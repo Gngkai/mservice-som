@@ -852,6 +852,18 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 		if ("EN_05".equals(type)) {
 			aosMktAadd.set("aos_user", aosMktProgOrgUser.get("aos_02hq"));
 			aosMktAadd.set("aos_status", "新品对比模块录入");
+			// 将对应A+需求表对应国别勾选
+			DynamicObject aos_mkt_addtrack = BusinessDataServiceHelper.loadSingleFromCache("aos_mkt_addtrack",
+					new QFilter("aos_itemid", QCP.equals, aos_itemid.getPkValue()).toArray());
+			if (FndGlobal.IsNotNull(aos_mkt_addtrack)) {
+				aos_mkt_addtrack.set("aos_" + ou, true);
+			} else {
+				aos_mkt_addtrack = BusinessDataServiceHelper.newDynamicObject("aos_mkt_addtrack");
+				aos_mkt_addtrack.set("aos_" + ou, true);
+				aos_mkt_addtrack.set("aos_itemid", ou);
+			}
+			OperationServiceHelper.executeOperate("save", "aos_mkt_addtrack", new DynamicObject[] { aos_mkt_addtrack },
+					OperateOption.create());
 		} else if ("EN_04".equals(type)) {
 			aosMktAadd.set("aos_user", aosMktProgUser.get("aos_designassit"));
 			aosMktAadd.set("aos_status", "设计制作");

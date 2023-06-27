@@ -353,8 +353,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn implements CellClick
 		DynamicObject aos_mkt_data_slogan = QueryServiceHelper.queryOne("aos_mkt_data_slogan", "id",
 				new QFilter("aos_category1", QCP.equals, aos_category1).and("aos_category2", QCP.equals, aos_category2)
 						.and("aos_category3", QCP.equals, aos_category3).and("aos_itemnamecn", QCP.equals, aos_cname)
-						.and("aos_detail", QCP.equals, aos_detail)
-						.toArray());
+						.and("aos_detail", QCP.equals, aos_detail).toArray());
 		DynamicObject slogan = BusinessDataServiceHelper.loadSingle(aos_mkt_data_slogan.get("id"),
 				"aos_mkt_data_slogan");
 		slogan.set("aos_itemnamecn", aos_entryentityS.get(0).get("aos_itemname"));
@@ -377,10 +376,9 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn implements CellClick
 		String aos_category1 = (String) this.getModel().getValue("aos_category1");
 		// 中类
 		String aos_category2 = (String) this.getModel().getValue("aos_category2");
-		
+
 		Object aos_detail = this.getModel().getValue("aos_detail");
-		
-		
+
 		DynamicObjectCollection aos_entryentityS = this.getModel().getEntryEntity("aos_entryentity");
 		DynamicObject aos_mkt_data_slogan = BusinessDataServiceHelper.newDynamicObject("aos_mkt_data_slogan"); // 品名Slogan库
 		aos_mkt_data_slogan.set("aos_category1", aos_category1);
@@ -388,11 +386,9 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn implements CellClick
 		aos_mkt_data_slogan.set("aos_category3", this.getModel().getValue("aos_category3"));
 
 		aos_mkt_data_slogan.set("aos_detail", aos_detail);
-		
 
 		aos_mkt_data_slogan.set("aos_category3", this.getModel().getValue("aos_category3"));
-		
-		
+
 		long aos_eng = 0;
 		QFilter filter_category1 = new QFilter("aos_category1", "=", aos_category1);
 		QFilter filter_category2 = new QFilter("aos_category2", "=", aos_category2);
@@ -452,7 +448,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn implements CellClick
 			aos_designer = aos_mkt_proguser.getLong("aos_designer");// 品类设计师
 			messageId = aos_designer;
 		} else {
-			messageId = ((DynamicObject)aos_designer).getPkValue();
+			messageId = ((DynamicObject) aos_designer).getPkValue();
 		}
 
 		if (aos_main) {
@@ -593,7 +589,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn implements CellClick
 				aos_entryentity.set("aos_itemname", this.getModel().getValue("aos_itemname", 1));
 				aos_entryentity.set("aos_slogan", this.getModel().getValue("aos_slogan", 1));
 				aos_entryentity.set("aos_width", this.getModel().getValue("aos_width", 1));
-				
+
 				DynamicObjectCollection aos_entryentityOS = this.getModel().getEntryEntity("aos_entryentity");
 				for (DynamicObject aos_entryentityO : aos_entryentityOS) {
 					if (org.equals(aos_entryentityO.getString("aos_langr"))) {
@@ -622,7 +618,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn implements CellClick
 				aos_designer = aos_mkt_proguser.getLong("aos_designer");// 品类设计师
 				messageId = aos_designer;
 			} else {
-				messageId = ((DynamicObject)aos_designer).getPkValue();
+				messageId = ((DynamicObject) aos_designer).getPkValue();
 			}
 			this.getModel().setValue("aos_designer", aos_designer);
 			this.getModel().setValue("aos_user", aos_designer);
@@ -874,7 +870,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn implements CellClick
 					}
 				}
 
-				if ("DE".equals(aos_langr)) {
+				if ("DE".equals(aos_langr) && "DE".equals(aos_lang)) {
 					if (FndGlobal.IsNull(aos_itemname) && "优化".equals(aos_type)) {
 						fndError.add("优化类型下DE品名必填!");
 					}
@@ -883,7 +879,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn implements CellClick
 					}
 				}
 
-				if ("FR".equals(aos_langr)) {
+				if ("FR".equals(aos_langr) && "FR".equals(aos_lang)) {
 					if (FndGlobal.IsNull(aos_itemname) && "优化".equals(aos_type)) {
 						fndError.add("优化类型下FR品名必填!");
 					}
@@ -892,7 +888,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn implements CellClick
 					}
 				}
 
-				if ("IT".equals(aos_langr)) {
+				if ("IT".equals(aos_langr) && "IT".equals(aos_lang)) {
 					if (FndGlobal.IsNull(aos_itemname) && "优化".equals(aos_type)) {
 						fndError.add("优化类型下IT品名必填!");
 					}
@@ -901,7 +897,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn implements CellClick
 					}
 				}
 
-				if ("ES".equals(aos_langr)) {
+				if ("ES".equals(aos_langr) && "ES".equals(aos_lang)) {
 					if (FndGlobal.IsNull(aos_itemname) && "优化".equals(aos_type)) {
 						fndError.add("优化类型下ES品名必填!");
 					}
