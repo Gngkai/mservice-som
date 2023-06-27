@@ -470,7 +470,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn implements CellClick
 			}
 			Boolean exist = QueryServiceHelper.exists("aos_mkt_slogan",
 					new QFilter("aos_sourceid", QCP.equals, aos_sourceid).and("id", QCP.not_equals, ReqFId)
-							.and("aos_status", QCP.in, new String[] { "翻译", "海外翻译" }).toArray());
+							.and("aos_status", QCP.in, new String[] { "翻译", "海外翻译", "结束" }).toArray());
 			if (!exist) {
 				aos_mkt_slogan.set("aos_designer", aos_designer);
 				aos_mkt_slogan.set("aos_user", aos_designer);
@@ -871,68 +871,79 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn implements CellClick
 				}
 
 				if ("DE".equals(aos_langr) && "DE".equals(aos_lang)) {
-					if (FndGlobal.IsNull(aos_itemname) && "优化".equals(aos_type)) {
+					if (FndGlobal.IsNull(aos_itemname)) {
 						fndError.add("优化类型下DE品名必填!");
 					}
-					if (FndGlobal.IsNull(aos_slogan) && "优化".equals(aos_type)) {
+					if (FndGlobal.IsNull(aos_slogan)) {
 						fndError.add("优化类型下DE-slogan必填!");
 					}
 				}
 
 				if ("FR".equals(aos_langr) && "FR".equals(aos_lang)) {
-					if (FndGlobal.IsNull(aos_itemname) && "优化".equals(aos_type)) {
+					if (FndGlobal.IsNull(aos_itemname)) {
 						fndError.add("优化类型下FR品名必填!");
 					}
-					if (FndGlobal.IsNull(aos_slogan) && "优化".equals(aos_type)) {
+					if (FndGlobal.IsNull(aos_slogan)) {
 						fndError.add("优化类型下FR-slogan必填!");
 					}
 				}
 
 				if ("IT".equals(aos_langr) && "IT".equals(aos_lang)) {
-					if (FndGlobal.IsNull(aos_itemname) && "优化".equals(aos_type)) {
+					if (FndGlobal.IsNull(aos_itemname)) {
 						fndError.add("优化类型下IT品名必填!");
 					}
-					if (FndGlobal.IsNull(aos_slogan) && "优化".equals(aos_type)) {
+					if (FndGlobal.IsNull(aos_slogan)) {
 						fndError.add("优化类型下IT-slogan必填!");
 					}
 				}
 
 				if ("ES".equals(aos_langr) && "ES".equals(aos_lang)) {
-					if (FndGlobal.IsNull(aos_itemname) && "优化".equals(aos_type)) {
+					if (FndGlobal.IsNull(aos_itemname)) {
 						fndError.add("优化类型下ES品名必填!");
 					}
-					if (FndGlobal.IsNull(aos_slogan) && "优化".equals(aos_type)) {
+					if (FndGlobal.IsNull(aos_slogan)) {
 						fndError.add("优化类型下ES-slogan必填!");
 					}
 				}
 			}
-		}
-		if ("新增".equals(aos_type)) {
-			// 校验唯一性
-			String aos_cname = aos_entryentityS.get(0).getString("aos_itemname");
-			Boolean exists = QueryServiceHelper.exists("aos_mkt_data_slogan",
-					new QFilter("aos_category1", QCP.equals, aos_category1)
-							.and("aos_category2", QCP.equals, aos_category2)
-							.and("aos_category3", QCP.equals, aos_category3)
-							.and("aos_itemnamecn", QCP.equals, aos_cname).and("aos_detail", QCP.equals, aos_detail)
-							.toArray());
-			if (exists) {
-				fndError.add("品名Slogan已存在!");
+			
+			
+			if ("新增".equals(aos_type)) {
+				// 校验唯一性
+				String aos_cname = aos_entryentityS.get(0).getString("aos_itemname");
+				Boolean exists = QueryServiceHelper.exists("aos_mkt_data_slogan",
+						new QFilter("aos_category1", QCP.equals, aos_category1)
+								.and("aos_category2", QCP.equals, aos_category2)
+								.and("aos_category3", QCP.equals, aos_category3)
+								.and("aos_itemnamecn", QCP.equals, aos_cname).and("aos_detail", QCP.equals, aos_detail)
+								.toArray());
+				if (exists) {
+					fndError.add("品名Slogan已存在!");
+				}
 			}
-		}
 
-		else if ("优化".equals(aos_type)) {
-			// 校验唯一性
-			String aos_cname = aos_entryentityS.get(0).getString("aos_itemname");
-			Boolean exists = QueryServiceHelper.exists("aos_mkt_data_slogan",
-					new QFilter("aos_category1", QCP.equals, aos_category1)
-							.and("aos_category2", QCP.equals, aos_category2)
-							.and("aos_category3", QCP.equals, aos_category3)
-							.and("aos_itemnamecn", QCP.equals, aos_cname).toArray());
-			if (!exists) {
-				fndError.add("品名Slogan不存在!");
+			else if ("优化".equals(aos_type)) {
+				// 校验唯一性
+				String aos_cname = aos_entryentityS.get(0).getString("aos_itemname");
+				Boolean exists = QueryServiceHelper.exists("aos_mkt_data_slogan",
+						new QFilter("aos_category1", QCP.equals, aos_category1)
+								.and("aos_category2", QCP.equals, aos_category2)
+								.and("aos_category3", QCP.equals, aos_category3)
+								.and("aos_itemnamecn", QCP.equals, aos_cname).and("aos_detail", QCP.equals, aos_detail)
+								.toArray());
+				if (!exists) {
+					fndError.add("品名Slogan不存在!");
+				}
 			}
+			
+			
+			
+			
+			
+			
+			
 		}
+		
 
 		if (fndError.getCount() > 0) {
 			throw fndError;
