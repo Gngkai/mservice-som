@@ -566,11 +566,18 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 									i - 1);
 
 				// 不含品牌
-				this.getModel().setValue("aos_s3address2",
-						"https://uspm.aosomcdn.com/videos/en/" + first + "/" + ItemNumber + "/" + ItemNumber + ".mp4",
-						i - 1);
+				if ("US".equals(aos_nationalitynumber) || "CA".equals(aos_nationalitynumber)
+						|| "UK".equals(aos_nationalitynumber))
+					// 非小语种
+					this.getModel().setValue("aos_s3address2", "https://uspm.aosomcdn.com/videos/en/" + first + "/"
+							+ ItemNumber + "/" + ItemNumber + ".mp4", i - 1);
+				else
+					// 小语种
+					this.getModel().setValue("aos_s3address2", "https://uspm.aosomcdn.com/videos/en/" + first + "/"
+							+ ItemNumber + "/" + ItemNumber + "-" + aos_nationalitynumber +".mp4", i - 1);
 
-				if ("US/CA/UK".contains(aos_nationalitynumber))
+				if ("US".equals(aos_nationalitynumber) || "CA".equals(aos_nationalitynumber)
+						|| "UK".equals(aos_nationalitynumber))
 					this.getModel().setValue("aos_filename", ItemNumber + "-" + value, i - 1);
 				else
 					this.getModel().setValue("aos_filename", ItemNumber + "-" + value + "-" + aos_nationalitynumber,
@@ -2177,7 +2184,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		AosMktPhotoReq.set("aos_status", "视频更新:多人会审");
 
 		AosMktPhotoReq.set("aos_desc", aos_mkt_photoreq.get("aos_desc"));
-		
+
 		AosMktPhotoReq.set("aos_sonflag", true);
 		AosMktPhotoReq.set("aos_parentid", ReqFId);
 		AosMktPhotoReq.set("aos_parentbill", aos_mkt_photoreq.get("billno"));
