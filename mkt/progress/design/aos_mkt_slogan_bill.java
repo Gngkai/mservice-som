@@ -265,6 +265,8 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn implements CellClick
 	private void aos_auto() {
 		this.getModel().setValue("aos_status", "结束");
 		this.getModel().setValue("aos_user", SYSTEM);
+		this.getView().invokeOperation("save");
+		this.getView().invokeOperation("refresh");
 		this.getView().showSuccessNotification("手工关闭成功!");
 	}
 

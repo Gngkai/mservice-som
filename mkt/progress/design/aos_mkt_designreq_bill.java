@@ -42,6 +42,7 @@ import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.MKTCom;
 import mkt.common.MKTS3PIC;
 import mkt.progress.ProgressUtil;
+import mkt.progress.design.aadd.aos_mkt_aadd_bill;
 import mkt.progress.design3d.aos_mkt_3design_bill;
 import mkt.progress.iface.iteminfo;
 import mkt.progress.iface.parainfo;
@@ -121,7 +122,7 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 			// 当前行
 			int currentRow = this.getModel().getEntryCurrentRowIndex("aos_entryentity");
 			// 货号
-			DynamicObject aosItemId = (DynamicObject) this.getModel().getValue("aos_itemid",currentRow);
+			DynamicObject aosItemId = (DynamicObject) this.getModel().getValue("aos_itemid", currentRow);
 			List<Object> primaryKeys = QueryServiceHelper.queryPrimaryKeys("aos_sealsample",
 					new QFilter("aos_item.id", QCP.equals, aosItemId.getPkValue()).toArray(), "createtime desc", 1);
 			if (FndGlobal.IsNotNull(primaryKeys) && primaryKeys.size() > 0)
@@ -522,7 +523,8 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 		setUser(dy_main);
 		setErrorList(dy_main);
 	}
-	private static void setUser(DynamicObject dy_main){
+
+	private static void setUser(DynamicObject dy_main) {
 		Object aos_user = dy_main.get("aos_user");
 		Object userID;
 		if (aos_user instanceof Long) {
@@ -547,24 +549,24 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 	}
 
 	/** 设置改错任务清单 **/
-	public static void setErrorList (DynamicObject dy_main) {
+	public static void setErrorList(DynamicObject dy_main) {
 		String aos_status = dy_main.getString("aos_status");
 		if (!aos_status.equals("结束")) {
 			return;
 		}
 		String aos_type = dy_main.getString("aos_type");
-		if (!ErrorListEntity.errorListType.contains(aos_type)){
+		if (!ErrorListEntity.errorListType.contains(aos_type)) {
 			return;
 		}
 		String billno = dy_main.getString("billno");
 
 		DynamicObject aos_orgid = dy_main.getDynamicObject("aos_orgid");
-		if (aos_orgid==null){
+		if (aos_orgid == null) {
 			CountryDao countryDao = new CountryDaoImpl();
 			DynamicObjectCollection dyc_ent = dy_main.getDynamicObjectCollection("aos_entryentity");
 			for (DynamicObject dy : dyc_ent) {
 				DynamicObject aos_itemid = dy.getDynamicObject("aos_itemid");
-				if (aos_itemid==null)
+				if (aos_itemid == null)
 					continue;
 				DynamicObject dy_sub = dy.getDynamicObjectCollection("aos_subentryentity").get(0);
 				String orgtext = dy_sub.getString("aos_orgtext");
@@ -574,19 +576,20 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 				String[] split = orgtext.split(";");
 				for (String org : split) {
 					String countryID = countryDao.getCountryID(org);
-					ErrorListEntity errorListEntity = new ErrorListEntity(billno,aos_type,countryID,aos_itemid.getString("id"));
+					ErrorListEntity errorListEntity = new ErrorListEntity(billno, aos_type, countryID,
+							aos_itemid.getString("id"));
 					errorListEntity.save();
 				}
 			}
-		}
-		else {
+		} else {
 			String orgid = aos_orgid.getString("id");
 			DynamicObjectCollection dyc_ent = dy_main.getDynamicObjectCollection("aos_entryentity");
 			for (DynamicObject dy : dyc_ent) {
 				DynamicObject aos_itemid = dy.getDynamicObject("aos_itemid");
-				if (aos_itemid==null)
+				if (aos_itemid == null)
 					continue;
-				ErrorListEntity errorListEntity = new ErrorListEntity(billno,aos_type,orgid,aos_itemid.getString("id"));
+				ErrorListEntity errorListEntity = new ErrorListEntity(billno, aos_type, orgid,
+						aos_itemid.getString("id"));
 				errorListEntity.save();
 			}
 		}
@@ -714,7 +717,7 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 
 		dy_main.set("aos_designby", RequestContext.get().getCurrUserId());
 		dy_main.set("aos_design_date", new Date());
-		
+
 		// 设置单据流程状态
 		if (Flag3D) {
 			// 1.是否3D建模=是，走3D建模节点
@@ -997,6 +1000,61 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 	private static void SubmitForConfirmReq(DynamicObject dy_main, String type) throws FndError {
 		Object aos_orgid = dy_main.get("aos_orgid");
 		Object aos_sourcetype = dy_main.get("aos_sourcetype");
+		Object aos_type = dy_main.get("aos_type");
+		// A+生成逻辑
+		if ("新品设计".equals(aos_type)) {
+			DynamicObjectCollection aos_entryentityS = dy_main.getDynamicObjectCollection("aos_entryentity");
+			for (DynamicObject aos_entryentity : aos_entryentityS) {
+				DynamicObject aos_itemid = aos_entryentity.getDynamicObject("aos_itemid");
+				String aos_productno = aos_itemid.getString("aos_productno");
+				Boolean exists1 = QueryServiceHelper.exists("aos_mkt_addtrack",
+						new QFilter("aos_itemid.aos_productno", QCP.equals, aos_productno));
+				Boolean exists2 = QueryServiceHelper.exists("aos_mkt_addtrack",
+						new QFilter("aos_itemid", QCP.equals, aos_itemid.getPkValue()));
+				// A+跟踪表中不存在物料 存在产品号
+				if (exists1 && !exists2) {
+					// 循环
+					DynamicObjectCollection aos_subentryentityS = aos_entryentity
+							.getDynamicObjectCollection("aos_subentryentity");
+					DynamicObject aos_subentryentity = aos_subentryentityS.get(0);
+					String aos_orgtext = aos_subentryentity.getString("aos_orgtext");
+					if (Cux_Common_Utl.IsNull(aos_orgtext))
+						continue;
+					String[] aos_orgtextArray = aos_orgtext.split(";");
+					for (int i = 0; i < aos_orgtextArray.length; i++) {
+						String org = aos_orgtextArray[i];
+						// 判断国别类型为英语还是小语种
+						if ("US,CA,UK".contains(org)) {
+							// 判断同产品号是否有英语国别制作完成
+							Boolean exists3 = QueryServiceHelper.exists("aos_mkt_addtrack",
+									new QFilter("aos_itemid.aos_productno", QCP.equals, aos_productno)
+											.and(new QFilter("aos_us", QCP.equals, true).or("aos_ca", QCP.equals, true)
+													.or("aos_uk", QCP.equals, true))
+											.toArray());
+							// 存在英语国别制作完成 到05节点 不存在 到04节点
+							if (exists3) {
+								aos_mkt_aadd_bill.generateAddFromDesign(aos_itemid, org, "EN_05");
+							} else {
+								aos_mkt_aadd_bill.generateAddFromDesign(aos_itemid, org, "EN_04");
+							}
+						} else if ("DE,FR,IT,ES".contains(org)) {
+							// 判断同产品号是否有小语种国别制作完成
+							Boolean exists3 = QueryServiceHelper.exists("aos_mkt_addtrack",
+									new QFilter("aos_itemid.aos_productno", QCP.equals, aos_productno)
+											.and(new QFilter("aos_de", QCP.equals, true).or("aos_fr", QCP.equals, true)
+													.or("aos_it", QCP.equals, true).or("aos_es", QCP.equals, true))
+											.toArray());
+							// 存在小语种国别制作完成 到04节点 不存在 到02节点
+							if (exists3) {
+								aos_mkt_aadd_bill.generateAddFromDesign(aos_itemid, org, "SM_04");
+							} else {
+								aos_mkt_aadd_bill.generateAddFromDesign(aos_itemid, org, "SM_02");
+							}
+						}
+					}
+				}
+			}
+		}
 
 		if (aos_orgid != null && "LISTING".equals(aos_sourcetype)) {
 			// 1.触发生成设计需求表的listing优化需求表上有国别，设计需求表结束后只触发生成本国的设计完成表-国别;
@@ -1014,6 +1072,7 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 		else {
 			dy_main.set("aos_submitter", "system");
 		}
+
 		// 执行保存操作
 		dy_main.set("aos_status", "结束");// 设置单据流程状态
 		dy_main.set("aos_user", system);// 设置操作人为系统管理员
