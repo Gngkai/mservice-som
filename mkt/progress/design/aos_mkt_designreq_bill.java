@@ -894,6 +894,21 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 			MessageId = ((DynamicObject) aos_requireby).getPkValue().toString();
 			Message = "设计需求表-申请人确认";
 		} else {
+			
+			// 老品重拍回写拍照
+			if ("PHOTO".equals(dy_main.getString("aos_sourcetype")))
+			{
+				DynamicObject aos_mkt_photoreq = BusinessDataServiceHelper.loadSingleFromCache("aos_mkt_photoreq",
+						new QFilter("billno", QCP.equals, dy_main.getString("aos_sourcebillno"))
+								.and("aos_type", QCP.equals, "视频").toArray());
+				if (FndGlobal.IsNotNull(aos_mkt_photoreq)) {
+					aos_mkt_photoreq.set("aos_user", aos_mkt_photoreq.get("aos_vedior"));
+					OperationServiceHelper.executeOperate("save", "aos_mkt_photoreq",
+							new DynamicObject[] { aos_mkt_photoreq }, OperateOption.create());
+				}
+			}
+			
+			
 			dy_main.set("aos_status", "结束");
 			dy_main.set("aos_user", system);
 			MessageId = ((DynamicObject) aos_requireby).getPkValue().toString();
@@ -1073,6 +1088,19 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 			dy_main.set("aos_submitter", "system");
 		}
 
+		// 老品重拍回写拍照
+		if ("PHOTO".equals(dy_main.getString("aos_sourcetype")))
+		{
+			DynamicObject aos_mkt_photoreq = BusinessDataServiceHelper.loadSingleFromCache("aos_mkt_photoreq",
+					new QFilter("billno", QCP.equals, dy_main.getString("aos_sourcebillno"))
+							.and("aos_type", QCP.equals, "视频").toArray());
+			if (FndGlobal.IsNotNull(aos_mkt_photoreq)) {
+				aos_mkt_photoreq.set("aos_user", aos_mkt_photoreq.get("aos_vedior"));
+				OperationServiceHelper.executeOperate("save", "aos_mkt_photoreq",
+						new DynamicObject[] { aos_mkt_photoreq }, OperateOption.create());
+			}
+		}
+		
 		// 执行保存操作
 		dy_main.set("aos_status", "结束");// 设置单据流程状态
 		dy_main.set("aos_user", system);// 设置操作人为系统管理员

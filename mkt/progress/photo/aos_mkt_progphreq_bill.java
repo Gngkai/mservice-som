@@ -52,6 +52,7 @@ import mkt.common.MKTS3PIC;
 import mkt.progress.ProgressUtil;
 import mkt.progress.design3d.aos_mkt_3design_bill;
 import mkt.progress.iface.iteminfo;
+import mkt.progress.listing.aos_mkt_listingreq_bill;
 import mkt.progress.listing.aos_mkt_listingson_bill;
 
 import static mkt.progress.ProgressUtil.Is_saleout;
@@ -676,7 +677,13 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			if (is3d)
 				this.getModel().setValue(aos_phstate, "工厂简拍");
 			// 增加爆品字段
-			this.getModel().setValue("aos_is_saleout", Is_saleout(fid));
+			Boolean aos_is_saleout = Is_saleout(fid);
+			this.getModel().setValue("aos_is_saleout", aos_is_saleout);
+			
+			if (aos_is_saleout) {
+				this.getModel().setValue("aos_vedioflag", true);
+			}
+			
 			// 摄影标准库字段
 			DynamicObject aosMktPhotoStd = QueryServiceHelper.queryOne("aos_mkt_photostd",
 					"aos_firstpicture,aos_other,aos_require",
@@ -2597,14 +2604,21 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		String aos_productno = bd_material.getString("aos_productno");
 		String aos_itemname = bd_material.getString("name");
 		// 获取同产品号物料
-		QFilter filter_productno = new QFilter("aos_productno", QCP.equals, aos_productno);
-		QFilter[] filters = new QFilter[] { filter_productno };
-		String SelectColumn = "number,aos_type";
 		String aos_broitem = "";
-		DynamicObjectCollection bd_materialS = QueryServiceHelper.query("bd_material", SelectColumn, filters);
+		DynamicObjectCollection bd_materialS = QueryServiceHelper.query("bd_material", "id,number,aos_type",
+				new QFilter("aos_productno", QCP.equals, aos_productno).and("aos_type", QCP.equals, "A")
+						.toArray());
 		for (DynamicObject bd : bd_materialS) {
+			Object itemid = bd_material.get("id");
 			if ("B".equals(bd.getString("aos_type")))
 				continue; // 配件不获取
+			Boolean exist = QueryServiceHelper.exists("bd_material", new QFilter("id", QCP.equals, itemid)
+					.and("aos_contryentry.aos_contryentrystatus", QCP.not_equals, "C"));
+			if (!exist)
+				continue;// 全球终止不取
+			int osQty = aos_mkt_listingreq_bill.getOsQty(itemid);
+			if (osQty < 10)
+				continue;
 			String number = bd.getString("number");
 			if (item_number.equals(number))
 				continue;
