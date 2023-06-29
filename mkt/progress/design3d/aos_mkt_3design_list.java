@@ -8,13 +8,16 @@ import java.util.stream.Collectors;
 import com.alibaba.nacos.common.utils.Pair;
 import common.Cux_Common_Utl;
 import common.fnd.FndError;
+import common.fnd.FndGlobal;
 import common.fnd.FndHistory;
 import common.sal.util.SalUtil;
 import kd.bos.dataentity.OperateOption;
 import kd.bos.dataentity.entity.DynamicObject;
+import kd.bos.dataentity.entity.LocaleString;
 import kd.bos.dataentity.utils.StringUtils;
 import kd.bos.entity.datamodel.ListSelectedRow;
 import kd.bos.entity.datamodel.ListSelectedRowCollection;
+import kd.bos.entity.datamodel.events.PackageDataEvent;
 import kd.bos.entity.operate.result.OperationResult;
 import kd.bos.form.CloseCallBack;
 import kd.bos.form.FormShowParameter;
@@ -24,9 +27,13 @@ import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.events.AfterQueryOfExportEvent;
 import kd.bos.form.events.ClosedCallBackEvent;
 import kd.bos.form.events.SetFilterEvent;
+import kd.bos.form.operatecol.OperationColItem;
+import kd.bos.list.column.ListOperationColumnDesc;
 import kd.bos.list.plugin.AbstractListPlugin;
+import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
+import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.progress.ProgressUtil;
@@ -36,6 +43,39 @@ import org.apache.commons.collections4.BidiMap;
 public class aos_mkt_3design_list extends AbstractListPlugin {
 
 	public final static String aos_mkt_3design = "aos_mkt_3design";
+
+	@Override
+	public void packageData(PackageDataEvent e) {
+		if (e.getSource() instanceof ListOperationColumnDesc) {
+			List<OperationColItem> operationColItems = (List<OperationColItem>) e.getFormatValue();
+			for (OperationColItem operationColItem : operationColItems) {
+				LocaleString name = new LocaleString();
+				String billno = e.getRowData().getString("billno");
+				// 设置操作列名称为单据编号
+				if (FndGlobal.IsNull(billno))
+					name.setLocaleValue(" ");
+				else
+					name.setLocaleValue(billno);
+				operationColItem.setOperationName(name);
+				// 判断货号合同是否已关闭
+				String aos_source = e.getRowData().getString("aos_source");
+				String aos_orignbill = e.getRowData().getString("aos_orignbill");
+				if ("拍照需求表".equals(aos_source)) {
+					DynamicObject aos_mkt_photoreq = QueryServiceHelper.queryOne("aos_mkt_photoreq", "aos_ponumber",
+							new QFilter("billno", QCP.equals, aos_orignbill).toArray());
+					if (FndGlobal.IsNotNull(aos_mkt_photoreq)
+							&& FndGlobal.IsNotNull(aos_mkt_photoreq.getString("aos_ponumber"))) {
+						Boolean exist = QueryServiceHelper.exists("aos_purcontract",
+								new QFilter("billno", QCP.equals, aos_mkt_photoreq.getString("aos_ponumber"))
+										.and("billstatus", QCP.equals, "F").toArray());
+						if (exist)
+							operationColItem.setForeColor("red");
+					}
+				}
+			}
+		}
+		super.packageData(e);
+	}
 
 	@Override
 	public void setFilter(SetFilterEvent e) {
@@ -91,7 +131,8 @@ public class aos_mkt_3design_list extends AbstractListPlugin {
 		Object CurrentUserId = UserServiceHelper.getCurrentUserId();
 		Object CurrentUserName = UserServiceHelper.getUserInfoByID((long) CurrentUserId).get("name");
 
-		List<Object> list_pks = list.stream().map(row -> row.getPrimaryKeyValue()).distinct().collect(Collectors.toList());
+		List<Object> list_pks = list.stream().map(row -> row.getPrimaryKeyValue()).distinct()
+				.collect(Collectors.toList());
 		for (Object id : list_pks) {
 			DynamicObject aos_mkt_3design = BusinessDataServiceHelper.loadSingle(id, "aos_mkt_3design");
 			String aos_userold = aos_mkt_3design.getDynamicObject("aos_user").getPkValue().toString();
@@ -149,17 +190,17 @@ public class aos_mkt_3design_list extends AbstractListPlugin {
 	public void afterQueryOfExport(AfterQueryOfExportEvent e) {
 		fillExportData(e.getQueryValues());
 	}
-	private static void fillExportData(DynamicObject [] dyc_export){
+
+	private static void fillExportData(DynamicObject[] dyc_export) {
 		for (DynamicObject dy : dyc_export) {
 			String name = dy.getDynamicObjectType().getName();
 			String id = dy.getString("id");
 			Pair<BidiMap<String, Integer>, Map<String, Date>> pair = ProgressUtil.getOperateLog(name, id);
 			Map<String, Date> map_opDate = pair.getSecond();
-			if (map_opDate.containsKey("新建")){
-				dy.set("aos_enddate",map_opDate.get("新建"));
+			if (map_opDate.containsKey("新建")) {
+				dy.set("aos_enddate", map_opDate.get("新建"));
 			}
 		}
 	}
-
 
 }

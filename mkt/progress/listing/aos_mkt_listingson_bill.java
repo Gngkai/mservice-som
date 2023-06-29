@@ -7,6 +7,7 @@ import com.sun.istack.NotNull;
 import common.Cux_Common_Utl;
 import common.fnd.FndError;
 import common.fnd.FndHistory;
+import common.fnd.FndWebHook;
 import common.sal.sys.basedata.dao.CountryDao;
 import common.sal.sys.basedata.dao.impl.CountryDaoImpl;
 import common.sal.util.SalUtil;
@@ -927,6 +928,12 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
 				OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_listing_min",
 						new DynamicObject[] { aos_mkt_listing_min }, OperateOption.create());
 
+				// 修复关联关系
+				try {
+					ProgressUtil.botp("aos_mkt_listing_min", aos_mkt_listing_min.get("id"));
+				} catch (Exception ex) {
+				}
+				
 				if (operationrst.getValidateResult().getValidateErrors().size() != 0 && MessageFlag) {
 					MKTCom.SendGlobalMessage(MessageId, "aos_mkt_listing_min",
 							operationrst.getSuccessPkIds().get(0) + "", aos_mkt_listing_min.getString("billno"),
@@ -1050,6 +1057,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
 				mkt_listing_min.set("aos_is_saleout", ProgressUtil.Is_saleout(LastItemId));
 				mkt_listing_min.set("aos_require", aos_entryentity.get("aos_require"));
 				mkt_listing_min.set("aos_case", aos_entryentity.get("aos_case"));
+				
 				// 附件
 				DynamicObjectCollection aos_attributefrom = aos_entryentity.getDynamicObjectCollection("aos_attribute");
 				DynamicObjectCollection minEntityAttribute = mkt_listing_min
@@ -1133,10 +1141,21 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
 				aos_mkt_listing_min.set("aos_editor", aos_editor);// 英语编辑师
 				aos_mkt_listing_min.set("aos_editormin", aos_oueditor);// 小语种编辑师
 				aos_mkt_listing_min.set("aos_user", aos_oueditor);
+
 				MessageId = aos_oueditor + "";
 				Message = "Listing优化需求表小语种-Listing优化需求子表自动创建";
+				
 				OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_listing_min",
 						new DynamicObject[] { aos_mkt_listing_min }, OperateOption.create());
+				
+				
+				// 修复关联关系
+				try {
+					ProgressUtil.botp("aos_mkt_listing_min", aos_mkt_listing_min.get("id"));
+				} catch (Exception ex) {
+				}
+				
+				
 
 				if (operationrst.getValidateResult().getValidateErrors().size() != 0 && MessageFlag) {
 					MKTCom.SendGlobalMessage(MessageId, "aos_mkt_listing_min",

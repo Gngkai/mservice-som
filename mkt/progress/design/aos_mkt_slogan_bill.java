@@ -262,7 +262,41 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn implements CellClick
 	/**
 	 * 手工关闭
 	 */
-	private void aos_auto() {
+	private void aos_auto() throws FndError {
+		FndError fndError = new FndError();
+		
+		Boolean aos_main = (Boolean) this.getModel().getValue("aos_main");
+		Object ReqFId = this.getModel().getDataEntity().getPkValue();// 当前单据主键
+		Object aos_sourceid = this.getModel().getValue("aos_sourceid");
+		String aos_category1 = (String) this.getModel().getValue("aos_category1");// 大类
+		String aos_category2 = (String) this.getModel().getValue("aos_category2");// 中类
+		
+		if (!aos_main){
+			Object aos_designer = this.getModel().getValue("aos_designer");
+			if (FndGlobal.IsNull(aos_designer)) {
+				DynamicObject aos_mkt_proguser = QueryServiceHelper.queryOne("aos_mkt_proguser", "aos_designer",
+						new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2)
+								.toArray());
+				if (FndGlobal.IsNull(aos_mkt_proguser) || FndGlobal.IsNull(aos_mkt_proguser.get("aos_designer"))) {
+					fndError.add("品类设计师不存在!");
+					throw fndError;
+				}
+				aos_designer = aos_mkt_proguser.getLong("aos_designer");// 品类设计师
+			}
+			DynamicObject aos_mkt_slogan = BusinessDataServiceHelper.loadSingle(aos_sourceid, "aos_mkt_slogan");
+			Boolean exist = QueryServiceHelper.exists("aos_mkt_slogan",
+					new QFilter("aos_sourceid", QCP.equals, aos_sourceid).and("id", QCP.not_equals, ReqFId)
+							.and("aos_status", QCP.in, new String[] { "翻译", "海外翻译" }).toArray());
+			if (!exist) {
+				aos_mkt_slogan.set("aos_designer", aos_designer);
+				aos_mkt_slogan.set("aos_user", aos_designer);
+				aos_mkt_slogan.set("aos_status", "设计");
+			}
+			SaveServiceHelper.saveOperate("aos_mkt_slogan", new DynamicObject[] { aos_mkt_slogan },
+					OperateOption.create());
+		}
+		
+		
 		this.getModel().setValue("aos_status", "结束");
 		this.getModel().setValue("aos_user", SYSTEM);
 		this.getView().invokeOperation("save");
@@ -470,7 +504,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn implements CellClick
 			}
 			Boolean exist = QueryServiceHelper.exists("aos_mkt_slogan",
 					new QFilter("aos_sourceid", QCP.equals, aos_sourceid).and("id", QCP.not_equals, ReqFId)
-							.and("aos_status", QCP.in, new String[] { "翻译", "海外翻译", "结束" }).toArray());
+							.and("aos_status", QCP.in, new String[] { "翻译", "海外翻译" }).toArray());
 			if (!exist) {
 				aos_mkt_slogan.set("aos_designer", aos_designer);
 				aos_mkt_slogan.set("aos_user", aos_designer);

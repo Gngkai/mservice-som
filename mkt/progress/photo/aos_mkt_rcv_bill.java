@@ -499,7 +499,12 @@ public class aos_mkt_rcv_bill extends AbstractBillPlugIn implements ItemClickLis
 			AosMktPhotoReq.set("aos_funcpicdate", aos_mkt_photoreq.get("aos_funcpicdate"));
 			AosMktPhotoReq.set("aos_vedio", aos_mkt_photoreq.get("aos_vedio"));
 			AosMktPhotoReq.set("billno", aos_mkt_photoreq.get("billno"));
-			AosMktPhotoReq.set("aos_user", aos_mkt_photoreq.get("aos_vedior"));
+			
+			if ("工厂简拍".equals(aos_phstate))
+				AosMktPhotoReq.set("aos_user", system);
+			else
+				AosMktPhotoReq.set("aos_user", aos_mkt_photoreq.get("aos_vedior"));
+				
 			AosMktPhotoReq.set("aos_type", "视频");
 			AosMktPhotoReq.set("aos_designer", aos_mkt_photoreq.get("aos_designer"));
 			AosMktPhotoReq.set("aos_sale", aos_mkt_photoreq.get("aos_sale"));

@@ -653,7 +653,7 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
 		Object aos_source = dy_main.get("aos_source");// 任务来源
 		if (dy_main.getBoolean("aos_autoflag") && FndGlobal.IsNull(dy_main.get("aos_productbill")))
 			aos_source = "老品重拍-传图";
-		
+
 		Object aos_importance = dy_main.get("aos_importance");// 紧急程度
 		Object aos_orgid = dy_main.get("aos_orgid"); // 国别
 		Object aos_requireby = dy_main.get("aos_requireby"); // 申请人
@@ -808,14 +808,22 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
 			// 获取同产品号物料
 			QFilter filter_productno = new QFilter("aos_productno", QCP.equals, aos_productno);
 			filters = new QFilter[] { filter_productno };
-			String SelectColumn = "number,aos_type";
 			String aos_broitem = "";
-
 			if (!Cux_Common_Utl.IsNull(aos_productno)) {
-				DynamicObjectCollection bd_materialS = QueryServiceHelper.query("bd_material", SelectColumn, filters);
+				DynamicObjectCollection bd_materialS = QueryServiceHelper.query("bd_material",  "id,number,aos_type",
+						new QFilter("aos_productno", QCP.equals, aos_productno).and("aos_type", QCP.equals, "A")
+								.toArray());
 				for (DynamicObject bd : bd_materialS) {
+					Object itemid = bd_material.get("id");
 					if ("B".equals(bd.getString("aos_type")))
 						continue; // 配件不获取
+					Boolean exist = QueryServiceHelper.exists("bd_material", new QFilter("id", QCP.equals, itemid)
+							.and("aos_contryentry.aos_contryentrystatus", QCP.not_equals, "C"));
+					if (!exist)
+						continue;// 全球终止不取
+					int osQty = getOsQty(itemid);
+					if (osQty < 10)
+						continue;
 					String number = bd.getString("number");
 					if (item_number.equals(number))
 						continue;
@@ -951,16 +959,22 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
 			}
 
 			// 获取同产品号物料
-			QFilter filter_productno = new QFilter("aos_productno", QCP.equals, aos_productno);
-			QFilter[] filters = new QFilter[] { filter_productno };
-			String SelectColumn = "number,aos_type";
 			String aos_broitem = "";
-
 			if (!Cux_Common_Utl.IsNull(aos_productno)) {
-				DynamicObjectCollection bd_materialS = QueryServiceHelper.query("bd_material", SelectColumn, filters);
+				DynamicObjectCollection bd_materialS = QueryServiceHelper.query("bd_material", "id,number,aos_type",
+						new QFilter("aos_productno", QCP.equals, aos_productno).and("aos_type", QCP.equals, "A")
+								.toArray());
 				for (DynamicObject bd : bd_materialS) {
+					Object itemid = bd_material.get("id");
 					if ("B".equals(bd.getString("aos_type")))
 						continue; // 配件不获取
+					Boolean exist = QueryServiceHelper.exists("bd_material", new QFilter("id", QCP.equals, itemid)
+							.and("aos_contryentry.aos_contryentrystatus", QCP.not_equals, "C"));
+					if (!exist)
+						continue;// 全球终止不取
+					int osQty = getOsQty(itemid);
+					if (osQty < 10)
+						continue;
 					String number = bd.getString("number");
 					if (item_number.equals(number))
 						continue;
@@ -980,7 +994,7 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
 			if (FId != null)
 				filter_fid = new QFilter("id", QCP.not_equals, FId);
 			QFilter filter_date = new QFilter("aos_requiredate", QCP.large_equals, date_from_str);
-			filters = new QFilter[] { filter_item, filter_fid, filter_date };
+			QFilter[] filters = new QFilter[] { filter_item, filter_fid, filter_date };
 			DynamicObjectCollection aos_mkt_listing_reqS = QueryServiceHelper.query("aos_mkt_listing_req",
 					"id,billno," + "aos_entryentity.aos_require aos_require,"
 							+ "aos_entryentity.aos_requirepic aos_requirepic," + "aos_requireby,aos_requiredate",
@@ -1007,6 +1021,22 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
 				i++;
 			}
 		}
+	}
+
+	/**
+	 * 获取物料全球海外库存
+	 * 
+	 * @param itemid
+	 * @return
+	 */
+	public static int getOsQty(Object itemid) {
+		int aos_instock_qty = 0;
+		DynamicObjectCollection aos_sync_invou_valueS = QueryServiceHelper.query("aos_sync_invou_value",
+				"aos_instock_qty", new QFilter("aos_item", QCP.equals, itemid).toArray());
+		for (DynamicObject aos_sync_invou_value : aos_sync_invou_valueS) {
+			aos_instock_qty += aos_sync_invou_value.getInt("aos_instock_qty");
+		}
+		return aos_instock_qty;
 	}
 
 	/** 创建优化需求表后给物料的大类赋值 **/

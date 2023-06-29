@@ -351,22 +351,19 @@ public class MKTCom {
 	/**
 	 *
 	 * @param aos_orgnumber
-	 * @param availableDays		可售天数
-	 * @param R					7天日均
-	 * @param saleout			是否爆品	true为爆品
+	 * @param availableDays 可售天数
+	 * @param R             7天日均
+	 * @param saleout       是否爆品 true为爆品
 	 * @return
 	 */
-	public static String Get_RegularUn(String aos_orgnumber, int availableDays, float R,boolean saleout) {
+	public static String Get_RegularUn(String aos_orgnumber, int availableDays, float R) {
 		String us_type = "";
-		//可售天数标准  可售天数(7天日均) > 90(法国60)
+		// 可售天数标准 可售天数(7天日均) > 90(法国60)
 		boolean availbaleDayStand = ("FR".equals(aos_orgnumber) && availableDays > 60 && availableDays < 90)
 				|| (!"FR".equals(aos_orgnumber) && availableDays > 90);
-		//爆品,7天日均小于等于1  且可售天数(7天日均) > 90(法国60) 则为  "低动销"
-		if (saleout && R<=1 && availbaleDayStand){
-			us_type = "低动销";
-		}
-		//不是爆品,7天日均小于等于0.42  且可售天数(7天日均) > 90(法国60) 则为  "低动销"
-		else if (!saleout && R <=0.42 && availbaleDayStand) {
+
+		// 不是爆品,7天日均小于等于0.42 且可售天数(7天日均) > 90(法国60) 则为 "低动销"
+		if (R <= 0.42 && availbaleDayStand) {
 			us_type = "低动销";
 		}
 		// 低周转:可售天数(7天日均)>=120天(法国90天), 且0.43<日均<6(US,UK)其他3
@@ -570,9 +567,9 @@ public class MKTCom {
 		if (itemCate.length > 0) {
 			String cateName = itemCate[0].getDynamicObject("group").getLocaleString("name").getLocaleValue_zh_CN();
 			String[] split = cateName.split(",");
-			if (split.length>=3){
+			if (split.length >= 3) {
 				if (!split[1].equals("组合货号"))
-					return cateName ;
+					return cateName;
 			}
 		}
 
@@ -588,13 +585,13 @@ public class MKTCom {
 		filter_sku = new QFilter("material.id", QCP.in, list_otherSku);
 		itemCate = BusinessDataServiceHelper.load("bd_materialgroupdetail", "group",
 				new QFilter[] { filter_sku, filter_stand, qFilter_group }, null, 1);
-		if (itemCate.length > 0){
+		if (itemCate.length > 0) {
 			for (DynamicObject dy : itemCate) {
 				String cateName = dy.getDynamicObject("group").getLocaleString("name").getLocaleValue_zh_CN();
 				String[] split = cateName.split(",");
-				if (split.length>=3){
+				if (split.length >= 3) {
 					if (!split[1].equals("组合货号"))
-						return cateName ;
+						return cateName;
 				}
 			}
 		}
