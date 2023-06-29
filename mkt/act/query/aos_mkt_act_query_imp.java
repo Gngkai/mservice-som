@@ -1,5 +1,6 @@
 package mkt.act.query;
 
+import cn.com.vastbase.core.Query;
 import com.alibaba.fastjson.JSONObject;
 import common.sal.sys.sync.service.ItemCacheService;
 import common.sal.sys.sync.service.impl.ItemCacheServiceImpl;
@@ -22,6 +23,7 @@ import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
+import kd.fi.bd.util.QFBuilder;
 import mkt.common.MKTCom;
 import org.apache.commons.lang3.time.DateUtils;
 
@@ -53,6 +55,7 @@ public class aos_mkt_act_query_imp extends BatchImportPlugin {
 	Map<String, Integer> platQtyMap = null;
 	Map<String, Integer> noPlatQtyMap = null;
 	Map<String, BigDecimal> deStockQtyMap = null;
+	Map<String,Integer> IeInstockQty = null;	//23-06-29 IE的海外库存直接国别物料的海外库存
 
 	private synchronized void Before() {
 		String currentUserId = UserServiceHelper.getCurrentUserId() + "";
@@ -75,6 +78,7 @@ public class aos_mkt_act_query_imp extends BatchImportPlugin {
 			noPlatQtyMap = getNoPlatQty();
 			primeMap = queryPrimeExpress();
 			deStockQtyMap = calInventory();
+			IeInstockQty = getIeInStockQty();
 			cache.put(currentUserId, "Y", 3600);
 			System.out.println("cache.get =" + cache.get(currentUserId));
 		} else {
@@ -147,6 +151,7 @@ public class aos_mkt_act_query_imp extends BatchImportPlugin {
 				row++;
 				JSONObject object = data.getData();
 				String item_number = ((JSONObject) object.get("aos_itemid")).getString("number");
+				String item_id = ((JSONObject) object.get("aos_itemid")).getString("id");
 				String org_number = ((JSONObject) object.get("aos_orgid")).getString("number");
 				String shop = ((JSONObject) object.get("aos_shop")).getString("number");
 				String orgid_str = "";
@@ -186,6 +191,9 @@ public class aos_mkt_act_query_imp extends BatchImportPlugin {
 				int overseaQty = platQty+noPlatQty;
 				object.put("aos_subqty", platQty);
 				object.put("aos_ownstorage", noPlatQty);// 自有仓库库存
+
+				if (org_number.equals("IE"))
+					overseaQty = IeInstockQty.getOrDefault(item_id,0);
 				object.put("aos_osqty", overseaQty);
 
 				Map<String, Object> item_inprocess = item.get("item_inprocess");
@@ -860,6 +868,22 @@ public class aos_mkt_act_query_imp extends BatchImportPlugin {
 				.sum("qty", "stockqty3")
 				.finish().filter("stockqty3 > 0 ");
 		return dataSet;
+	}
+
+	/** 计算IE的海外库存 **/
+	public static Map<String,Integer> getIeInStockQty(){
+		Map<String ,Integer> result = new HashMap<>();
+		QFBuilder builder = new QFBuilder("aos_ou.number","=","IE");
+		builder.add("aos_item","!=","");
+		builder.add("aos_instock_qty",">",0);
+		DynamicObjectCollection dyc = QueryServiceHelper.query("aos_sync_invou_value", "aos_item,aos_instock_qty", builder.toArray());
+		for (DynamicObject dy : dyc) {
+			String item = dy.getString("aos_item");
+			int qty = result.getOrDefault(item, 0);
+			qty += dy.getInt("aos_instock_qty");
+			result.put(item,qty);
+		}
+		return result;
 	}
 
 }
