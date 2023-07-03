@@ -1,6 +1,7 @@
 package mkt.progress.design;
 
 import java.util.EventObject;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -14,6 +15,7 @@ import kd.bos.form.control.EntryGrid;
 import kd.bos.form.plugin.AbstractFormPlugin;
 import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
+import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 
 public class aos_mkt_slogan_form extends AbstractFormPlugin {
@@ -63,15 +65,14 @@ public class aos_mkt_slogan_form extends AbstractFormPlugin {
 				} else {
 					this.getView().showErrorNotification("请选择一行数据!");
 				}
-			}
-			else if (para.keySet().contains("aos_cname")) {
+			} else if (para.keySet().contains("aos_cname")) {
 				EntryGrid aos_entryentity = this.getControl("aos_entryentity");
 				int[] row = aos_entryentity.getSelectRows();
 				if (row.length > 0) {
 					this.getView().getParentView().getModel().setValue("aos_cname",
 							this.getModel().getValue("aos_category", row[0]));
 					this.getView().getParentView().getModel().setValue("aos_itemname",
-							this.getModel().getValue("aos_category", row[0]),0);
+							this.getModel().getValue("aos_category", row[0]), 0);
 					this.getView().close();
 				} else {
 					this.getView().showErrorNotification("请选择一行数据!");
@@ -101,24 +102,30 @@ public class aos_mkt_slogan_form extends AbstractFormPlugin {
 				category += ("," + para.get("aos_itemname_category3"));
 			}
 			FndMsg.debug("category =" + category);
-			DynamicObjectCollection aos_sync_operateS = QueryServiceHelper.query("bd_materialgroupdetail",
-					" material.name name", new QFilter("group.name", QCP.equals, category).toArray());
+			DynamicObject[] aos_sync_operateS = BusinessDataServiceHelper.load("bd_materialgroupdetail", "material",
+					new QFilter("group.name", QCP.equals, category).toArray());
 			this.getModel().deleteEntryData("aos_entryentity");
 
-			List<String> list = aos_sync_operateS.stream().map(dy -> dy.getString("name")).distinct()
-					.collect(Collectors.toList());
-			for (int i = 0; i < list.size(); i++) {
-				this.getModel().batchCreateNewEntryRow("aos_entryentity", 1);
-				this.getModel().setValue("aos_category", list.get(i), i);
+			Map<String, Object> map = new HashMap<>();
+			for (DynamicObject aos_sync_operate : aos_sync_operateS) {
+				String name = aos_sync_operate.getDynamicObject("material").getString("name.en_US");
+				if (FndGlobal.IsNull(name))
+					continue;
+				map.put(name, name);
 			}
-		} else if (para.keySet().contains("aos_cname"))  {
-			String category =(String) para.get("aos_cname");
-			FndMsg.debug("category:"+category);
-			
+			int i = 0;
+			for (String key : map.keySet()) {
+				this.getModel().batchCreateNewEntryRow("aos_entryentity", 1);
+				this.getModel().setValue("aos_category", key, i);
+				i++;
+			}
+
+		} else if (para.keySet().contains("aos_cname")) {
+			String category = (String) para.get("aos_cname");
+			FndMsg.debug("category:" + category);
 			DynamicObjectCollection aos_sync_operateS = QueryServiceHelper.query("bd_materialgroupdetail",
 					" material.name name", new QFilter("group.name", QCP.equals, category).toArray());
 			this.getModel().deleteEntryData("aos_entryentity");
-
 			List<String> list = aos_sync_operateS.stream().map(dy -> dy.getString("name")).distinct()
 					.collect(Collectors.toList());
 			for (int i = 0; i < list.size(); i++) {
