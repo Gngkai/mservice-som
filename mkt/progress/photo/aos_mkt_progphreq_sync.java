@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import common.Cux_Common_Utl;
+import common.fnd.FndHistory;
 import common.fnd.FndReturn;
 import kd.bos.context.RequestContext;
 import kd.bos.dataentity.OperateOption;
@@ -183,6 +184,7 @@ public class aos_mkt_progphreq_sync extends AbstractTask {
 				
 				
 				aos_mkt_progphreq_bill.SubmitForNew(dyn);
+				FndHistory.Create(dyn, "提交", "新建");
 			}
 		}
 
