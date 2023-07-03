@@ -424,11 +424,8 @@ public class aos_mkt_actselect_init extends AbstractTask {
 		DynamicObjectCollection aos_base_stitemS = QueryServiceHelper.query("aos_base_stitem", "aos_itemid,aos_orgid",
 				new QFilter("aos_orgid.number", QCP.equals, p_ou_code).toArray());
 		for (DynamicObject aos_base_stitem : aos_base_stitemS) {
-			DynamicObject aos_entryentity = aos_entryentityS.addNew();
 			long aos_itemid = aos_base_stitem.getLong("aos_itemid");
-			if (list_unSaleItemid.contains(String.valueOf(aos_itemid))) {
-				aos_entryentity.set("aos_weekunsale", "Y");
-			}
+			
 			DynamicObject bd_material = QueryServiceHelper.queryOne("bd_material",
 					"id," + "number," + "aos_cn_name," + "aos_contryentry.aos_nationality.id aos_orgid,"
 							+ "aos_contryentry.aos_nationality.number aos_orgnumber,"
@@ -541,6 +538,10 @@ public class aos_mkt_actselect_init extends AbstractTask {
 				continue;
 			}
 
+			DynamicObject aos_entryentity = aos_entryentityS.addNew();
+			if (list_unSaleItemid.contains(String.valueOf(aos_itemid))) {
+				aos_entryentity.set("aos_weekunsale", "Y");
+			}
 			aos_entryentity.set("aos_orgid", aos_orgnumber);
 			aos_entryentity.set("aos_sku", bd_material.getPkValue());
 			aos_entryentity.set("aos_itemname", aos_itemname);
