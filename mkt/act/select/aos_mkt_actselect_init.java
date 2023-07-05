@@ -433,7 +433,7 @@ public class aos_mkt_actselect_init extends AbstractTask {
 							+ "aos_contryentry.aos_contryentrystatus aos_contryentrystatus,"
 							+ "aos_contryentry.aos_festivalseting aos_festivalseting,"
 							+ "aos_contryentry.aos_is_saleout aos_is_saleout",
-					new QFilter("id", "=", aos_itemid).toArray());
+					new QFilter("id", "=", aos_itemid).and("aos_contryentry.aos_nationality.number", "=", p_ou_code).toArray());
 
 			long item_id = bd_material.getLong("id");
 			long org_id = bd_material.getLong("aos_orgid");
