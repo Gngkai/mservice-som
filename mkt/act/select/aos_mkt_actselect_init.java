@@ -543,7 +543,7 @@ public class aos_mkt_actselect_init extends AbstractTask {
 				aos_entryentity.set("aos_weekunsale", "Y");
 			}
 			aos_entryentity.set("aos_orgid", aos_orgnumber);
-			aos_entryentity.set("aos_sku", bd_material.getPkValue());
+			aos_entryentity.set("aos_sku", bd_material.getString("number"));
 			aos_entryentity.set("aos_itemname", aos_itemname);
 			aos_entryentity.set("aos_seasonpro", aos_seasonpro);
 			aos_entryentity.set("aos_itemstatus", aos_itemstatus);
