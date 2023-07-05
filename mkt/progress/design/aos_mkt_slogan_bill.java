@@ -139,8 +139,9 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
 		super.afterCreateNewData(e);
 		InitDefualt();
 		aos_egsku_change();
+
 		Map<String, Object> params = this.getView().getFormShowParameter().getCustomParam("params");
-		if (params.keySet().contains("TYPE")) {
+		if (FndGlobal.IsNotNull(params) && params.keySet().contains("TYPE")) {
 
 			this.getModel().setValue("aos_category1", params.get("aos_category1"));
 			this.getModel().setValue("aos_category2", params.get("aos_category2"));
@@ -373,11 +374,10 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
 
 		if ("申请".equals(aos_status)) {
 			Map<String, Object> params = this.getView().getFormShowParameter().getCustomParam("params");
-			if (params.keySet().contains("TYPE")) {
+			if (FndGlobal.IsNotNull(params) && params.keySet().contains("TYPE")) {
 				this.getView().close();
 			}
 		}
-
 		StatusControl();// 提交完成后做新的界面状态控制
 	}
 
