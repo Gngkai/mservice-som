@@ -201,7 +201,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			QFilter filter_status2 = new QFilter("aos_status", "!=", "不需拍");
 			QFilter filter_son = new QFilter("aos_sonflag", "=", false);
 			QFilter filter_id = new QFilter("id", "!=", ReqFId);
-			QFilter filter_type = new QFilter("aos_type", "=", aos_type);
+			QFilter filter_type = new QFilter("aos_photoflag", "=", true);
 			QFilter[] filters = new QFilter[] { filter_itemid, filter_status, filter_id, filter_type, filter_son,
 					filter_status2 };
 			DynamicObject aos_mkt_photoreq = QueryServiceHelper.queryOne("aos_mkt_photoreq", "billno", filters);
@@ -1396,6 +1396,32 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		Object AosVedioFlag = dy_mian.get(aos_vedioflag);
 		Object AosFollower = dy_mian.get(aos_follower);
 		Object AosPoNumber = dy_mian.get(aos_ponumber);
+		
+		Object ReqFId = dy_mian.get("id"); // 当前界面主键
+		Object aos_type = dy_mian.get("aos_type");
+		Boolean aos_sonflag = dy_mian.getBoolean("aos_sonflag");
+		DynamicObject aos_itemid = dy_mian.getDynamicObject("aos_itemid");
+
+		// 子流程不做判断
+		if (!aos_sonflag && FndGlobal.IsNotNull(aos_itemid)) {
+			QFilter filter_itemid = new QFilter("aos_itemid", "=", aos_itemid.getPkValue());
+			QFilter filter_status = new QFilter("aos_status", "!=", "已完成");
+			QFilter filter_status2 = new QFilter("aos_status", "!=", "不需拍");
+			QFilter filter_son = new QFilter("aos_sonflag", "=", false);
+			QFilter filter_id = new QFilter("id", "!=", ReqFId);
+			QFilter filter_type = new QFilter("aos_photoflag", "=", true);
+			QFilter[] filters = new QFilter[] { filter_itemid, filter_status, filter_id, filter_type, filter_son,
+					filter_status2 };
+			DynamicObject aos_mkt_photoreq = QueryServiceHelper.queryOne("aos_mkt_photoreq", "billno", filters);
+			if (aos_mkt_photoreq != null) {
+				ErrorMessage = FndError.AddErrorMessage(ErrorMessage,
+						"有进行中拍照需求表" + aos_mkt_photoreq.getString("billno") + "，不允许再新增拍照需求流程!");
+				FndError fndMessage = new FndError(ErrorMessage);
+				throw fndMessage;
+			}
+		}
+		
+		
 
 		DynamicObjectCollection dyc_photo = dy_mian.getDynamicObjectCollection("aos_entryentity6");
 		Object aos_reqsupp = null;
@@ -1420,7 +1446,6 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		Object aos_phstate = dy_mian.get("aos_phstate");// 拍照地点
 		Boolean aos_newitem = dy_mian.getBoolean("aos_newitem");// 新产品
 		Boolean aos_newvendor = dy_mian.getBoolean("aos_newvendor");// 新供应商
-		DynamicObject aos_itemid = dy_mian.getDynamicObject("aos_itemid");
 
 		if ("工厂简拍".equals(aos_phstate) && (aos_newitem || aos_newvendor)) {
 			Boolean isSealSample = QueryServiceHelper.exists("aos_sealsample",
