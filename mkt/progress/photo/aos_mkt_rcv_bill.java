@@ -107,17 +107,17 @@ public class aos_mkt_rcv_bill extends AbstractBillPlugIn implements ItemClickLis
 
 	/**
 	 * 查看封样图片
-	 * 
-	 * @param object
-	 * @param iFormView
-	 * 
-	 * @param object
+	 * @param iFormView	view
+	 * @param fid		pk
 	 * @throws FndError
 	 */
 	public static void querySample(IFormView iFormView, Object fid) throws FndError {
 		// 封样单参数
 		Object sampleId = null;
 		// 根据传入的样品入库通知单主键获取 样品入库通知单对象
+		boolean exists = QueryServiceHelper.exists(AOS_MKT_RCV, fid);
+		if (!exists)
+			throw new FndError("封样单不存在");
 		DynamicObject aosMktRcv = BusinessDataServiceHelper.loadSingle(fid, AOS_MKT_RCV);
 		// 合同号
 		String aosPoNumber = aosMktRcv.getString("aos_ponumber");
