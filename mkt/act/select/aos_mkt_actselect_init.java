@@ -1,6 +1,7 @@
 package mkt.act.select;
 
 import common.Cux_Common_Utl;
+import common.fnd.FndGlobal;
 import common.sal.util.InStockAvailableDays;
 import common.sal.util.SalUtil;
 import kd.bos.algo.DataSet;
@@ -145,6 +146,16 @@ public class aos_mkt_actselect_init extends AbstractTask {
 		aos_sync_log.set("billstatus", "A");
 		DynamicObjectCollection aos_sync_logS = aos_sync_log.getDynamicObjectCollection("aos_entryentity");
 		List<String> list_unSaleItemid = getNewestUnsaleDy(String.valueOf(p_ou_code));
+
+		// 并上营销国别滞销货号
+		filters = new QFilter[]{new QFilter("aos_orgid.number", QCP.equals, p_ou_code)};
+		List<String> unsalableProducts = QueryServiceHelper.query("aos_base_stitem", "aos_itemid", filters)
+				.stream()
+				.map(dy -> dy.getString("aos_itemid"))
+				.filter(FndGlobal::IsNotNull)
+				.distinct()
+				.collect(Collectors.toList());
+
 		for (DynamicObject bd_material : bd_materialS) {
 			count++;
 			System.out.println(p_ou_code + "进度" + "(" + count + "/" + rows + ")");
@@ -259,6 +270,11 @@ public class aos_mkt_actselect_init extends AbstractTask {
 			int day7Sales = (int) Cux_Common_Utl.nvl(Order7Days.get(String.valueOf(item_id)));
 			String aos_typedetail = "";// 滞销类型 低动销 低周转
 
+			//季节品
+			boolean seasonProduct = aos_seasonpro.equals("AUTUMN_WINTER") || aos_seasonpro.equals("WINTER")
+					|| aos_seasonpro.equals("SPRING") || aos_seasonpro.equals("SPRING_SUMMER")
+					|| aos_seasonpro.equals("SUMMER");
+
 			// 针对爆品 季节 节日 常规 进行筛选 不满足条件的直接跳过
 			float SeasonRate = 0;
 			Boolean issaleout = false;
@@ -269,9 +285,7 @@ public class aos_mkt_actselect_init extends AbstractTask {
 						issaleout = false;
 				}
 				// 爆品中的季节品
-				if (aos_seasonpro.equals("AUTUMN_WINTER") || aos_seasonpro.equals("WINTER")
-						|| aos_seasonpro.equals("SPRING") || aos_seasonpro.equals("SPRING_SUMMER")
-						|| aos_seasonpro.equals("SUMMER")) {
+				if (seasonProduct) {
 					// 判断季节品累计完成率是否满足条件
 					SeasonRate = MKTCom.Get_SeasonRate(org_id, item_id, aos_seasonpro, item_overseaqty, month);
 					if (SeasonRate == 0) {
@@ -288,12 +302,18 @@ public class aos_mkt_actselect_init extends AbstractTask {
 				aos_typedetail = "爆品";
 			}
 
-			// 1.0季节品 累计完成率
 
+			//非爆品
 			if (!issaleout) {
-				if (aos_seasonpro.equals("AUTUMN_WINTER") || aos_seasonpro.equals("WINTER")
-						|| aos_seasonpro.equals("SPRING") || aos_seasonpro.equals("SPRING_SUMMER")
-						|| aos_seasonpro.equals("SUMMER")) {
+				Object org_id_o = Long.toString(org_id);
+				int aos_shp_day = (int) aos_shpday_map.get(org_id_o);// 备货天数
+				int aos_freight_day = (int) aos_clearday_map.get(org_id_o);// 海运天数
+				int aos_clear_day = (int) aos_freightday_map.get(org_id_o);// 清关天数
+				//预断货
+				boolean preSaleOut = MKTCom.Is_PreSaleOut(org_id, item_id, (int) item_intransqty, aos_shp_day, aos_freight_day, aos_clear_day, availableDays);
+
+				// 1.0季节品 累计完成率
+				if (seasonProduct) {
 					// 判断季节品累计完成率是否满足条件
 					SeasonRate = MKTCom.Get_SeasonRate(org_id, item_id, aos_seasonpro, item_overseaqty, month);
 					if (SeasonRate == 0) {
@@ -308,12 +328,7 @@ public class aos_mkt_actselect_init extends AbstractTask {
 					}
 					// 季节品预断货 跳过
 					// 海运备货清关
-					Object org_id_o = Long.toString(org_id);
-					int aos_shp_day = (int) aos_shpday_map.get(org_id_o);// 备货天数
-					int aos_freight_day = (int) aos_clearday_map.get(org_id_o);// 海运天数
-					int aos_clear_day = (int) aos_freightday_map.get(org_id_o);// 清关天数
-					if (MKTCom.Is_PreSaleOut(org_id, item_id, (int) item_intransqty, aos_shp_day, aos_freight_day,
-							aos_clear_day, availableDays)) {
+					if (preSaleOut) {
 						aos_sync_logS = MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "季节品未预断货");
 						continue;
 					}
@@ -323,7 +338,16 @@ public class aos_mkt_actselect_init extends AbstractTask {
 				}
 				// 2.0常规品 滞销
 				else if (aos_seasonpro.equals("REGULAR") || aos_seasonpro.equals("SPRING-SUMMER-CONVENTIONAL")) {
+					//判断是为周转还是低滞销
 					aos_typedetail = MKTCom.Get_RegularUn(aos_orgnumber, availableDays, R);
+					// 20230711 gk:判断是否为常规品滞销
+					if ("".equals(aos_typedetail)) {
+						//营销国别滞销货号中存在这个货号,并且还不为 预断货
+						boolean conventType = unsalableProducts.contains(String.valueOf(item_id)) && !preSaleOut;
+						if (conventType){
+							aos_typedetail = "常规品滞销";
+						}
+					}
 					if ("".equals(aos_typedetail)) {// 如果为空则表示不为滞销品
 						aos_sync_logS = MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "常规品未滞销");
 						continue;
@@ -366,7 +390,6 @@ public class aos_mkt_actselect_init extends AbstractTask {
 				aos_category1 = category_group[0];
 			if (category_length > 1)
 				aos_category2 = category_group[1];
-
 			if (aos_category2.equals("圣诞装饰") || aos_category2.equals("其它节日装饰"))
 				continue;
 			switch (aos_itemstatus) {
@@ -418,153 +441,6 @@ public class aos_mkt_actselect_init extends AbstractTask {
 
 			long l3 = System.currentTimeMillis();
 			System.out.println("耗时:" + (l3 - l2) + "ms");
-		}
-
-		// 并上营销国别滞销货号中未预断货部分
-		DynamicObjectCollection aos_base_stitemS = QueryServiceHelper.query("aos_base_stitem", "aos_itemid,aos_orgid",
-				new QFilter("aos_orgid.number", QCP.equals, p_ou_code).toArray());
-		for (DynamicObject aos_base_stitem : aos_base_stitemS) {
-			long aos_itemid = aos_base_stitem.getLong("aos_itemid");
-			
-			DynamicObject bd_material = QueryServiceHelper.queryOne("bd_material",
-					"id," + "number," + "aos_cn_name," + "aos_contryentry.aos_nationality.id aos_orgid,"
-							+ "aos_contryentry.aos_nationality.number aos_orgnumber,"
-							+ "aos_contryentry.aos_seasonseting.number aos_seasonseting,"
-							+ "aos_contryentry.aos_contryentrystatus aos_contryentrystatus,"
-							+ "aos_contryentry.aos_festivalseting aos_festivalseting,"
-							+ "aos_contryentry.aos_is_saleout aos_is_saleout",
-					new QFilter("id", "=", aos_itemid).and("aos_contryentry.aos_nationality.number", "=", p_ou_code).toArray());
-
-			long item_id = bd_material.getLong("id");
-			long org_id = bd_material.getLong("aos_orgid");
-			String aos_itemnumber = bd_material.getString("number");
-			String aos_seasonpro = bd_material.getString("aos_seasonseting");
-			String aos_itemstatus = bd_material.getString("aos_contryentrystatus");
-			String aos_festivalseting = bd_material.getString("aos_festivalseting");
-			String aos_orgnumber = bd_material.getString("aos_orgnumber");
-			String aos_itemtype = null;
-			boolean saleout = bd_material.getBoolean("aos_is_saleout"); // 是否爆品
-
-			// 产品状态 季节属性
-			if (aos_itemstatus == null || aos_itemstatus.equals("null") || aos_seasonpro == null
-					|| aos_seasonpro.equals("null")) {
-				aos_sync_logS = MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "季节属性为空");
-				continue;
-			}
-			// 最大库龄≥15天
-			Object item_maxage = item_maxage_map.get(org_id + "~" + item_id);
-			// 海外库存>30
-			Object item_overseaqty = item_overseaqty_map.get(org_id + "~" + item_id);
-			if (item_overseaqty == null || item_overseaqty.equals("null")) {
-				item_overseaqty = 0;
-			}
-			// 平台仓库数量可售天数
-			int availableDaysByPlatQty = InStockAvailableDays.calAvailableDaysByPlatQty(String.valueOf(org_id),
-					String.valueOf(item_id));
-			// 可提报活动数量 > 5 (当前可售库存数量+在途)*活动数量占比-已提报的未来60天的活动数量
-			Object item_intransqty = item_intransqty_map.get(org_id + "~" + item_id);
-			if (item_intransqty == null || item_intransqty.equals("null"))
-				item_intransqty = 0;
-			// 活动数量占比
-			BigDecimal ActQtyRate = MKTCom.Get_ActQtyRate(aos_itemstatus, aos_seasonpro, aos_festivalseting);
-			if (ActQtyRate == null) {
-				aos_sync_logS = MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "活动数量占比为空");
-				continue;
-			}
-			// 已提报未来60天活动数量
-			int Act60PreQty = MKTCom.Get_Act60PreQty(org_id, item_id);
-			BigDecimal AvaQty = new BigDecimal((int) item_overseaqty + (int) item_intransqty);
-			// 可提报活动数量
-			aos_sync_logS = MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + ActQtyRate + "活动数量占比");
-			aos_sync_logS = MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + item_overseaqty + "海外库存");
-			aos_sync_logS = MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + item_intransqty + "在途数量");
-			aos_sync_logS = MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + Act60PreQty + "已提报未来60天活动数量");
-			int aos_qty = ActQtyRate.multiply(AvaQty).intValue() - Act60PreQty;
-			aos_sync_logS = MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + aos_qty + "可提报活动数量");
-			if (aos_qty <= 5) {
-				aos_sync_logS = MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "可提报活动数量<=5");
-				// continue;
-			}
-
-			String orgid_str = Long.toString(org_id);
-			String itemid_str = Long.toString(item_id);
-
-			// 库存可售天数 非平台仓库用量
-			int availableDays = InStockAvailableDays.calInstockSalDays(orgid_str, itemid_str);
-			// 7天日均销量dd
-			float R = InStockAvailableDays.getOrgItemOnlineAvgQty(orgid_str, itemid_str);
-			// 7天销量
-			int day7Sales = (int) Cux_Common_Utl.nvl(Order7Days.get(String.valueOf(item_id)));
-
-			// 获取数据
-			String aos_itemname = bd_material.getString("aos_cn_name");
-			String category = (String) SalUtil.getCategoryByItemId(item_id + "").get("name");
-			String[] category_group = category.split(",");
-			String aos_category1 = "";
-			String aos_category2 = "";
-			// 处理数据
-			int category_length = category_group.length;
-			if (category_length > 0)
-				aos_category1 = category_group[0];
-			if (category_length > 1)
-				aos_category2 = category_group[1];
-
-			if (aos_category2.equals("圣诞装饰") || aos_category2.equals("其它节日装饰"))
-				continue;
-			switch (aos_itemstatus) {
-			case "A":
-				aos_itemstatus = "新品首单";
-				break;
-			case "B":
-				aos_itemstatus = "正常";
-				break;
-			case "C":
-				aos_itemstatus = "终止";
-				break;
-			case "D":
-				aos_itemstatus = "异常";
-				break;
-			case "E":
-				aos_itemstatus = "入库新品";
-				break;
-			}
-
-			Object org_id_o = Long.toString(org_id);
-			int aos_shp_day = (int) aos_shpday_map.get(org_id_o);// 备货天数
-			int aos_freight_day = (int) aos_clearday_map.get(org_id_o);// 海运天数
-			int aos_clear_day = (int) aos_freightday_map.get(org_id_o);// 清关天数
-			if (MKTCom.Is_PreSaleOut(org_id, item_id, (int) item_intransqty, aos_shp_day, aos_freight_day,
-					aos_clear_day, availableDays)) {
-				continue;
-			}
-
-			DynamicObject aos_entryentity = aos_entryentityS.addNew();
-			if (list_unSaleItemid.contains(String.valueOf(aos_itemid))) {
-				aos_entryentity.set("aos_weekunsale", "Y");
-			}
-			aos_entryentity.set("aos_orgid", aos_orgnumber);
-			aos_entryentity.set("aos_sku", bd_material.getString("number"));
-			aos_entryentity.set("aos_itemname", aos_itemname);
-			aos_entryentity.set("aos_seasonpro", aos_seasonpro);
-			aos_entryentity.set("aos_itemstatus", aos_itemstatus);
-			aos_entryentity.set("aos_category1", aos_category1);
-			aos_entryentity.set("aos_category2", aos_category2);
-			aos_entryentity.set("aos_overseaqty", item_overseaqty);
-			aos_entryentity.set("aos_qty", aos_qty);
-			aos_entryentity.set("aos_typedetail", "常规滞销品(月更新)");// 类型细分
-			aos_entryentity.set("aos_itemtype", aos_itemtype);
-			aos_entryentity.set("aos_salesqty", BigDecimal.valueOf(R));
-			aos_entryentity.set("aos_last7sales", day7Sales);
-			aos_entryentity.set("aos_avadays", availableDays);// 非平台仓库可售天数
-			aos_entryentity.set("aos_seasonrate", 0);
-			aos_entryentity.set("aos_times", alreadyActivityTimes.getOrDefault(String.valueOf(item_id), 0));
-			aos_entryentity.set("aos_platfqty",
-					InStockAvailableDays.getPlatQty(String.valueOf(org_id), String.valueOf(item_id)));
-			aos_entryentity.set("aos_platdays", availableDaysByPlatQty);// 平台仓库可售天数
-			aos_entryentity.set("aos_itemmaxage", item_maxage);// 平台仓库可售天数
-			aos_entryentity.set("aos_platavgqty",
-					InStockAvailableDays.getPlatAvgQty(String.valueOf(org_id), String.valueOf(item_id)));// 平台仓库可售天数
-			aos_entryentity.set("aos_is_saleout", saleout); // 是否爆品
 		}
 
 		// 保存正式表

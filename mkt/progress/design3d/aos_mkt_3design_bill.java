@@ -27,6 +27,7 @@ import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.MKTCom;
 import mkt.progress.ProgressUtil;
 import mkt.progress.iface.iteminfo;
+import mkt.progress.photo.aos_mkt_rcv_bill;
 
 public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClickListener {
 
@@ -50,6 +51,9 @@ public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClic
 				aos_submit(dy_main, "A");// 提交
 			} else if ("aos_history".equals(Control))
 				aos_history();// 查看历史记录
+			else if("aos_querysample".equals(Control)){
+				aos_mkt_rcv_bill.querySample(getView(),getModel().getDataEntity(true).getPkValue());
+			}
 		} catch (FndError fndMessage) {
 			this.getView().showTipNotification(fndMessage.getErrorMessage());
 		} catch (Exception ex) {
