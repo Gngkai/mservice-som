@@ -1175,7 +1175,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		}
 		// 如果是拍照类型的新品则生成 设计需求表
 		if ("拍照".equals(AosType)) {
-			GenerateDesign();
+			GenerateDesign(this.getModel().getDataEntity(true));
 		}
 		FndHistory.Create(this.getView(), "确认", "确认");
 		// 执行保存操作
@@ -2490,30 +2490,31 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		MKTCom.SendGlobalMessage(MessageId, aos_mkt_photoreq, ReqFId + "", AosBillno + "", "拍照需求表-开发退回");
 	}
 
-	/** 拍照类型新品结束后 生成设计需求表 **/
-	private void GenerateDesign() {
+	/** 拍照类型新品结束后 生成设计需求表 
+	 * @param dyn **/
+	public static void GenerateDesign(DynamicObject dyn) {
 		// 数据层
-		Object AosShipDate = this.getModel().getValue(aos_shipdate);
-		Object aos_billno = this.getModel().getValue(billno);
+		Object AosShipDate = dyn.get(aos_shipdate);
+		Object aos_billno = dyn.get(billno);
 		// 判断是否已经生成了设计需求表
 		QFBuilder builder = new QFBuilder("aos_orignbill", "=", aos_billno);
 		if (QueryServiceHelper.exists("aos_mkt_designreq", builder.toArray())) {
 			return;
 		}
 
-		Object ReqFId = this.getModel().getDataEntity().getPkValue(); // 当前界面主键
-		Object AosItemId = this.getModel().getValue(aos_itemid);
-		Object aos_requireby = this.getModel().getValue("aos_requireby");
-		Object AosDesigner = this.getModel().getValue(aos_designer);
-		DynamicObject AosDeveloper = (DynamicObject) this.getModel().getValue(aos_developer);
+		Object ReqFId = dyn.getPkValue(); // 当前界面主键
+		Object AosItemId = dyn.get(aos_itemid);
+		Object aos_requireby = dyn.get("aos_requireby");
+		Object AosDesigner = dyn.get(aos_designer);
+		DynamicObject AosDeveloper = dyn.getDynamicObject(aos_developer);
 		Object AosDeveloperId = AosDeveloper.getPkValue();
 		DynamicObject AosItemidObject = (DynamicObject) AosItemId;
 		Object fid = AosItemidObject.getPkValue();
 		String MessageId = AosDeveloperId + "";
 		Object aos_requirebyid = ((DynamicObject) aos_requireby).getPkValue();
 
-		Boolean aos_3dflag = (Boolean) this.getModel().getValue("aos_3dflag");
-		String aos_phstate = this.getModel().getValue("aos_phstate").toString();
+		Boolean aos_3dflag = dyn.getBoolean("aos_3dflag");
+		String aos_phstate = dyn.getString("aos_phstate");
 
 		// 判断对应抠图任务清单是否为已完成
 		if (!aos_3dflag && !aos_phstate.equals("工厂简拍")) {
@@ -2531,7 +2532,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		aos_mkt_designreq.set("aos_requiredate", new Date());
 
 		// 是否新品
-		boolean aos_newitem = (boolean) this.getModel().getValue("aos_newitem");
+		boolean aos_newitem = dyn.getBoolean("aos_newitem");
 		if (aos_newitem)
 			aos_mkt_designreq.set("aos_type", "新品设计");
 		else
@@ -2683,7 +2684,6 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		try {
 			ProgressUtil.botp("aos_mkt_designreq", aos_mkt_designreq.get("id"));
 		} catch (Exception ex) {
-			FndError.showex(getView(), ex, FndWebHook.urlMms);
 		}
 
 		if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
