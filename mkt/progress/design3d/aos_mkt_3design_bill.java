@@ -15,6 +15,7 @@ import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.dataentity.metadata.dynamicobject.DynamicObjectType;
 import kd.bos.entity.EntityMetadataCache;
 import kd.bos.entity.operate.result.OperationResult;
+import kd.bos.form.IFormView;
 import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.control.events.ItemClickListener;
 import kd.bos.orm.query.QCP;
@@ -24,6 +25,7 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
+import kd.fi.bd.util.QFBuilder;
 import mkt.common.MKTCom;
 import mkt.progress.ProgressUtil;
 import mkt.progress.iface.iteminfo;
@@ -52,13 +54,31 @@ public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClic
 			} else if ("aos_history".equals(Control))
 				aos_history();// 查看历史记录
 			else if("aos_querysample".equals(Control)){
-				aos_mkt_rcv_bill.querySample(getView(),getModel().getDataEntity(true).getPkValue());
+				openSample(this.getView(),this.getModel().getDataEntity(true).getPkValue());
 			}
 		} catch (FndError fndMessage) {
 			this.getView().showTipNotification(fndMessage.getErrorMessage());
 		} catch (Exception ex) {
 			this.getView().showErrorNotification(SalUtil.getExceptionStr(ex));
 		}
+	}
+	public static void openSample(IFormView iFormView, Object id){
+		QFBuilder builder = new QFBuilder();
+		builder.add("id", "=", id);
+		builder.add("aos_source","=","拍照需求表");
+		DynamicObject dy = QueryServiceHelper.queryOne("aos_mkt_3design", "aos_orignbill", builder.toArray());
+		if (dy==null) {
+			throw new FndError("拍照需求表不存在");
+		}
+		builder.clear();
+		builder.add("billno","=",dy.get("aos_orignbill"));
+		dy = QueryServiceHelper.queryOne("aos_mkt_photoreq", "aos_itemid,aos_ponumber", builder.toArray());
+		if (dy==null) {
+			throw new FndError("拍照需求表不存在");
+		}
+		String aos_itemid = dy.getString("aos_itemid");
+		String ponumber = dy.getString("aos_ponumber");
+		aos_mkt_rcv_bill.openSample(iFormView,aos_itemid,ponumber);
 	}
 
 	/* 打开历史记录 **/
