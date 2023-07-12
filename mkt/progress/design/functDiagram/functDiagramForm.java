@@ -1,9 +1,12 @@
 package mkt.progress.design.functDiagram;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.deepl.api.DeepLException;
 import com.deepl.api.TextResult;
 import com.deepl.api.Translator;
 import common.Cux_Common_Utl;
+import common.fnd.FndGlobal;
 import common.fnd.FndHistory;
 import kd.bos.bill.AbstractBillPlugIn;
 import kd.bos.context.RequestContext;
@@ -11,28 +14,32 @@ import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.dataentity.entity.LocaleString;
 import kd.bos.dataentity.serialization.SerializationUtils;
+import kd.bos.entity.BadgeInfo;
 import kd.bos.entity.datamodel.events.AfterAddRowEventArgs;
 import kd.bos.entity.datamodel.events.AfterDeleteRowEventArgs;
 import kd.bos.entity.datamodel.events.BeforeDeleteRowEventArgs;
+import kd.bos.entity.datamodel.events.PropertyChangedArgs;
+import kd.bos.entity.report.CellStyle;
 import kd.bos.exception.ErrorCode;
 import kd.bos.exception.KDException;
-import kd.bos.form.CloseCallBack;
-import kd.bos.form.FormShowParameter;
-import kd.bos.form.IPageCache;
-import kd.bos.form.ShowType;
-import kd.bos.form.control.EntryGrid;
-import kd.bos.form.control.Image;
-import kd.bos.form.control.TreeEntryGrid;
+import kd.bos.form.*;
+import kd.bos.form.container.Tab;
+import kd.bos.form.container.TabPage;
+import kd.bos.form.control.*;
 import kd.bos.form.events.AfterDoOperationEventArgs;
 import kd.bos.form.events.ClosedCallBackEvent;
+import kd.bos.form.events.HyperLinkClickEvent;
+import kd.bos.form.events.HyperLinkClickListener;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import kd.fi.bd.util.QFBuilder;
+import mkt.common.util.sensitiveWordsUtils;
 
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -41,7 +48,7 @@ import java.util.stream.Collectors;
  * @action  功能图需求表界面插件
  */
 @SuppressWarnings({"unchecked","rawtypes"})
-public class functDiagramForm extends AbstractBillPlugIn {
+public class functDiagramForm extends AbstractBillPlugIn implements HyperLinkClickListener {
     public static String  authKey = "7d2a206b-8182-c99a-a314-76874dd27d89:fx";
     Translator translator = new Translator(authKey);
     public static  List<String> list_language;
@@ -51,6 +58,9 @@ public class functDiagramForm extends AbstractBillPlugIn {
     private boolean isAddRow = false; //增删行权限
     private boolean isExchange = false; //交换界面权限
     private static final String KEY_USER = "LAN"; //用户可操控的语言
+    private static List<String> sensitiviteFields;
+    //敏感词语种缓存标识
+    public static final String KEY_SENSITIVE ="seniive";
     static {
         list_language = Arrays.asList("中文","EN","DE","FR","IT","ES","PT","RO","UK","US","CA");
         map_transLan = new HashMap<>();
@@ -65,6 +75,55 @@ public class functDiagramForm extends AbstractBillPlugIn {
         map_transLan.put("UK","EN-GB");
         map_transLan.put("US","EN-US");
         map_transLan.put("CA","EN-US");
+        sensitiviteFields = new ArrayList<>();
+        for (int i = 1; i < 7; i++) {
+            sensitiviteFields.add("aos_value"+i);
+            sensitiviteFields.add("aos_content"+i);
+        }
+    }
+
+    @Override
+    public void registerListener(EventObject e) {
+        super.registerListener(e);
+        EntryGrid entryGrid = this.getView().getControl("aos_subentryentity1");
+        entryGrid.addHyperClickListener(this);
+    }
+
+    @Override
+    public void hyperLinkClick(HyperLinkClickEvent event) {
+        String fieldName = event.getFieldName();
+        String lanIndex = fieldName.substring(fieldName.length() - 1);
+        int eventRowIndex = event.getRowIndex();
+        if (eventRowIndex>=0){
+            DynamicObject rowEntity = this.getModel().getEntryRowEntity("aos_subentryentity" + lanIndex, eventRowIndex);
+            int currentRowIndex = this.getModel().getEntryCurrentRowIndex("aos_entity" + lanIndex);
+            String sentitiveWord = rowEntity.getString("aos_word" + lanIndex);
+            String replaceWord = rowEntity.getString("aos_subword" + lanIndex);
+            String value,entityField;
+            String type = rowEntity.getString("aos_type" + lanIndex);
+            if (FndGlobal.IsNull(type))
+                return;
+            if (type.equals("标题")){
+                entityField = "aos_value"+lanIndex;
+                value = this.getModel().getValue(entityField,currentRowIndex).toString();
+
+            }
+            else {
+                entityField = "aos_content"+lanIndex;
+                value = this.getModel().getValue(entityField,currentRowIndex).toString();
+            }
+            value = sensitiveWordsUtils.replaceSensitiveWords(value,sentitiveWord,replaceWord);
+            this.getModel().setValue(entityField,value,currentRowIndex);
+        }
+    }
+    @Override
+    public void propertyChanged(PropertyChangedArgs e) {
+        String name = e.getProperty().getName();
+        if (sensitiviteFields.contains(name)){
+            int rowIndex = e.getChangeSet()[0].getRowIndex();
+            String value = e.getChangeSet()[0].getNewValue().toString();
+            filterSentiviteWords(rowIndex,name,value);
+        }
     }
     @Override
     public void afterBindData(EventObject e)  {
@@ -72,7 +131,7 @@ public class functDiagramForm extends AbstractBillPlugIn {
         InitPic();
         StatusControl();
         InitEntity();
-//        addRow();
+        initSensitiveWords();
     }
     @Override
     public void afterAddRow(AfterAddRowEventArgs e) {
@@ -96,7 +155,6 @@ public class functDiagramForm extends AbstractBillPlugIn {
         this.getModel().setValue("aos_title"+entityIndex,local_head,insertRow);
         this.getModel().setValue("aos_lan"+entityIndex,lan,insertRow);
     }
-
     @Override
     public void beforeDeleteRow(BeforeDeleteRowEventArgs e) {
         int[] rowIndexs = e.getRowIndexs();
@@ -389,7 +447,6 @@ public class functDiagramForm extends AbstractBillPlugIn {
             }
         }
     }
-
     /** copy from  赋值 **/
     private void setValue(String key,List<String> list_language, Map<String,List<DynamicObject>> map_source,Map<String,List<DynamicObject>> map_target,DynamicObjectCollection dyc_form){
         for (String language : list_language) {
@@ -744,20 +801,116 @@ public class functDiagramForm extends AbstractBillPlugIn {
         treeEntryGrid = this.getControl("aos_entity" + endImage);
         treeEntryGrid.setCollapse(false);
     }
-    /** 如果标题行下没有一行，则添加副标题行  **/
-    private void addRow(){
-        for (int i=1;i<7;i++){
-            DynamicObjectCollection dyc = this.getModel().getDataEntity(true).getDynamicObjectCollection("aos_entity"+i);
-            for (int index = 0; index < dyc.size(); index++) {
-                DynamicObject dy_row = dyc.get(index);
-                if (dy_row.getInt("pid")==0) {
-                    String id = dy_row.getString("id");
-                    if (this.getPageCache().get(id)==null) {
-                        this.getPageCache().put(KEY_INSERT,dy_row.getString("aos_language"+i));
-                        this.getModel().insertEntryRow("aos_entity"+i,index);
-                    }
-                }
+    /**
+     * 初始化敏感词
+     */
+    private void initSensitiveWords(){
+        //根据产品号查询一个最新的物料
+        Object productNo = getModel().getValue("aos_segment3");
+        JSONObject lanSensitiveWords = sensitiveWordsUtils.FindMaterialSensitiveWords(productNo);
+        getPageCache().put(KEY_SENSITIVE,lanSensitiveWords.toString());
+    }
+    private void filterSentiviteWords(int rowIndex,String fieldName,String text){
+        String valueField = fieldName.substring(0,fieldName.length()-1);
+        String lanIndex = fieldName.substring(fieldName.length() - 1);
+        String language = this.getModel().getValue("aos_lan"+lanIndex, rowIndex).toString();
+        if (language.equals("中文"))
+            return;
+        JSONObject sensitiveWords = JSONObject.parseObject(getPageCache().get(KEY_SENSITIVE));
+        JSONObject sensitiveResult = sensitiveWordsUtils.sensitiveWordVerificate(sensitiveWords, text, language);
+        String entityName ="aos_entity" + lanIndex;
+        DynamicObjectCollection subEntity = getModel().getDataEntity(true)
+                .getDynamicObjectCollection(entityName)
+                .get(rowIndex)
+                .getDynamicObjectCollection("aos_subentryentity"+lanIndex);
+        //删除子单据体中原本的对应类型的敏感词
+        String fieldType = "",titleField ="";
+        if (valueField.equals("aos_value")) {
+            fieldType = "标题";
+            titleField = "aos_head"+lanIndex;
+        }
+        else {
+            fieldType = "正文";
+            titleField = "aos_title"+lanIndex;
+        }
+        Iterator<DynamicObject> iterator = subEntity.iterator();
+        while (iterator.hasNext()) {
+            DynamicObject next = iterator.next();
+            if (next.getString("aos_type"+lanIndex).equals(fieldType)) {
+                iterator.remove();
             }
         }
+        boolean state = sensitiveResult.getBoolean("state");
+        if (state) {
+            JSONArray wordsArr = sensitiveResult.getJSONArray("data");
+            for (int i = 0; i < wordsArr.size(); i++) {
+                JSONObject words = wordsArr.getJSONObject(i);
+                DynamicObject subEntityRow = subEntity.addNew();
+                subEntityRow.set("aos_type"+lanIndex,fieldType);
+                subEntityRow.set("aos_wordtype"+lanIndex,words.getString("type"));
+                subEntityRow.set("aos_word"+lanIndex,words.getString("words"));
+                subEntityRow.set("aos_subword"+lanIndex,words.getString("replace"));
+                subEntityRow.set("aos_replace"+lanIndex,"replace");
+            }
+        }
+        this.getView().updateView("aos_subentryentity"+lanIndex);
+        this.getModel().setValue(valueField+"_s"+lanIndex,state,rowIndex);
+        int[] rows = new int[]{rowIndex};
+        setEntityRowColor(entityName,titleField,rows,state);
+        setTableColor(lanIndex);
     }
+    /**
+     * 设置单据颜色
+     * @param entityName    单据名
+     * @param fieldName     字段名
+     * @param rows          行
+     * @param state         是否存在敏感词
+     */
+    private void setEntityRowColor(String entityName,String fieldName,int []rows,boolean state){
+        AbstractGrid grid = this.getView().getControl(entityName);//获取分录表体
+        ArrayList csList = new  ArrayList();
+        for (int row : rows) {
+            CellStyle cs = new CellStyle();
+            if (state){
+                cs.setForeColor("#fb2323");//字体颜色
+            }
+            else {
+                cs.setForeColor("#404040");
+            }
+            cs.setFieldKey(fieldName);//列标识
+            cs.setRow(row);//行索引
+            csList.add(cs);
+        }
+        grid.setCellStyle(csList);//设置单元格样式
+    }
+    /**
+     * 设置页签徽标
+     * @param index    行
+     */
+    private void setTableColor(String index){
+        DynamicObjectCollection dyc = this.getModel().getDataEntity(true).getDynamicObjectCollection("aos_entity" + index);
+        int row = 0;
+        for (DynamicObject dy_row : dyc) {
+            if (dy_row.getBoolean("aos_value_s"+index)) {
+                row++;
+                continue;
+            }
+            if (dy_row.getBoolean("aos_content_s"+index)){
+                row++;
+                continue;
+            }
+        }
+        TabPage control = this.getControl("aos_tabpageap" + index);
+        BadgeInfo badgeInfo = new BadgeInfo();
+        if (row>0){
+            badgeInfo.setDot(false);
+            badgeInfo.setCount(row);
+            badgeInfo.setOffset(new String[]{"5px","5px"} );
+        }
+        else {
+            badgeInfo.setOffset(new String[]{"-50px","-50px"} );
+        }
+        control.setBadgeInfo(badgeInfo);
+    }
+
 }
