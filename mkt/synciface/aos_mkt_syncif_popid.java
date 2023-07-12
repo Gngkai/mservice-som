@@ -2,10 +2,11 @@ package mkt.synciface;
 
 import java.util.Map;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 
 import common.sal.impl.ComImpl;
+import common.sal.impl.ComImpl2;
 import kd.bos.context.RequestContext;
 import kd.bos.dataentity.OperateOption;
 import kd.bos.dataentity.entity.DynamicObject;
@@ -22,7 +23,10 @@ public class aos_mkt_syncif_popid extends AbstractTask {
 	}
 
 	public static void do_operate(Map<String, Object> param) {
-		JSONArray p_ret_cursor = ComImpl.GetCursorMms(param, "CUXPOPID_MMS");
+		
+
+		JSONObject obj = ComImpl2.GetCursorEsb(param, "CUXPOPID_MMS");
+		JSONArray p_ret_cursor = obj.getJSONArray("p_real_model");
 		int length = p_ret_cursor.size();
 		if (length > 0) {
 			// 删除接口表中原有数据
