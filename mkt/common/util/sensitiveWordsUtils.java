@@ -24,6 +24,7 @@ public class sensitiveWordsUtils {
     public static List<String> sensitiveWordSpecies;
     private static final  String specialSymbols = " [`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*()——+|{}【】‘；：”“’。，、？\\\\]";
     private static JSONObject wordsInfo = new JSONObject();
+    private static Date intiWordInfoDate =  new Date(); //敏感词的初始化时间
     static {
         sensitiveWordSpecies = Arrays.asList("DE","FR","IT","ES","PT","RO","UK","US","CA");
         setWordsInfo();
@@ -108,6 +109,15 @@ public class sensitiveWordsUtils {
             if (result.containsKey(lan)) {
                 JSONArray value = result.getJSONArray(lan);
                 value.add(SplitString(words));
+            }
+        }
+
+        //判断是否需要更新敏感词
+        DynamicObjectCollection dyc = QueryServiceHelper.query("aos_mkt_sensitive", "modifytime", builder.toArray(), "modifytime desc", 1);
+        if (dyc.size()>0){
+            Date modifytime = dyc.get(0).getDate("modifytime");
+            if (modifytime.after(intiWordInfoDate)) {
+                setWordsInfo();
             }
         }
         return result;
@@ -220,6 +230,7 @@ public class sensitiveWordsUtils {
         return result;
     }
     public static void setWordsInfo (){
+        intiWordInfoDate = new Date();
         QFBuilder builder = new QFBuilder();
         builder.add("aos_words","!=","");
         DynamicObjectCollection results = QueryServiceHelper.query("aos_mkt_sensitive", "aos_words,aos_type,aos_replace", builder.toArray());
