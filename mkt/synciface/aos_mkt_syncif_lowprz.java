@@ -10,13 +10,15 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 
 import common.sal.impl.ComImpl;
+import common.sal.impl.ComImpl2;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 
 public class aos_mkt_syncif_lowprz extends AbstractTask {
 	@Override
@@ -33,7 +35,11 @@ public class aos_mkt_syncif_lowprz extends AbstractTask {
 	}
 
 	public static void do_operate(Map<String, Object> param) {
-		JSONArray p_ret_cursor = ComImpl.GetCursorMms(param, "CUXLOW_MMS");
+
+		JSONObject obj = ComImpl2.GetCursorEsb(param, "CUXLOW_MMS");
+		JSONArray p_ret_cursor = obj.getJSONArray("p_real_model");
+		
+		
 		Map<String, String> countryIdMap = queryCountryIdMap();
 		Map<String, String> materialIdMap = queryMaterialIdMap();
 		int length = p_ret_cursor.size();

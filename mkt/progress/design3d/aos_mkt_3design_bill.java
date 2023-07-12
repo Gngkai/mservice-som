@@ -29,6 +29,7 @@ import kd.fi.bd.util.QFBuilder;
 import mkt.common.MKTCom;
 import mkt.progress.ProgressUtil;
 import mkt.progress.iface.iteminfo;
+import mkt.progress.photo.aos_mkt_progphreq_bill;
 import mkt.progress.photo.aos_mkt_rcv_bill;
 
 public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClickListener {
@@ -229,6 +230,9 @@ public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClic
 
 			String aos_phstate = aos_mkt_photoreq.getString("aos_phstate");
 			if ("工厂简拍".equals(aos_phstate)) {
+				
+				aos_mkt_progphreq_bill.GenerateDesign(aos_mkt_photoreq);
+				
 				aos_mkt_photoreq.set("aos_status", "已完成");
 				aos_mkt_photoreq.set("aos_user", system);
 				// 回写拍照任务清单
