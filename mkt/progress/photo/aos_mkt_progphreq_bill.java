@@ -160,7 +160,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		String Operatation = formOperate.getOperateKey();
 		try {
 			if ("save".equals(Operatation)) {
-				NewControl();
+				NewControl(this.getModel().getDataEntity(true));
 				SyncPhotoList(); // 拍照任务清单同步
 			}
 		} catch (FndError fndError) {
@@ -187,13 +187,16 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 	}
 
 	/** 有进行中拍照需求表，不允许再新增拍照需求流程 **/
-	private void NewControl() throws FndError {
+	private static void NewControl(DynamicObject dy_main) throws FndError {
 		String ErrorMessage = "";
-		Object ReqFId = this.getModel().getDataEntity().getPkValue(); // 当前界面主键
-		Object aos_type = this.getModel().getValue("aos_type");
-		Boolean aos_sonflag = (Boolean) this.getModel().getValue("aos_sonflag");
-		DynamicObject aos_itemid = (DynamicObject) this.getModel().getValue("aos_itemid");
-
+		Object ReqFId = dy_main.getPkValue(); // 当前界面主键
+		Object aos_type = dy_main.get("aos_type");
+		Boolean aos_sonflag =  dy_main.getBoolean("aos_sonflag");
+		DynamicObject aos_itemid = dy_main.getDynamicObject("aos_itemid");
+		//本单不需要拍照的话则不做校验
+		if (!dy_main.getBoolean("aos_photoflag")) {
+			return;
+		}
 		// 子流程不做判断
 		if (!aos_sonflag && FndGlobal.IsNotNull(aos_itemid)) {
 			QFilter filter_itemid = new QFilter("aos_itemid", "=", aos_itemid.getPkValue());
@@ -1396,32 +1399,11 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		Object AosVedioFlag = dy_mian.get(aos_vedioflag);
 		Object AosFollower = dy_mian.get(aos_follower);
 		Object AosPoNumber = dy_mian.get(aos_ponumber);
-		
-		Object ReqFId = dy_mian.get("id"); // 当前界面主键
-		Object aos_type = dy_mian.get("aos_type");
-		Boolean aos_sonflag = dy_mian.getBoolean("aos_sonflag");
+
 		DynamicObject aos_itemid = dy_mian.getDynamicObject("aos_itemid");
 
 		// 子流程不做判断
-		if (!aos_sonflag && FndGlobal.IsNotNull(aos_itemid)) {
-			QFilter filter_itemid = new QFilter("aos_itemid", "=", aos_itemid.getPkValue());
-			QFilter filter_status = new QFilter("aos_status", "!=", "已完成");
-			QFilter filter_status2 = new QFilter("aos_status", "!=", "不需拍");
-			QFilter filter_son = new QFilter("aos_sonflag", "=", false);
-			QFilter filter_id = new QFilter("id", "!=", ReqFId);
-			QFilter filter_type = new QFilter("aos_photoflag", "=", true);
-			QFilter[] filters = new QFilter[] { filter_itemid, filter_status, filter_id, filter_type, filter_son,
-					filter_status2 };
-			DynamicObject aos_mkt_photoreq = QueryServiceHelper.queryOne("aos_mkt_photoreq", "billno", filters);
-			if (aos_mkt_photoreq != null) {
-				ErrorMessage = FndError.AddErrorMessage(ErrorMessage,
-						"有进行中拍照需求表" + aos_mkt_photoreq.getString("billno") + "，不允许再新增拍照需求流程!");
-				FndError fndMessage = new FndError(ErrorMessage);
-				throw fndMessage;
-			}
-		}
-		
-		
+		NewControl(dy_mian);
 
 		DynamicObjectCollection dyc_photo = dy_mian.getDynamicObjectCollection("aos_entryentity6");
 		Object aos_reqsupp = null;
