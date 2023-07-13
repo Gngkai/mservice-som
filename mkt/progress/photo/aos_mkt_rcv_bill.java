@@ -112,8 +112,6 @@ public class aos_mkt_rcv_bill extends AbstractBillPlugIn implements ItemClickLis
 	 * @throws FndError
 	 */
 	public static void querySample(IFormView iFormView, Object fid) throws FndError {
-		// 封样单参数
-		Object sampleId = null;
 		// 根据传入的样品入库通知单主键获取 样品入库通知单对象
 		boolean exists = QueryServiceHelper.exists(AOS_MKT_RCV, fid);
 		if (!exists)
@@ -123,14 +121,20 @@ public class aos_mkt_rcv_bill extends AbstractBillPlugIn implements ItemClickLis
 		String aosPoNumber = aosMktRcv.getString("aos_ponumber");
 		// 货号
 		DynamicObject aosItemId = aosMktRcv.getDynamicObject("aos_itemid");
+		openSample(iFormView,aosItemId.getPkValue(),aosPoNumber);
+	}
+
+	public static void openSample(IFormView iFormView,Object itemid,Object poNumber){
+		// 封样单参数
+		Object sampleId = null;
 		// 查询是否存在对应封样单
 		DynamicObject aosSealSample = QueryServiceHelper.queryOne(AOS_SEALSAMPLE, "id",
-				new QFilter("aos_item.id", QCP.equals, aosItemId.getPkValue())
-						.and("aos_contractnowb", QCP.equals, aosPoNumber).toArray());
+				new QFilter("aos_item", QCP.equals, itemid)
+						.and("aos_contractnowb", QCP.equals, poNumber).toArray());
 
 		if (FndGlobal.IsNull(aosSealSample)) {
 			List<Object> primaryKeys = QueryServiceHelper.queryPrimaryKeys(AOS_SEALSAMPLE,
-					new QFilter("aos_item.id", QCP.equals, aosItemId.getPkValue()).toArray(), "createtime desc", 1);
+					new QFilter("aos_item", QCP.equals,itemid).toArray(), "createtime desc", 1);
 			if (FndGlobal.IsNotNull(primaryKeys) && primaryKeys.size() > 0)
 				sampleId = primaryKeys.get(0);
 			else
