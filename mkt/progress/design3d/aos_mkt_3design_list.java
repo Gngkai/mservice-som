@@ -94,6 +94,8 @@ public class aos_mkt_3design_list extends AbstractListPlugin {
 				aos_submit();
 			} else if ("aos_showclose".equals(itemKey))
 				parainfo.showClose(this.getView());// 查询关闭流程
+			else if ("aos_querysample".equals(itemKey))
+				querySample();// 查看封样图片
 		} catch (FndError error) {
 			this.getView().showMessage(error.getErrorMessage());
 		} catch (Exception e) {
@@ -103,7 +105,24 @@ public class aos_mkt_3design_list extends AbstractListPlugin {
 			e.printStackTrace();
 		}
 	}
-
+	/**
+	 * 查看封样图片
+	 */
+	private void querySample() throws FndError {
+		try {
+			ListSelectedRowCollection selectedRows = this.getSelectedRows();
+			int size = selectedRows.size();
+			if (size != 1) {
+				this.getView().showTipNotification("请先选择单条数据查询!");
+			} else {
+				aos_mkt_3design_bill.openSample(this.getView(), selectedRows.get(0).getPrimaryKeyValue());
+			}
+		} catch (FndError fndMessage) {
+			this.getView().showTipNotification(fndMessage.getErrorMessage());
+		} catch (Exception ex) {
+			this.getView().showErrorNotification(SalUtil.getExceptionStr(ex));
+		}
+	}
 	/** 弹出转办框 **/
 	private void aos_open() {
 		FormShowParameter showParameter = new FormShowParameter();
