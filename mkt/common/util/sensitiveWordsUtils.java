@@ -22,7 +22,7 @@ import java.util.*;
  */
 public class sensitiveWordsUtils {
     public static List<String> sensitiveWordSpecies;
-    private static final  String specialSymbols = " [`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*()——+|{}【】‘；：”“’。，、？\\\\]";
+    private static final  String specialSymbols = "\n [`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*()——+|{}【】‘；：”“’。，、？\\\\]";
     private static JSONObject wordsInfo = new JSONObject();
     private static Date intiWordInfoDate =  new Date(); //敏感词的初始化时间
     static {
