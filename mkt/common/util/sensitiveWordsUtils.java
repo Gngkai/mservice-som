@@ -189,6 +189,10 @@ public class sensitiveWordsUtils {
             return result;
         //记录校验到的敏感词
         StringBuilder sensitiveBuilder = new StringBuilder();
+
+        //记录已经校验出来的敏感词
+        List<String> calibratedWords = new ArrayList<>(contentArrays.size());
+
         //校验内容按照字符遍历
         for (int contentIndex = 0; contentIndex < contentArrays.size(); contentIndex++) {
             //敏感词遍历
@@ -212,6 +216,12 @@ public class sensitiveWordsUtils {
                 }
                 //单个敏感词完全匹配，则认为异常
                 if (abnormal){
+                    //先判断这个敏感词是否已经校验出来了,如果已经校验出来了，则跳过
+                    if (calibratedWords.contains(sensitiveBuilder.toString())){
+                        continue;
+                    }
+                    calibratedWords.add(sensitiveBuilder.toString());
+                    //判断返回状态，如果状态还剩正常，则打上异常标记
                     if (!result.getBoolean("state"))
                         result.put("state",abnormal);
                     JSONArray words = result.getJSONArray("data");
@@ -265,7 +275,7 @@ public class sensitiveWordsUtils {
             // 存在敏感词
             if (abnormal){
                 result.append(replaceWords);
-                contentIndex = contentIndex + sensitiveCharArray.size();
+                contentIndex = contentIndex + sensitiveCharArray.size()-1;
             }
             else {
                 result.append(contentArrays.getString(contentIndex));
