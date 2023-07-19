@@ -6,6 +6,7 @@ import java.util.List;
 
 import common.Cux_Common_Utl;
 import common.fnd.FndError;
+import common.fnd.FndGlobal;
 import common.fnd.FndHistory;
 import common.sal.util.SalUtil;
 import kd.bos.bill.AbstractBillPlugIn;
@@ -423,16 +424,21 @@ public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClic
 		aos_mkt_3design.set("aos_type", "新建");// 3D类型 此方法默认新建
 		aos_mkt_3design.set("aos_designer", AosDesignerId);
 		aos_mkt_3design.set("aos_source", "拍照需求表");
+		//质检完成日期
+		aos_mkt_3design.set("aos_quainscomdate",aos_mkt_photoreq.get("aos_quainscomdate"));
 
 		//230718 gk:(新产品=是，或新供应商=是)且工厂简拍 生成3D产品设计单，3D产品设计单到大货样封样节点
 		boolean newitem = aos_mkt_photoreq.getBoolean("aos_newitem");
 		boolean newvendor = aos_mkt_photoreq.getBoolean("aos_newvendor");
 		boolean phstate = aos_mkt_photoreq.getString("aos_phstate").equals("工厂简拍");
 		if ((newitem || newvendor) && phstate){
-
+			boolean existShipdate = FndGlobal.IsNull(aos_mkt_photoreq.get("aos_shipdate"));
+			boolean existQuainscome = FndGlobal.IsNull(aos_mkt_photoreq.get("aos_quainscomdate"));
+			//出运日期和质检完成日期都为空
+			if (existQuainscome && existShipdate){
+				aos_mkt_3design.set("aos_status","大货样封样");
+			}
 		}
-
-
 
 		if (MapList != null) {
 			if (MapList.get(2) != null)
