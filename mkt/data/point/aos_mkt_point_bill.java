@@ -72,11 +72,14 @@ public class aos_mkt_point_bill extends AbstractBillPlugIn implements RowClickEv
 		if (name.equals("aos_category1") || name.equals("aos_category2") || name.equals("aos_category3")) {
 			init_category();
 			Get_points();
-		} else if (name.equals("aos_egsku")) {
+		}
+		else if (name.equals("aos_egsku")) {
 			aos_egsku_change();
-		} else if (name.equals("aos_orgid")) {
+		}
+		else if (name.equals("aos_orgid")) {
 			init_point();
-		} else if (name.equals("aos_itemnamecn")) {
+		}
+		else if (name.equals("aos_itemnamecn")) {
 			init_point();
 			Get_points();
 		}
@@ -129,9 +132,7 @@ public class aos_mkt_point_bill extends AbstractBillPlugIn implements RowClickEv
 					filters);
 			if (aos_mkt_data_slogan != null) {
 				String aos_itemnamefr = aos_mkt_data_slogan.getString("aos_itemnamefr");
-				String aos_itemnamees = aos_mkt_data_slogan.getString("aos_itemnamees");
 				this.getModel().setValue("aos_pointsfr", aos_itemnamefr);
-				this.getModel().setValue("aos_pointses", aos_itemnamees);
 			}
 		} 
 	}
@@ -178,15 +179,12 @@ public class aos_mkt_point_bill extends AbstractBillPlugIn implements RowClickEv
 	}
 
 	private void init_point() {
-		this.getView().setVisible(false, "aos_pointses");
 		this.getView().setVisible(false, "aos_pointsfr");
 		Object aos_orgid = this.getModel().getValue("aos_orgid");
 		if (aos_orgid != null) {
 			DynamicObject aos_org = (DynamicObject) aos_orgid;
 			String aos_orgnumber = aos_org.getString("number");
-			if (aos_orgnumber.equals("US")) {
-				this.getView().setVisible(true, "aos_pointses");
-			} else if (aos_orgnumber.equals("CA")) {
+			if (aos_orgnumber.equals("CA")) {
 				this.getView().setVisible(true, "aos_pointsfr");
 			}
 		}
