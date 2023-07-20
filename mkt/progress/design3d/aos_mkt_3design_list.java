@@ -36,6 +36,7 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
+import kd.fi.bd.util.QFBuilder;
 import mkt.progress.ProgressUtil;
 import mkt.progress.iface.parainfo;
 import org.apache.commons.collections4.BidiMap;
@@ -80,6 +81,15 @@ public class aos_mkt_3design_list extends AbstractListPlugin {
 	@Override
 	public void setFilter(SetFilterEvent e) {
 		List<QFilter> qFilters = e.getQFilters();
+		//判断大货封样是否可见
+		QFBuilder builder = new QFBuilder();
+		builder.add("aos_code", "=", "aos_mkt_3designStatus");
+		builder.add("aos_value", "=", "1");
+		boolean exists = QueryServiceHelper.exists("aos_sync_params", builder.toArray());
+		if (exists){
+			QFilter filter = new QFilter("aos_status","!=","大货样封样");
+			qFilters.add(filter);
+		}
 		parainfo.setRights(qFilters, this.getPageCache(), aos_mkt_3design);
 	}
 
@@ -94,6 +104,8 @@ public class aos_mkt_3design_list extends AbstractListPlugin {
 				aos_submit();
 			} else if ("aos_showclose".equals(itemKey))
 				parainfo.showClose(this.getView());// 查询关闭流程
+			else if ("aos_querysample".equals(itemKey))
+				querySample();// 查看封样图片
 		} catch (FndError error) {
 			this.getView().showMessage(error.getErrorMessage());
 		} catch (Exception e) {
@@ -103,7 +115,24 @@ public class aos_mkt_3design_list extends AbstractListPlugin {
 			e.printStackTrace();
 		}
 	}
-
+	/**
+	 * 查看封样图片
+	 */
+	private void querySample() throws FndError {
+		try {
+			ListSelectedRowCollection selectedRows = this.getSelectedRows();
+			int size = selectedRows.size();
+			if (size != 1) {
+				this.getView().showTipNotification("请先选择单条数据查询!");
+			} else {
+				aos_mkt_3design_bill.openSample(this.getView(), selectedRows.get(0).getPrimaryKeyValue());
+			}
+		} catch (FndError fndMessage) {
+			this.getView().showTipNotification(fndMessage.getErrorMessage());
+		} catch (Exception ex) {
+			this.getView().showErrorNotification(SalUtil.getExceptionStr(ex));
+		}
+	}
 	/** 弹出转办框 **/
 	private void aos_open() {
 		FormShowParameter showParameter = new FormShowParameter();

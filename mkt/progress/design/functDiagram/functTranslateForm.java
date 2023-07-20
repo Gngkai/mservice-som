@@ -12,9 +12,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * @author create by ?
+ * @author create by gk
  * @date 2023/4/21 13:41
- * @action
+ * @action 功能图翻译界面插件
  */
 public class functTranslateForm extends AbstractFormPlugin {
     @Override

@@ -6,6 +6,7 @@ import java.util.List;
 
 import common.Cux_Common_Utl;
 import common.fnd.FndError;
+import common.fnd.FndGlobal;
 import common.fnd.FndHistory;
 import common.sal.util.SalUtil;
 import kd.bos.bill.AbstractBillPlugIn;
@@ -15,6 +16,7 @@ import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.dataentity.metadata.dynamicobject.DynamicObjectType;
 import kd.bos.entity.EntityMetadataCache;
 import kd.bos.entity.operate.result.OperationResult;
+import kd.bos.form.IFormView;
 import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.control.events.ItemClickListener;
 import kd.bos.orm.query.QCP;
@@ -24,9 +26,12 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
+import kd.fi.bd.util.QFBuilder;
 import mkt.common.MKTCom;
 import mkt.progress.ProgressUtil;
 import mkt.progress.iface.iteminfo;
+import mkt.progress.photo.aos_mkt_progphreq_bill;
+import mkt.progress.photo.aos_mkt_rcv_bill;
 
 public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClickListener {
 
@@ -50,11 +55,32 @@ public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClic
 				aos_submit(dy_main, "A");// 提交
 			} else if ("aos_history".equals(Control))
 				aos_history();// 查看历史记录
+			else if("aos_querysample".equals(Control)){
+				openSample(this.getView(),this.getModel().getDataEntity(true).getPkValue());
+			}
 		} catch (FndError fndMessage) {
 			this.getView().showTipNotification(fndMessage.getErrorMessage());
 		} catch (Exception ex) {
 			this.getView().showErrorNotification(SalUtil.getExceptionStr(ex));
 		}
+	}
+	public static void openSample(IFormView iFormView, Object id){
+		QFBuilder builder = new QFBuilder();
+		builder.add("id", "=", id);
+		builder.add("aos_source","=","拍照需求表");
+		DynamicObject dy = QueryServiceHelper.queryOne("aos_mkt_3design", "aos_orignbill", builder.toArray());
+		if (dy==null) {
+			throw new FndError("拍照需求表不存在");
+		}
+		builder.clear();
+		builder.add("billno","=",dy.get("aos_orignbill"));
+		dy = QueryServiceHelper.queryOne("aos_mkt_photoreq", "aos_itemid,aos_ponumber", builder.toArray());
+		if (dy==null) {
+			throw new FndError("拍照需求表不存在");
+		}
+		String aos_itemid = dy.getString("aos_itemid");
+		String ponumber = dy.getString("aos_ponumber");
+		aos_mkt_rcv_bill.openSample(iFormView,aos_itemid,ponumber);
 	}
 
 	/* 打开历史记录 **/
@@ -205,6 +231,9 @@ public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClic
 
 			String aos_phstate = aos_mkt_photoreq.getString("aos_phstate");
 			if ("工厂简拍".equals(aos_phstate)) {
+				
+				aos_mkt_progphreq_bill.GenerateDesign(aos_mkt_photoreq);
+				
 				aos_mkt_photoreq.set("aos_status", "已完成");
 				aos_mkt_photoreq.set("aos_user", system);
 				// 回写拍照任务清单
@@ -370,11 +399,8 @@ public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClic
 	/** 拍照需求表类型创建3D **/
 	public static void Generate3Design(DynamicObject aos_mkt_photoreq) throws FndError {
 		// 信息参数
-		String MessageId = null;
-		String Message = "";
-		// 异常参数
-		int ErrorCount = 0;
-		String ErrorMessage = "";
+		String MessageId ;
+		String Message ;
 		// 数据层
 		Object AosDesignerId = aos_mkt_photoreq.getDynamicObject("aos_designer").getPkValue();
 		List<DynamicObject> MapList = Cux_Common_Utl.GetUserOrg(AosDesignerId);
@@ -383,11 +409,6 @@ public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClic
 		Object ReqFId = aos_mkt_photoreq.get("id"); // 主键
 		Object Aos3DerID = aos_mkt_photoreq.getDynamicObject("aos_3d").getPkValue();
 		Object Item_id = aos_mkt_photoreq.getDynamicObject("aos_itemid").getPkValue();
-
-		if (ErrorCount > 0) {
-			FndError fndMessage = new FndError(ErrorMessage);
-			throw fndMessage;
-		}
 
 		// 创建一条3D产品设计单
 		DynamicObject aos_mkt_3design = BusinessDataServiceHelper.newDynamicObject("aos_mkt_3design");
@@ -403,6 +424,21 @@ public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClic
 		aos_mkt_3design.set("aos_type", "新建");// 3D类型 此方法默认新建
 		aos_mkt_3design.set("aos_designer", AosDesignerId);
 		aos_mkt_3design.set("aos_source", "拍照需求表");
+		//质检完成日期
+		aos_mkt_3design.set("aos_quainscomdate",aos_mkt_photoreq.get("aos_quainscomdate"));
+
+		//230718 gk:(新产品=是，或新供应商=是)且工厂简拍 生成3D产品设计单，3D产品设计单到大货样封样节点
+		boolean newitem = aos_mkt_photoreq.getBoolean("aos_newitem");
+		boolean newvendor = aos_mkt_photoreq.getBoolean("aos_newvendor");
+		boolean phstate = aos_mkt_photoreq.getString("aos_phstate").equals("工厂简拍");
+		if ((newitem || newvendor) && phstate){
+			boolean existShipdate = FndGlobal.IsNull(aos_mkt_photoreq.get("aos_shipdate"));
+			boolean existQuainscome = FndGlobal.IsNull(aos_mkt_photoreq.get("aos_quainscomdate"));
+			//出运日期和质检完成日期都为空
+			if (existQuainscome && existShipdate){
+				aos_mkt_3design.set("aos_status","大货样封样");
+			}
+		}
 
 		if (MapList != null) {
 			if (MapList.get(2) != null)

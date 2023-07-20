@@ -6,11 +6,13 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+
 import kd.bos.exception.ErrorCode;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 
 import common.sal.impl.ComImpl;
+import common.sal.impl.ComImpl2;
 import common.sal.util.SalUtil;
 import kd.bos.context.RequestContext;
 import kd.bos.dataentity.OperateOption;
@@ -86,7 +88,12 @@ public class aos_mkt_syncif_sku extends AbstractTask {
 	}
 
 	public static void do_operate(Map<String, Object> param) {
-		JSONArray p_ret_cursor = ComImpl.GetCursorMms(param, "CUXSKU_MMS");
+
+		JSONObject obj = ComImpl2.GetCursorEsb(param, "CUXSKU_MMS");
+		JSONArray p_ret_cursor = obj.getJSONArray("p_real_model");
+		
+		
+		
 		int length = p_ret_cursor.size();
 		System.out.println(length);
 		Object p_ou_code = param.get("ou_name");
