@@ -4,6 +4,7 @@ import common.fnd.FndGlobal;
 import kd.bos.context.RequestContext;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.exception.KDException;
+import kd.bos.orm.query.QFilter;
 import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
@@ -57,7 +58,7 @@ public class aos_mkt_sync_3dsign extends AbstractTask {
                 builder.clear();
                 builder.add("aos_item","=",dy_photo.get("aos_itemid"));
                 builder.add("aos_contractnowb","=",dy_photo.get("aos_ponumber"));
-                builder.add("aos_largegood","!=","");
+                builder.add("aos_largegood", QFilter.is_notnull,null);
                 boolean sealsample = QueryServiceHelper.exists("aos_sealsample", builder.toArray());
                 if (!sealsample){
                     continue;
