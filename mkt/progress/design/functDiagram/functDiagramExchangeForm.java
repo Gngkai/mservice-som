@@ -8,7 +8,7 @@ import java.util.*;
 /**
  * @author create by gk
  * @date 2023/4/24 13:47
- * @action
+ * @action 功能图图片交换界面
  */
 public class functDiagramExchangeForm extends AbstractFormPlugin {
     @Override
