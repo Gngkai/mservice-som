@@ -115,8 +115,10 @@ public class functDiagramForm extends AbstractBillPlugIn implements HyperLinkCli
                 entityField = "aos_content"+lanIndex;
                 value = this.getModel().getValue(entityField,currentRowIndex).toString();
             }
-            value = sensitiveWordsUtils.replaceSensitiveWords(value,sentitiveWord,replaceWord);
-            this.getModel().setValue(entityField,value,currentRowIndex);
+            if (FndGlobal.IsNotNull(replaceWord)){
+                value = sensitiveWordsUtils.replaceSensitiveWords(value,sentitiveWord,replaceWord);
+                this.getModel().setValue(entityField,value,currentRowIndex);
+            }
         }
     }
     @Override
