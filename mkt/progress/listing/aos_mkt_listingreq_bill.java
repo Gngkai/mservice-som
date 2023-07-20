@@ -9,6 +9,7 @@ import common.Cux_Common_Utl;
 import common.fnd.FndError;
 import common.fnd.FndGlobal;
 import common.fnd.FndHistory;
+import common.fnd.FndMsg;
 import common.fnd.FndReturn;
 import common.fnd.FndWebHook;
 import common.sal.sys.basedata.dao.ItemCategoryDao;
@@ -817,10 +818,12 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
 					Object itemid = bd_material.get("id");
 					if ("B".equals(bd.getString("aos_type")))
 						continue; // 配件不获取
+					
 					Boolean exist = QueryServiceHelper.exists("bd_material", new QFilter("id", QCP.equals, itemid)
 							.and("aos_contryentry.aos_contryentrystatus", QCP.not_equals, "C"));
 					if (!exist)
-						continue;// 全球终止不取
+						continue;
+					// 全球终止不取
 					int osQty = getOsQty(itemid);
 					if (osQty < 10)
 						continue;
@@ -965,23 +968,27 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
 						new QFilter("aos_productno", QCP.equals, aos_productno).and("aos_type", QCP.equals, "A")
 								.toArray());
 				for (DynamicObject bd : bd_materialS) {
-					Object itemid = bd_material.get("id");
+					Object itemid = bd.getString("id");
 					if ("B".equals(bd.getString("aos_type")))
 						continue; // 配件不获取
-					Boolean exist = QueryServiceHelper.exists("bd_material", new QFilter("id", QCP.equals, itemid)
-							.and("aos_contryentry.aos_contryentrystatus", QCP.not_equals, "C"));
-					if (!exist)
+					DynamicObject one = QueryServiceHelper.queryOne("bd_material", "id", new QFilter("number", "=", bd.getString("number"))
+							.and("aos_contryentry.aos_contryentrystatus","!=", "C").toArray());
+					FndMsg.debug(FndGlobal.IsNull(one));
+					if (FndGlobal.IsNull(one))
 						continue;// 全球终止不取
 					int osQty = getOsQty(itemid);
+					FndMsg.debug(FndGlobal.IsNull(osQty));
 					if (osQty < 10)
 						continue;
 					String number = bd.getString("number");
+					FndMsg.debug(FndGlobal.IsNull(number));
 					if (item_number.equals(number))
 						continue;
 					else
 						aos_broitem = aos_broitem + number + ";";
 				}
 			}
+			
 			// 赋值物料相关
 			dy_row.set("aos_segment3", aos_productno);
 			dy_row.set("aos_itemname", aos_itemname);

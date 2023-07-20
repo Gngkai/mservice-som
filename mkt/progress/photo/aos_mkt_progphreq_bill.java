@@ -191,10 +191,10 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		String ErrorMessage = "";
 		Object ReqFId = dy_main.getPkValue(); // 当前界面主键
 		Object aos_type = dy_main.get("aos_type");
-		Boolean aos_sonflag =  dy_main.getBoolean("aos_sonflag");
+		Boolean aos_sonflag = dy_main.getBoolean("aos_sonflag");
 		DynamicObject aos_itemid = dy_main.getDynamicObject("aos_itemid");
-		//本单不需要拍照的话则不做校验
-		if (!dy_main.getBoolean("aos_photoflag")) {
+		// 本单不需要拍照的话则不做校验
+		if (!dy_main.getBoolean("aos_photoflag") || "视频".equals(aos_type)) {
 			return;
 		}
 		// 子流程不做判断
@@ -202,10 +202,12 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			QFilter filter_itemid = new QFilter("aos_itemid", "=", aos_itemid.getPkValue());
 			QFilter filter_status = new QFilter("aos_status", "!=", "已完成");
 			QFilter filter_status2 = new QFilter("aos_status", "!=", "不需拍");
+			QFilter filter_status3 = new QFilter("aos_type", "!=", "视频");
+			
 			QFilter filter_son = new QFilter("aos_sonflag", "=", false);
 			QFilter filter_id = new QFilter("id", "!=", ReqFId);
 			QFilter filter_type = new QFilter("aos_photoflag", "=", true);
-			QFilter[] filters = new QFilter[] { filter_itemid, filter_status, filter_id, filter_type, filter_son,
+			QFilter[] filters = new QFilter[] { filter_status3,filter_itemid, filter_status, filter_id, filter_type, filter_son,
 					filter_status2 };
 			DynamicObject aos_mkt_photoreq = QueryServiceHelper.queryOne("aos_mkt_photoreq", "billno", filters);
 			if (aos_mkt_photoreq != null) {
@@ -578,7 +580,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 				else
 					// 小语种
 					this.getModel().setValue("aos_s3address2", "https://uspm.aosomcdn.com/videos/en/" + first + "/"
-							+ ItemNumber + "/" + ItemNumber + "-" + aos_nationalitynumber +".mp4", i - 1);
+							+ ItemNumber + "/" + ItemNumber + "-" + aos_nationalitynumber + ".mp4", i - 1);
 
 				if ("US".equals(aos_nationalitynumber) || "CA".equals(aos_nationalitynumber)
 						|| "UK".equals(aos_nationalitynumber))
@@ -682,11 +684,11 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			// 增加爆品字段
 			Boolean aos_is_saleout = Is_saleout(fid);
 			this.getModel().setValue("aos_is_saleout", aos_is_saleout);
-			
+
 			if (aos_is_saleout) {
 				this.getModel().setValue("aos_vedioflag", true);
 			}
-			
+
 			// 摄影标准库字段
 			DynamicObject aosMktPhotoStd = QueryServiceHelper.queryOne("aos_mkt_photostd",
 					"aos_firstpicture,aos_other,aos_require",
@@ -916,6 +918,9 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		this.getView().setVisible(true, "aos_flexpanelap18");
 		this.getView().setVisible(true, "aos_flexpanelap15");
 		this.getView().setVisible(true, "aos_flexpanelap20");
+		
+		
+		this.getView().setVisible(true, "aos_flexpanelap14");
 
 		// 当前节点操作人不为当前用户 全锁
 		if (!AosUser.getPkValue().toString().equals(CurrentUserId.toString())) {
@@ -1023,9 +1028,22 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			map.put(ClientProperties.Text, new LocaleString("开发确认:视频"));
 			this.getView().updateControlMetadata("aos_submit", map);
 			this.getView().setVisible(true, "aos_submit");
-			this.getView().setEnable(false, "contentpanelflex");// 主界面面板
 			this.getView().setVisible(false, "bar_save");
 			this.getView().setVisible(true, "aos_back");// 退回按钮
+			
+
+			this.getView().setEnable(true, "aos_dereason");// 开发退回原因
+
+			this.getView().setEnable(true, "aos_flexpanelap");
+			this.getView().setEnable(true, "aos_flexpanelap1");
+			this.getView().setEnable(true, "aos_flexpanelap11");
+			this.getView().setEnable(true, "aos_flexpanelap12");
+			this.getView().setEnable(true, "aos_flexpanelap13");
+			this.getView().setEnable(true, "aos_flexpanelap18");
+			this.getView().setEnable(true, "aos_flexpanelap20");
+			this.getView().setEnable(true, "aos_flexpanelap15");
+			this.getView().setEnable(true, "aos_flexpanelap141");
+			
 		} else if ("视频剪辑".equals(AosStatus)) {
 			map.put(ClientProperties.Text, new LocaleString("提交"));
 			this.getView().updateControlMetadata("aos_submit", map);
@@ -2472,8 +2490,11 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		MKTCom.SendGlobalMessage(MessageId, aos_mkt_photoreq, ReqFId + "", AosBillno + "", "拍照需求表-开发退回");
 	}
 
-	/** 拍照类型新品结束后 生成设计需求表 
-	 * @param dyn **/
+	/**
+	 * 拍照类型新品结束后 生成设计需求表
+	 * 
+	 * @param dyn
+	 **/
 	public static void GenerateDesign(DynamicObject dyn) {
 		// 数据层
 		Object AosShipDate = dyn.get(aos_shipdate);
@@ -2614,8 +2635,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		// 获取同产品号物料
 		String aos_broitem = "";
 		DynamicObjectCollection bd_materialS = QueryServiceHelper.query("bd_material", "id,number,aos_type",
-				new QFilter("aos_productno", QCP.equals, aos_productno).and("aos_type", QCP.equals, "A")
-						.toArray());
+				new QFilter("aos_productno", QCP.equals, aos_productno).and("aos_type", QCP.equals, "A").toArray());
 		for (DynamicObject bd : bd_materialS) {
 			Object itemid = bd_material.get("id");
 			if ("B".equals(bd.getString("aos_type")))
