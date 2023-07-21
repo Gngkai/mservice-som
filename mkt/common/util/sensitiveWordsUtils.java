@@ -49,7 +49,8 @@ public class sensitiveWordsUtils {
             //查找英文品类名
             ItemCategoryDao categoryDao = new ItemCategoryDaoImpl();
             ILocaleString cateName = categoryDao.getItemCateName(itemId);
-            cateNameEn = cateName.getLocaleValue_en().split(",");
+            if (FndGlobal.IsNotNull(cateName) && FndGlobal.IsNotNull(cateName.getLocaleValue_en()))
+                cateNameEn = cateName.getLocaleValue_en().split(",");
         }
 
         //查询敏感词
