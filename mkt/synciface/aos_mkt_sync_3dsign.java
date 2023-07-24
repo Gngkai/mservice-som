@@ -68,7 +68,7 @@ public class aos_mkt_sync_3dsign extends AbstractTask {
                 design.set("aos_shipdate",dy_photo.get("aos_shipdate"));
                 design.set("aos_quainscomdate",dy_photo.get("aos_quainscomdate"));
             }
-            design.set("aos_status","大货样封样");
+            design.set("aos_status","新建");
             updateEntity.add(design);
         }
         DynamicObject[] array = updateEntity.toArray(new DynamicObject[0]);
