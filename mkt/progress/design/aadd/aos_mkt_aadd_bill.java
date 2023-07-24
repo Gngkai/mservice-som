@@ -538,8 +538,7 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 					this.getModel().setValue("aos_organization1", MapList.get(2).get("id"));
 			}
 			// 设置国别初始下拉为空
-			ComboEdit aos_org = getControl("aos_org");
-			aos_org.setComboItems(null);
+			aosTypeChange();
 		} catch (Exception ex) {
 			FndError.showex(getView(), ex);
 		}
@@ -587,8 +586,11 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 		Object aosStatus = this.getModel().getValue("aos_status");
 		DynamicObject aosUser = (DynamicObject) this.getModel().getValue("aos_user");
 		Object currentUserId = UserServiceHelper.getCurrentUserId();
+		Object CurrentUserId = UserServiceHelper.getCurrentUserId();
+		Object CurrentUserName = UserServiceHelper.getUserInfoByID((long) CurrentUserId).get("name");
 		// 权限控制
-		if (!aosUser.getPkValue().toString().equals(currentUserId.toString())) {
+		if (!aosUser.getPkValue().toString().equals(currentUserId.toString()) && 
+				!"程震杰".equals(CurrentUserName.toString())) {
 			this.getView().setEnable(false, "titlepanel");// 标题面板
 			this.getView().setEnable(false, "aos_contentpanelflex");// 主界面面板
 			this.getView().setVisible(false, "bar_save");// 保存

@@ -2,7 +2,6 @@ package mkt.progress.design.aadd;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.Map;
 
 import common.fnd.FndGlobal;
