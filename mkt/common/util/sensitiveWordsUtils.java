@@ -207,6 +207,11 @@ public class sensitiveWordsUtils {
                 //单个敏感词的字符遍历
                 for (int senCharIndex = 0; senCharIndex < sensitiveCharArray.size(); senCharIndex++) {
                     //校验内容字符
+                    if ((contentIndex+senCharIndex)>=contentArrays.size()){
+                        abnormal = false;
+                        break;
+                    }
+
                     String contentChar = contentArrays.getString(contentIndex+senCharIndex);
                     //校验敏感词字符
                     String sensitiveChar = sensitiveCharArray.getString(senCharIndex);

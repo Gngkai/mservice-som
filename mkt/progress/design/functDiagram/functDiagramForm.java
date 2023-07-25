@@ -369,6 +369,10 @@ public class functDiagramForm extends AbstractBillPlugIn implements HyperLinkCli
                 Map<String,List<String>> map_data = (Map<String, List<String>>) data;
                 List<String> list_language = map_data.get("lan");   //选择的语言
                 List<String> list_img = map_data.get("img");        //选择的图片
+                if (list_language==null || list_language.size()==0 || list_img==null || list_img.size()==0)
+                {
+                    return;
+                }
                 if (dy_source!=null){
                     DynamicObject dy_funct = BusinessDataServiceHelper.loadSingle( dy_source.get("id"), "aos_mkt_functreq");
                     for (String key : list_img) {
