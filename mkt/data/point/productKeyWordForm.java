@@ -623,34 +623,64 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
             return;
         }
         List<String> spiltKeyWord = new ArrayList<>();
+        //搜索总量
+        Map<String,Integer> map_search = new HashMap<>(spiltKeyWord.size());
         for (DynamicObject row : entityRows) {
             String keyWord = row.getString("aos_keyword");
             if (FndGlobal.IsNull(keyWord))
                 continue;
 
+            //搜索总量
+            int search = Optional.ofNullable(row.getInt("aos_search")).orElse(0);
             String[] split = keyWord.split(" ");
             List<String> combinations = arrangeUtils.getCombinations(split);
             for (String combination : combinations) {
                 if (!spiltKeyWord.contains(combination)) {
                     spiltKeyWord.add(combination);
                 }
+                int wordSearch = map_search.getOrDefault(combination, 0);
+                wordSearch = wordSearch + search;
+                map_search.put(combination,wordSearch);
             }
         }
 
         //获取拆分词的词频和搜索量
         Map<String,Integer> map_frequency = new HashMap<>(spiltKeyWord.size());
-        Map<String,Integer> map_search = new HashMap<>(spiltKeyWord.size());
         Map<String,String> map_wordInfo = new HashMap<>();
+        calculateWordFrequency(spiltKeyWord,map_wordInfo);
+
 
     }
-    private void calculateWordFrequency(List<String> spildWord, Map<String,Integer> map_frequency,Map<String,String> map_wordInfo){
+    private void calculateWordFrequency(List<String> spildWord ,Map<String,String> map_wordInfo){
         QFBuilder builder = new QFBuilder();
         Object orgid = this.getModel().getDataEntity(true).getDynamicObject("aos_orgid").getPkValue();
         builder.add("aos_org","=",orgid);
         builder.add("aos_root","!=","");
-        DynamicObjectCollection result = QueryServiceHelper.query("aos_mkt_root", "aos_root,aos_attributeaos_value", builder.toArray());
+        DynamicObjectCollection result = QueryServiceHelper.query("aos_mkt_root", "aos_root,aos_attribute,aos_value", builder.toArray());
+        Map<String,Integer> map_frequency = new HashMap<>();
         for (DynamicObject dy_row : result) {
             String root = dy_row.getString("aos_root");
+            for (String word : spildWord) {
+                //完全相等
+                if (root.equals(word)){
+                    int wordFrequency = map_frequency.getOrDefault(word, 0);
+                    wordFrequency++;
+                    map_frequency.put(word,wordFrequency);
+                    String info = dy_row.getString("aos_attribute")+"/"+dy_row.getString("aos_value");
+                    map_wordInfo.put(word,info);
+                }
+                String[] splitWords = root.split(" ");
+                for (String splitWord : splitWords) {
+                    if (splitWord.equals(word)){
+                        int wordFrequency = map_frequency.getOrDefault(word, 0);
+                        wordFrequency++;
+                        map_frequency.put(word,wordFrequency);
+                    }
+                }
+            }
+
         }
+
+
     }
 }
