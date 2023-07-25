@@ -793,7 +793,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
 				}
 				long aos_oueditor = aos_mkt_progorguser.getLong("aos_oueditor");
 				messageId = aos_oueditor;
-				this.getModel().setValue("aos_oseditor", aos_oueditor);
+				this.getModel().setValue("aos_oueditor", aos_oueditor);
 				this.getModel().setValue("aos_user", aos_oueditor);
 				this.getModel().setValue("aos_status", "翻译");
 			}
@@ -1058,17 +1058,11 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
 					if (FndGlobal.IsNull(aos_itemname)) {
 						fndError.add("优化类型下DE品名必填!");
 					}
-					if (FndGlobal.IsNull(aos_slogan)) {
-						fndError.add("优化类型下DE-slogan必填!");
-					}
 				}
 
 				if ("FR".equals(aos_langr) && "FR".equals(aos_lang)) {
 					if (FndGlobal.IsNull(aos_itemname)) {
 						fndError.add("优化类型下FR品名必填!");
-					}
-					if (FndGlobal.IsNull(aos_slogan)) {
-						fndError.add("优化类型下FR-slogan必填!");
 					}
 				}
 
@@ -1076,17 +1070,11 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
 					if (FndGlobal.IsNull(aos_itemname)) {
 						fndError.add("优化类型下IT品名必填!");
 					}
-					if (FndGlobal.IsNull(aos_slogan)) {
-						fndError.add("优化类型下IT-slogan必填!");
-					}
 				}
 
 				if ("ES".equals(aos_langr) && "ES".equals(aos_lang)) {
 					if (FndGlobal.IsNull(aos_itemname)) {
 						fndError.add("优化类型下ES品名必填!");
-					}
-					if (FndGlobal.IsNull(aos_slogan)) {
-						fndError.add("优化类型下ES-slogan必填!");
 					}
 				}
 			}
