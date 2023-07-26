@@ -1,5 +1,7 @@
 package mkt.common.util;
 
+import common.fnd.FndGlobal;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +25,10 @@ public class arrangeUtils {
         if (prefix!="")
             combinations.add(prefix);
         for (int i = start; i < str.length; i++) {
-            combinationHelper(prefix+" "+ str[i], str, i + 1, combinations);
+            if (FndGlobal.IsNotNull(prefix))
+                combinationHelper(prefix+" "+ str[i], str, i + 1, combinations);
+            else
+                combinationHelper( str[i], str, i + 1, combinations);
         }
     }
 

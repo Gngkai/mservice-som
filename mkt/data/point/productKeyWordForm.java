@@ -24,14 +24,13 @@ import kd.bos.form.control.EntryGrid;
 import kd.bos.form.control.Image;
 import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.control.events.RowClickEventListener;
-import kd.bos.form.events.BeforeClosedEvent;
-import kd.bos.form.events.HyperLinkClickEvent;
-import kd.bos.form.events.HyperLinkClickListener;
+import kd.bos.form.events.*;
 import kd.bos.form.field.BasedataEdit;
 import kd.bos.form.field.ComboEdit;
 import kd.bos.form.field.ComboItem;
 import kd.bos.form.field.events.BeforeF7SelectEvent;
 import kd.bos.form.field.events.BeforeF7SelectListener;
+import kd.bos.form.operate.FormOperate;
 import kd.bos.lang.Lang;
 import kd.bos.list.ListShowParameter;
 import kd.bos.logging.Log;
@@ -45,12 +44,13 @@ import kd.fi.bd.util.QFBuilder;
 import mkt.common.util.arrangeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
+import sal.sche.aos_sal_sche_pub.aos_sal_sche_pvt;
 import sal.synciface.imp.aos_sal_import_pub;
 
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -119,9 +119,13 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
     @Override
     public void propertyChanged(PropertyChangedArgs e) {
         String name = e.getProperty().getName();
+        int rowIndex = e.getChangeSet()[0].getRowIndex();
         if (name.equals("aos_category1") || name.equals("aos_category2") || name.equals("aos_category3")) {
             init_category();
             Get_points();
+            if ("aos_category2".equals(name) || "aos_category1".equals(name)) {
+                autoSetCategoryInfo();
+            }
         }
         else if (name.equals("aos_egsku")) {
             aos_egsku_change();
@@ -132,10 +136,9 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         else if (name.equals("aos_itemnamecn")) {
             init_point();
             Get_points();
+            setItemEntity();
         }
-        if ("aos_category2".equals(name) || "aos_category1".equals(name)) {
-            autoSetCategoryInfo();
-        }
+
     }
 
     @Override
@@ -155,42 +158,37 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
 
     @Override
     public void beforeImportData(BeforeImportDataEventArgs e) {
-        try {
-            // 获取导入类型
-            Map<String, Object> option = e.getOption();
-            String importtype = obj2String(option.get("importtype"));
-            Map<String, Object> sourceData = e.getSourceData();
-            List<Map<String, Object>> list = (List<Map<String, Object>>) sourceData.get("aos_linentity");
-            Object aos_orgid = ((Map<String, Object>) sourceData.get("aos_orgid")).get("number");
-            Object aos_category1 = sourceData.get("aos_category1");
-            Object aos_category2 = sourceData.get("aos_category2");
-            Object aos_category3 = sourceData.get("aos_category3");
-            Object aos_itemnamecn = sourceData.get("aos_itemnamecn");
+        // 获取导入类型
+        Map<String, Object> option = e.getOption();
+        String importtype = obj2String(option.get("importtype"));
+        Map<String, Object> sourceData = e.getSourceData();
+        List<Map<String, Object>> list = (List<Map<String, Object>>) sourceData.get("aos_linentity");
+        Object aos_orgid = ((Map<String, Object>) sourceData.get("aos_orgid")).get("number");
+        Object aos_category1 = sourceData.get("aos_category1");
+        Object aos_category2 = sourceData.get("aos_category2");
+        Object aos_category3 = sourceData.get("aos_category3");
+        Object aos_itemnamecn = sourceData.get("aos_itemnamecn");
 
-            int rows = 0;
-            if (list != null) {
-                rows = list.size();
+        int rows = 0;
+        if (list != null) {
+            rows = list.size();
+        }
+        Object aos_org_id = aos_sal_import_pub.get_import_id(aos_orgid.toString(), "bd_country");
+
+        if (StringUtils.equals(importtype, "overridenew")) {
+            for (int l = 0; l < rows; l++) {
+
+                String import_mainvoc = list.get(l).get("aos_mainvoc").toString();
+
+                String sql = " DELETE FROM tk_aos_mkt_point_r r  WHERE 1=1 " + " and r.fk_aos_mainvoc = ? "
+                        + " and exists (select 1 from tk_aos_mkt_point t " + " where 1=1 " + " and t.fid = r.fid "
+                        + " and t.fk_aos_category1 = ? " + " and t.fk_aos_category2 = ? "
+                        + " and t.fk_aos_category3 = ? " + " and t.fk_aos_itemname = ?"
+                        + " and t.fk_aos_orgid =  ? )";
+                Object[] params = { import_mainvoc, aos_category1, aos_category2, aos_category3, aos_itemnamecn,
+                        aos_org_id };
+                DB.execute(DBRoute.of(DB_MKT), sql, params);
             }
-            Object aos_org_id = aos_sal_import_pub.get_import_id(aos_orgid.toString(), "bd_country");
-
-            if (StringUtils.equals(importtype, "overridenew")) {
-                for (int l = 0; l < rows; l++) {
-
-                    String import_mainvoc = list.get(l).get("aos_mainvoc").toString();
-
-                    String sql = " DELETE FROM tk_aos_mkt_point_r r  WHERE 1=1 " + " and r.fk_aos_mainvoc = ? "
-                            + " and exists (select 1 from tk_aos_mkt_point t " + " where 1=1 " + " and t.fid = r.fid "
-                            + " and t.fk_aos_category1 = ? " + " and t.fk_aos_category2 = ? "
-                            + " and t.fk_aos_category3 = ? " + " and t.fk_aos_itemname = ?"
-                            + " and t.fk_aos_orgid =  ? )";
-                    Object[] params = { import_mainvoc, aos_category1, aos_category2, aos_category3, aos_itemnamecn,
-                            aos_org_id };
-                    DB.execute(DBRoute.of(DB_MKT), sql, params);
-                }
-            }
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
         }
     }
 
@@ -264,14 +262,77 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
     }
 
     @Override
-    public void beforeClosed(BeforeClosedEvent e) {
-        super.beforeClosed(e);
+    public void beforeDoOperation(BeforeDoOperationEventArgs args) {
+        super.beforeDoOperation(args);
+        if (args.getSource() instanceof FormOperate){
+            FormOperate formOperate = (FormOperate) args.getSource();
+            String operateKey = formOperate.getOperateKey();
+            if (operateKey.equals("save")){
+                beforeSave();
+                args.setCancel(false);
+            }
+        }
+    }
+
+    @Override
+    public void closedCallBack(ClosedCallBackEvent event) {
+        super.closedCallBack(event);
+        String actionId = event.getActionId();
+        if (actionId.equals("aos_mkt_point_sw")){
+            this.getView().updateView("aos_entryentity");
+        }
+    }
+
+    //设置sku清单
+    private void setItemEntity(){
+        QFBuilder builder = new QFBuilder();
+        DynamicObject aos_orgid = (DynamicObject) this.getModel().getValue("aos_orgid");
+        if (aos_orgid!=null){
+            builder.add("aos_orgid","=",aos_orgid.getPkValue());
+        }
+        builder.add("aos_category1","=",getModel().getValue("aos_category1"));
+        builder.add("aos_category2","=",getModel().getValue("aos_category2"));
+        builder.add("aos_category3","=",getModel().getValue("aos_category3"));
+        builder.add("aos_itemname","=",getModel().getValue("aos_itemnamecn"));
+        builder.add("aos_itemid","!=","");
+        getModel().deleteEntryData("aos_itementity");
+        DynamicObjectCollection dyc = QueryServiceHelper.query("aos_mkt_keyword", "aos_itemid,aos_itemid.number number", builder.toArray());
+        for (DynamicObject row : dyc) {
+            int index = getModel().createNewEntryRow("aos_itementity");
+            this.getModel().setValue("aos_itemid",row.get("aos_itemid"),index);
+            this.getModel().setValue("aos_picture1", aos_sal_sche_pvt.get_img_url(row.getString("number")),index);
+        }
+    }
+
+    private void beforeSave() {
         String language = Lang.get().getLocale().getLanguage();
         if (language.equals("zh")){
             if (Cux_Common_Utl.IsNull(this.getModel().getValue("aos_en_category1"))){
                 setCate(this.getModel().getDataEntity(true));
-                this.getView().invokeOperation("save");
             }
+        }
+    }
+
+    private static void setRelate(DynamicObject dy_main){
+        DynamicObjectCollection entityRows = dy_main.getDynamicObjectCollection("aos_linentity");
+        for (DynamicObject entityRow : entityRows) {
+            ILocaleString correlate = entityRow.getLocaleString("aos_correlate");
+            if (FndGlobal.IsNull(correlate.getLocaleValue_zh_CN())){
+                correlate.setLocaleValue_en("");
+            }
+            else if (correlate.getLocaleValue_zh_CN().equals("高")){
+                correlate.setLocaleValue_en("high");
+            }
+            else if (correlate.getLocaleValue_zh_CN().equals("中")){
+                correlate.setLocaleValue_en("intermediate");
+            }
+            else if (correlate.getLocaleValue_zh_CN().equals("低")){
+                correlate.setLocaleValue_en("low");
+            }
+            else {
+                correlate.setLocaleValue_en(correlate.getLocaleValue_zh_CN());
+            }
+            entityRow.set("aos_correlate",correlate);
         }
     }
 
@@ -378,9 +439,11 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         ComboEdit comboEdit = this.getControl("aos_category1");
         ComboEdit comboEdit2 = this.getControl("aos_category2");
         ComboEdit comboEdit3 = this.getControl("aos_category3");
+        ComboEdit comboEditName = getControl("aos_itemnamecn");
         List<ComboItem> data = new ArrayList<>();
         List<ComboItem> data2 = new ArrayList<>();
         List<ComboItem> data3 = new ArrayList<>();
+        List<ComboItem> nameData = new ArrayList<>();
         // 大类
         QFilter filter_level = new QFilter("level", "=", "1");
         QFilter filter_divide = new QFilter("name", "!=", "待分类");
@@ -444,7 +507,8 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
             this.getModel().setValue("aos_category1_name",null);
             this.getModel().setValue("aos_category2_name",null);
             this.getModel().setValue("aos_category3_name",null);
-        }else{
+        }
+        else{
             if (aos_category2 == null || aos_category2.equals("")){
                 this.getModel().setValue("aos_category2_name",null);
                 this.getModel().setValue("aos_category3_name",null);
@@ -458,6 +522,20 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
             }
             this.getModel().setValue("aos_category1_name",this.getModel().getValue("aos_category1"));
         }
+        //根据类别赋值品类名称
+        if (FndGlobal.IsNotNull(aos_category1) && FndGlobal.IsNotNull(aos_category2) && FndGlobal.IsNotNull(aos_category3)){
+            QFilter filter  = new QFilter("group.name","=",aos_category1+","+aos_category2+","+aos_category3);
+            DynamicObjectCollection dyc = QueryServiceHelper.query("bd_materialgroupdetail", "material.name name", new QFilter[]{filter, filter_org});
+            List<String> names = new ArrayList<>(dyc.size());
+            for (DynamicObject dy : dyc) {
+                String name = dy.getString("name");
+                if (names.contains(name))
+                    continue;
+                names.add(name);
+                nameData.add(new ComboItem(new LocaleString(name),name));
+            }
+        }
+        comboEditName.setComboItems(nameData);
     }
 
     private void showBill(String selectPkid) {
@@ -502,6 +580,29 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
             if (split.length>2)
                 dy_main.set("aos_en_category3",split[2]);
         }
+        //设置相关性的英文
+        setRelate(dy_main);
+        //设置物料名
+        String itemnamecn = dy_main.getString("aos_itemnamecn");
+        dy_main.set("aos_itemnamecn_s",itemnamecn);
+        //设置英文品名
+        if (FndGlobal.IsNotNull(itemnamecn)){
+            dy_main.set("aos_itemnameen",itemnamecn);
+        }
+        else{
+            builder.clear();
+            builder.add("name" ,"=",itemnamecn);
+            DynamicObject dy = BusinessDataServiceHelper.loadSingle("bd_material", "name", builder.toArray());
+            if (dy!=null){
+                dy_main.set("aos_itemnameen",dy.getLocaleString("name").getLocaleValue_en());
+            }
+            else
+                dy_main.set("aos_itemnameen","");
+        }
+
+
+
+
 
     }
 
@@ -539,7 +640,7 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
             str.add(getModel().getValue("aos_category"+i).toString());
         }
         builder.add("aos_cate.name","=",str.toString());
-        builder.add("aos_item_name","=",getModel().getValue("aos_itemnamecn").toString());
+        builder.add("aos_item","=",getModel().getValue("aos_itemnamecn").toString());
         builder.add("aos_relate1",">=",0);
         builder.add("aos_relate2",">=",0);
         builder.add("aos_relate3",">=",0);
@@ -627,7 +728,6 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
      * 拆分词根
      */
     private void spiltWord(){
-        getModel().deleteEntryData("aos_entryentity");
         DynamicObjectCollection entityRows = getModel().getDataEntity(true).getDynamicObjectCollection("aos_linentity");
         if (entityRows.size()==0) {
             return;
@@ -635,10 +735,16 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         List<String> spiltKeyWord = new ArrayList<>();
         //搜索总量
         Map<String,Integer> map_search = new HashMap<>(spiltKeyWord.size());
+        Map<String,Integer> map_frequencyCount = new HashMap<>();
+        //行信息
+        Map<String,DynamicObject> map_oldRows = new HashMap<>();
+        //品名词库的数据
+        Map<String,DynamicObject> map_lineEntity = new HashMap<>();
         for (DynamicObject row : entityRows) {
             String keyWord = row.getString("aos_keyword");
             if (FndGlobal.IsNull(keyWord))
                 continue;
+            map_lineEntity.put(keyWord,row);
 
             //搜索总量
             int search = Optional.ofNullable(row.getInt("aos_search")).orElse(0);
@@ -651,38 +757,81 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
                 int wordSearch = map_search.getOrDefault(combination, 0);
                 wordSearch = wordSearch + search;
                 map_search.put(combination,wordSearch);
+
+                int frequency = map_frequencyCount.getOrDefault(combination, 0);
+                frequency++;
+                map_frequencyCount.put(combination,frequency);
+            }
+        }
+        //将词根表之前的数据也添加进去
+        DynamicObjectCollection aos_entryentity = getModel().getDataEntity(true).getDynamicObjectCollection("aos_entryentity");
+        for (DynamicObject object : aos_entryentity) {
+            String keyWord = object.getString("aos_root");
+            if (FndGlobal.IsNotNull(keyWord)){
+                if (!spiltKeyWord.contains(keyWord))
+                    spiltKeyWord.add(keyWord);
             }
         }
 
         //获取拆分词的词频和搜索量
         Map<String,String> map_wordInfo = new HashMap<>();
-        Map<String,Integer> map_frequency = calculateWordFrequency(spiltKeyWord,map_wordInfo);
-
+        calculateWordFrequency(spiltKeyWord,map_wordInfo);
+        Map<String,Integer> map_frequency = new LinkedHashMap<>(map_frequencyCount.size());
+        if (map_frequencyCount.entrySet().size()>0){
+            map_frequencyCount.entrySet().stream()
+                    .sorted((o1,o2)->-(o1.getValue()-o2.getValue()))
+                    .forEach(e-> map_frequency.put(e.getKey(),e.getValue()));
+        }
         //数据填充
-        DynamicObjectCollection aos_entryentity = getModel().getDataEntity(true).getDynamicObjectCollection("aos_entryentity");
+
+        for (DynamicObject dy : aos_entryentity) {
+            if (FndGlobal.IsNotNull(dy.getString("aos_root")))
+                map_oldRows.put(dy.getString("aos_root"),dy);
+        }
+        getModel().deleteEntryData("aos_entryentity");
+        aos_entryentity = getModel().getDataEntity(true).getDynamicObjectCollection("aos_entryentity");
         for (Map.Entry<String, Integer> entry : map_frequency.entrySet()) {
             DynamicObject newRow = aos_entryentity.addNew();
             newRow.set("aos_root",entry.getKey());
-            if (map_wordInfo.containsKey(entry.getKey())){
-                String attrValue = map_wordInfo.get(entry.getKey());
-                if (FndGlobal.IsNotNull(attrValue)){
-                    String[] split = attrValue.split("/");
-                    if (split.length>0)
-                        newRow.set("aos_root_attr",split[0]);
-                    if (split.length>1)
-                        newRow.set("aos_root_value",split[1]);
+
+            if (map_oldRows.keySet().contains(entry.getKey())){
+                DynamicObject oldRow = map_oldRows.get(entry.getKey());
+                newRow.set("aos_root_attr",oldRow.get("aos_root_attr"));
+                newRow.set("aos_root_value",oldRow.get("aos_root_value"));
+                newRow.set("aos_total",oldRow.get("aos_total"));
+            }
+            else {
+                if (map_wordInfo.containsKey(entry.getKey())){
+                    String attrValue = map_wordInfo.get(entry.getKey());
+                    if (FndGlobal.IsNotNull(attrValue)){
+                        String[] split = attrValue.split("/");
+                        if (split.length>0)
+                            newRow.set("aos_root_attr",split[0]);
+                        if (split.length>1)
+                            newRow.set("aos_root_value",split[1]);
+                    }
                 }
+                newRow.set("aos_total",map_search.getOrDefault(entry.getKey(),0));
             }
             newRow.set("aos_word_fre",entry.getValue());
-            newRow.set("aos_total",map_search.getOrDefault(entry.getKey(),0));
+
+            //设置品名数据库的信息
+            if (map_lineEntity.containsKey(entry.getKey())) {
+                DynamicObject lienRow = map_lineEntity.get(entry.getKey());
+                lienRow.set("aos_attribute",newRow.get("aos_root_attr"));
+            }
         }
         getView().updateView("aos_entryentity");
+        getView().updateView("aos_linentity");
     }
-    private Map<String,Integer> calculateWordFrequency(List<String> spildWord ,Map<String,String> map_wordInfo){
+
+    //查找属性标签和属性值
+    private void calculateWordFrequency(List<String> spildWord ,Map<String,String> map_wordInfo){
         QFBuilder builder = new QFBuilder();
         Object orgid = this.getModel().getDataEntity(true).getDynamicObject("aos_orgid").getPkValue();
         builder.add("aos_org","=",orgid);
         builder.add("aos_root","!=","");
+        builder.add("aos_root",QFilter.in,spildWord);
         DynamicObjectCollection result = QueryServiceHelper.query("aos_mkt_root", "aos_root,aos_attribute,aos_value", builder.toArray());
         Map<String,Integer> map_frequency = new HashMap<>();
         for (DynamicObject dy_row : result) {
@@ -696,23 +845,8 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
                     String info = dy_row.getString("aos_attribute")+"/"+dy_row.getString("aos_value");
                     map_wordInfo.put(word,info);
                 }
-                String[] splitWords = root.split(" ");
-                for (String splitWord : splitWords) {
-                    if (splitWord.equals(word)){
-                        int wordFrequency = map_frequency.getOrDefault(word, 0);
-                        wordFrequency++;
-                        map_frequency.put(word,wordFrequency);
-                    }
-                }
             }
+        }
 
-        }
-        Map<String,Integer> map_result = new LinkedHashMap<>(map_frequency.size());
-        if (map_frequency.entrySet().size()>0){
-            map_frequency.entrySet().stream()
-                    .sorted((o1,o2)->-(o1.getValue()-o2.getValue()))
-                    .forEach(e-> map_result.put(e.getKey(),e.getValue()));
-        }
-        return map_result;
     }
 }
