@@ -37,19 +37,22 @@ public class sensitiveWordsUtils {
         JSONObject result = InitLanguageSensitiveWords();
         if (FndGlobal.IsNull(productNo))
             return result;
+        String itemName = null;
+        String[] cateNameEn = null;
         QFBuilder builder = new QFBuilder("aos_productno","=",productNo);
         //加入物料通用过滤条件
         builder.add("name","!=","");
         DynamicObjectCollection items = QueryServiceHelper.query("bd_material", "id,name", builder.toArray(), "createtime desc", 1);
-        if (items.size()==0) {
-            return result;
+        if (items.size()>0) {
+            itemName = items.get(0).getString("name");
+            String itemId = items.get(0).getString("id");
+            //查找英文品类名
+            ItemCategoryDao categoryDao = new ItemCategoryDaoImpl();
+            ILocaleString cateName = categoryDao.getItemCateName(itemId);
+            if (FndGlobal.IsNotNull(cateName) && FndGlobal.IsNotNull(cateName.getLocaleValue_en()))
+                cateNameEn = cateName.getLocaleValue_en().split(",");
         }
-        String itemName = items.get(0).getString("name");
-        String itemId = items.get(0).getString("id");
-        //查找英文品类名
-        ItemCategoryDao categoryDao = new ItemCategoryDaoImpl();
-        ILocaleString cateName = categoryDao.getItemCateName(itemId);
-        String[] cateNameEn = cateName.getLocaleValue_en().split(",");
+
         //查询敏感词
         builder.clear();
         builder.add("aos_words","!=","");
@@ -81,28 +84,28 @@ public class sensitiveWordsUtils {
 
             //判断大类是否相等
             String cate = searchResult.getString("aos_cate1");
-            boolean equivalent = FndGlobal.IsNull(cate) || cateNameEn.length<1 || cate.equals(cateNameEn[0]);
+            boolean equivalent = FndGlobal.IsNull(cate)|| FndGlobal.IsNull(cateNameEn) || cateNameEn.length<1 || cate.equals(cateNameEn[0]);
             if (!equivalent) {
                 continue;
             }
 
             //中类
             cate = searchResult.getString("aos_cate2");
-            equivalent = FndGlobal.IsNull(cate) || cateNameEn.length<2 || cate.equals(cateNameEn[1]);
+            equivalent = FndGlobal.IsNull(cate) || FndGlobal.IsNull(cateNameEn) || cateNameEn.length<2 || cate.equals(cateNameEn[1]);
             if (!equivalent){
                 continue;
             }
 
             //小类
             cate = searchResult.getString("aos_cate3");
-            equivalent = FndGlobal.IsNull(cate) || cateNameEn.length<3 || cate.equals(cateNameEn[2]);
+            equivalent = FndGlobal.IsNull(cate)|| FndGlobal.IsNull(cateNameEn) || cateNameEn.length<3 || cate.equals(cateNameEn[2]);
             if (!equivalent){
                 continue;
             }
 
             //品名
             String searchName = searchResult.getString("aos_name");
-            equivalent = FndGlobal.IsNull(searchName) || itemName.equals(searchName);
+            equivalent = FndGlobal.IsNull(searchName) || FndGlobal.IsNull(itemName) || itemName.equals(searchName);
             if (!equivalent){
                 continue;
             }
@@ -204,6 +207,11 @@ public class sensitiveWordsUtils {
                 //单个敏感词的字符遍历
                 for (int senCharIndex = 0; senCharIndex < sensitiveCharArray.size(); senCharIndex++) {
                     //校验内容字符
+                    if ((contentIndex+senCharIndex)>=contentArrays.size()){
+                        abnormal = false;
+                        break;
+                    }
+
                     String contentChar = contentArrays.getString(contentIndex+senCharIndex);
                     //校验敏感词字符
                     String sensitiveChar = sensitiveCharArray.getString(senCharIndex);

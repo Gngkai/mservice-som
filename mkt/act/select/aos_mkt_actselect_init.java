@@ -1,6 +1,7 @@
 package mkt.act.select;
 
 import common.Cux_Common_Utl;
+import common.fnd.FndDate;
 import common.fnd.FndGlobal;
 import common.sal.util.InStockAvailableDays;
 import common.sal.util.SalUtil;
@@ -148,19 +149,19 @@ public class aos_mkt_actselect_init extends AbstractTask {
 		List<String> list_unSaleItemid = getNewestUnsaleDy(String.valueOf(p_ou_code));
 
 		// 并上营销国别滞销货号
-		filters = new QFilter[]{new QFilter("aos_orgid.number", QCP.equals, p_ou_code)};
-		List<String> unsalableProducts = QueryServiceHelper.query("aos_base_stitem", "aos_itemid", filters)
-				.stream()
-				.map(dy -> dy.getString("aos_itemid"))
-				.filter(FndGlobal::IsNotNull)
-				.distinct()
+		filters = new QFilter[] { new QFilter("aos_orgid.number", QCP.equals, p_ou_code) };
+		List<String> unsalableProducts = QueryServiceHelper.query("aos_base_stitem", "aos_itemid", filters).stream()
+				.map(dy -> dy.getString("aos_itemid")).filter(FndGlobal::IsNotNull).distinct()
 				.collect(Collectors.toList());
+
+		// 获取本月第一份排名改善汇总表
+		Set<String> firstRank = getFirstRank(p_ou_code);
+		Map<String, Object> cateSeason = getCateSeason(p_ou_code); // aos_mkt_cateseason
 
 		for (DynamicObject bd_material : bd_materialS) {
 			count++;
 			System.out.println(p_ou_code + "进度" + "(" + count + "/" + rows + ")");
 			// 判断是否跳过
-
 			long l1 = System.currentTimeMillis();
 			long item_id = bd_material.getLong("id");
 			long org_id = bd_material.getLong("aos_orgid");
@@ -270,7 +271,7 @@ public class aos_mkt_actselect_init extends AbstractTask {
 			int day7Sales = (int) Cux_Common_Utl.nvl(Order7Days.get(String.valueOf(item_id)));
 			String aos_typedetail = "";// 滞销类型 低动销 低周转
 
-			//季节品
+			// 季节品
 			boolean seasonProduct = aos_seasonpro.equals("AUTUMN_WINTER") || aos_seasonpro.equals("WINTER")
 					|| aos_seasonpro.equals("SPRING") || aos_seasonpro.equals("SPRING_SUMMER")
 					|| aos_seasonpro.equals("SUMMER");
@@ -302,15 +303,15 @@ public class aos_mkt_actselect_init extends AbstractTask {
 				aos_typedetail = "爆品";
 			}
 
-
-			//非爆品
+			// 非爆品
 			if (!issaleout) {
 				Object org_id_o = Long.toString(org_id);
 				int aos_shp_day = (int) aos_shpday_map.get(org_id_o);// 备货天数
 				int aos_freight_day = (int) aos_clearday_map.get(org_id_o);// 海运天数
 				int aos_clear_day = (int) aos_freightday_map.get(org_id_o);// 清关天数
-				//预断货
-				boolean preSaleOut = MKTCom.Is_PreSaleOut(org_id, item_id, (int) item_intransqty, aos_shp_day, aos_freight_day, aos_clear_day, availableDays);
+				// 预断货
+				boolean preSaleOut = MKTCom.Is_PreSaleOut(org_id, item_id, (int) item_intransqty, aos_shp_day,
+						aos_freight_day, aos_clear_day, availableDays);
 
 				// 1.0季节品 累计完成率
 				if (seasonProduct) {
@@ -338,13 +339,13 @@ public class aos_mkt_actselect_init extends AbstractTask {
 				}
 				// 2.0常规品 滞销
 				else if (aos_seasonpro.equals("REGULAR") || aos_seasonpro.equals("SPRING-SUMMER-CONVENTIONAL")) {
-					//判断是为周转还是低滞销
+					// 判断是为周转还是低滞销
 					aos_typedetail = MKTCom.Get_RegularUn(aos_orgnumber, availableDays, R);
 					// 20230711 gk:判断是否为常规品滞销
 					if ("".equals(aos_typedetail)) {
-						//营销国别滞销货号中存在这个货号,并且还不为 预断货
+						// 营销国别滞销货号中存在这个货号,并且还不为 预断货
 						boolean conventType = unsalableProducts.contains(String.valueOf(item_id)) && !preSaleOut;
-						if (conventType){
+						if (conventType) {
 							aos_typedetail = "常规品滞销";
 						}
 					}
@@ -439,6 +440,14 @@ public class aos_mkt_actselect_init extends AbstractTask {
 					InStockAvailableDays.getPlatAvgQty(String.valueOf(org_id), String.valueOf(item_id)));// 平台仓库可售天数
 			aos_entryentity.set("aos_is_saleout", saleout); // 是否爆品
 
+			// 排名是否达标
+			if (FndGlobal.IsNotNull(firstRank) && firstRank.contains(String.valueOf(item_id))) {
+				aos_entryentity.set("aos_level", true);
+			}
+			if (FndGlobal.IsNotNull(cateSeason)) {
+				aos_entryentity.set("aos_attr", cateSeason.get(aos_category1 + "~" + aos_category2));
+			}
+
 			long l3 = System.currentTimeMillis();
 			System.out.println("耗时:" + (l3 - l2) + "ms");
 		}
@@ -454,6 +463,50 @@ public class aos_mkt_actselect_init extends AbstractTask {
 				new DynamicObject[] { aos_sync_log }, OperateOption.create());
 		if (operationrstLog.getValidateResult().getValidateErrors().size() != 0) {
 		}
+	}
+
+	private static Map<String, Object> getCateSeason(Object p_ou_code) {
+		HashMap<String, Object> cateSeason = new HashMap<>();
+		DynamicObjectCollection aos_mkt_cateseasonS = QueryServiceHelper.query("aos_mkt_cateseason",
+				"aos_category1," + "aos_category2,aos_festname",
+				new QFilter("aos_startdate", QCP.large_equals, FndDate.add_days(new Date(), 60))
+						.and("aos_endate", QCP.less_equals, FndDate.add_days(new Date(), 60))
+						.and("aos_orgid.number", QCP.equals, p_ou_code).toArray());
+		for (DynamicObject aos_mkt_cateseason : aos_mkt_cateseasonS) {
+			String aos_category1 = aos_mkt_cateseason.getString("aos_category1");
+			String aos_category2 = aos_mkt_cateseason.getString("aos_category2");
+			String aos_festname = aos_mkt_cateseason.getString("aos_festname");
+			Object lastObject = cateSeason.get("aos_category1" + "~" + "aos_category2");
+			if (FndGlobal.IsNull(lastObject))
+				cateSeason.put(aos_category1 + "~" + aos_category2, aos_festname);
+			else
+				cateSeason.put(aos_category1 + "~" + aos_category2, lastObject + "/" + aos_festname);
+		}
+		return cateSeason;
+	}
+
+	/**
+	 * 获取本月第一份排名改善汇总表
+	 * 
+	 * @param p_ou_code
+	 * @return
+	 */
+	private static Set<String> getFirstRank(Object p_ou_code) {
+		LocalDate firstDayOfMonth = LocalDate.now().withDayOfMonth(1);
+		DynamicObjectCollection aos_sal_ranksumS = QueryServiceHelper.query("aos_sal_ranksum", "id",
+				new QFilter("aos_submitdate", ">=", firstDayOfMonth).toArray(), "aos_submitdate asc");
+		Object fid = null;
+		for (DynamicObject aos_sal_ranksum : aos_sal_ranksumS) {
+			fid = aos_sal_ranksum.get("id");
+			break;
+		}
+		aos_sal_ranksumS = QueryServiceHelper.query("aos_sal_ranksum", "aos_entryentity.aos_itemid aos_itemid",
+				new QFilter("aos_orgid.number", QCP.equals, p_ou_code).and("id", QCP.equals, fid).toArray());
+		if (FndGlobal.IsNotNull(aos_sal_ranksumS))
+			return aos_sal_ranksumS.stream().map(obj -> obj.getString("aos_itemid")).distinct()
+					.collect(Collectors.toSet());
+		else
+			return null;
 	}
 
 	/**

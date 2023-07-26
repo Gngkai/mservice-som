@@ -59,6 +59,14 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 		FndMsg.debug("FieldName " + FieldName);
 		if ("aos_url".equals(FieldName))
 			getView().openUrl(this.getModel().getValue(FieldName, RowIndex).toString());
+		else if ("aos_productno".equals(FieldName)) {
+			DynamicObject aos_itemid = (DynamicObject) this.getModel().getValue("aos_itemid", 0);// 根据状态判断当前流程节点
+			DynamicObject aos_aadd_model = QueryServiceHelper.queryOne("aos_aadd_model", "id",
+					new QFilter("aos_productno", QCP.equals, aos_itemid.getString("aos_productno")).toArray());
+			if (FndGlobal.IsNotNull(aos_aadd_model)) {
+				FndGlobal.OpenBillById(getView(), "aos_aadd_model", aos_aadd_model.get("id"));
+			}
+		}
 	}
 
 	public void propertyChanged(PropertyChangedArgs e) {
@@ -220,7 +228,7 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 			// 2.按流程中的SKU，找到对应产品号下的其他SKU，生成多张英语国别(US/CA/UK)同款高级A+需求表，流程到04节点
 			FndMsg.debug("=======2=======");
 			DynamicObjectCollection sameSegmentS = QueryServiceHelper.query("bd_material", "id",
-					new QFilter("aos_productno", QCP.equals, aos_productno)
+					new QFilter("aos_productno", QCP.equals, aos_productno).and("aos_protype", QCP.equals, "N")
 							.and("id", QCP.not_equals, ((DynamicObject) aosItemId).getPkValue()).toArray());
 			for (DynamicObject sameSegment : sameSegmentS) {
 				Set<String> segmentSet = getItemOrg(sameSegment.get("id"));
@@ -228,7 +236,8 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 					Iterator<String> iterSeg = segmentSet.iterator();
 					while (iterSeg.hasNext()) {
 						String ou = iterSeg.next();
-						if ("US,UK,CA".contains(ou) && !aos_org.equals(ou)) {
+						if ("US,UK,CA".contains(ou) && !sameSegment.getString("id")
+								.equals(((DynamicObject) aosItemId).getPkValue().toString())) {
 							genSameAadd(ReqFId, ou, 0, "NORMAL", sameSegment.get("id"));
 						}
 					}
@@ -278,18 +287,6 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 		String messageId = aos_user.toString();
 		MKTCom.SendGlobalMessage(messageId, "aos_mkt_aadd", ReqFId, aosBillNo, "高级A+需求单-新品对比模块录入");
 
-		// 如果当前为小语种同步主单 则需要同步修改其他子单
-		Boolean aos_min = (Boolean) this.getModel().getValue("aos_min");
-		Object aos_sourceid = this.getModel().getValue("aos_sourceid");
-		if (aos_min) {
-			DynamicObjectCollection aosMktAaddS = QueryServiceHelper.query("aos_mkt_aadd", "id",
-					new QFilter("aos_son", QCP.equals, true).and("aos_sourceid", QCP.equals, aos_sourceid).toArray());
-			for (DynamicObject aosMktAadd : aosMktAaddS) {
-				DynamicObject son = BusinessDataServiceHelper.loadSingle(aosMktAadd.get("id"), "aos_mkt_aadd");
-				son.set("aos_user", son.get("aos_design"));
-				son.set("aos_status", "设计制作");
-			}
-		}
 	}
 
 	/**
@@ -308,6 +305,21 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 		String ReqFId = this.getModel().getDataEntity().getPkValue().toString();
 		String aosBillNo = this.getModel().getValue("aos_billno").toString();
 		MKTCom.SendGlobalMessage(messageId, "aos_mkt_aadd", ReqFId, aosBillNo, "高级A+需求单-设计制作");
+
+		// 如果当前为小语种同步主单 则需要同步修改其他子单
+		Boolean aos_min = (Boolean) this.getModel().getValue("aos_min");
+		Object aos_sourceid = this.getModel().getValue("aos_sourceid");
+		if (aos_min) {
+			DynamicObjectCollection aosMktAaddS = QueryServiceHelper.query("aos_mkt_aadd", "id",
+					new QFilter("aos_son", QCP.equals, true).and("aos_sourceid", QCP.equals, aos_sourceid).toArray());
+			for (DynamicObject aosMktAadd : aosMktAaddS) {
+				DynamicObject son = BusinessDataServiceHelper.loadSingle(aosMktAadd.get("id"), "aos_mkt_aadd");
+				son.set("aos_user", son.get("aos_design"));
+				son.set("aos_status", "设计制作");
+				OperationServiceHelper.executeOperate("save", "aos_mkt_aadd", new DynamicObject[] { son },
+						OperateOption.create());
+			}
+		}
 	}
 
 	/**
@@ -359,6 +371,22 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 			String ReqFId = this.getModel().getDataEntity().getPkValue().toString();
 			String aosBillNo = this.getModel().getValue("aos_billno").toString();
 			MKTCom.SendGlobalMessage(messageId, "aos_mkt_aadd", ReqFId, aosBillNo, "高级A+需求单-设计制作");
+
+			// 如果当前为小语种确认主单 则提交所有小语种同步单据
+			Boolean aos_min = (Boolean) this.getModel().getValue("aos_min");
+			Object aos_sourceid = this.getModel().getValue("aos_sourceid");
+			if (aos_min) {
+				DynamicObjectCollection aosMktAaddS = QueryServiceHelper.query("aos_mkt_aadd", "id",
+						new QFilter("aos_son", QCP.equals, true).and("aos_sourceid", QCP.equals, aos_sourceid)
+								.toArray());
+				for (DynamicObject aosMktAadd : aosMktAaddS) {
+					DynamicObject son = BusinessDataServiceHelper.loadSingle(aosMktAadd.get("id"), "aos_mkt_aadd");
+					son.set("aos_user", son.get("aos_design"));
+					son.set("aos_status", "设计制作");
+					OperationServiceHelper.executeOperate("save", "aos_mkt_aadd", new DynamicObject[] { son },
+							OperateOption.create());
+				}
+			}
 		}
 	}
 
@@ -538,8 +566,7 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 					this.getModel().setValue("aos_organization1", MapList.get(2).get("id"));
 			}
 			// 设置国别初始下拉为空
-			ComboEdit aos_org = getControl("aos_org");
-			aos_org.setComboItems(null);
+			aosTypeChange();
 		} catch (Exception ex) {
 			FndError.showex(getView(), ex);
 		}
@@ -587,8 +614,11 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 		Object aosStatus = this.getModel().getValue("aos_status");
 		DynamicObject aosUser = (DynamicObject) this.getModel().getValue("aos_user");
 		Object currentUserId = UserServiceHelper.getCurrentUserId();
+		Object CurrentUserId = UserServiceHelper.getCurrentUserId();
+		Object CurrentUserName = UserServiceHelper.getUserInfoByID((long) CurrentUserId).get("name");
 		// 权限控制
-		if (!aosUser.getPkValue().toString().equals(currentUserId.toString())) {
+		if (!aosUser.getPkValue().toString().equals(currentUserId.toString())
+				&& !"程震杰".equals(CurrentUserName.toString())) {
 			this.getView().setEnable(false, "titlepanel");// 标题面板
 			this.getView().setEnable(false, "aos_contentpanelflex");// 主界面面板
 			this.getView().setVisible(false, "bar_save");// 保存

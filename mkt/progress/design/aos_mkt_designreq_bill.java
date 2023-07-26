@@ -6,7 +6,6 @@ import common.Cux_Common_Utl;
 import common.fnd.FndError;
 import common.fnd.FndGlobal;
 import common.fnd.FndHistory;
-import common.fnd.FndMsg;
 import common.sal.sys.basedata.dao.CountryDao;
 import common.sal.sys.basedata.dao.impl.CountryDaoImpl;
 import common.sal.util.SalUtil;
@@ -617,6 +616,9 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 
 		// 执行保存操作
 		dy_main.set("aos_status", "设计");// 设置单据流程状态
+		
+		dy_main.set("aos_receivedate", new Date());// 设计接收日期
+		
 		dy_main.set("aos_user", aos_designer);// 设置操作人为设计
 
 		String MessageId = null;
@@ -842,6 +844,7 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 
 		// 设置单据流程状态
 		dy_main.set("aos_status", "设计确认3D");
+		dy_main.set("aos_receivedate", new Date());// 设计接收日期
 		dy_main.set("aos_user", aos_designer);
 		MessageId = ((DynamicObject) aos_designer).getPkValue().toString();
 		Message = "设计需求表-设计确认3D";

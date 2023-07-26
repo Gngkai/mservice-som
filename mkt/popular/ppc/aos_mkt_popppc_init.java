@@ -911,6 +911,11 @@ public class aos_mkt_popppc_init extends AbstractTask {
 						RoiType = "k";
 					}
 
+					// 周2周4不剔除
+					if (week == Calendar.TUESDAY && week == Calendar.THURSDAY) {
+						ROIFlag = false;
+					}
+					
 					if (ROIFlag) {
 						InsertData(aos_entryentityS, insert_map, "ROI", roiMap);
 						log.add(aos_itemnumer + " " + RoiType + " 差ROI自动剔除");
@@ -949,8 +954,13 @@ public class aos_mkt_popppc_init extends AbstractTask {
 						ProFlag = false;
 					}
 
-					// k.周24加回
-					if (week != Calendar.TUESDAY && week != Calendar.THURSDAY && !"true".equals(saleAdd)) {
+					// k.周135 正常剔除 销售加回不剔除
+					if (week != Calendar.TUESDAY && week != Calendar.THURSDAY && "true".equals(saleAdd)) {
+						ProFlag = false;
+					}
+					
+					// k.周24剔除135部分
+					if (week == Calendar.TUESDAY && week == Calendar.THURSDAY) {
 						ProFlag = false;
 					}
 
