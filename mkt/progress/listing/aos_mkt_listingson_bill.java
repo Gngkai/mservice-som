@@ -7,7 +7,6 @@ import com.sun.istack.NotNull;
 import common.Cux_Common_Utl;
 import common.fnd.FndError;
 import common.fnd.FndHistory;
-import common.fnd.FndWebHook;
 import common.sal.sys.basedata.dao.CountryDao;
 import common.sal.sys.basedata.dao.impl.CountryDaoImpl;
 import common.sal.util.SalUtil;
@@ -554,6 +553,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
 				}
 				aos_mkt_designreq.set("aos_user", MessageId);
 				aos_mkt_designreq.set("aos_status", "设计确认:翻译");
+				aos_mkt_designreq.set("aos_receivedate", new Date());
 				mkt.progress.design.aos_mkt_designreq_bill.setEntityValue(aos_mkt_designreq);
 				FndHistory.Create(aos_mkt_designreq, "提交", aos_status);
 				OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_designreq",

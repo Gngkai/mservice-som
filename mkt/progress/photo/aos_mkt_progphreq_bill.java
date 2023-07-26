@@ -9,7 +9,6 @@ import common.fnd.FndDate;
 import common.fnd.FndError;
 import common.fnd.FndGlobal;
 import common.fnd.FndHistory;
-import common.fnd.FndMsg;
 import common.fnd.FndWebHook;
 import common.sal.util.SalUtil;
 import kd.bos.bill.AbstractBillPlugIn;
@@ -22,11 +21,9 @@ import kd.bos.dataentity.entity.LocaleString;
 import kd.bos.dataentity.utils.StringUtils;
 import kd.bos.entity.datamodel.events.PropertyChangedArgs;
 import kd.bos.entity.operate.result.OperationResult;
-import kd.bos.entity.report.CellStyle;
 import kd.bos.form.ClientProperties;
 import kd.bos.form.FormShowParameter;
 import kd.bos.form.ShowType;
-import kd.bos.form.control.Control;
 import kd.bos.form.control.EntryGrid;
 import kd.bos.form.control.Image;
 import kd.bos.form.control.events.ItemClickEvent;
@@ -36,7 +33,6 @@ import kd.bos.form.events.BeforeClosedEvent;
 import kd.bos.form.events.BeforeDoOperationEventArgs;
 import kd.bos.form.events.HyperLinkClickEvent;
 import kd.bos.form.events.HyperLinkClickListener;
-import kd.bos.form.field.TextEdit;
 import kd.bos.form.operate.FormOperate;
 import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
@@ -1389,8 +1385,9 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		}
 
 		if (StrightCut) {
-			AosUser = AosVedior;// 直接流转给摄像
-			MessageId = ((DynamicObject) AosVedior).getPkValue().toString();
+			dy_main.set(aos_vedior, UserServiceHelper.getCurrentUserId());
+			AosUser = UserServiceHelper.getCurrentUserId();// 直接流转给摄像
+			MessageId = UserServiceHelper.getCurrentUserId()+"";
 			AosStatus = "视频剪辑";
 			dy_main.set(aos_type, "视频");
 			message = "拍照需求表-视频拍摄";
@@ -1805,8 +1802,9 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			GenerateListing();// 按照语言生成Listing优化需求子表&小语种
 		} else {
 			AosStatus = "视频剪辑";
-			AosUser = AosVedior;
-			MessageId = ((DynamicObject) AosVedior).getPkValue().toString();
+			this.getModel().setValue(aos_vedior, UserServiceHelper.getCurrentUserId());
+			AosUser = UserServiceHelper.getCurrentUserId();
+			MessageId = UserServiceHelper.getCurrentUserId()+"";
 		}
 
 		// 回写拍照任务清单
