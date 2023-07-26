@@ -19,6 +19,7 @@ import kd.bos.entity.datamodel.events.ImportDataEventArgs;
 import kd.bos.entity.datamodel.events.PropertyChangedArgs;
 import kd.bos.form.ShowType;
 import kd.bos.form.StyleCss;
+import kd.bos.form.control.Control;
 import kd.bos.form.control.EntryGrid;
 import kd.bos.form.control.Image;
 import kd.bos.form.control.events.ItemClickEvent;
@@ -78,6 +79,8 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
             EntryGrid aos_itementity = this.getControl("aos_itementity");
             aos_itementity.addHyperClickListener(this);
             this.addItemClickListeners("tbmain");
+
+            this.addClickListeners("aos_buttonap");
         } catch (Exception ex) {
             this.getView().showErrorNotification("registerListener = " + ex.toString());
         }
@@ -98,7 +101,18 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
            }
         }
         else if (itemKey.equals("aos_split")){
+            spiltWord();
+        }
+    }
 
+    @Override
+    public void click(EventObject evt) {
+        super.click(evt);
+        Control control = (Control) evt.getSource();
+        String key = control.getKey();
+        if (key.equals("aos_buttonap")){
+            Map<String,Object> params = new HashMap<>();
+            FndGlobal.OpenForm(this,"aos_mkt_point_sw",params);
         }
     }
 
@@ -269,12 +283,8 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         DynamicObject dynamicObject = getEditorInfo(aos_category);
         if (dynamicObject != null) {
             this.getModel().setValue("aos_user", dynamicObject.getString("aos_editor"));
-            this.getModel().setValue("aos_groupid", dynamicObject.getString("aos_group_edit"));
-            this.getModel().setValue("aos_confirmor", dynamicObject.getString("aos_edit_leader"));
         } else {
             this.getModel().setValue("aos_user", null);
-            this.getModel().setValue("aos_groupid", null);
-            this.getModel().setValue("aos_confirmor", null);
         }
     }
 
@@ -618,7 +628,7 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
      */
     private void spiltWord(){
         getModel().deleteEntryData("aos_entryentity");
-        DynamicObjectCollection entityRows = getModel().getDataEntity(true).getDynamicObjectCollection("aos_entryentity");
+        DynamicObjectCollection entityRows = getModel().getDataEntity(true).getDynamicObjectCollection("aos_linentity");
         if (entityRows.size()==0) {
             return;
         }
@@ -645,13 +655,30 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         }
 
         //获取拆分词的词频和搜索量
-        Map<String,Integer> map_frequency = new HashMap<>(spiltKeyWord.size());
         Map<String,String> map_wordInfo = new HashMap<>();
-        calculateWordFrequency(spiltKeyWord,map_wordInfo);
+        Map<String,Integer> map_frequency = calculateWordFrequency(spiltKeyWord,map_wordInfo);
 
-
+        //数据填充
+        DynamicObjectCollection aos_entryentity = getModel().getDataEntity(true).getDynamicObjectCollection("aos_entryentity");
+        for (Map.Entry<String, Integer> entry : map_frequency.entrySet()) {
+            DynamicObject newRow = aos_entryentity.addNew();
+            newRow.set("aos_root",entry.getKey());
+            if (map_wordInfo.containsKey(entry.getKey())){
+                String attrValue = map_wordInfo.get(entry.getKey());
+                if (FndGlobal.IsNotNull(attrValue)){
+                    String[] split = attrValue.split("/");
+                    if (split.length>0)
+                        newRow.set("aos_root_attr",split[0]);
+                    if (split.length>1)
+                        newRow.set("aos_root_value",split[1]);
+                }
+            }
+            newRow.set("aos_word_fre",entry.getValue());
+            newRow.set("aos_total",map_search.getOrDefault(entry.getKey(),0));
+        }
+        getView().updateView("aos_entryentity");
     }
-    private void calculateWordFrequency(List<String> spildWord ,Map<String,String> map_wordInfo){
+    private Map<String,Integer> calculateWordFrequency(List<String> spildWord ,Map<String,String> map_wordInfo){
         QFBuilder builder = new QFBuilder();
         Object orgid = this.getModel().getDataEntity(true).getDynamicObject("aos_orgid").getPkValue();
         builder.add("aos_org","=",orgid);
@@ -680,7 +707,12 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
             }
 
         }
-
-
+        Map<String,Integer> map_result = new LinkedHashMap<>(map_frequency.size());
+        if (map_frequency.entrySet().size()>0){
+            map_frequency.entrySet().stream()
+                    .sorted((o1,o2)->-(o1.getValue()-o2.getValue()))
+                    .forEach(e-> map_result.put(e.getKey(),e.getValue()));
+        }
+        return map_result;
     }
 }
