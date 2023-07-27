@@ -245,6 +245,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
 				SubmitToOsConfirm(dy_main);
 			else
 				SubmitForEditor(dy_main);
+			fillDesign(dy_main);
 			break;
 		case "海外确认":
 			SubmitForEditor(dy_main);
@@ -347,7 +348,6 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
 		long currentUserId = UserServiceHelper.getCurrentUserId();
 		dy_main.set("aos_make", currentUserId);
 		dy_main.set("aos_status", "海外确认");// 设置单据流程状态
-		fillDesign(dy_main);
 	}
 
 	/** 来源类型=设计需求表时，编辑确认节点可编辑；提交后将值回写到设计需求表的功能图文案备注字段 **/
