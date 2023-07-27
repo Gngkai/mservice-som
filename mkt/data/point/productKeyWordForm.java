@@ -50,7 +50,6 @@ import sal.synciface.imp.aos_sal_import_pub;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -119,7 +118,6 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
     @Override
     public void propertyChanged(PropertyChangedArgs e) {
         String name = e.getProperty().getName();
-        int rowIndex = e.getChangeSet()[0].getRowIndex();
         if (name.equals("aos_category1") || name.equals("aos_category2") || name.equals("aos_category3")) {
             init_category();
             Get_points();
@@ -672,7 +670,7 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         List<DynamicObject> entityRows = linentity
                 .stream()
                 .sorted((dy1, dy2) -> {
-                    int search1 = Optional.ofNullable(dy1.getInt("aos_search")).orElse(0);
+                    int search1 = Optional.of(dy1.getInt("aos_search")).orElse(0);
                     int search2 = Optional.ofNullable(dy2.getInt("aos_search")).orElse(0);
                     return -(search1 - search2);
                 })
