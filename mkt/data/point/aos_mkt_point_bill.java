@@ -131,7 +131,9 @@ public class aos_mkt_point_bill extends AbstractBillPlugIn implements RowClickEv
 			DynamicObject aos_mkt_data_slogan = QueryServiceHelper.queryOne("aos_mkt_data_slogan", SelectField,
 					filters);
 			if (aos_mkt_data_slogan != null) {
+				String aos_itemnamees = aos_mkt_data_slogan.getString("aos_itemnamees");
 				String aos_itemnamefr = aos_mkt_data_slogan.getString("aos_itemnamefr");
+				this.getModel().setValue("aos_pointses", aos_itemnamees);
 				this.getModel().setValue("aos_pointsfr", aos_itemnamefr);
 			}
 		} 
@@ -179,12 +181,16 @@ public class aos_mkt_point_bill extends AbstractBillPlugIn implements RowClickEv
 	}
 
 	private void init_point() {
+		this.getView().setVisible(false, "aos_pointses");
 		this.getView().setVisible(false, "aos_pointsfr");
 		Object aos_orgid = this.getModel().getValue("aos_orgid");
 		if (aos_orgid != null) {
 			DynamicObject aos_org = (DynamicObject) aos_orgid;
 			String aos_orgnumber = aos_org.getString("number");
-			if (aos_orgnumber.equals("CA")) {
+			if (aos_orgnumber.equals("US")){
+				this.getView().setVisible(true, "aos_pointses");
+			}
+			else if (aos_orgnumber.equals("CA")) {
 				this.getView().setVisible(true, "aos_pointsfr");
 			}
 		}
