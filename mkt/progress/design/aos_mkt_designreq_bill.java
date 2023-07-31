@@ -1238,6 +1238,9 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 			aos_entryentity.set("aos_is_saleout", ProgressUtil.Is_saleout(ItemId));
 			aos_entryentity.set("aos_require", dyn3d_r.get("aos_desreq"));
 			aos_entryentity.set("aos_srcrowseq", dyn3d_r.get("SEQ"));
+			
+			// 功能图文案备注
+			aos_entryentity.set("aos_remakes", dyn3d_r.get("aos_remakes"));
 
 			DynamicObjectCollection aos_attribute = aos_entryentity.getDynamicObjectCollection("aos_attribute");
 			aos_attribute.clear();
@@ -1362,6 +1365,10 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 			mkt_listing_min.set("aos_is_saleout", ProgressUtil.Is_saleout(LastItemId));
 			mkt_listing_min.set("aos_require", aos_entryentity.get("aos_desreq"));
 			mkt_listing_min.set("aos_srcrowseq", aos_entryentity.get("SEQ"));
+			// 功能图文案备注
+			mkt_listing_min.set("aos_remakes", aos_entryentity.get("aos_remakes"));
+			
+			
 			// 附件
 			DynamicObjectCollection aos_attribute = mkt_listing_min.getDynamicObjectCollection("aos_attribute");
 			aos_attribute.clear();

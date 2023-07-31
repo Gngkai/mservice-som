@@ -1004,6 +1004,9 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
 		// 属性细分
 		Object aos_detail = this.getModel().getValue("aos_detail");
 
+		Object aos_cname = this.getModel().getValue("aos_cname");
+		
+
 		DynamicObjectCollection aos_entryentityS = this.getModel().getEntryEntity("aos_entryentity");
 		// 新建状态下校验必填
 		if ("申请".equals(aos_status)) {
@@ -1037,7 +1040,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
 				String aos_slogan = aos_entryentity.getString("aos_slogan");
 
 				if ("CN".equals(aos_langr)) {
-					if (FndGlobal.IsNull(aos_itemname)) {
+					if (FndGlobal.IsNull(aos_itemname) && "新增".equals(aos_type)) {
 						fndError.add("CN品名必填!");
 					}
 					if (FndGlobal.IsNull(aos_slogan) && "新增".equals(aos_type)) {
@@ -1081,7 +1084,6 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
 
 			if ("新增".equals(aos_type)) {
 				// 校验唯一性
-				String aos_cname = aos_entryentityS.get(0).getString("aos_itemname");
 				Boolean exists = QueryServiceHelper.exists("aos_mkt_data_slogan",
 						new QFilter("aos_category1", QCP.equals, aos_category1)
 								.and("aos_category2", QCP.equals, aos_category2)
@@ -1095,7 +1097,6 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
 
 			else if ("优化".equals(aos_type)) {
 				// 校验唯一性
-				String aos_cname = aos_entryentityS.get(0).getString("aos_itemname");
 				Boolean exists = QueryServiceHelper.exists("aos_mkt_data_slogan",
 						new QFilter("aos_category1", QCP.equals, aos_category1)
 								.and("aos_category2", QCP.equals, aos_category2)

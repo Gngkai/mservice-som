@@ -9,6 +9,7 @@ import common.fnd.FndDate;
 import common.fnd.FndError;
 import common.fnd.FndGlobal;
 import common.fnd.FndHistory;
+import common.fnd.FndMsg;
 import common.fnd.FndWebHook;
 import common.sal.util.SalUtil;
 import kd.bos.bill.AbstractBillPlugIn;
@@ -42,6 +43,7 @@ import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
+import kd.bos.url.UrlService;
 import kd.fi.bd.util.QFBuilder;
 import mkt.common.MKTCom;
 import mkt.common.MKTS3PIC;
@@ -102,7 +104,77 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 	public void afterLoadData(EventObject e) {
 		super.afterLoadData(e);
 		StatusControl();
-		AosItemChange();
+		// AosItemChange();
+		itemInit();
+	}
+
+	private void itemInit() {
+		// 摄影标准库字段
+		Object AosItemid = this.getModel().getValue(aos_itemid);
+		DynamicObject AosItemidObject = (DynamicObject) AosItemid;
+		Object fid = AosItemidObject.getPkValue();
+
+		String category = (String) SalUtil.getCategoryByItemId(fid + "").get("name");
+		String[] category_group = category.split(",");
+		String AosCategory1 = null;
+		String AosCategory2 = null;
+		String AosCategory3 = null;
+		int category_length = category_group.length;
+		if (category_length > 0)
+			AosCategory1 = category_group[0];
+		if (category_length > 1)
+			AosCategory2 = category_group[1];
+		if (category_length > 2)
+			AosCategory3 = category_group[2];
+		// 赋值物料相关
+		DynamicObject bd_material = BusinessDataServiceHelper.loadSingle(fid, "bd_material");
+		String aosItemName = bd_material.getString("name");
+		
+					this.getModel().deleteEntryData("aos_entryentity5");
+					this.getModel().batchCreateNewEntryRow("aos_entryentity5", 1);
+					this.getModel().setValue("aos_refer", "摄影标准库", 0);
+					DynamicObject aosMktPhotoStd = QueryServiceHelper.queryOne("aos_mkt_photostd",
+							"aos_firstpicture,aos_other,aos_require",
+							new QFilter("aos_category1_name", QCP.equals, AosCategory1)
+									.and("aos_category2_name", QCP.equals, AosCategory2)
+									.and("aos_category3_name", QCP.equals, AosCategory3)
+									.and("aos_itemnamecn", QCP.equals, aosItemName).toArray());
+					if (FndGlobal.IsNotNull(aosMktPhotoStd)) {
+						this.getModel().setValue("aos_reqfirst", aosMktPhotoStd.getString("aos_firstpicture"), 0);
+						this.getModel().setValue("aos_reqother", aosMktPhotoStd.getString("aos_other"), 0);
+						this.getModel().setValue("aos_detail", aosMktPhotoStd.getString("aos_require"), 0);
+					}
+
+					// 布景标准库字段
+					DynamicObject aosMktViewStd = QueryServiceHelper.queryOne("aos_mkt_viewstd",
+							"aos_scene1,aos_object1,aos_scene2,aos_object2,aos_itemnamecn,aos_descpic",
+							new QFilter("aos_category1_name", QCP.equals, AosCategory1)
+									.and("aos_category2_name", QCP.equals, AosCategory2)
+									.and("aos_category3_name", QCP.equals, AosCategory3)
+									.and("aos_itemnamecn", QCP.equals, aosItemName).toArray());
+					if (FndGlobal.IsNotNull(aosMktViewStd)) {
+						this.getModel().setValue("aos_scene1", aosMktViewStd.getString("aos_scene1"), 0);
+						this.getModel().setValue("aos_object1", aosMktViewStd.getString("aos_object1"), 0);
+						this.getModel().setValue("aos_scene2", aosMktViewStd.getString("aos_scene2"), 0);
+						this.getModel().setValue("aos_object2", aosMktViewStd.getString("aos_object2"), 0);
+						this.getModel().setValue("aos_descpic", aosMktViewStd.getString("aos_descpic"), 0);
+					}
+
+					DynamicObject aos_color = bd_material.getDynamicObject("aos_color");
+					if (FndGlobal.IsNotNull(aos_color)) {
+						String aos_rgb = aos_color.getString("aos_rgb");
+						this.getModel().setValue("aos_rgb", aos_rgb);
+						this.getModel().setValue("aos_colors", aos_color.get("aos_colors"));
+						this.getModel().setValue("aos_colorname", aos_color.get("name"));
+						this.getModel().setValue("aos_colorex", aos_color);
+
+						HashMap<String, Object> fieldMap = new HashMap<>();
+						// 设置前景色
+						fieldMap.put(ClientProperties.BackColor, aos_rgb);
+						// 同步指定元数据到控件
+						this.getView().updateControlMetadata("aos_color", fieldMap);
+					}
+		
 	}
 
 	public void afterCreateNewData(EventObject e) {
@@ -410,13 +482,11 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		// 如果存在物料 设置图片
 		if (AosItemid != null) {
 			String url = "";
-//			String item_number = ((DynamicObject) AosItemid).getString("number");
-//			url = "https://clss.s3.amazonaws.com/" + item_number + ".jpg";
-			// 获取新品排单的图片链接
-			String itemID = ((DynamicObject) AosItemid).getString("id");
-			url = ProgressUtil.QueryImgUrlThroughNew(itemID);
+			String picturefield = ((DynamicObject) AosItemid).getString("picturefield");
+			url = UrlService.getImageFullUrl(picturefield);
 			Image image = this.getControl("aos_image");
 			image.setUrl(url);
+			this.getModel().setValue("aos_picturefield", url);
 		}
 
 		// 对于流程图
@@ -500,6 +570,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			// 清空图片
 			Image image = this.getControl("aos_image");
 			image.setUrl(null);
+			this.getModel().setValue("aos_picturefield", null);
 			// 清空品牌信息
 			this.getModel().deleteEntryData("aos_entryentity4");
 			// RGB颜色
@@ -594,6 +665,11 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			String url = ProgressUtil.QueryImgUrlThroughNew(fid);
 			Image image = this.getControl("aos_image");
 			image.setUrl(url);
+
+			String picturefield = AosItemidObject.getString("picturefield");
+			url = UrlService.getImageFullUrl(picturefield);
+			this.getModel().setValue("aos_picturefield", url);
+
 			// 产品类别
 
 			String category = (String) SalUtil.getCategoryByItemId(fid + "").get("name");
@@ -740,8 +816,8 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		String ErrorMessage = "";
 		// 数据层
 		Object AosStatus = dy_main.get(aos_status);
-		Object AosPhotoFlag = dy_main.get(aos_photoflag);
-		Object AosVedioFlag = dy_main.get(aos_vedioflag);
+		Boolean AosPhotoFlag = dy_main.getBoolean(aos_photoflag);
+		Boolean AosVedioFlag = dy_main.getBoolean(aos_vedioflag);
 		Object AosReason = dy_main.get(aos_reason);
 		Object AosReqtype = dy_main.get(aos_reqtype);
 		Object AosItemid = dy_main.get(aos_itemid);
@@ -760,38 +836,37 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		Boolean aos_3dflag = dy_main.getBoolean("aos_3dflag");
 		Object aos_3d_reason = dy_main.get("aos_3d_reason");
 
-		if ("剪辑".equals(aos_vediotype) && (Boolean) AosVedioFlag) {
+		if ("剪辑".equals(aos_vediotype) && AosVedioFlag) {
 			StrightCut = true;
 		}
 
 		// 校验 视频优化类型为剪辑时 只勾选是否拍展示视频
-		if ("剪辑".equals(aos_vediotype) && (!(Boolean) AosVedioFlag || (Boolean) AosPhotoFlag)) {
+		if ("剪辑".equals(aos_vediotype) && (!AosVedioFlag || AosPhotoFlag)) {
 			ErrorCount++;
 			ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "视频优化类型为剪辑时 只允许勾选是否拍展示视频!");
 		} else
 
 		// 校验 新建时是否拍照、是否拍展示视频不能同时为false
-		if ("新建".equals(AosStatus) && AosPhotoFlag != null && AosVedioFlag != null && !(Boolean) AosPhotoFlag
-				&& !(Boolean) AosVedioFlag && (AosReason == null || "".equals(AosReason))) {
+		if ("新建".equals(AosStatus) && AosPhotoFlag != null && AosVedioFlag != null && !AosPhotoFlag && !AosVedioFlag
+				&& (AosReason == null || "".equals(AosReason))) {
 			ErrorCount++;
 			ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "是否拍照与是否拍视频同时为否时不拍照原因必填!");
 		}
 		// 校验 新建时如果选择了拍照或者拍视频 拍照地点必填 非视频剪辑类型才做校验
 
 		if ("开发/采购确认".equals(AosStatus) && AosPhotoFlag != null && AosVedioFlag != null
-				&& ((Boolean) AosPhotoFlag || (Boolean) AosVedioFlag) && (AosPhstate == null || "".equals(AosPhstate))
-				&& !StrightCut) {
+				&& (AosPhotoFlag || AosVedioFlag) && (AosPhstate == null || "".equals(AosPhstate)) && !StrightCut) {
 			ErrorCount++;
 			ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "选择了拍照或者拍视频则拍照地点必填!");
 		}
 
 		// 校验 不拍照原因在是否拍照为否时必填
-		if (AosPhotoFlag != null && !(Boolean) AosPhotoFlag && (AosReason == null || "".equals(AosReason))) {
+		if (AosPhotoFlag != null && !AosPhotoFlag && (AosReason == null || "".equals(AosReason))) {
 			ErrorCount++;
 			ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "不拍照原因在是否拍照为否时必填!");
 		}
 		// 校验 同货号在是否拍照为否不拍照原因=同XX货号时必填
-		if (AosPhotoFlag != null && !(Boolean) AosPhotoFlag
+		if (AosPhotoFlag != null && !AosPhotoFlag
 				&& (aos_sameitemid == null && AosReason != null && "同XX货号".equals((String) AosReason))) {
 			ErrorCount++;
 			ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "同货号在是否拍照为否,不拍照原因为同XX货号时必填!");
@@ -1096,8 +1171,8 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 
 		// 视频需要隐藏字段
 		if ("视频".equals(aos_type)) {
-			this.getView().setVisible(false, aos_photoflag);
-			this.getView().setVisible(false, aos_vedioflag);
+			this.getView().setVisible(true, aos_photoflag);
+			this.getView().setVisible(true, aos_vedioflag);
 			this.getView().setVisible(false, aos_reqtype);
 			this.getView().setVisible(false, aos_arrivaldate);
 			this.getView().setVisible(false, aos_reason);
@@ -1387,7 +1462,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		if (StrightCut) {
 			dy_main.set(aos_vedior, UserServiceHelper.getCurrentUserId());
 			AosUser = UserServiceHelper.getCurrentUserId();// 直接流转给摄像
-			MessageId = UserServiceHelper.getCurrentUserId()+"";
+			MessageId = UserServiceHelper.getCurrentUserId() + "";
 			AosStatus = "视频剪辑";
 			dy_main.set(aos_type, "视频");
 			message = "拍照需求表-视频拍摄";
@@ -1804,7 +1879,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			AosStatus = "视频剪辑";
 			this.getModel().setValue(aos_vedior, UserServiceHelper.getCurrentUserId());
 			AosUser = UserServiceHelper.getCurrentUserId();
-			MessageId = UserServiceHelper.getCurrentUserId()+"";
+			MessageId = UserServiceHelper.getCurrentUserId() + "";
 		}
 
 		// 回写拍照任务清单
@@ -2501,10 +2576,10 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		Object aos_billno = dyn.get(billno);
 		// 判断是否已经生成了设计需求表
 		QFBuilder builder = new QFBuilder("aos_orignbill", "=", aos_billno);
-		if (QueryServiceHelper.exists("aos_mkt_designreq", builder.toArray())) {
+		DynamicObject exists = QueryServiceHelper.queryOne("aos_mkt_designreq", "id", builder.toArray());
+		if (FndGlobal.IsNotNull(exists))
 			return;
-		}
-
+		
 		Object ReqFId = dyn.getPkValue(); // 当前界面主键
 		Object AosItemId = dyn.get(aos_itemid);
 		Object aos_requireby = dyn.get("aos_requireby");

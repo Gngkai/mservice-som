@@ -606,6 +606,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
 		Object aos_type = dy_main.get("aos_type");// 任务类型
 		Object aos_editor = dy_main.get("aos_editor");// 任务类型
 		Object aos_orgid = dy_main.get("aos_orgid");
+		
 		Object aos_editorid = ((DynamicObject) aos_editor).getPkValue();// 子表与小语种生成时 申请人为编辑
 		Object aos_make = aos_editorid;
 		if (dy_main.get("aos_make") != null)
@@ -655,7 +656,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
 			System.out.println("ou =" + ou);
 			Object org_id = aos_sal_import_pub.get_import_id(ou, "bd_country");
 			DynamicObject aos_mkt_listing_sal = BusinessDataServiceHelper.newDynamicObject("aos_mkt_listing_sal");
-			aos_mkt_listing_sal.set("aos_requireby", aos_make);
+			aos_mkt_listing_sal.set("aos_requireby", UserServiceHelper.getCurrentUserId());
 			aos_mkt_listing_sal.set("aos_designer", aos_designer);
 			aos_mkt_listing_sal.set("aos_status", "销售确认");
 			aos_mkt_listing_sal.set("aos_orgid", org_id);
