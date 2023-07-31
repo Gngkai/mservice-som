@@ -12,8 +12,6 @@ import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.dataentity.entity.ILocaleString;
 import kd.bos.dataentity.entity.LocaleString;
-import kd.bos.db.DB;
-import kd.bos.db.DBRoute;
 import kd.bos.entity.datamodel.events.BeforeImportDataEventArgs;
 import kd.bos.entity.datamodel.events.ImportDataEventArgs;
 import kd.bos.entity.datamodel.events.PropertyChangedArgs;
@@ -45,7 +43,6 @@ import mkt.common.util.arrangeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import sal.sche.aos_sal_sche_pub.aos_sal_sche_pvt;
-import sal.synciface.imp.aos_sal_import_pub;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
