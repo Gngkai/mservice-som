@@ -1,8 +1,11 @@
 package mkt.data.keyword;
 
+import common.sal.util.SalUtil;
 import kd.bos.bill.AbstractBillPlugIn;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
+import kd.bos.entity.datamodel.events.PropertyChangedArgs;
+import kd.bos.form.control.Hyperlink;
 import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.events.ClosedCallBackEvent;
 import kd.bos.orm.query.QCP;
@@ -10,18 +13,34 @@ import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
+import kd.fi.bd.util.QFBuilder;
 import org.apache.commons.lang3.StringUtils;
 import sal.dis.util.DisUtil;
 
-import java.util.ArrayList;
-import java.util.EventObject;
-import java.util.List;
+import java.util.*;
 
 /**
  * lch
  * 2022-04-15
  */
 public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
+    @Override
+    public void afterBindData(EventObject e) {
+        super.afterBindData(e);
+        setItemUrl();
+    }
+    private void setItemUrl(){
+        Hyperlink hyperlink = this.getView().getControl("aos_hyperlinkap");
+        DynamicObject aos_orgid = (DynamicObject) this.getModel().getValue("aos_orgid");
+        DynamicObject aos_itemid = (DynamicObject) this.getModel().getValue("aos_itemid");
+        if (aos_orgid!=null && aos_itemid!=null){
+            String itemID = aos_itemid.getString("id");
+            List<String> list = Arrays.asList(itemID);
+            Map<String, String> map = SalUtil.queryItemAsin(aos_orgid.getPkValue(), aos_orgid.getString("number"), list);
+            if (map.containsKey(itemID))
+                hyperlink.setUrl(map.get(itemID));
+        }
+    }
 
     @Override
     public void registerListener(EventObject e) {
@@ -42,17 +61,37 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
         }
     }
 
+    @Override
+    public void propertyChanged(PropertyChangedArgs e) {
+        String name = e.getProperty().getName();
+        if (name.equals("aos_orgid"))
+            setItemUrl();
+        else if (name.equals("aos_itemid"))
+            setItemUrl();
+    }
+
     // 引入关键词库
     private void importItemKeyword() {
         // 1. 国别
         DynamicObject aos_orgid = (DynamicObject) this.getModel().getValue("aos_orgid");
         // 2. 物料
         DynamicObject aos_itemid = (DynamicObject) this.getModel().getValue("aos_itemid");
+        StringJoiner str = new StringJoiner(",");
 
-        DynamicObjectCollection list = QueryServiceHelper.query("aos_mkt_point", "aos_linentity.aos_mainvoc", new QFilter[]{
-                new QFilter("aos_orgid", QCP.equals, aos_orgid.getString("id")),
-                new QFilter("aos_itementity.aos_itemid", QCP.equals, aos_itemid.getString("id")),
-        });
+        str.add("aos_linentity.aos_keyword aos_keyword");
+        str.add("aos_linentity.aos_sort aos_sort");
+        str.add("aos_linentity.aos_search aos_search");
+        str.add("aos_linentity.aos_apply aos_apply");
+        str.add("aos_linentity.aos_attribute aos_attribute");
+        str.add("aos_linentity.aos_remake aos_remake");
+
+        QFBuilder builder = new QFBuilder();
+        builder.add("aos_orgid", QCP.equals, aos_orgid.getString("id"));
+        builder.add("aos_category1","=",getModel().getValue("aos_category1"));
+        builder.add("aos_category2","=",getModel().getValue("aos_category2"));
+        builder.add("aos_category3","=",getModel().getValue("aos_category3"));
+        builder.add("aos_itemnamecn","=",getModel().getValue("aos_itemname"));
+        DynamicObjectCollection list = QueryServiceHelper.query("aos_mkt_point", str.toString(),builder.toArray());
         if (list == null || list.size() == 0) {
             this.getView().showTipNotification("无可用数据!");
             return;
@@ -62,9 +101,14 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
         this.getModel().deleteEntryData("aos_entryentity");
         // 取出关键词 赋值到关键词单据体
         for (DynamicObject obj:list) {
-            String aos_mainvoc = obj.getString("aos_linentity.aos_mainvoc");
             int index = this.getModel().createNewEntryRow("aos_entryentity");
-            this.getModel().setValue("aos_mainvoc", aos_mainvoc, index);
+            getModel().setValue("aos_mainvoc", obj.get("aos_keyword"), index);
+            getModel().setValue("aos_sort",obj.get("aos_sort"),index);
+            getModel().setValue("aos_search",obj.get("aos_search"),index);
+            getModel().setValue("aos_apply",obj.get("aos_apply"),index);
+            getModel().setValue("aos_attribute",obj.get("aos_attribute"),index);
+            getModel().setValue("aos_attribute",obj.get("aos_attribute"),index);
+            getModel().setValue("aos_remake",obj.get("aos_remake"),index);
         }
     }
 
