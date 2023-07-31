@@ -319,13 +319,13 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
                 correlate.setLocaleValue_en("");
             }
             else if (correlate.getLocaleValue_zh_CN().equals("高")){
-                correlate.setLocaleValue_en("high");
+                correlate.setLocaleValue_en("High");
             }
             else if (correlate.getLocaleValue_zh_CN().equals("中")){
-                correlate.setLocaleValue_en("intermediate");
+                correlate.setLocaleValue_en("Medium");
             }
             else if (correlate.getLocaleValue_zh_CN().equals("低")){
-                correlate.setLocaleValue_en("low");
+                correlate.setLocaleValue_en("Low");
             }
             else {
                 correlate.setLocaleValue_en(correlate.getLocaleValue_zh_CN());
@@ -597,11 +597,6 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
             else
                 dy_main.set("aos_itemnameen","");
         }
-
-
-
-
-
     }
 
     /** 不同的语言环境设置不同的可见性**/
