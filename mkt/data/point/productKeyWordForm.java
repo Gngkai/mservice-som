@@ -156,6 +156,7 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
 
     @Override
     public void beforeImportData(BeforeImportDataEventArgs e) {
+        /*
         // 获取导入类型
         Map<String, Object> option = e.getOption();
         String importtype = obj2String(option.get("importtype"));
@@ -188,6 +189,8 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
                 DB.execute(DBRoute.of(DB_MKT), sql, params);
             }
         }
+
+         */
     }
 
     @Override
@@ -198,8 +201,8 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
             Object aos_category2 = sourceData.get("aos_category2");
             DynamicObject dynamicObject = getEditorInfo(obj2String(aos_category1) + "," + obj2String(aos_category2));
             this.getModel().setValue("aos_user", dynamicObject.getString("aos_editor"));
-            this.getModel().setValue("aos_groupid", dynamicObject.getString("aos_group_edit"));
-            this.getModel().setValue("aos_confirmor", dynamicObject.getString("aos_edit_leader"));
+            //this.getModel().setValue("aos_groupid", dynamicObject.getString("aos_group_edit"));
+            //this.getModel().setValue("aos_confirmor", dynamicObject.getString("aos_edit_leader"));
             setCate(this.getModel().getDataEntity(true));
         } catch (Exception exception) {
             logger.error("导入后出现异常:" + DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss") +"--" + SalUtil.getExceptionStr(exception));
@@ -656,10 +659,10 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
 
         //确定高搜索的条数
         BigDecimal bd_high = dy_parameter.getBigDecimal("aos_search2");
-        int highSearch = new BigDecimal(linentity.size()).multiply(bd_high).setScale(0, BigDecimal.ROUND_UP).intValue();
+        int highSearch = new BigDecimal(linentity.size()).multiply(bd_high).setScale(0, BigDecimal.ROUND_DOWN).intValue();
         //中搜索条数
         BigDecimal bd_mid = dy_parameter.getBigDecimal("aos_search1").subtract(bd_high);
-        int midSearch = new BigDecimal(linentity.size()).multiply(bd_mid).setScale(0, BigDecimal.ROUND_UP).intValue();
+        int midSearch = new BigDecimal(linentity.size()).multiply(bd_mid).setScale(0, BigDecimal.ROUND_DOWN).intValue();
 
         //高相关
         BigDecimal higRelate = dy_parameter.getBigDecimal("aos_relate3");

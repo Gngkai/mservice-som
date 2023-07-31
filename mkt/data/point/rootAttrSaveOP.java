@@ -37,24 +37,30 @@ public class rootAttrSaveOP extends AbstractOperationServicePlugIn {
             ExtendedDataEntity[] dataEntities = this.getDataEntities();
             for (ExtendedDataEntity dataEntity : dataEntities) {
                 DynamicObject entity = dataEntity.getDataEntity();
-                DynamicObject aos_org = entity.getDynamicObject("aos_org");
+                Object orgid = null;
+                if (entity.get("aos_org") instanceof DynamicObject){
+                    DynamicObject aos_org = entity.getDynamicObject("aos_org");
+                    orgid = aos_org.getPkValue();
+                }
+                else if (entity.get("aos_org") instanceof Long){
+                    orgid = entity.get("aos_org");
+                }
                 String aos_root = entity.getString("aos_root");
                 String aos_attribute = entity.getString("aos_attribute");
                 QFBuilder builder = new QFBuilder();
                 builder.add("id","!=",entity.getPkValue());
-                builder.add("aos_org","=",aos_org.getPkValue());
+                builder.add("aos_org","=",orgid);
                 builder.add(" aos_root","=", aos_root);
                 builder.add("aos_attribute","=",aos_attribute);
                 if (QueryServiceHelper.exists(this.entityKey,builder.toArray())) {
                     StringJoiner text = new StringJoiner(" ");
-                    text.add(aos_org.getString("number"));
+                    text.add(orgid.toString());
                     text.add(aos_root);
                     text.add(aos_attribute);
                     text.add("数据重复");
                     this.addErrorMessage(dataEntity,text.toString());
                 }
             }
-
         }
     }
 }
