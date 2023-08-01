@@ -653,8 +653,8 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         BigDecimal bd_high = dy_parameter.getBigDecimal("aos_search2");
         int highSearch = new BigDecimal(linentity.size()).multiply(bd_high).setScale(0, BigDecimal.ROUND_DOWN).intValue();
         //中搜索条数
-        BigDecimal bd_mid = dy_parameter.getBigDecimal("aos_search1").subtract(bd_high);
-        int midSearch = new BigDecimal(linentity.size()).multiply(bd_mid).setScale(0, BigDecimal.ROUND_DOWN).intValue();
+        BigDecimal bd_mid = dy_parameter.getBigDecimal("aos_search1");
+        int midSearch = new BigDecimal(linentity.size()).multiply(bd_mid).setScale(0, BigDecimal.ROUND_DOWN).intValue()-highSearch;
 
         //高相关
         BigDecimal higRelate = dy_parameter.getBigDecimal("aos_relate3");
@@ -688,10 +688,10 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
                 relevance = "高相关";
             }
             else if (correlate.contains("中")){
-                relevance = "中";
+                relevance = "中相关";
             }
             else if (correlate.contains("低")){
-                relevance = "低";
+                relevance = "低相关";
             }
             else {
                 BigDecimal bd_correlate;

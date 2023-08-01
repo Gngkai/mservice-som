@@ -84,6 +84,7 @@ public class wordEditForm extends AbstractFormPlugin {
                             DynamicObject dy = BusinessDataServiceHelper.loadSingle("aos_mkt_root", new QFilter[]{filter_org, filter_root});
                             dy.set("aos_attribute",split[0]);
                             dy.set("aos_value",split[1]);
+                            dy.set("billstatus","A");
                             updateEntity.add(dy);
                         }
                         else {
@@ -92,6 +93,7 @@ public class wordEditForm extends AbstractFormPlugin {
                             dy.set("aos_root",entry.getKey());
                             dy.set("aos_attribute",split[0]);
                             dy.set("aos_value",split[1]);
+                            dy.set("billstatus","A");
                             saveEntity.add(dy);
                         }
                     }
