@@ -12,6 +12,7 @@ import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.dataentity.entity.ILocaleString;
 import kd.bos.dataentity.entity.LocaleString;
+import kd.bos.dataentity.serialization.SerializationUtils;
 import kd.bos.entity.datamodel.events.BeforeImportDataEventArgs;
 import kd.bos.entity.datamodel.events.ImportDataEventArgs;
 import kd.bos.entity.datamodel.events.PropertyChangedArgs;
@@ -98,6 +99,9 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         }
         else if (itemKey.equals("aos_split")){
             spiltWord();
+        }
+        else if (itemKey.equals("aos_open")){
+            openView();
         }
     }
 
@@ -278,6 +282,7 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         String actionId = event.getActionId();
         if (actionId.equals("aos_mkt_point_sw")){
             this.getView().updateView("aos_entryentity");
+            getView().updateView("aos_linentity");
         }
     }
 
@@ -398,12 +403,16 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
 
     private void init_point() {
         this.getView().setVisible(false, "aos_pointsfr");
+        this.getView().setVisible(false, "aos_pointses");
         Object aos_orgid = this.getModel().getValue("aos_orgid");
         if (aos_orgid != null) {
             DynamicObject aos_org = (DynamicObject) aos_orgid;
             String aos_orgnumber = aos_org.getString("number");
             if (aos_orgnumber.equals("CA")) {
                 this.getView().setVisible(true, "aos_pointsfr");
+            }
+            if (aos_orgnumber.equals("US")) {
+                this.getView().setVisible(true, "aos_pointses");
             }
         }
     }
@@ -536,6 +545,10 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         comboEditName.setComboItems(nameData);
     }
 
+    /**
+     * 打开sku关键词库单据
+     * @param selectPkid
+     */
     private void showBill(String selectPkid) {
         //当工作交接安排控件被点击的时候，创建弹出表单页面的对象
         BillShowParameter billShowParameter = new BillShowParameter();
@@ -551,7 +564,7 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         billShowParameter.setShowFullScreen(true);//可全屏
         StyleCss styleCss = new StyleCss();
         styleCss.setHeight("800");
-        styleCss.setWidth("1200");
+        styleCss.setWidth("1500");
         //设置弹出表单的样式，宽，高等
         billShowParameter.getOpenStyle().setInlineStyleCss(styleCss);
         this.getView().showForm(billShowParameter);
@@ -728,6 +741,7 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         List<String> spiltKeyWord = new ArrayList<>();
         //搜索总量
         Map<String,Integer> map_search = new HashMap<>(spiltKeyWord.size());
+        //词频
         Map<String,Integer> map_frequencyCount = new HashMap<>();
         //行信息
         Map<String,DynamicObject> map_oldRows = new HashMap<>();
@@ -743,6 +757,8 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
             int search = Optional.ofNullable(row.getInt("aos_search")).orElse(0);
             String[] split = keyWord.split(" ");
             List<String> combinations = arrangeUtils.getCombinations(split);
+            //将关键词拆分的结果结存
+            getPageCache().put(keyWord, SerializationUtils.toJsonString(combinations));
             for (String combination : combinations) {
                 if (!spiltKeyWord.contains(combination)) {
                     spiltKeyWord.add(combination);
@@ -804,9 +820,9 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
                             newRow.set("aos_root_value",split[1]);
                     }
                 }
-                newRow.set("aos_total",map_search.getOrDefault(entry.getKey(),0));
             }
             newRow.set("aos_word_fre",entry.getValue());
+            newRow.set("aos_total",map_search.getOrDefault(entry.getKey(),0));
 
             //设置品名数据库的信息
             if (map_lineEntity.containsKey(entry.getKey())) {
@@ -841,5 +857,43 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
             }
         }
 
+    }
+
+    /**
+     * 打开相关性弹窗
+     */
+    private void openView(){
+        //查找相关性的id
+        QFBuilder builder = new QFBuilder();
+        Object aos_orgid = ((DynamicObject)getModel().getValue("aos_orgid")).get("id");
+        builder.add("aos_org","=",aos_orgid);
+        builder.add("aos_item","=",getModel().getValue("aos_itemnamecn"));
+        StringJoiner str = new StringJoiner(",");
+        str.add(getModel().getValue("aos_category1").toString());
+        str.add(getModel().getValue("aos_category2").toString());
+        str.add(getModel().getValue("aos_category3").toString());
+        builder.add("aos_cate.name","=",str.toString());
+        DynamicObject dy = QueryServiceHelper.queryOne("aos_mkt_keyword_par", "id", builder.toArray());
+        if (dy!=null){
+            //创建弹出单据页面对象，并赋值
+            BillShowParameter billShowParameter = new BillShowParameter();
+            //设置弹出子单据页面的标识
+            billShowParameter.setFormId("aos_mkt_keyword_par");
+            //设置弹出子单据页面的标题
+            //设置弹出子单据页面的打开方式
+            billShowParameter.getOpenStyle().setShowType(ShowType.Modal);
+            //设置弹出子单据页面的样式，高600宽800
+            StyleCss inlineStyleCss = new StyleCss();
+            inlineStyleCss.setHeight("700");
+            inlineStyleCss.setWidth("1000");
+            billShowParameter.getOpenStyle().setInlineStyleCss(inlineStyleCss);
+            billShowParameter.setPkId(dy.getString("id"));
+            //设置子页面关闭回调对象，回调本插件，标识为常量KEY_LEAVE_DAYS对应的值
+            //弹窗子页面和父页面绑定
+            this.getView().showForm(billShowParameter);
+        }
+        else {
+            this.getView().showTipNotification("未维护相关性");
+        }
     }
 }
