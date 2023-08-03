@@ -612,7 +612,7 @@ public class aos_mkt_act_query_imp extends BatchImportPlugin {
 		String algoKey = this.getClass().getName() + "queryPrimeExpress";
 
 		Map<String, BigDecimal> result = new HashMap<>();
-		DataSet dataSet = QueryServiceHelper.queryDataSet(algoKey, "aos_expressresult", "aos_org,aos_mat,aos_rev_fee",
+		DataSet dataSet = QueryServiceHelper.queryDataSet(algoKey, "aos_expressresult", "aos_org.aos_country.id aos_org,aos_mat,aos_rev_fee",
 				new QFilter("aos_suittype.number", QCP.equals, "Prime").toArray(), null);
 		dataSet = dataSet.groupBy(new String[]{"aos_org", "aos_mat"}).min("aos_rev_fee").finish();
 		while (dataSet.hasNext()) {

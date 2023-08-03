@@ -520,8 +520,8 @@ public class aos_mkt_popadjpst_init extends AbstractTask {
 		if (type <= 0) {
 			if (saveOrgs >= 5) {
 				// 发送邮件
-				String head = "ST初始化数据完成 (欧洲)";
-				sal.sche.aos_sal_sche_pub.aos_sal_sche_pvt.WarinCore(head, head, "B");
+//				String head = "ST初始化数据完成 (欧洲)";
+//				sal.sche.aos_sal_sche_pub.aos_sal_sche_pvt.WarinCore(head, head, "B");
 				// 缓存清空
 				cache.remove("saveOrgs");
 			} else {
@@ -532,8 +532,8 @@ public class aos_mkt_popadjpst_init extends AbstractTask {
 		if (type == 1) {
 			if (saveOrgs >= 2) {
 				// 发送邮件
-				String head = "ST初始化数据完成 (美加)";
-				sal.sche.aos_sal_sche_pub.aos_sal_sche_pvt.WarinCore(head, head, "B");
+//				String head = "ST初始化数据完成 (美加)";
+//				sal.sche.aos_sal_sche_pub.aos_sal_sche_pvt.WarinCore(head, head, "B");
 				// 缓存清空
 				cache.remove("saveOrgs");
 			} else {

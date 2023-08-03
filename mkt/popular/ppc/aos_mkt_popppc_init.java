@@ -68,6 +68,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
 	@Override
 	public void execute(RequestContext ctx, Map<String, Object> param) throws KDException {
 		executerun();
+		FndWebHook.send(urlSP, "PPC推广SP初始化已成功生成!");
 	}
 
 	public static void ManualitemClick(String aos_ou_code) {
@@ -1632,7 +1633,6 @@ public class aos_mkt_popppc_init extends AbstractTask {
 			Map<String, Object> adjs = new HashMap<>();
 			adjs.put("p_ou_code", p_ou_code);
 			aos_mkt_popadjs_init.executerun(adjs);
-			FndWebHook.send(urlSP, p_ou_code + ":PPC推广SP初始化已成功生成!");
 		} catch (Exception e) {
 			String message = e.toString();
 			String exceptionStr = SalUtil.getExceptionStr(e);

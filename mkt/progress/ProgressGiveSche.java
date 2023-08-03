@@ -36,18 +36,15 @@ public class ProgressGiveSche extends AbstractTask {
 						.and("aos_endate", QCP.large_equals, today).toArray());
 		FndMsg.debug(aosMktGiveS.length);
 		for (DynamicObject aosMktGive : aosMktGiveS) {
-			try {
+//			try {
 				Object aosAgent = aosMktGive.get("aos_agent");
 				String aosUser = aosMktGive.getString("aos_user");
-				String aosType = aosMktGive.getString("aos_type");
 				Boolean aosTotal = aosMktGive.getBoolean("aos_total");
 				FndMsg.debug(aosTotal);
 				if (aosTotal) {
 					FndMsg.debug("into aosTotal");
 					DynamicObjectCollection aosMktProgressS = QueryServiceHelper.query("aos_mkt_progress", "number",
 							null);
-					
-					
 					for (DynamicObject aosMktProgress : aosMktProgressS) {
 						FndMsg.debug(aosMktProgress.getString("number"));
 						DynamicObject[] aosTypeS = BusinessDataServiceHelper.load(aosMktProgress.getString("number"),
@@ -59,6 +56,9 @@ public class ProgressGiveSche extends AbstractTask {
 						SaveServiceHelper.save(aosTypeS);
 					}
 				} else {
+					String aosType = aosMktGive.getDynamicObject("aos_type").getString("number");
+					FndMsg.debug(aosType);
+					
 					DynamicObject[] aosTypeS = BusinessDataServiceHelper.load(aosType, "aos_user",
 							new QFilter("aos_user.name", QCP.equals, aosUser).toArray());
 					for (DynamicObject aosTypeSingle : aosTypeS) {
@@ -67,10 +67,10 @@ public class ProgressGiveSche extends AbstractTask {
 					SaveServiceHelper.save(aosTypeS);
 				}
 				aosMktGive.set("aos_status", "B");
-			} catch (Exception ex) {
-				ex.printStackTrace();
-				continue;
-			}
+//			} catch (Exception ex) {
+//				ex.printStackTrace();
+//				continue;
+//			}
 		}
 		SaveServiceHelper.save(aosMktGiveS);
 		
