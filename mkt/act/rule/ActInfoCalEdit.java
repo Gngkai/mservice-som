@@ -11,12 +11,18 @@ import mkt.act.rule.service.impl.ActPlanServiceImpl;
 import java.util.Date;
 import java.util.EventObject;
 
+import common.fnd.AosomLog;
+
 /**
  * 活动信息计算
  */
 public class ActInfoCalEdit extends AbstractBillPlugIn {
 
-    private static final Log logger = LogFactory.getLog(ActInfoCalEdit.class);
+	private static AosomLog logger = AosomLog.init("ActInfoCalEdit");
+    static{
+		logger.setService("aos.mms");
+		logger.setDomain("mms.act");
+    }
     private static final ActPlanService actPlanService = new ActPlanServiceImpl();
 
     @Override

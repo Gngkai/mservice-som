@@ -1,6 +1,7 @@
 package mkt.act.select;
 
 import common.Cux_Common_Utl;
+import common.fnd.AosomLog;
 import common.fnd.FndDate;
 import common.fnd.FndGlobal;
 import common.sal.util.InStockAvailableDays;
@@ -15,8 +16,6 @@ import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.entity.operate.result.OperationResult;
 import kd.bos.exception.KDException;
-import kd.bos.logging.Log;
-import kd.bos.logging.LogFactory;
 import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.schedule.executor.AbstractTask;
@@ -43,7 +42,11 @@ public class aos_mkt_actselect_init extends AbstractTask {
 	private static final DistributeSessionlessCache cache = CacheFactory.getCommonCacheFactory()
 			.getDistributeSessionlessCache("mkt_redis");
 
-	private static Log logger = LogFactory.getLog(aos_mkt_actselect_init.class);
+	private static AosomLog logger = AosomLog.init("aos_mkt_actselect_init");
+	static {
+		logger.setService("aos.mms");
+		logger.setDomain("mms.act");
+	}
 
 	@Override
 	public void execute(RequestContext ctx, Map<String, Object> param) throws KDException {

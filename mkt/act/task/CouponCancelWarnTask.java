@@ -1,6 +1,8 @@
 package mkt.act.task;
 
 import com.alibaba.fastjson.JSONObject;
+
+import common.fnd.AosomLog;
 import common.sal.sys.basedata.dao.CountryDao;
 import common.sal.sys.basedata.dao.impl.CountryDaoImpl;
 import common.sal.sys.sync.service.ItemCacheService;
@@ -33,8 +35,11 @@ import java.util.*;
  * @updateRemark:
  */
 public class CouponCancelWarnTask extends AbstractTask {
-
-	private static final Log logger = LogFactory.getLog(CouponCancelWarnTask.class);
+	private static AosomLog logger = AosomLog.init("CouponCancelWarnTask");
+	static {
+		logger.setService("aos.mms");
+		logger.setDomain("mms.act");
+	}
 	private static final ActPlanService actPlanService = new ActPlanServiceImpl();
 	private static final CouponCancelDao couponCancelDao = new CouponCancelDaoImpl();
 	private static final ItemCacheService itemCacheService = new ItemCacheServiceImpl();
@@ -43,14 +48,13 @@ public class CouponCancelWarnTask extends AbstractTask {
 	@Override
 	public void execute(RequestContext requestContext, Map<String, Object> map) throws KDException {
 		try {
-			logger.info("到这里了");
 			List<Long> orgIdList = countryDao.listSaleCountry();
 			for (Long aos_orgid : orgIdList) {
 				newCouponCancelBill(aos_orgid);
 			}
 		} catch (RuntimeException e) {
 			// 1.打印日志
-			logger.error("生成Coupon取消提醒单报错", e);
+			logger.error("生成Coupon取消提醒单报错");
 			// 2.发送邮件
 		}
 	}

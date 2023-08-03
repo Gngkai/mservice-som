@@ -2,6 +2,7 @@ package mkt.act.rule.allCountries;
 
 import com.alibaba.nacos.common.utils.Pair;
 import common.Cux_Common_Utl;
+import common.fnd.AosomLog;
 import common.sal.sys.basedata.dao.SeasonAttrDao;
 import common.sal.sys.basedata.dao.impl.SeasonAttrDaoImpl;
 import common.sal.util.SalUtil;
@@ -37,7 +38,6 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -47,8 +47,12 @@ import java.util.stream.Collectors;
  */
 @SuppressWarnings("unchecked")
 public class TrackerVipon implements ActStrategy {
-    private static Logger log = Logger.getLogger("TrackerVipon");
-//    private static Log log = LogFactory.getLog("TrackerVipon");
+	private static AosomLog logger = AosomLog.init("TrackerVipon");
+	static {
+		logger.setService("aos.mms");
+		logger.setDomain("mms.act");
+	}
+    
     @Override
     public void doOperation(DynamicObject object) throws Exception {
         //获取国别
@@ -74,16 +78,16 @@ public class TrackerVipon implements ActStrategy {
         //获取常规品
         Map<String, String> map_conventItem = getConventItem(orgId);
         MKTCom.Put_SyncLog(aos_sync_logS,"常规基础数据获取完成 根据抓客规则获取数据 "+map_conventItem.keySet().size());
-        log.info(billno+"  常规基础数据获取完成 根据抓客规则获取数据  "+map_conventItem.keySet().size());
+        logger.info(billno+"  常规基础数据获取完成 根据抓客规则获取数据  "+map_conventItem.keySet().size());
         //获取季节品
         Map<String, String> map_seasonItem = getSeasonItem(orgId,aos_sync_logS);
         MKTCom.Put_SyncLog(aos_sync_logS,"季节基础数据获取完成 根据抓客规则获取数据 "+map_seasonItem.keySet().size());
-        log.info(billno+"  季节基础数据获取完成 根据抓客规则获取数据  "+map_seasonItem.keySet().size());
+        logger.info(billno+"  季节基础数据获取完成 根据抓客规则获取数据  "+map_seasonItem.keySet().size());
         //获取各品类的分配比例
         Map<String, BigDecimal> map_cateAllocate = ActUtil.queryActCateAllocate(orgId, actId);
         //确定每个品类的分配数量
         Map<String, Integer> map_saleQty = AllocateQty(map_cateAllocate, 100);  //常规品的分配数
-        log.info(billno+ "抓客规则获取国别品类分配比例完成");
+        logger.info(billno+ "抓客规则获取国别品类分配比例完成");
         try {
             //常规品和季节品的物料ID (之后的过滤以此为基础)
             List<String> list_filterItem = new ArrayList<>();
@@ -102,49 +106,49 @@ public class TrackerVipon implements ActStrategy {
             for (String key : map_stock.keySet()) {
                 list_filterItem.add(bidiMap_ietmID.getKey(key));
             }
-            log.info(billno+ "   TrackerVipon抓客规则  物料经过库存过滤：  "+list_filterItem.size());
+            logger.info(billno+ "   TrackerVipon抓客规则  物料经过库存过滤：  "+list_filterItem.size());
 
             //根据活动进行过滤
             list_filterItem = FilterItemByAct(billno,orgId,local_s.toString(),local_e.toString(),local_make,list_filterItem,aos_sync_logS,bidiMap_ietmID);
-            log.info(billno+ "   TrackerVipon抓客规则  物料经过活动过滤：  "+list_filterItem.size());
+            logger.info(billno+ "   TrackerVipon抓客规则  物料经过活动过滤：  "+list_filterItem.size());
 
             //根据最惨定价过滤过滤
             Quad quad = FilterItemByPrice(orgId,shopid,list_filterItem,aos_sync_logS,bidiMap_ietmID);
             Map<String, Map<String, BigDecimal>> map_itemProfit = (Map<String, Map<String, BigDecimal>>) quad.getA();
-            log.info(billno+ "   TrackerVipon抓客规则  获取毛利率：  "+map_itemProfit.size());
+            logger.info(billno+ "   TrackerVipon抓客规则  获取毛利率：  "+map_itemProfit.size());
             Map<String, BigDecimal[]> map_itemPirce = (Map<String, BigDecimal[]>) quad.getB();
-            log.info(billno+ "   TrackerVipon抓客规则  获取价格：  "+map_itemProfit.size());
+            logger.info(billno+ "   TrackerVipon抓客规则  获取价格：  "+map_itemProfit.size());
             list_filterItem = (List<String>) quad.getC();
-            log.info(billno+ "   TrackerVipon抓客规则  根据活动毛利率过滤：  "+list_filterItem.size());
+            logger.info(billno+ "   TrackerVipon抓客规则  根据活动毛利率过滤：  "+list_filterItem.size());
             Map<String,BigDecimal> map_increase = (Map<String, BigDecimal>) quad.getD();
 
             //获取库存金额，并且根据金额排序排列
             LinkedHashMap<String, BigDecimal> linkMap_inventPrice = new LinkedHashMap<>();
             Map<String, BigDecimal> map_itemCost= calInventQty(orgId, list_filterItem, bidiMap_ietmID, map_stock, linkMap_inventPrice,aos_sync_logS);
             list_filterItem = new ArrayList<>(linkMap_inventPrice.keySet());
-            log.info(billno+ "   TrackerVipon抓客规则  获取库存金额并且倒序：  "+list_filterItem.size());
+            logger.info(billno+ "   TrackerVipon抓客规则  获取库存金额并且倒序：  "+list_filterItem.size());
 
             //查找物料分类
             Map<String, List<String>> map_cate = getItemCate(list_filterItem);
             //选择物料填入单据
             list_filterItem = fillItem(list_filterItem,map_conventItem,map_seasonItem,map_saleQty,map_cate);
-            log.info(billno+ "   TrackerVipon  选择物料完成   ：  "+list_filterItem.size());
+            logger.info(billno+ "   TrackerVipon  选择物料完成   ：  "+list_filterItem.size());
 
             //查找帖子id
             Map<String, String> map_asin = ActUtil.queryOrgShopItemASIN(orgId, shopid, list_filterItem);
-            log.info(billno+ "   TrackerVipon  查找帖子id完成   ：  "+map_asin.size());
+            logger.info(billno+ "   TrackerVipon  查找帖子id完成   ：  "+map_asin.size());
             //物料携带的的其他基础资料
             Map<String, DynamicObject> map_itemInfo = queryItemInfo(orgId, list_filterItem);
-            log.info(billno+ "   TrackerVipon  查找物料信息完成   ：  "+map_itemInfo.size());
+            logger.info(billno+ "   TrackerVipon  查找物料信息完成   ：  "+map_itemInfo.size());
             //计算活动数量
             Map<String, Integer> map_itemActQty = calItemActQty(list_filterItem, bidiMap_ietmID, map_stock);
-            log.info(billno+ "   TrackerVipon  计算活动数量完成   ：  "+map_itemActQty.size());
+            logger.info(billno+ "   TrackerVipon  计算活动数量完成   ：  "+map_itemActQty.size());
             //营收和成本
             Pair<Map<String, BigDecimal>, Map<String, BigDecimal>> pair_cal = queryRevenueAndCost(orgId, orgNumber, shopid, list_filterItem, map_itemPirce, map_itemCost, map_itemActQty);
             Map<String, BigDecimal> map_calCost = pair_cal.getFirst();
             Map<String, BigDecimal> map_calReven = pair_cal.getSecond();
-            log.info(billno+ "   TrackerVipon  计算营收完成  ：  "+map_calReven.size());
-            log.info(billno+ "   TrackerVipon  计算成本完成  ：  "+map_calCost.size());
+            logger.info(billno+ "   TrackerVipon  计算营收完成  ：  "+map_calReven.size());
+            logger.info(billno+ "   TrackerVipon  计算成本完成  ：  "+map_calCost.size());
 
             //填充数据
             DynamicObjectCollection dyc_actEnt = object.getDynamicObjectCollection("aos_sal_actplanentity");
@@ -156,7 +160,7 @@ public class TrackerVipon implements ActStrategy {
             }
             //detialType
             Map<String, String> map_itemToType = QueryTypedatail(orgNumber, list_filterItem);
-            log.info(billno+ "   TrackerVipon  填充数据开始   ");
+            logger.info(billno+ "   TrackerVipon  填充数据开始   ");
             for (String itemid : list_filterItem) {
                 String itemNumber = bidiMap_ietmID.get(itemid);
                 DynamicObject dy_new = dyc_actEnt.addNew();
@@ -223,7 +227,7 @@ public class TrackerVipon implements ActStrategy {
                 else
                     dy_new.set("aos_typedetail",map_seasonItem.get(itemid));
             }
-            log.info(billno+ "   TrackerVipon  填充数据结束   ");
+            logger.info(billno+ "   TrackerVipon  填充数据结束   ");
             SaveServiceHelper.save(new DynamicObject[]{object});
             object = BusinessDataServiceHelper.loadSingle(object.getPkValue(),"aos_act_select_plan");
             //赋值库存信息、活动信息
@@ -232,12 +236,12 @@ public class TrackerVipon implements ActStrategy {
             //统计行信息到头表
             sal.act.ActShopProfit.aos_sal_act_from.collectRevenueCost(object);
             SaveServiceHelper.save(new DynamicObject[]{object});
-            log.info(billno+ "   TrackerVipon  头表填充数据   ");
+            logger.info(billno+ "   TrackerVipon  头表填充数据   ");
 
         }catch (Exception e){
             StringWriter writer = new StringWriter();
             e.printStackTrace(new PrintWriter(writer));
-            log.info(billno+ "   TrackerVipon  发生异常  ：  "+writer.toString());
+            logger.error(billno+ "   TrackerVipon  发生异常  ：  "+writer.toString());
             e.printStackTrace();
             throw e;
         }
@@ -423,7 +427,7 @@ public class TrackerVipon implements ActStrategy {
         List<String> list_OtherActItem = dyc_otherAct.stream()
                 .map(dy -> dy.getString("aos_itemnum"))
                 .collect(Collectors.toList());
-        log.info("TrackerVipon  其他活动剔除物料数量：  "+list_OtherActItem.size());
+        logger.info("TrackerVipon  其他活动剔除物料数量：  "+list_OtherActItem.size());
 
         //根据国别判断录入日期8天内该SKU是否在其他“Tracker/Vipon”的活动计划中，且头状态或行状态非“手工关闭”
         filter_actType = new QFilter("aos_acttype.number",QFilter.equals,"Tracker/Vipon");
@@ -435,7 +439,7 @@ public class TrackerVipon implements ActStrategy {
         List<String> list_sameAct = dyc_theAct.stream()
                 .map(dy -> dy.getString("aos_itemnum"))
                 .collect(Collectors.toList());
-        log.info("TrackerVipon  相同活动剔除物料数量：  "+list_sameAct.size());
+        logger.info("TrackerVipon  相同活动剔除物料数量：  "+list_sameAct.size());
 
         List<String> list_re = new ArrayList<>(list_ietm.size());
         for (String item : list_ietm) {
