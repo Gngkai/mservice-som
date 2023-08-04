@@ -34,6 +34,7 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
         setItemUrl();
     }
     private void setItemUrl(){
+        this.getModel().setValue("aos_textfield","AM链接");
         Hyperlink hyperlink = this.getView().getControl("aos_hyperlinkap");
         DynamicObject aos_orgid = (DynamicObject) this.getModel().getValue("aos_orgid");
         DynamicObject aos_itemid = (DynamicObject) this.getModel().getValue("aos_itemid");

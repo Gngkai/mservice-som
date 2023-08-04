@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import common.fnd.FndGlobal;
 import common.sal.util.SalUtil;
 import common.sal.util.SaveUtils;
 import kd.bos.bill.AbstractBillPlugIn;
@@ -82,54 +83,84 @@ public class aos_czj_test_bill extends AbstractBillPlugIn implements ItemClickLi
 	}
 
 	private void keyWordSync(){
-		DynamicObjectCollection dyc = QueryServiceHelper.query("aos_czj_tmp", "aos_string1,aos_string2,aos_string3", null);
-		Map<String, List<DynamicObject>> map_data = dyc.stream()
-				.collect(Collectors.groupingBy(dy -> dy.getString("aos_string1")));
-		List<String> list = new ArrayList<>(map_data.keySet());
-		Map<String, String> map_rowData = dyc.stream()
-				.collect(Collectors.toMap(
-						dy -> dy.getString("aos_string2"),
-						dy -> dy.getString("aos_string3"),
-						(old, newvalue) -> old
-				));
-
-
-		QFBuilder builder = new QFBuilder();
-		builder.add("id", QFilter.in,list);
 		StringJoiner str = new StringJoiner(",");
-		str.add("aos_itemnamecn");
 		str.add("id");
-		str.add("aos_linentity.id");
-		str.add("aos_linentity.aos_correlate");
-		List<DynamicObject> update = new ArrayList<>(dyc.size());
-		DynamicObject[] mkt_points = BusinessDataServiceHelper.load("aos_mkt_point", str.toString(), builder.toArray());
-		for (DynamicObject dy : mkt_points) {
-			DynamicObjectCollection aos_linentity = dy.getDynamicObjectCollection("aos_linentity");
-			for (DynamicObject entity : aos_linentity) {
-				String entityid = entity.getPkValue().toString();
-				if (map_rowData.containsKey(entityid)) {
-					String value = map_rowData.get(entityid);
-					ILocaleString correlate = entity.getLocaleString("aos_correlate");
-					correlate.setLocaleValue_zh_CN(value);
-					if (value.contains("高")||value.contains("强")){
-						correlate.setLocaleValue_en("High");
+		str.add("aos_linentity.aos_type");	//类型
+		str.add("aos_linentity.aos_remake");	//备注
+		str.add("aos_linentity.aos_rate");	//同款占比
+		str.add("aos_linentity.aos_apply");	//应用
+		str.add("aos_linentity.aos_correlate");	//新相关性
+		str.add("modifytime");
+
+		Date date = new Date();
+		DynamicObject[] mktPoints = BusinessDataServiceHelper.load("aos_mkt_point", str.toString(), null);
+		for (DynamicObject point : mktPoints) {
+			DynamicObjectCollection lineEntitys = point.getDynamicObjectCollection("aos_linentity");
+			for (DynamicObject lineRow : lineEntitys) {
+				//获取备注
+				StringJoiner desc = new StringJoiner(",");
+				if (FndGlobal.IsNotNull(lineRow.getString("aos_remake"))){
+					desc.add(lineRow.getString("aos_remake"));
+				}
+
+				//类型对应应用
+				String aos_type = lineRow.getString("aos_type");
+				if (FndGlobal.IsNotNull(aos_type)){
+					//核心关键词对应标题
+					if (aos_type.equals("核心关键词")){
+						lineRow.set("aos_apply","标题");
 					}
-					else if (value.contains("中")){
-						correlate.setLocaleValue_en("Medium");
-					}
-					else if (value.contains("低")||value.contains("弱")){
-						correlate.setLocaleValue_en("Low");
+					//主要关键词对应Listing前台
+					else if (aos_type.equals("主要关键词")){
+						lineRow.set("aos_apply","Listing前台");
 					}
 					else {
-						correlate.setLocaleValue_en(value);
+						desc.add(aos_type);
 					}
-					entity.set("aos_correlate",correlate);
+					point.set("modifytime",date);
+				}
 
+				//相关性是数值则保留（其他移到备注）
+				String aos_relate = lineRow.getLocaleString("aos_correlate").getLocaleValue_zh_CN();
+				if (FndGlobal.IsNotNull(aos_relate)){
+					ILocaleString aos_correlate = lineRow.getLocaleString("aos_correlate");
+					//是数字
+					if (figure(aos_relate)) {
+						aos_correlate.setLocaleValue_zh_CN(aos_relate);
+						aos_correlate.setLocaleValue_en(aos_relate);
+					}
+					//不是则放到备注
+					else {
+						aos_correlate.setLocaleValue_en("");
+						aos_correlate.setLocaleValue_zh_CN("");
+						desc.add(aos_relate);
+					}
+					lineRow.set("aos_correlate",aos_correlate);
+					point.set("modifytime",date);
+				}
+
+				//同款占比移到相关性
+				Object aos_rate = lineRow.get("aos_rate");
+				if (FndGlobal.IsNotNull(aos_rate)){
+					ILocaleString aos_correlate = lineRow.getLocaleString("aos_correlate");
+					aos_correlate.setLocaleValue_en(aos_rate.toString());
+					aos_correlate.setLocaleValue_zh_CN(aos_rate.toString());
+					lineRow.set("aos_correlate",aos_correlate);
+					point.set("modifytime",date);
+				}
+
+				if (str.length()>0){
+					lineRow.set("aos_remake",desc.toString());
+					point.set("modifytime",date);
 				}
 			}
-			update.add(dy);
 		}
-		SaveServiceHelper.save(mkt_points);
+		SaveServiceHelper.save(mktPoints);
+	}
+
+	public static boolean figure(String str) {
+		String regex = "[-+]?\\d*\\.?\\d+";
+		return str.matches(regex);
 	}
 
 	public void beforePropertyChanged(PropertyChangedArgs e) {
