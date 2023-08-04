@@ -81,8 +81,12 @@ public class wordEditForm extends AbstractFormPlugin {
                             }
                             //如果在词根属性明细表中不存在，则新增
                             if (!roots.contains(row.getString("aos_root"+i))){
-                                String value = row.getString("aos_root_attr" + i) + "/" + row.getString("aos_root_value" + i);
-                                map_addRow.put(row.getString("aos_root"+i),value);
+                                String attr = row.getString("aos_root_attr" + i);
+                                String value = row.getString("aos_root_value" + i);
+                                if (FndGlobal.IsNotNull(attr) && FndGlobal.IsNotNull(value)){
+                                    map_addRow.put(row.getString("aos_root"+i),attr+"/"+value);
+                                }
+
                             }
                             parentRow.set("aos_root_attr",row.get("aos_root_attr"+i));
                             parentRow.set("aos_root_value",row.get("aos_root_value"+i));
@@ -124,9 +128,6 @@ public class wordEditForm extends AbstractFormPlugin {
             String keyword = entity.getString("aos_keyword");
             if (FndGlobal.IsNotNull(keyword)) {
                 String spiltWord = pageCache.get(keyword);
-                if (FndGlobal.IsNull(spiltWord)){
-                    continue;
-                }
                 //关键词拆分后的排列组合
                 List<String> words = (List<String>) SerializationUtils.fromJsonStringToList(spiltWord, String.class);
                 //记录属性值

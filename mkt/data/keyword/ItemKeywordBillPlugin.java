@@ -5,7 +5,9 @@ import kd.bos.bill.AbstractBillPlugIn;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.entity.datamodel.events.PropertyChangedArgs;
+import kd.bos.form.control.Control;
 import kd.bos.form.control.Hyperlink;
+import kd.bos.form.control.Label;
 import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.events.BeforeDoOperationEventArgs;
 import kd.bos.form.events.ClosedCallBackEvent;
@@ -35,6 +37,7 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
         Hyperlink hyperlink = this.getView().getControl("aos_hyperlinkap");
         DynamicObject aos_orgid = (DynamicObject) this.getModel().getValue("aos_orgid");
         DynamicObject aos_itemid = (DynamicObject) this.getModel().getValue("aos_itemid");
+        Map<String, Object> style = new HashMap<>();
         if (aos_orgid!=null && aos_itemid!=null){
             String itemID = aos_itemid.getString("id");
             List<String> list = Arrays.asList(itemID);
@@ -44,15 +47,20 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
                 String[] split = url.split("!");
                 if (split.length>1){
                     hyperlink.setUrl(split[0]+split[1]);
-                    Map<String, Object> style = new HashMap<>();
                     Map<String, Object> map1 = new HashMap<>();
                     style.put("text", map1);
                     map1.put("zh_CN", split[1]);
                     map1.put("en_US",split[1]);
-                    this.getView().updateControlMetadata("aos_hyperlinkap", style);
                 }
             }
         }
+        if (style.isEmpty()) {
+            Map<String, Object> map1 = new HashMap<>();
+            style.put("text", map1);
+            map1.put("zh_CN", " ");
+            map1.put("en_US"," ");
+        }
+        this.getView().updateControlMetadata("aos_hyperlinkap", style);
     }
 
     @Override
