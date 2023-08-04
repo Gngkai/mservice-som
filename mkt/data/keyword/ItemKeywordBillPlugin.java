@@ -54,12 +54,12 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
                 }
             }
         }
-        if (style.isEmpty()) {
-            Map<String, Object> map1 = new HashMap<>();
-            style.put("text", map1);
-            map1.put("zh_CN", " ");
-            map1.put("en_US"," ");
-        }
+//        if (style.isEmpty()) {
+//            Map<String, Object> map1 = new HashMap<>();
+//            style.put("text", map1);
+//            map1.put("zh_CN", " ");
+//            map1.put("en_US"," ");
+//        }
         this.getView().updateControlMetadata("aos_hyperlinkap", style);
     }
 
