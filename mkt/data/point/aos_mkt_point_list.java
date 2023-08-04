@@ -43,7 +43,7 @@ public class aos_mkt_point_list extends AbstractListPlugin {
             list = Arrays.asList("aos_en_category1","aos_en_category2","aos_en_category3");
         }
         else {
-            list = Arrays.asList("aos_category1_name", "aos_category2_name", "aos_category3_name");
+            list = Arrays.asList("aos_itemnamecn_s","aos_category1_name", "aos_category2_name", "aos_category3_name");
         }
         this.getView().setVisible(false,list.toArray(new String[0]));
     }

@@ -1,5 +1,9 @@
 package mkt.data.keyword;
 
+import common.sal.sys.basedata.dao.ItemDao;
+import common.sal.sys.basedata.dao.impl.ItemDaoImpl;
+import common.sal.util.SalUtil;
+import common.sal.util.SaveUtils;
 import kd.bos.context.RequestContext;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
@@ -12,12 +16,10 @@ import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
-import kd.bos.util.ExceptionUtils;
+import kd.fi.bd.util.QFBuilder;
+import org.joda.time.LocalDate;
 
-import java.util.Calendar;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -32,6 +34,8 @@ public class ItemKeywordListPlugin extends AbstractTask {
         syncItemKeyword();
         // 同步关键词库
         syncItemList();
+        //sku关键词状态
+        syncItemStatus();
     }
 
     private Map<String, String> getAllItemCategory() {
@@ -48,10 +52,14 @@ public class ItemKeywordListPlugin extends AbstractTask {
         String selectFields = "aos_contryentry.aos_nationality aos_orgid," +
                 "id aos_itemid," +
                 "name aos_itemname";
-        DynamicObjectCollection list = QueryServiceHelper.query("bd_material", selectFields, new QFilter[]{
-                new QFilter("aos_contryentry.aos_nationality", QCP.is_notnull, null),
-                new QFilter("aos_contryentry.aos_contryentrystatus", QCP.equals, "A")
-        });
+        LocalDate localDate = LocalDate.now().minusDays(1);
+        QFilter filter_date = new QFilter("aos_contryentry.aos_firstshipment",">=",localDate.toString());
+        QFilter filter_org = new QFilter("aos_contryentry.aos_nationality", QCP.is_notnull, null);
+        List<QFilter> materialFilter = SalUtil.get_MaterialFilter();
+        materialFilter.add(filter_date);
+        materialFilter.add(filter_org);
+
+        DynamicObjectCollection list = QueryServiceHelper.query("bd_material", selectFields, materialFilter.toArray(new QFilter[0]));
 
         // 查询关键词库中已有的数据
         DynamicObjectCollection aos_mkt_keyword = QueryServiceHelper.query("aos_mkt_keyword", "aos_orgid,aos_itemid", null);
@@ -73,36 +81,30 @@ public class ItemKeywordListPlugin extends AbstractTask {
             // 如果SKU关键词库中已存在
             if (keywordExists.contains(aos_orgid + "~" + aos_itemid)) continue;
 
-            try {
-                String aos_category = allItemCategory.get(aos_itemid);
-                if (aos_category == null) continue;
-                String[] categoryArr = aos_category.split(",");
-                if (categoryArr.length > 0) {
-                    aos_category1 =  categoryArr[0];
-                }
-                if (categoryArr.length > 1) {
-                    aos_category2 =  categoryArr[1];
-                }
-                if (categoryArr.length > 2) {
-                    aos_category3 =  categoryArr[2];
-                }
-
-                // 新建一单
-                DynamicObject itemKeywordObj = BusinessDataServiceHelper.newDynamicObject("aos_mkt_keyword");
-                itemKeywordObj.set("billstatus", "A");
-                itemKeywordObj.set("aos_orgid", aos_orgid);
-                itemKeywordObj.set("aos_itemid", aos_itemid);
-                itemKeywordObj.set("aos_itemname", aos_itemname);
-                itemKeywordObj.set("aos_category1", aos_category1);
-                itemKeywordObj.set("aos_category2", aos_category2);
-                itemKeywordObj.set("aos_category3", aos_category3);
-                SaveServiceHelper.save(new DynamicObject[]{itemKeywordObj});
-            } catch (Exception e) {
-                e.printStackTrace();
-                logger.error("mkt.data.keyword.ItemKeywordListPlugin.syncItemKeyword:" + ExceptionUtils.getExceptionStackTraceMessage(e)
-                        + "\r\n 物料:" + aos_itemid
-                        + "\r\n 国别:" + aos_orgid);
+            String aos_category = allItemCategory.get(aos_itemid);
+            if (aos_category == null) continue;
+            String[] categoryArr = aos_category.split(",");
+            if (categoryArr.length > 0) {
+                aos_category1 =  categoryArr[0];
             }
+            if (categoryArr.length > 1) {
+                aos_category2 =  categoryArr[1];
+            }
+            if (categoryArr.length > 2) {
+                aos_category3 =  categoryArr[2];
+            }
+
+            // 新建一单
+            DynamicObject itemKeywordObj = BusinessDataServiceHelper.newDynamicObject("aos_mkt_keyword");
+            itemKeywordObj.set("billstatus", "A");
+            itemKeywordObj.set("aos_orgid", aos_orgid);
+            itemKeywordObj.set("aos_itemid", aos_itemid);
+            itemKeywordObj.set("aos_itemname", aos_itemname);
+            itemKeywordObj.set("aos_category1", aos_category1);
+            itemKeywordObj.set("aos_category2", aos_category2);
+            itemKeywordObj.set("aos_category3", aos_category3);
+            SaveServiceHelper.save(new DynamicObject[]{itemKeywordObj});
+
         }
     }
 
@@ -125,6 +127,9 @@ public class ItemKeywordListPlugin extends AbstractTask {
         for (DynamicObject objPoints:aos_mkt_points) {
             // 根据国别+品类+品名获取SKU
             DynamicObject aos_orgid = objPoints.getDynamicObject("aos_orgid");
+            if (aos_orgid==null) {
+                continue;
+            }
             String aos_category1 = objPoints.getString("aos_category1");
             String aos_category2 = objPoints.getString("aos_category2");
             String aos_category3 = objPoints.getString("aos_category3");
@@ -155,6 +160,41 @@ public class ItemKeywordListPlugin extends AbstractTask {
             }
             SaveServiceHelper.save(new DynamicObject[]{objPoints});
         }
+    }
+
+    /**
+     * 同步关键词中的是否新品
+     */
+    private void syncItemStatus(){
+        //获取所有新品的物料
+        ItemDao itemDao = new ItemDaoImpl();
+        QFilter filter = new QFilter("aos_contryentry.aos_contryentrystatus","=","E");
+        String selectFields = "id,aos_contryentry.aos_nationality aos_nationality";
+        DynamicObjectCollection itemEntity = itemDao.listItemObj(selectFields, filter, null);
+        List<String> newItem = itemEntity.stream().map(dy -> dy.getString("id") + "/" + dy.getString("aos_nationality"))
+                .distinct()
+                .collect(Collectors.toList());
+
+        QFBuilder builder = new QFBuilder();
+        builder.add("aos_orgid","!=","");
+        builder.add("aos_itemid","!=","");
+        DynamicObject[] mkt_keywords = BusinessDataServiceHelper.load("aos_mkt_keyword", "aos_orgid,aos_itemid,aos_new", builder.toArray());
+        List<DynamicObject> updateEntity = new ArrayList<>(5000);
+        for (DynamicObject keyword : mkt_keywords) {
+            String orgid = keyword.getDynamicObject("aos_orgid").getString("id");
+            String itemID = keyword.getDynamicObject("aos_itemid").getString("id");
+            String key = orgid+"/"+itemID;
+            if (newItem.contains(key) && keyword.getBoolean("aos_new")){
+                    keyword.set("aos_new",true);
+                    updateEntity.add(keyword);
+            }
+            else if (!newItem.contains(key) && keyword.getBoolean("aos_new")){
+                keyword.set("aos_new",false);
+                updateEntity.add(keyword);
+            }
+            SaveUtils.UpdateEntity(updateEntity,false);
+        }
+        SaveUtils.UpdateEntity(updateEntity,true);
     }
 
 }

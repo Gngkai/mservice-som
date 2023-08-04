@@ -2,6 +2,7 @@ package mkt.common;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -20,10 +21,12 @@ import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.control.events.ItemClickListener;
 import kd.bos.logging.Log;
 import kd.bos.logging.LogFactory;
+import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
+import kd.bos.util.ExceptionUtils;
 import kd.fi.bd.util.QFBuilder;
 import kd.scm.pur.opplugin.util.SaveUtil;
 import mkt.synciface.aos_mkt_item_sync;
@@ -42,10 +45,9 @@ public class aos_czj_test_bill extends AbstractBillPlugIn implements ItemClickLi
 		super.itemClick(evt);
 		String Control = evt.getItemKey();
 		if (Control.equals("aos_test")){
-
 			log.info("迁移开始： {}"+ LocalDateTime.now().toString());
 			try {
-				keyWordSync();
+				syncItemKeyword();
 			}catch (Exception e){
 				StringWriter sw = new StringWriter();
 				e.printStackTrace(new PrintWriter(sw));
@@ -84,74 +86,31 @@ public class aos_czj_test_bill extends AbstractBillPlugIn implements ItemClickLi
 
 	private void keyWordSync(){
 		StringJoiner str = new StringJoiner(",");
+		DecimalFormat df = new DecimalFormat("#.####"); // 定义格式化模式，最多保留4位小数
 		str.add("id");
-		str.add("aos_linentity.aos_type");	//类型
-		str.add("aos_linentity.aos_remake");	//备注
-		str.add("aos_linentity.aos_rate");	//同款占比
-		str.add("aos_linentity.aos_apply");	//应用
-		str.add("aos_linentity.aos_correlate");	//新相关性
 		str.add("modifytime");
+		str.add("aos_linentity.aos_correlate");	//新相关性
 
 		Date date = new Date();
 		DynamicObject[] mktPoints = BusinessDataServiceHelper.load("aos_mkt_point", str.toString(), null);
 		for (DynamicObject point : mktPoints) {
 			DynamicObjectCollection lineEntitys = point.getDynamicObjectCollection("aos_linentity");
 			for (DynamicObject lineRow : lineEntitys) {
-				//获取备注
-				StringJoiner desc = new StringJoiner(",");
-				if (FndGlobal.IsNotNull(lineRow.getString("aos_remake"))){
-					desc.add(lineRow.getString("aos_remake"));
-				}
-
-				//类型对应应用
-				String aos_type = lineRow.getString("aos_type");
-				if (FndGlobal.IsNotNull(aos_type)){
-					//核心关键词对应标题
-					if (aos_type.equals("核心关键词")){
-						lineRow.set("aos_apply","标题");
-					}
-					//主要关键词对应Listing前台
-					else if (aos_type.equals("主要关键词")){
-						lineRow.set("aos_apply","Listing前台");
-					}
-					else {
-						desc.add(aos_type);
-					}
-					point.set("modifytime",date);
-				}
-
 				//相关性是数值则保留（其他移到备注）
 				String aos_relate = lineRow.getLocaleString("aos_correlate").getLocaleValue_zh_CN();
 				if (FndGlobal.IsNotNull(aos_relate)){
 					ILocaleString aos_correlate = lineRow.getLocaleString("aos_correlate");
 					//是数字
 					if (figure(aos_relate)) {
-						aos_correlate.setLocaleValue_zh_CN(aos_relate);
-						aos_correlate.setLocaleValue_en(aos_relate);
+						String format = df.format(Double.parseDouble(aos_relate));
+						if (format.equals("0")){
+							format ="";
+						}
+						aos_correlate.setLocaleValue_zh_CN(format);
+						aos_correlate.setLocaleValue_en(format);
+						lineRow.set("aos_correlate",aos_correlate);
+						point.set("modifytime",date);
 					}
-					//不是则放到备注
-					else {
-						aos_correlate.setLocaleValue_en("");
-						aos_correlate.setLocaleValue_zh_CN("");
-						desc.add(aos_relate);
-					}
-					lineRow.set("aos_correlate",aos_correlate);
-					point.set("modifytime",date);
-				}
-
-				//同款占比移到相关性
-				Object aos_rate = lineRow.get("aos_rate");
-				if (FndGlobal.IsNotNull(aos_rate)){
-					ILocaleString aos_correlate = lineRow.getLocaleString("aos_correlate");
-					aos_correlate.setLocaleValue_en(aos_rate.toString());
-					aos_correlate.setLocaleValue_zh_CN(aos_rate.toString());
-					lineRow.set("aos_correlate",aos_correlate);
-					point.set("modifytime",date);
-				}
-
-				if (str.length()>0){
-					lineRow.set("aos_remake",desc.toString());
-					point.set("modifytime",date);
 				}
 			}
 		}
@@ -162,6 +121,75 @@ public class aos_czj_test_bill extends AbstractBillPlugIn implements ItemClickLi
 		String regex = "[-+]?\\d*\\.?\\d+";
 		return str.matches(regex);
 	}
+
+
+	private Map<String, String> getAllItemCategory() {
+		QFilter qFilter = new QFilter("standard.number", QCP.equals, "JBFLBZ");
+		String selectFields = "material,group.name categoryname";
+		DynamicObjectCollection list = QueryServiceHelper.query("bd_materialgroupdetail", selectFields, qFilter.toArray());
+		return list.stream().collect(Collectors.toMap(
+				obj -> obj.getString("material"),
+				obj -> obj.getString("categoryname"),
+				(k1, k2) -> k1));
+	}
+
+	private void syncItemKeyword() {
+		Map<String, String> allItemCategory = getAllItemCategory();
+		String selectFields = "aos_org aos_orgid," +
+				"aos_item aos_itemid," +
+				"aos_item.name aos_itemname";
+		DynamicObjectCollection list = QueryServiceHelper.query("aos_czj_tmp", selectFields, null);
+
+		// 查询关键词库中已有的数据
+		DynamicObjectCollection aos_mkt_keyword = QueryServiceHelper.query("aos_mkt_keyword", "aos_orgid,aos_itemid", null);
+		Set<String> keywordExists = new HashSet<>();
+		for (DynamicObject obj:aos_mkt_keyword) {
+			String aos_orgid = obj.getString("aos_orgid");
+			String aos_itemid = obj.getString("aos_itemid");
+			keywordExists.add(aos_orgid + "~" + aos_itemid);
+		}
+
+		List<DynamicObject> savEntity = new ArrayList<>(list.size());
+		for (DynamicObject obj:list) {
+			String aos_orgid = obj.getString("aos_orgid");
+			String aos_itemid = obj.getString("aos_itemid");
+			String aos_itemname = obj.getString("aos_itemname");
+			String aos_category1 = "";
+			String aos_category2 = "";
+			String aos_category3 = "";
+
+			// 如果SKU关键词库中已存在
+			if (keywordExists.contains(aos_orgid + "~" + aos_itemid)) continue;
+
+			String aos_category = allItemCategory.get(aos_itemid);
+			if (aos_category == null) continue;
+			String[] categoryArr = aos_category.split(",");
+			if (categoryArr.length > 0) {
+				aos_category1 =  categoryArr[0];
+			}
+			if (categoryArr.length > 1) {
+				aos_category2 =  categoryArr[1];
+			}
+			if (categoryArr.length > 2) {
+				aos_category3 =  categoryArr[2];
+			}
+
+			// 新建一单
+			DynamicObject itemKeywordObj = BusinessDataServiceHelper.newDynamicObject("aos_mkt_keyword");
+			itemKeywordObj.set("billstatus", "A");
+			itemKeywordObj.set("aos_orgid", aos_orgid);
+			itemKeywordObj.set("aos_itemid", aos_itemid);
+			itemKeywordObj.set("aos_itemname", aos_itemname);
+			itemKeywordObj.set("aos_category1", aos_category1);
+			itemKeywordObj.set("aos_category2", aos_category2);
+			itemKeywordObj.set("aos_category3", aos_category3);
+			savEntity.add(itemKeywordObj);
+		}
+		SaveUtils.SaveEntity("aos_mkt_keyword",savEntity,true);
+	}
+
+
+
 
 	public void beforePropertyChanged(PropertyChangedArgs e) {
 		String name = e.getProperty().getName();
