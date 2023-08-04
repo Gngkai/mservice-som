@@ -609,22 +609,16 @@ public class aos_mkt_act_query_imp extends BatchImportPlugin {
 	}
 
 	private Map<String, BigDecimal> queryPrimeExpress() {
-		String algoKey = this.getClass().getName() + "aos_mkt_primeexpmode";
-		DynamicObjectCollection list = QueryServiceHelper.query("aos_mkt_primeexpmode", "aos_orgid,aos_expmode", null, null);
-		QFilter qFilter = new QFilter("1" , QCP.equals, 2);
-		for (DynamicObject object : list) {
-			String aos_orgid = object.getString("aos_orgid");
-			String aos_expmode = object.getString("aos_expmode");
-			qFilter.or(new QFilter("aos_orgid", QCP.equals, aos_orgid).and(new QFilter("aos_expmode", QCP.equals, aos_expmode)));
-		}
+		String algoKey = this.getClass().getName() + "queryPrimeExpress";
 
 		Map<String, BigDecimal> result = new HashMap<>();
-		DataSet dataSet = QueryServiceHelper.queryDataSet(algoKey, "aos_courier_inquiry", "aos_orgid,aos_itemid,aos_rev_fee", qFilter.toArray(), null);
-		dataSet = dataSet.groupBy(new String[]{"aos_orgid", "aos_itemid"}).min("aos_rev_fee").finish();
+		DataSet dataSet = QueryServiceHelper.queryDataSet(algoKey, "aos_expressresult", "aos_org.aos_country.id aos_org,aos_mat,aos_rev_fee",
+				new QFilter("aos_suittype.number", QCP.equals, "Prime").toArray(), null);
+		dataSet = dataSet.groupBy(new String[]{"aos_org", "aos_mat"}).min("aos_rev_fee").finish();
 		while (dataSet.hasNext()) {
 			Row next = dataSet.next();
-			String aos_orgid = next.getString("aos_orgid");
-			String aos_itemid = next.getString("aos_itemid");
+			String aos_orgid = next.getString("aos_org");
+			String aos_itemid = next.getString("aos_mat");
 			BigDecimal aos_rev_fee = next.getBigDecimal("aos_rev_fee");
 			result.put(aos_orgid+aos_itemid, aos_rev_fee);
 		}

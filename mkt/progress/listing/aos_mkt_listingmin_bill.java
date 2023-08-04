@@ -1083,6 +1083,7 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
 			des_entryentity.set("aos_itemid", aos_itemid);
 			des_entryentity.set("aos_is_saleout", ProgressUtil.Is_saleout(aos_itemid));
 			des_entryentity.set("aos_srcrowseq", aos_entryentity.get("SEQ"));
+			des_entryentity.set("aos_remakes", aos_entryentity.get("aos_remakes"));  
 
 			DynamicObjectCollection aos_subentryentityS = des_entryentity
 					.getDynamicObjectCollection("aos_subentryentity");

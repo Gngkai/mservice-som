@@ -36,6 +36,7 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
+import kd.fi.bd.util.QFBuilder;
 import mkt.progress.ProgressUtil;
 import mkt.progress.iface.parainfo;
 import org.apache.commons.collections4.BidiMap;
@@ -80,6 +81,15 @@ public class aos_mkt_3design_list extends AbstractListPlugin {
 	@Override
 	public void setFilter(SetFilterEvent e) {
 		List<QFilter> qFilters = e.getQFilters();
+		//判断大货封样是否可见
+		QFBuilder builder = new QFBuilder();
+		builder.add("aos_code", "=", "aos_mkt_3designStatus");
+		builder.add("aos_value", "=", "1");
+		boolean exists = QueryServiceHelper.exists("aos_sync_params", builder.toArray());
+		if (exists){
+			QFilter filter = new QFilter("aos_status","!=","大货样封样");
+			qFilters.add(filter);
+		}
 		parainfo.setRights(qFilters, this.getPageCache(), aos_mkt_3design);
 	}
 

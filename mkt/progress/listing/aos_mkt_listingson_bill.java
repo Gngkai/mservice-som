@@ -7,7 +7,6 @@ import com.sun.istack.NotNull;
 import common.Cux_Common_Utl;
 import common.fnd.FndError;
 import common.fnd.FndHistory;
-import common.fnd.FndWebHook;
 import common.sal.sys.basedata.dao.CountryDao;
 import common.sal.sys.basedata.dao.impl.CountryDaoImpl;
 import common.sal.util.SalUtil;
@@ -246,6 +245,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
 				SubmitToOsConfirm(dy_main);
 			else
 				SubmitForEditor(dy_main);
+			fillDesign(dy_main);
 			break;
 		case "海外确认":
 			SubmitForEditor(dy_main);
@@ -348,7 +348,6 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
 		long currentUserId = UserServiceHelper.getCurrentUserId();
 		dy_main.set("aos_make", currentUserId);
 		dy_main.set("aos_status", "海外确认");// 设置单据流程状态
-		fillDesign(dy_main);
 	}
 
 	/** 来源类型=设计需求表时，编辑确认节点可编辑；提交后将值回写到设计需求表的功能图文案备注字段 **/
@@ -554,6 +553,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
 				}
 				aos_mkt_designreq.set("aos_user", MessageId);
 				aos_mkt_designreq.set("aos_status", "设计确认:翻译");
+				aos_mkt_designreq.set("aos_receivedate", new Date());
 				mkt.progress.design.aos_mkt_designreq_bill.setEntityValue(aos_mkt_designreq);
 				FndHistory.Create(aos_mkt_designreq, "提交", aos_status);
 				OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_designreq",
@@ -606,6 +606,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
 		Object aos_type = dy_main.get("aos_type");// 任务类型
 		Object aos_editor = dy_main.get("aos_editor");// 任务类型
 		Object aos_orgid = dy_main.get("aos_orgid");
+		
 		Object aos_editorid = ((DynamicObject) aos_editor).getPkValue();// 子表与小语种生成时 申请人为编辑
 		Object aos_make = aos_editorid;
 		if (dy_main.get("aos_make") != null)
@@ -655,7 +656,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
 			System.out.println("ou =" + ou);
 			Object org_id = aos_sal_import_pub.get_import_id(ou, "bd_country");
 			DynamicObject aos_mkt_listing_sal = BusinessDataServiceHelper.newDynamicObject("aos_mkt_listing_sal");
-			aos_mkt_listing_sal.set("aos_requireby", aos_make);
+			aos_mkt_listing_sal.set("aos_requireby", UserServiceHelper.getCurrentUserId());
 			aos_mkt_listing_sal.set("aos_designer", aos_designer);
 			aos_mkt_listing_sal.set("aos_status", "销售确认");
 			aos_mkt_listing_sal.set("aos_orgid", org_id);

@@ -30,6 +30,7 @@ import kd.bos.util.ExceptionUtils;
 import kd.fi.bd.util.QFBuilder;
 import kd.scm.pur.opplugin.util.SaveUtil;
 import mkt.synciface.aos_mkt_item_sync;
+import scala.Dynamic;
 
 public class aos_czj_test_bill extends AbstractBillPlugIn implements ItemClickListener, ClickListener {
 
@@ -56,32 +57,59 @@ public class aos_czj_test_bill extends AbstractBillPlugIn implements ItemClickLi
 			log.info("迁移结束： {}"+ LocalDateTime.now().toString());
 		}
 	}
-
+	/** 同步敏感词库 **/
 	private void aos_test() {
-		StringJoiner message = new StringJoiner(";");
-		//设置设计需求表
-		QFBuilder qfBuilder = new QFBuilder();
-		qfBuilder.add("aos_status","!=","结束");
-		StringJoiner str = new StringJoiner(",");
-		str.add("id");
-		str.add("aos_user");
-		str.add("aos_userorganizat1");
-		str.add("aos_userorganizat2");
-		str.add("aos_userorganizat3");
-		DynamicObject[] aos_mkt_designreqs = BusinessDataServiceHelper.load("aos_mkt_designreq", str.toString(), qfBuilder.toArray());
-		for (DynamicObject dy : aos_mkt_designreqs) {
-			mkt.progress.design.aos_mkt_designreq_bill.setEntityValue(dy);
+		Log log = LogFactory.getLog("mkt.common.aos_czj_test_bill");
+		log.info("敏感词同步开始：{}"+ LocalDateTime.now().toString());
+		try {
+			//查找敏感词信息
+			QFBuilder builder = new QFBuilder();
+			builder.add("aos_string2","!=","");
+			StringJoiner str = new StringJoiner(",");
+			for (int i = 1; i <= 10; i++) {
+				str.add("aos_string"+i);
+			}
+			DynamicObjectCollection dyc = QueryServiceHelper.query("aos_czj_tmp", str.toString(), builder.toArray());
+			List<DynamicObject> saveEntity = new ArrayList<>(dyc.size());
+			//新建单据
+			DynamicObjectType type = BusinessDataServiceHelper.newDynamicObject("aos_mkt_sensitive").getDynamicObjectType();
+			for (DynamicObject dy : dyc) {
+				DynamicObject dy_new = new DynamicObject(type);
+				dy_new.set("billstatus","A");
+				dy_new.set("aos_words",dy.get("aos_string2"));
+				dy_new.set("aos_type",dy.get("aos_string3"));
+				dy_new.set("aos_replace",dy.get("aos_string4"));
+				dy_new.set("aos_level",dy.get("aos_string5"));
+
+				String org = dy.getString("aos_string1");
+				DynamicObjectCollection entity = dy_new.getDynamicObjectCollection("entryentity");
+				if (org.equals("CN")){
+					DynamicObject subNew = entity.addNew();
+					subNew.set("aos_whole",type);
+				}
+				else {
+					String[] split = org.split("/");
+					for (String value : split) {
+						DynamicObject subNew = entity.addNew();
+						subNew.set("aos_lan",value);
+						subNew.set("aos_cate1",dy.get("aos_string6"));
+						subNew.set("aos_cate2",dy.get("aos_string7"));
+						subNew.set("aos_cate3",dy.get("aos_string8"));
+						subNew.set("aos_name",dy.get("aos_string9"));
+					}
+				}
+				saveEntity.add(dy_new);
+			}
+			SaveUtils.SaveEntity("aos_mkt_sensitive",saveEntity,true);
+
+		}catch (Exception e){
+			StringWriter sw = new StringWriter();
+			e.printStackTrace(new PrintWriter(sw));
+			log.error(sw.toString());
+			e.printStackTrace();
 		}
-		SaveServiceHelper.update(aos_mkt_designreqs);
-		message.add("设计需求表修改完成");
-		//文案
-		DynamicObject[] aos_mkt_listing_sons = BusinessDataServiceHelper.load("aos_mkt_listing_son", str.toString(), qfBuilder.toArray());
-		for (DynamicObject dy : aos_mkt_listing_sons) {
-			mkt.progress.listing.aos_mkt_listingson_bill.setListSonUserOrganizate(dy);
-		}
-		SaveServiceHelper.update(aos_mkt_listing_sons);
-		message.add("文案修改完成");
-		this.getView().showMessage(message.toString());
+		log.info("敏感词同步结束：{}"+ LocalDateTime.now().toString());
+
 	}
 
 	private void keyWordSync(){

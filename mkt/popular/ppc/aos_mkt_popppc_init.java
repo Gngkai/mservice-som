@@ -1,6 +1,7 @@
 package mkt.popular.ppc;
 
 import common.StringComUtils;
+import common.fnd.AosomLog;
 import common.fnd.FndDate;
 import common.fnd.FndGlobal;
 import common.fnd.FndLog;
@@ -21,8 +22,6 @@ import kd.bos.db.DB;
 import kd.bos.db.DBRoute;
 import kd.bos.entity.operate.result.OperationResult;
 import kd.bos.exception.KDException;
-import kd.bos.logging.Log;
-import kd.bos.logging.LogFactory;
 import kd.bos.orm.ORM;
 import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
@@ -59,12 +58,17 @@ public class aos_mkt_popppc_init extends AbstractTask {
 	private static final DistributeSessionlessCache cache = CacheFactory.getCommonCacheFactory()
 			.getDistributeSessionlessCache("mkt_redis");
 	private static final String DB_MKT = "aos.mkt";
-	private static Log logger = LogFactory.getLog(aos_mkt_popppc_init.class);
+	private static AosomLog logger = AosomLog.init("aos_mkt_popppc_init");
+	static {
+		logger.setService("aos.mms");
+		logger.setDomain("mms.popular");
+	}
 	public static final String urlSP = "https://open.feishu.cn/open-apis/bot/v2/hook/242e7160-8309-4312-8586-5fe58482d8c5";
 
 	@Override
 	public void execute(RequestContext ctx, Map<String, Object> param) throws KDException {
 		executerun();
+		FndWebHook.send(urlSP, "PPC推广SP初始化已成功生成!");
 	}
 
 	public static void ManualitemClick(String aos_ou_code) {
@@ -163,8 +167,12 @@ public class aos_mkt_popppc_init extends AbstractTask {
 			Map<String, Object> aos_shpday_map = datepara.get("aos_shp_day");// 备货天数
 			Map<String, Object> aos_clearday_map = datepara.get("aos_clear_day");// 清关天数
 			Map<String, Object> aos_freightday_map = datepara.get("aos_freight_day");// 海运天数
-			byte[] serialize_ProductInfo = cache.getByteValue("mkt_productinfo");// Amazon店铺货号
-			HashMap<String, String> mkt_productinfo = SerializationUtils.deserialize(serialize_ProductInfo);
+
+			// byte[] serialize_ProductInfo = cache.getByteValue("mkt_productinfo");//
+			// Amazon店铺货号
+			// HashMap<String, String> mkt_productinfo =
+			// SerializationUtils.deserialize(serialize_ProductInfo);
+
 			byte[] serialize_ppcInfo = cache.getByteValue("mkt_ppcinfo"); // PPC系列与组创建日期
 			HashMap<String, Map<String, Object>> PPCInfo = SerializationUtils.deserialize(serialize_ppcInfo);
 			byte[] serialize_ppcInfoSerial = cache.getByteValue("mkt_ppcinfoSerial"); // PPC系列与组创建日期
@@ -403,6 +411,8 @@ public class aos_mkt_popppc_init extends AbstractTask {
 			SelectColumn = "aos_ratefrom,aos_rateto,aos_roi,aos_adjratio";
 			DataSet aos_mkt_bsadjparaS = QueryServiceHelper.queryDataSet("aos_mkt_popppc_init." + p_ou_code,
 					"aos_mkt_bsadjpara", SelectColumn, filters_adjpara, null);
+			// 每日价格
+			HashMap<String, String> mkt_productinfo = generateProductInfo();
 			// 循环国别物料
 			QFilter filter_ou = new QFilter("aos_contryentry.aos_nationality.number", "=", p_ou_code);
 			QFilter filter_type = new QFilter("aos_protype", "=", "N");
@@ -416,7 +426,8 @@ public class aos_mkt_popppc_init extends AbstractTask {
 					+ "aos_contryentry.aos_contryentrystatus aos_contryentrystatus,"
 					+ "aos_contryentry.aos_festivalseting.number aos_festivalseting,"
 					+ "aos_contryentry.aos_firstindate aos_firstindate,"
-					+ "aos_contryentry.aos_is_saleout aos_is_saleout";
+					+ "aos_contryentry.aos_is_saleout aos_is_saleout," + "aos_isrepliceold," + "aos_oldnumber,"
+					+ "aos_contryentry.aos_onshelfreplace aos_onshelfreplace";
 			DynamicObjectCollection bd_materialS = QueryServiceHelper.query("bd_material", SelectField, filters,
 					"aos_productno");
 			int rows = bd_materialS.size();
@@ -489,8 +500,19 @@ public class aos_mkt_popppc_init extends AbstractTask {
 				if (BaseStItem.get(org_id + "~" + item_id) != null)
 					BseStItem = BaseStItem.get(org_id + "~" + item_id) + "";
 				// 获取AMAZON店铺货号 如果没有则跳过
-				String aos_shopsku = mkt_productinfo.get(org_id + "~" + item_id);
-				if (aos_shopsku == null || aos_shopsku.equals("") || aos_shopsku.equals("null")) {
+
+				// 获取老货号
+				Boolean aosIsRepliceOld = bd_material.getBoolean("aos_isrepliceold");
+				String aosOldNumber = bd_material.getString("aos_oldnumber");
+				Boolean aosOnShelfReplace = bd_material.getBoolean("aos_onshelfreplace");
+
+				String aos_shopsku = "";
+				if (aosIsRepliceOld && FndGlobal.IsNotNull(aosOldNumber) && aosOnShelfReplace)
+					aos_shopsku = mkt_productinfo.get(p_ou_code + "~" + aosOldNumber);
+				else
+					aos_shopsku = mkt_productinfo.get(p_ou_code + "~" + aos_itemnumer);
+
+				if (FndGlobal.IsNull(aos_shopsku)) {
 					log.add(aos_itemnumer + "AMAZON店铺货号不存在");
 					continue;
 				}
@@ -911,6 +933,11 @@ public class aos_mkt_popppc_init extends AbstractTask {
 						RoiType = "k";
 					}
 
+					// 周2周4不剔除
+					if (week == Calendar.TUESDAY && week == Calendar.THURSDAY) {
+						ROIFlag = false;
+					}
+
 					if (ROIFlag) {
 						InsertData(aos_entryentityS, insert_map, "ROI", roiMap);
 						log.add(aos_itemnumer + " " + RoiType + " 差ROI自动剔除");
@@ -949,8 +976,13 @@ public class aos_mkt_popppc_init extends AbstractTask {
 						ProFlag = false;
 					}
 
-					// k.周24加回
-					if (week != Calendar.TUESDAY && week != Calendar.THURSDAY && !"true".equals(saleAdd)) {
+					// k.周135 正常剔除 销售加回不剔除
+					if (week != Calendar.TUESDAY && week != Calendar.THURSDAY && "true".equals(saleAdd)) {
+						ProFlag = false;
+					}
+
+					// k.周24剔除135部分
+					if (week == Calendar.TUESDAY && week == Calendar.THURSDAY) {
 						ProFlag = false;
 					}
 
@@ -1601,7 +1633,6 @@ public class aos_mkt_popppc_init extends AbstractTask {
 			Map<String, Object> adjs = new HashMap<>();
 			adjs.put("p_ou_code", p_ou_code);
 			aos_mkt_popadjs_init.executerun(adjs);
-			FndWebHook.send(urlSP, p_ou_code + ":PPC推广SP初始化已成功生成!");
 		} catch (Exception e) {
 			String message = e.toString();
 			String exceptionStr = SalUtil.getExceptionStr(e);
@@ -1610,6 +1641,21 @@ public class aos_mkt_popppc_init extends AbstractTask {
 			System.out.println(messageStr);
 			logger.error(messageStr);
 		}
+	}
+
+	private static HashMap<String, String> generateProductInfo() {
+		HashMap<String, String> ProductInfo = new HashMap<>();
+		QFilter filter_ama = new QFilter("aos_platformfid.number", "=", "AMAZON");
+		QFilter filter_mainshop = new QFilter("aos_shopfid.aos_is_mainshop", "=", true);
+		QFilter[] filters = new QFilter[] { filter_ama, filter_mainshop };
+		String SelectColumn = "aos_orgid.number aos_orgid," + "aos_item_code.number aos_itemid,"
+				+ "aos_shopsku aos_productid";
+		DynamicObjectCollection bd_materialS = QueryServiceHelper.query("aos_sync_invprice", SelectColumn, filters);
+		for (DynamicObject bd_material : bd_materialS) {
+			ProductInfo.put(bd_material.getString("aos_orgid") + "~" + bd_material.getString("aos_itemid"),
+					bd_material.getString("aos_productid"));
+		}
+		return ProductInfo;
 	}
 
 	/** 平台上架信息 **/
