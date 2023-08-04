@@ -3,18 +3,25 @@ package mkt.data.point;
 import common.Cux_Common_Utl;
 import common.fnd.FndError;
 import common.fnd.FndGlobal;
+import common.sal.sys.basedata.dao.ItemCategoryDao;
+import common.sal.sys.basedata.dao.ItemDao;
+import common.sal.sys.basedata.dao.impl.ItemCategoryDaoImpl;
+import common.sal.sys.basedata.dao.impl.ItemDaoImpl;
 import common.sal.util.SalUtil;
 import kd.bos.algo.DataSet;
 import kd.bos.algo.Row;
 import kd.bos.bill.AbstractBillPlugIn;
 import kd.bos.bill.BillShowParameter;
+import kd.bos.dataentity.OperateOption;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.dataentity.entity.ILocaleString;
 import kd.bos.dataentity.entity.LocaleString;
+import kd.bos.dataentity.serialization.SerializationUtils;
 import kd.bos.entity.datamodel.events.BeforeImportDataEventArgs;
 import kd.bos.entity.datamodel.events.ImportDataEventArgs;
 import kd.bos.entity.datamodel.events.PropertyChangedArgs;
+import kd.bos.entity.operate.result.OperationResult;
 import kd.bos.form.ShowType;
 import kd.bos.form.StyleCss;
 import kd.bos.form.control.Control;
@@ -37,6 +44,7 @@ import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
+import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import kd.fi.bd.util.QFBuilder;
 import mkt.common.util.arrangeUtils;
@@ -59,6 +67,7 @@ import java.util.stream.Collectors;
 public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEventListener, BeforeF7SelectListener, HyperLinkClickListener {
     public final static String DB_MKT = "aos.mkt";// 供应链库
     private static final Log logger = LogFactory.getLog(aos_mkt_point_bill.class);
+    private static final String KEY_ITEM = "item";  //物料值改变的是否由品名改变触发的标识
 
     @Override
     public void afterBindData(EventObject e) {
@@ -99,6 +108,9 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         else if (itemKey.equals("aos_split")){
             spiltWord();
         }
+        else if (itemKey.equals("aos_open")){
+            openView();
+        }
     }
 
     @Override
@@ -123,7 +135,13 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
             }
         }
         else if (name.equals("aos_egsku")) {
+            String value = getPageCache().get(KEY_ITEM);
+            if (FndGlobal.IsNotNull(value) && Boolean.parseBoolean(value)){
+                setCate();
+            }
             aos_egsku_change();
+            getPageCache().put(KEY_ITEM,String.valueOf(true));
+
         }
         else if (name.equals("aos_orgid")) {
             init_point();
@@ -132,8 +150,56 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
             init_point();
             Get_points();
             setItemEntity();
+            setegItem();
+        }
+    }
+
+    /**
+     * 品名改变带出物料
+     */
+    private void setegItem(){
+        Object itemnamecn = this.getModel().getValue("aos_itemnamecn");
+        if (FndGlobal.IsNull(itemnamecn)){
+            this.getModel().setValue("aos_egsku",null);
+        }
+        else {
+            QFilter filter = new QFilter("name","=",itemnamecn);
+            ItemDao itemDao = new ItemDaoImpl();
+            DynamicObjectCollection dyc = itemDao.listItemObj("id", filter, null);
+            if (dyc.size()==0){
+                this.getModel().setValue("aos_egsku",null);
+            }
+            else {
+                getPageCache().put(KEY_ITEM,String.valueOf(false));
+                this.getModel().setValue("aos_egsku",dyc.get(0).get("id"));
+
+            }
         }
 
+    }
+
+    /**
+     * 根据推荐物料带出品名还和类别
+     */
+    private void setCate(){
+        Object egSku = getModel().getValue("aos_egsku");
+        if (FndGlobal.IsNotNull(egSku)){
+            String itemid = ((DynamicObject)egSku).getString("id");
+            String name = ((DynamicObject)egSku).getString("name");
+            ItemCategoryDao categoryDao = new ItemCategoryDaoImpl();
+            String itemCateNameZH = categoryDao.getItemCateNameZH(itemid);
+            String[] split = itemCateNameZH.split(",");
+            if (split.length>0){
+                getModel().setValue("aos_category1",split[0]);
+            }
+            if (split.length>1){
+                getModel().setValue("aos_category2",split[1]);
+            }
+            if (split.length>2){
+                getModel().setValue("aos_category3",split[2]);
+            }
+            this.getModel().setValue("aos_itemnamecn",name);
+        }
     }
 
     @Override
@@ -278,6 +344,7 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         String actionId = event.getActionId();
         if (actionId.equals("aos_mkt_point_sw")){
             this.getView().updateView("aos_entryentity");
+            getView().updateView("aos_linentity");
         }
     }
 
@@ -376,6 +443,8 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
             if (aos_mkt_data_slogan != null) {
                 String aos_itemnamefr = aos_mkt_data_slogan.getString("aos_itemnamefr");
                 this.getModel().setValue("aos_pointsfr", aos_itemnamefr);
+                String aos_itemnamees = aos_mkt_data_slogan.getString("aos_itemnamees");
+                this.getModel().setValue("aos_pointses", aos_itemnamees);
             }
         }
     }
@@ -398,12 +467,16 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
 
     private void init_point() {
         this.getView().setVisible(false, "aos_pointsfr");
+        this.getView().setVisible(false, "aos_pointses");
         Object aos_orgid = this.getModel().getValue("aos_orgid");
         if (aos_orgid != null) {
             DynamicObject aos_org = (DynamicObject) aos_orgid;
             String aos_orgnumber = aos_org.getString("number");
             if (aos_orgnumber.equals("CA")) {
                 this.getView().setVisible(true, "aos_pointsfr");
+            }
+            if (aos_orgnumber.equals("US")) {
+                this.getView().setVisible(true, "aos_pointses");
             }
         }
     }
@@ -536,6 +609,10 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         comboEditName.setComboItems(nameData);
     }
 
+    /**
+     * 打开sku关键词库单据
+     * @param selectPkid
+     */
     private void showBill(String selectPkid) {
         //当工作交接安排控件被点击的时候，创建弹出表单页面的对象
         BillShowParameter billShowParameter = new BillShowParameter();
@@ -551,7 +628,7 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         billShowParameter.setShowFullScreen(true);//可全屏
         StyleCss styleCss = new StyleCss();
         styleCss.setHeight("800");
-        styleCss.setWidth("1200");
+        styleCss.setWidth("1500");
         //设置弹出表单的样式，宽，高等
         billShowParameter.getOpenStyle().setInlineStyleCss(styleCss);
         this.getView().showForm(billShowParameter);
@@ -653,8 +730,8 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         BigDecimal bd_high = dy_parameter.getBigDecimal("aos_search2");
         int highSearch = new BigDecimal(linentity.size()).multiply(bd_high).setScale(0, BigDecimal.ROUND_DOWN).intValue();
         //中搜索条数
-        BigDecimal bd_mid = dy_parameter.getBigDecimal("aos_search1").subtract(bd_high);
-        int midSearch = new BigDecimal(linentity.size()).multiply(bd_mid).setScale(0, BigDecimal.ROUND_DOWN).intValue();
+        BigDecimal bd_mid = dy_parameter.getBigDecimal("aos_search1");
+        int midSearch = new BigDecimal(linentity.size()).multiply(bd_mid).setScale(0, BigDecimal.ROUND_DOWN).intValue()-highSearch;
 
         //高相关
         BigDecimal higRelate = dy_parameter.getBigDecimal("aos_relate3");
@@ -688,10 +765,10 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
                 relevance = "高相关";
             }
             else if (correlate.contains("中")){
-                relevance = "中";
+                relevance = "中相关";
             }
             else if (correlate.contains("低")){
-                relevance = "低";
+                relevance = "低相关";
             }
             else {
                 BigDecimal bd_correlate;
@@ -728,6 +805,7 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         List<String> spiltKeyWord = new ArrayList<>();
         //搜索总量
         Map<String,Integer> map_search = new HashMap<>(spiltKeyWord.size());
+        //词频
         Map<String,Integer> map_frequencyCount = new HashMap<>();
         //行信息
         Map<String,DynamicObject> map_oldRows = new HashMap<>();
@@ -742,7 +820,9 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
             //搜索总量
             int search = Optional.ofNullable(row.getInt("aos_search")).orElse(0);
             String[] split = keyWord.split(" ");
-            List<String> combinations = arrangeUtils.getCombinations(split);
+            List<String> combinations = arrangeUtils.seqCombinate(split);
+            //将关键词拆分的结果结存
+            getPageCache().put(keyWord, SerializationUtils.toJsonString(combinations));
             for (String combination : combinations) {
                 if (!spiltKeyWord.contains(combination)) {
                     spiltKeyWord.add(combination);
@@ -804,9 +884,9 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
                             newRow.set("aos_root_value",split[1]);
                     }
                 }
-                newRow.set("aos_total",map_search.getOrDefault(entry.getKey(),0));
             }
             newRow.set("aos_word_fre",entry.getValue());
+            newRow.set("aos_total",map_search.getOrDefault(entry.getKey(),0));
 
             //设置品名数据库的信息
             if (map_lineEntity.containsKey(entry.getKey())) {
@@ -841,5 +921,55 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
             }
         }
 
+    }
+
+    /**
+     * 打开相关性弹窗
+     */
+    private void openView(){
+        //查找相关性的id
+        QFBuilder builder = new QFBuilder();
+        Object aos_orgid = ((DynamicObject)getModel().getValue("aos_orgid")).get("id");
+        builder.add("aos_org","=",aos_orgid);
+        builder.add("aos_item","=",getModel().getValue("aos_itemnamecn"));
+        StringJoiner str = new StringJoiner(",");
+        str.add(getModel().getValue("aos_category1").toString());
+        str.add(getModel().getValue("aos_category2").toString());
+        str.add(getModel().getValue("aos_category3").toString());
+        builder.add("aos_cate.name","=",str.toString());
+        DynamicObject dy = QueryServiceHelper.queryOne("aos_mkt_keyword_par", "id", builder.toArray());
+        Object pk;
+        if (dy == null){
+            builder.clear();
+            builder.add("name","=",str.toString());
+            DynamicObject cate = QueryServiceHelper.queryOne("bd_materialgroup", "id", builder.toArray());
+
+            //如果为相关性为维护，则新建一单
+            DynamicObject dy_parater = BusinessDataServiceHelper.newDynamicObject("aos_mkt_keyword_par");
+            dy_parater.set("aos_cate",cate.get("id"));
+            dy_parater.set("aos_item",getModel().getValue("aos_itemnamecn"));
+            dy_parater.set("aos_org",aos_orgid);
+            OperationResult result = SaveServiceHelper.saveOperate("aos_mkt_keyword_par", new DynamicObject[]{dy_parater}, OperateOption.create());
+            pk = result.getSuccessPkIds().get(0);
+        }
+        else {
+            pk = dy.get("id");
+        }
+        //创建弹出单据页面对象，并赋值
+        BillShowParameter billShowParameter = new BillShowParameter();
+        //设置弹出子单据页面的标识
+        billShowParameter.setFormId("aos_mkt_keyword_par");
+        //设置弹出子单据页面的标题
+        //设置弹出子单据页面的打开方式
+        billShowParameter.getOpenStyle().setShowType(ShowType.Modal);
+        //设置弹出子单据页面的样式，高600宽800
+        StyleCss inlineStyleCss = new StyleCss();
+        inlineStyleCss.setHeight("700");
+        inlineStyleCss.setWidth("1000");
+        billShowParameter.getOpenStyle().setInlineStyleCss(inlineStyleCss);
+        billShowParameter.setPkId(pk);
+        //设置子页面关闭回调对象，回调本插件，标识为常量KEY_LEAVE_DAYS对应的值
+        //弹窗子页面和父页面绑定
+        this.getView().showForm(billShowParameter);
     }
 }
