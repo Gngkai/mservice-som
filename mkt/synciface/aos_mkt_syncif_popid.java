@@ -25,7 +25,7 @@ public class aos_mkt_syncif_popid extends AbstractTask {
 	public static void do_operate(Map<String, Object> param) {
 		
 
-		JSONObject obj = ComImpl2.GetCursorEsb(param, "CUXPOPID_MMS");
+		JSONObject obj = ComImpl2.GetCursorEsb(param, "CUXPOPID_MMS","CUX_MMS_BASIC");
 		JSONArray p_ret_cursor = obj.getJSONArray("p_real_model");
 		int length = p_ret_cursor.size();
 		if (length > 0) {

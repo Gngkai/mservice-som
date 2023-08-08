@@ -59,8 +59,6 @@ public class aos_mkt_syncif_sku extends AbstractTask {
 			String p_ou_code = ou.getString("number");
 			Map<String, Object> params = new HashMap<>();
 			params.put("ou_name", p_ou_code);
-			params.put("start_date", start.toString());
-			params.put("end_date", end.toString());
 			MktSkuRunnable mktSkuRunnable = new MktSkuRunnable(params);
 			ThreadPools.executeOnce("MKT_SKU报告接口_" + p_ou_code, mktSkuRunnable);
 		}
@@ -89,7 +87,7 @@ public class aos_mkt_syncif_sku extends AbstractTask {
 
 	public static void do_operate(Map<String, Object> param) {
 		JSONObject obj = ComImpl2.GetCursorEsb(param, "CUXSKU_MMS", "CUX_MMS_BASIC");
-		JSONArray p_ret_cursor = obj.getJSONArray("p_real_model");
+		JSONArray p_ret_cursor = obj.getJSONArray("data");
 		int length = p_ret_cursor.size();
 		System.out.println(length);
 		Object p_ou_code = param.get("ou_name");

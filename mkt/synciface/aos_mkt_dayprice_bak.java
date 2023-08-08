@@ -3,9 +3,12 @@ package mkt.synciface;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
+
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+
 import common.sal.impl.ComImpl;
+import common.sal.impl.ComImpl2;
 import kd.bos.context.RequestContext;
 import kd.bos.dataentity.OperateOption;
 import kd.bos.dataentity.entity.DynamicObject;
@@ -34,7 +37,11 @@ public class aos_mkt_dayprice_bak extends AbstractTask {
 		Date Today = today.getTime();
 		// 删除今日数据
 		DeleteServiceHelper.delete("aos_base_przbak", new QFilter[] { new QFilter("aos_date", "=", Today) });
-		JSONArray p_ret_cursor = ComImpl.GetCursorSom(param, "CUXPRZBAK_MMS");
+		//JSONArray p_ret_cursor = ComImpl.GetCursorSom(param, "CUXPRZBAK_MMS");
+
+		JSONObject obj = ComImpl2.GetCursorEsb(param, "CUXPRZBAK_MMS","CUX_MMS_BASIC");
+		JSONArray p_ret_cursor = obj.getJSONArray("p_ret_cursor");
+		
 		int length = p_ret_cursor.size();
 		System.out.println("length =" + length);
 		if (length > 0) {

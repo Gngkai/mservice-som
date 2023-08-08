@@ -27,7 +27,7 @@ public class aos_mkt_syncif_advice extends AbstractTask {
 
 	public static void do_operate(Map<String, Object> param) {
 		
-		JSONObject obj = ComImpl2.GetCursorEsb(param, "CUXADVICE_MMS");
+		JSONObject obj = ComImpl2.GetCursorEsb(param, "CUXADVICE_MMS","CUX_MMS_BASIC");
 		JSONArray p_ret_cursor = obj.getJSONArray("p_real_model");
 		
 		
