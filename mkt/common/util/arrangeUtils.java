@@ -4,6 +4,7 @@ import common.fnd.FndGlobal;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
 
 /**
  * @author create by gk
@@ -11,6 +12,34 @@ import java.util.List;
  * @action  排列组合工具类
  */
 public class arrangeUtils {
+
+    /**
+     * 组合方法
+     * @param str   进行组合的数组
+     * @return 所有可能的组合
+     */
+    public static List<String> seqCombinate(String[] str) {
+        List<String> combinations = new ArrayList<>();
+        //组合字段的长度
+        for (int size = 1; size <= str.length; size++) {
+            //开始位置
+            for (int start = 0; start < str.length; start++) {
+                StringJoiner word = new StringJoiner(" ");
+                //结束位置
+                for (int end = start; end < size+start; end++) {
+                    if (end>=str.length)
+                        break;
+                    word.add(str[end]);
+                }
+                if (!combinations.contains(word.toString())){
+                    combinations.add(word.toString());
+                }
+            }
+        }
+        return combinations;
+    }
+
+
     /**
      * 组合方法
      * @param str   进行组合的数组
@@ -21,6 +50,7 @@ public class arrangeUtils {
         combinationHelper("", str, 0, combinations);
         return combinations;
     }
+
     private static void combinationHelper(String prefix, String[] str, int start, List<String> combinations) {
         if (prefix!="")
             combinations.add(prefix);

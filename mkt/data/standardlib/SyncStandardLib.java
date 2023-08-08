@@ -221,7 +221,14 @@ public class SyncStandardLib extends AbstractTask {
         if (exists) return null;
         DynamicObject dynamicObject = BusinessDataServiceHelper.newDynamicObject(bill);
         dynamicObject.set("aos_orgid", orgId);
-        dynamicObject.set("aos_groupid", groupId);
+        if (!bill.equals("aos_mkt_point")){
+            dynamicObject.set("aos_groupid", groupId);
+            dynamicObject.set("aos_confirmor", aos_auditor);
+        }
+        if (bill.equals("aos_mkt_point")){
+            dynamicObject.set("aos_itemnamecn_s",aos_itemnamecn);
+        }
+
         dynamicObject.set("aos_category1_name", category[0]);
         dynamicObject.set("aos_category2_name", category[1]);
         dynamicObject.set("aos_category3_name", category[2]);
@@ -231,7 +238,7 @@ public class SyncStandardLib extends AbstractTask {
         dynamicObject.set("aos_itemnamecn", aos_itemnamecn);
         dynamicObject.set("aos_itemnameen", aos_itemnameen);
         dynamicObject.set("aos_user", aos_operater);
-        dynamicObject.set("aos_confirmor", aos_auditor);
+
         dynamicObject.set("billstatus", "A");
         return dynamicObject;
     }
