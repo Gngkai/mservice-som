@@ -986,6 +986,9 @@ public class aos_mkt_popppc_init extends AbstractTask {
 						ProFlag = false;
 					}
 
+					// 2023.08.07 不做低毛利剔除
+					ProFlag = false;
+					
 					// 特殊广告不进低毛利剔除
 					if (ProFlag && !"true".equals(saleAdd)) {
 						InsertData(aos_entryentityS, insert_map, "PRO", roiMap);

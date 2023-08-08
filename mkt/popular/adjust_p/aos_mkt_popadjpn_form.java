@@ -253,7 +253,8 @@ public class aos_mkt_popadjpn_form extends AbstractFormPlugin implements ItemCli
 				+ "aos_detailentry.aos_bidsuggest aos_bidsuggest," + "aos_detailentry.aos_mark aos_mark,"
 				+ "aos_detailentry.aos_activity aos_activity," + "aos_detailentry.aos_age aos_age,"
 				+ "aos_detailentry.aos_rank aos_rank," + "aos_detailentry.aos_overseaqty aos_overseaqty,"
-						+ "aos_detailentry.aos_is_saleout aos_is_saleout";
+						+ "aos_detailentry.aos_is_saleout aos_is_saleout,"
+						+ "aos_detailentry.aos_seasonattr aos_seasonattr";
 		DynamicObjectCollection aos_mkt_popadjustp_dataS = QueryServiceHelper.query("aos_mkt_popadjustp_data",
 				SelectField, filters, "aos_detailentry.aos_productno");
 		int size = aos_mkt_popadjustp_dataS.size();
@@ -291,6 +292,9 @@ public class aos_mkt_popadjpn_form extends AbstractFormPlugin implements ItemCli
 			this.getModel().setValue("aos_rank", aos_mkt_popadjustp_data.get("aos_rank"), i);
 			this.getModel().setValue("aos_overseaqty", aos_mkt_popadjustp_data.get("aos_overseaqty"), i);
 			this.getModel().setValue("aos_is_saleout", aos_mkt_popadjustp_data.get("aos_is_saleout"), i);
+			this.getModel().setValue("aos_seasonattr", aos_mkt_popadjustp_data.get("aos_seasonattr"), i);
+			
+			
 			
 			BigDecimal aos_lastprice = aos_mkt_popadjustp_data.getBigDecimal("aos_lastprice");
 			BigDecimal aos_adjprice = aos_mkt_popadjustp_data.getBigDecimal("aos_adjprice");

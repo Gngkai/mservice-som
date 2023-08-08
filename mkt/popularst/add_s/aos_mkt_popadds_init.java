@@ -349,8 +349,9 @@ public class aos_mkt_popadds_init extends AbstractTask {
 	public static HashMap<String, Map<String, String>> GenerateItemPoint(Object p_org_id) {
 		HashMap<String, Map<String, String>> itemPoint = new HashMap<>();
 		// 品名关键词库
-		DynamicObjectCollection aos_mkt_itempointS = QueryServiceHelper.query("aos_mkt_itempoint",
-				"aos_category1," + "aos_category2,aos_category3," + "aos_itemname,aos_point",
+		DynamicObjectCollection aos_mkt_itempointS = QueryServiceHelper.query("aos_mkt_point",
+				"aos_category1," + "aos_category2,aos_category3,"
+						+ "aos_itemnamecn aos_itemname, aos_linentity.aos_keyword aos_keyword",
 				new QFilter("aos_orgid", QCP.equals, p_org_id).toArray());
 		for (DynamicObject aos_mkt_itempoint : aos_mkt_itempointS) {
 			String key = aos_mkt_itempoint.getString("aos_category1") + "~"
@@ -366,7 +367,7 @@ public class aos_mkt_popadds_init extends AbstractTask {
 		// SKU关键词库
 		DynamicObjectCollection aos_mkt_keywordS = QueryServiceHelper.query("aos_mkt_keyword",
 				"aos_category1," + "aos_category2,aos_category3,"
-						+ "aos_itemname,aos_entryentity.aos_mainvoc aos_point",
+						+ "aos_itemname,aos_entryentity1.aos_pr_keyword aos_point",
 				new QFilter("aos_orgid", QCP.equals, p_org_id).toArray());
 		for (DynamicObject aos_mkt_keyword : aos_mkt_keywordS) {
 			String key = aos_mkt_keyword.getString("aos_category1") + "~" + aos_mkt_keyword.getString("aos_category2")

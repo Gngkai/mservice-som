@@ -3,6 +3,8 @@ package mkt.popularst.week;
 import java.util.EventObject;
 
 import common.fnd.FndError;
+import common.fnd.FndGlobal;
+import common.fnd.FndMsg;
 import common.sal.util.SalUtil;
 import kd.bos.bill.AbstractBillPlugIn;
 import kd.bos.dataentity.entity.DynamicObject;
@@ -22,6 +24,7 @@ public class aos_mkt_popweek_bill extends AbstractBillPlugIn implements RowClick
 		aos_subentryentity.addRowClickListener(this);
 		this.addItemClickListeners("aos_toolbarap");// 给工具栏加监听事件
 		this.addItemClickListeners("aos_confirm"); // 提交
+		this.addItemClickListeners("aos_batch"); 
 	}
 
 	public void propertyChanged(PropertyChangedArgs e) {
@@ -36,6 +39,8 @@ public class aos_mkt_popweek_bill extends AbstractBillPlugIn implements RowClick
 		try {
 			if ("aos_confirm".equals(Control))
 				aos_confirm();// 提交
+			else if ("aos_batch".equals(Control)) 
+				aos_batch();// 批量修改状态
 		} catch (FndError FndError) {
 			this.getView().showTipNotification(FndError.getErrorMessage());
 		} catch (Exception ex) {
@@ -43,6 +48,14 @@ public class aos_mkt_popweek_bill extends AbstractBillPlugIn implements RowClick
 		}
 	}
 	
+	/**
+	 * 批量修改状态
+	 */
+	private void aos_batch() {
+		FndMsg.debug("==========into aos_batch==========");
+		FndGlobal.OpenForm(this, "aos_mkt_week_show", null);
+	}
+
 	private void aos_confirm() {
 		this.getModel().setValue("aos_statush", "B");
 		this.getView().invokeOperation("save");

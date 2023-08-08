@@ -1,9 +1,12 @@
 package mkt.synciface;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import common.fnd.FndDate;
+import common.fnd.FndWebHook;
 import common.sal.util.SalUtil;
 import kd.bos.context.RequestContext;
 import kd.bos.dataentity.entity.DynamicObject;
@@ -81,10 +84,11 @@ public class aos_mkt_syncif_point extends AbstractTask {
 		Today.set(Calendar.MINUTE, 0);
 		Today.set(Calendar.SECOND, 0);
 		Today.set(Calendar.MILLISECOND, 0);
+		Date today = Today.getTime();
 		DynamicObject aos_base_pointrpt = BusinessDataServiceHelper.newDynamicObject("aos_base_pointrpt");
 		aos_base_pointrpt.set("billstatus", "A");
 		aos_base_pointrpt.set("aos_orgid", p_org_id);
-		aos_base_pointrpt.set("aos_date", Today.getTime());
+		aos_base_pointrpt.set("aos_date", today);
 		DynamicObjectCollection aos_entryentityS = aos_base_pointrpt.getDynamicObjectCollection("aos_entryentity");
 
 		String org = aos_mkt_syncif_pointkey.getOrg(p_ou_code.toString());
@@ -116,5 +120,12 @@ public class aos_mkt_syncif_point extends AbstractTask {
 		}
 		SaveServiceHelper.save(new DynamicObject[] { aos_base_pointrpt });
 
+		// 查询最大日期
+		DynamicObject maxQuery = QueryServiceHelper.queryOne("aos_base_pointrpt",
+				"max(aos_entryentity.aos_date_l) aos_date_l", new QFilter("aos_date", QCP.equals, today)
+						.and("aos_orgid", QCP.equals, p_org_id).toArray());
+		Date aos_date_l = maxQuery.getDate("aos_date_l");
+		if (FndDate.add_days(today, -1).compareTo(aos_date_l) > 0) 
+			FndWebHook.send(FndWebHook.urlMms, p_ou_code +":ST推广关键词报告数据未获取到最新值!");
 	}
 }

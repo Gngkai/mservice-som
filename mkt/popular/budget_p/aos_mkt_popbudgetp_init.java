@@ -9,6 +9,8 @@ import java.util.Map;
 import org.apache.commons.lang3.SerializationUtils;
 
 import common.Cux_Common_Utl;
+import common.fnd.FndDate;
+import common.fnd.FndGlobal;
 import common.sal.util.SalUtil;
 import kd.bos.algo.DataSet;
 import kd.bos.algo.Row;
@@ -22,6 +24,7 @@ import kd.bos.entity.operate.result.OperationResult;
 import kd.bos.exception.KDException;
 import kd.bos.logging.Log;
 import kd.bos.logging.LogFactory;
+import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
@@ -141,6 +144,7 @@ public class aos_mkt_popbudgetp_init extends AbstractTask {
 		QFilter Qf_Date = new QFilter("aos_date", "=", Today);
 		QFilter Qf_Org = new QFilter("aos_orgid.number", "=", p_ou_code);
 		QFilter Qf_type = new QFilter("aos_entryentity.aos_groupstatus", "=", "AVAILABLE");
+		Map<String, Object> cateSeason = getCateSeason(p_ou_code); // aos_mkt_cateseason
 		
 		//设置出价调整日期Start
 		QFilter[] filters = new QFilter[] { Qf_Date, Qf_Org};
@@ -163,13 +167,14 @@ public class aos_mkt_popbudgetp_init extends AbstractTask {
 		filters = new QFilter[] { Qf_Date, Qf_Org, Qf_type };
 		String SelectField = "1 aos_skucount,aos_billno,aos_orgid,aos_channel,aos_poptype,"
 				+ "aos_orgid.number aos_orgnumber," + "aos_entryentity.aos_productno aos_productno,"
+						+ " aos_entryentity.aos_category1 aos_category1 , aos_entryentity.aos_category2 aos_category2,"
 				+ "aos_entryentity.aos_seasonseting aos_seasonseting," + "aos_entryentity.aos_budget aos_budget,"
 						+ "id, case when aos_entryentity.aos_salemanual = 'Y' then 1 "
 						+ "  when aos_entryentity.aos_salemanual = 'N' then 0 end as aos_salemanual";
 		DataSet aos_mkt_popular_ppcS = QueryServiceHelper.queryDataSet("aos_mkt_popbudgetp_init" + "." + p_ou_code,
 				"aos_mkt_popular_ppc", SelectField, filters, null);
 		String[] GroupBy = new String[] { "aos_orgid", "aos_productno", "aos_seasonseting", "aos_billno", "aos_channel",
-				"aos_poptype", "aos_orgnumber", "aos_budget","id" };
+				"aos_poptype", "aos_orgnumber", "aos_budget","id","aos_category1","aos_category2" };
 		aos_mkt_popular_ppcS = aos_mkt_popular_ppcS.groupBy(GroupBy).sum("aos_skucount").max("aos_salemanual").finish();
 		int count = 0;
 		DynamicObject aos_mkt_popbudget_data = BusinessDataServiceHelper.newDynamicObject("aos_mkt_popbudget_data");
@@ -245,6 +250,13 @@ public class aos_mkt_popbudgetp_init extends AbstractTask {
 			aos_entryentity.set("aos_lastspend_r", LastSpend);
 			aos_entryentity.set("aos_lastbudget", LastBudget);
 			aos_entryentity.set("aos_calbudget", aos_budget);
+			
+
+			String aos_category1 = aos_mkt_popular_ppc.getString("aos_category1");
+			String aos_category2 = aos_mkt_popular_ppc.getString("aos_category2");
+			Object aos_seasonattr = cateSeason.getOrDefault(aos_category1 + "~" + aos_category2, null);
+			aos_entryentity.set("aos_seasonattr", aos_seasonattr);
+			
 			if ((int)aos_salemanual == 1) 
 				aos_entryentity.set("aos_saldescription", "销售手调");
 			// 系列获取 出价调整 金额
@@ -312,6 +324,26 @@ public class aos_mkt_popbudgetp_init extends AbstractTask {
 		}
 	}
 
+	private static Map<String, Object> getCateSeason(Object p_ou_code) {
+		HashMap<String, Object> cateSeason = new HashMap<>();
+		DynamicObjectCollection aos_mkt_cateseasonS = QueryServiceHelper.query("aos_mkt_cateseason",
+				"aos_category1," + "aos_category2,aos_festname",
+				new QFilter("aos_startdate", QCP.large_equals, FndDate.add_days(new Date(), 7))
+						.and("aos_endate", QCP.less_equals, FndDate.add_days(new Date(), 7))
+						.and("aos_orgid.number", QCP.equals, p_ou_code).toArray());
+		for (DynamicObject aos_mkt_cateseason : aos_mkt_cateseasonS) {
+			String aos_category1 = aos_mkt_cateseason.getString("aos_category1");
+			String aos_category2 = aos_mkt_cateseason.getString("aos_category2");
+			String aos_festname = aos_mkt_cateseason.getString("aos_festname");
+			Object lastObject = cateSeason.get("aos_category1" + "~" + "aos_category2");
+			if (FndGlobal.IsNull(lastObject))
+				cateSeason.put(aos_category1 + "~" + aos_category2, aos_festname);
+			else
+				cateSeason.put(aos_category1 + "~" + aos_category2, lastObject + "/" + aos_festname);
+		}
+		return cateSeason;
+	}
+	
 	private static HashMap<String, BigDecimal> InitAdjsMap(String p_ou_code, Date today) {
 		HashMap<String,BigDecimal> InitAdjs = new HashMap<>();
 		String SelectColumn = "aos_entryentity.aos_bid * 20 aos_bid,"

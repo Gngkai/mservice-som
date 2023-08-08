@@ -25,7 +25,6 @@ import kd.bos.context.RequestContext;
 import kd.bos.dataentity.OperateOption;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
-import kd.bos.entity.operate.result.OperationResult;
 import kd.bos.exception.KDException;
 import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
@@ -464,17 +463,26 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 
 			// .剔除毛利<12%
 
-			Object FixValue = DailyPrice.getOrDefault(org_id + "~" + item_id, BigDecimal.ZERO);
-			BigDecimal inventoryCost = CostMap.getOrDefault(org_id + "~" + item_id, BigDecimal.ZERO);
-			BigDecimal expressFee = ShipFee.getOrDefault(org_id + "~" + item_id, BigDecimal.ZERO);
-			BigDecimal Profitrate = SalUtil.calProfitrate((BigDecimal) FixValue, aos_vat_amount, aos_am_platform,
-					inventoryCost, expressFee);
-			if (Profitrate.compareTo(BigDecimal.valueOf(0.12)) < 0) {
-				insert_map.put("aos_reason", "低毛利剔除");
-				InsertData(aos_entryentityS, insert_map);
-				log.add(aos_itemnumer + "低毛利剔除");
-				continue;
-			}
+//			Object FixValue = DailyPrice.getOrDefault(item_id+ "", BigDecimal.ZERO);
+//			BigDecimal inventoryCost = CostMap.getOrDefault(org_id + "~" + item_id, BigDecimal.ZERO);
+//			BigDecimal expressFee = ShipFee.getOrDefault(org_id + "~" + item_id, BigDecimal.ZERO);
+//			BigDecimal Profitrate = SalUtil.calProfitrate((BigDecimal) FixValue, aos_vat_amount, aos_am_platform,
+//					inventoryCost, expressFee);
+//			
+//			log.add(aos_itemnumer + " FixValue =" + FixValue + "\n" + " inventoryCost =" + inventoryCost + "\n"
+//					+ " expressFee =" + expressFee + "\n" + " aos_vat_amount =" + aos_vat_amount + "\n"
+//					+ " aos_am_platform =" + aos_am_platform + "\n");
+//
+//			log.add(aos_itemnumer + "(" + FixValue + " / (1 + " + aos_vat_amount + ") - " + inventoryCost + " - "
+//					+ FixValue + " / (1 +  " + aos_vat_amount + ") * " + aos_am_platform + " - " + expressFee
+//					+ " / (1 + " + aos_vat_amount + "+)) / (" + FixValue + " / (1 + " + aos_vat_amount + "+))");
+//			
+//			if (Profitrate.compareTo(BigDecimal.valueOf(0.12)) < 0) {
+//				insert_map.put("aos_reason", "低毛利剔除");
+//				InsertData(aos_entryentityS, insert_map);
+//				log.add(aos_itemnumer + "低毛利剔除");
+//				continue;
+//			}
 
 			// 循环关键词表
 			for (String aos_targetcomb : KeyRptDetail.keySet()) {

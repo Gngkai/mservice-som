@@ -10,8 +10,8 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
 import kd.bos.exception.ErrorCode;
-
-import common.sal.impl.ComImpl;
+import common.fnd.FndDate;
+import common.fnd.FndWebHook;
 import common.sal.impl.ComImpl2;
 import common.sal.util.SalUtil;
 import kd.bos.context.RequestContext;
@@ -59,8 +59,8 @@ public class aos_mkt_syncif_sku extends AbstractTask {
 			String p_ou_code = ou.getString("number");
 			Map<String, Object> params = new HashMap<>();
 			params.put("ou_name", p_ou_code);
-			params.put("start_date",start.toString());
-			params.put("end_date",end.toString());
+			params.put("start_date", start.toString());
+			params.put("end_date", end.toString());
 			MktSkuRunnable mktSkuRunnable = new MktSkuRunnable(params);
 			ThreadPools.executeOnce("MKT_SKU报告接口_" + p_ou_code, mktSkuRunnable);
 		}
@@ -82,18 +82,14 @@ public class aos_mkt_syncif_sku extends AbstractTask {
 				String exceptionStr = SalUtil.getExceptionStr(e);
 				String messageStr = message + "\r\n" + exceptionStr;
 				System.out.println(messageStr);
-				throw new KDException(new ErrorCode("获取关键词报告异常",exceptionStr));
+				throw new KDException(new ErrorCode("获取关键词报告异常", exceptionStr));
 			}
 		}
 	}
 
 	public static void do_operate(Map<String, Object> param) {
-
-		JSONObject obj = ComImpl2.GetCursorEsb(param, "CUXSKU_MMS");
+		JSONObject obj = ComImpl2.GetCursorEsb(param, "CUXSKU_MMS", "CUX_MMS_BASIC");
 		JSONArray p_ret_cursor = obj.getJSONArray("p_real_model");
-		
-		
-		
 		int length = p_ret_cursor.size();
 		System.out.println(length);
 		Object p_ou_code = param.get("ou_name");
@@ -103,12 +99,15 @@ public class aos_mkt_syncif_sku extends AbstractTask {
 		Today.set(Calendar.MINUTE, 0);
 		Today.set(Calendar.SECOND, 0);
 		Today.set(Calendar.MILLISECOND, 0);
+		
+		Date today = Today.getTime();
+		
 		if (length > 0) {
 			DynamicObject aos_base_skupoprpt = BusinessDataServiceHelper.newDynamicObject("aos_base_skupoprpt");
 			DynamicObjectCollection aos_entryentityS = aos_base_skupoprpt.getDynamicObjectCollection("aos_entryentity");
 			aos_base_skupoprpt.set("billstatus", "A");
 			aos_base_skupoprpt.set("aos_orgid", p_org_id);
-			aos_base_skupoprpt.set("aos_date", Today.getTime());
+			aos_base_skupoprpt.set("aos_date", today);
 			int d = 0;
 			for (int i = 0; i < length; i++) {
 				d++;
@@ -157,6 +156,13 @@ public class aos_mkt_syncif_sku extends AbstractTask {
 				}
 			}
 
+			// 查询最大日期
+			DynamicObject maxQuery = QueryServiceHelper.queryOne("aos_base_skupoprpt",
+					"max(aos_entryentity.aos_date_l) aos_date_l", new QFilter("aos_date", QCP.equals, today)
+							.and("aos_orgid", QCP.equals, p_org_id).toArray());
+			Date aos_date_l = maxQuery.getDate("aos_date_l");
+			if (FndDate.add_days(today, -1).compareTo(aos_date_l) > 0) 
+				FndWebHook.send(FndWebHook.urlMms, p_ou_code +":SP推广SKU报告数据未获取到最新值!");
 		}
 	}
 }

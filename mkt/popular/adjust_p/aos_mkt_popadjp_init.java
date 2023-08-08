@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.SerializationUtils;
 
 import common.Cux_Common_Utl;
+import common.fnd.FndDate;
+import common.fnd.FndGlobal;
 import common.sal.util.SalUtil;
 import kd.bos.algo.DataSet;
 import kd.bos.algo.JoinType;
@@ -138,6 +140,7 @@ public class aos_mkt_popadjp_init extends AbstractTask {
 
 			HashMap<String, Object> Act = GenerateAct();
 			HashMap<String, Object> Rank = GenerateRank(p_org_id);
+			Map<String, Object> cateSeason = getCateSeason(p_ou_code); // aos_mkt_cateseason
 
 			QFilter Qf_Date = new QFilter("aos_date", "=", Today);
 			QFilter Qf_Org = new QFilter("aos_orgid.number", "=", p_ou_code);
@@ -155,7 +158,8 @@ public class aos_mkt_popadjp_init extends AbstractTask {
 					+ "aos_entryentity.aos_sal_group aos_sal_group," + "aos_entryentity.id aos_ppcentryid," + "id,"
 					+ "aos_entryentity.aos_highvalue aos_highvalue," + "aos_entryentity.aos_basestitem aos_basestitem,"
 					+ "aos_entryentity.aos_age aos_age," + "aos_entryentity.aos_overseaqty aos_overseaqty,"
-							+ "aos_entryentity.aos_is_saleout aos_is_saleout";
+					+ "aos_entryentity.aos_is_saleout aos_is_saleout,"
+					+ "aos_entryentity.aos_category1 aos_category1,aos_entryentity.aos_category2 aos_category2";
 			DynamicObjectCollection aos_mkt_popular_ppcS = QueryServiceHelper.query("aos_mkt_popular_ppc", SelectField,
 					filters, "aos_entryentity.aos_productno");
 			int rows = aos_mkt_popular_ppcS.size();
@@ -302,10 +306,6 @@ public class aos_mkt_popadjp_init extends AbstractTask {
 				else
 					// 5.其他默认为其他类型
 					;
-				
-				
-				
-				
 
 				DynamicObject aos_detailentry = aos_detailentryS.addNew();
 				aos_detailentry.set("aos_poptype", Head.get("aos_poptype"));
@@ -326,13 +326,13 @@ public class aos_mkt_popadjp_init extends AbstractTask {
 				aos_detailentry.set("aos_highvalue", aos_mkt_popular_ppc.get("aos_highvalue"));// 最高价
 				aos_detailentry.set("aos_basestitem", aos_mkt_popular_ppc.get("aos_basestitem"));// 滞销类型
 				aos_detailentry.set("aos_age", aos_mkt_popular_ppc.get("aos_age"));// 最大库龄
-				
-
 				aos_detailentry.set("aos_is_saleout", aos_mkt_popular_ppc.get("aos_is_saleout"));
-				
-				
-
 				aos_detailentry.set("aos_overseaqty", aos_mkt_popular_ppc.get("aos_overseaqty"));
+
+				String aos_category1 = aos_mkt_popular_ppc.getString("aos_category1");
+				String aos_category2 = aos_mkt_popular_ppc.getString("aos_category2");
+				Object aos_seasonattr = cateSeason.getOrDefault(aos_category1 + "~" + aos_category2, null);
+				aos_detailentry.set("aos_seasonattr", aos_seasonattr);
 
 				if (Rank != null)
 					aos_detailentry.set("aos_rank", Rank.get(item_id + ""));// AM搜索排名
@@ -541,7 +541,7 @@ public class aos_mkt_popadjp_init extends AbstractTask {
 					// 2.ROI好花费低
 					// 7天ROI＞标准，前3曝光＞国别标准(取参数表<曝光标准>)，前3天日平均花费＜国别标准*20%，曝光点击率＜国别标准(取参数表<曝光点击>);
 					aos_detailentry.set("aos_type", "ROIHIGH");
-				else 
+				else
 					aos_detailentry.set("aos_type", "OTHER");
 			}
 
@@ -570,6 +570,26 @@ public class aos_mkt_popadjp_init extends AbstractTask {
 				logger.error(messageStr);
 			}
 		}
+	}
+
+	private static Map<String, Object> getCateSeason(Object p_ou_code) {
+		HashMap<String, Object> cateSeason = new HashMap<>();
+		DynamicObjectCollection aos_mkt_cateseasonS = QueryServiceHelper.query("aos_mkt_cateseason",
+				"aos_category1," + "aos_category2,aos_festname",
+				new QFilter("aos_startdate", QCP.large_equals, FndDate.add_days(new Date(), 7))
+						.and("aos_endate", QCP.less_equals, FndDate.add_days(new Date(), 7))
+						.and("aos_orgid.number", QCP.equals, p_ou_code).toArray());
+		for (DynamicObject aos_mkt_cateseason : aos_mkt_cateseasonS) {
+			String aos_category1 = aos_mkt_cateseason.getString("aos_category1");
+			String aos_category2 = aos_mkt_cateseason.getString("aos_category2");
+			String aos_festname = aos_mkt_cateseason.getString("aos_festname");
+			Object lastObject = cateSeason.get("aos_category1" + "~" + "aos_category2");
+			if (FndGlobal.IsNull(lastObject))
+				cateSeason.put(aos_category1 + "~" + aos_category2, aos_festname);
+			else
+				cateSeason.put(aos_category1 + "~" + aos_category2, lastObject + "/" + aos_festname);
+		}
+		return cateSeason;
 	}
 
 	private static HashMap<String, Object> GenerateRank(Object p_org_id) {

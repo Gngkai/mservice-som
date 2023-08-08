@@ -3,8 +3,10 @@ package mkt.progress.photo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import common.Cux_Common_Utl;
+import common.fnd.FndGlobal;
 import common.fnd.FndHistory;
 import common.fnd.FndReturn;
 import kd.bos.context.RequestContext;
@@ -19,6 +21,7 @@ import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
+import kd.bos.servicehelper.operation.SaveServiceHelper;
 import mkt.progress.listing.aos_mkt_listingreq_bill;
 
 public class aos_mkt_progphreq_sync extends AbstractTask {
@@ -35,6 +38,60 @@ public class aos_mkt_progphreq_sync extends AbstractTask {
 		PhotoSync();
 		/** 将SCM生成的Listing优化需求表同步至拍照任务清单 **/
 		ListingSync();
+		/** 合同取消自动关闭 **/
+		closePoSync();
+	}
+
+	/**
+	 * 合同取消自动关闭
+	 */
+	private static void closePoSync() {
+		List<String> aosPurContractS = QueryServiceHelper
+				.query("aos_purcontract", "billno", new QFilter("billstatus", QCP.equals, "F").toArray()).stream()
+				.map(dy -> dy.getString("billno")).distinct().collect(Collectors.toList());
+
+		DynamicObject[] aosMktPhotoReqS = BusinessDataServiceHelper.load("aos_mkt_photoreq",
+				"aos_user,aos_status,aos_ponumber,aos_type,id,aos_photoflag,aos_vedioflag,"
+						+ "aos_itemid,aos_itemname,billno,aos_sameitemid,aos_reason,aos_developer,aos_poer,"
+						+ "aos_shipdate,aos_specification,aos_seting1",
+				new QFilter("aos_status", QCP.not_equals, "已完成").and("aos_ponumber", QCP.in, aosPurContractS)
+						.toArray());
+		for (DynamicObject aosMktPhotoReq : aosMktPhotoReqS) {
+			aosMktPhotoReq.set("aos_user", system);
+			aosMktPhotoReq.set("aos_status", "不需拍");
+			aosMktPhotoReq.set("aos_photoflag", false);
+			aosMktPhotoReq.set("aos_vedioflag", false);
+			if ("拍照".equals(aosMktPhotoReq.getString("aos_type"))) {
+				// 数据进入不拍照任务清单
+				aos_mkt_nophoto_bill.create_noPhotoEntity(aosMktPhotoReq);
+				// 将3D调整为已完成
+				DynamicObject aos_mkt_3design = BusinessDataServiceHelper.loadSingle("aos_mkt_3design",
+						new QFilter("aos_sourceid", QCP.equals, aosMktPhotoReq.getPkValue().toString()).toArray());
+				if (FndGlobal.IsNotNull(aos_mkt_3design)) {
+					aos_mkt_3design.set("aos_status", "已完成");
+					aos_mkt_3design.set("aos_user", system);
+					SaveServiceHelper.save(new DynamicObject[] { aos_mkt_3design });
+				}
+				// 将样品入库单调整为已完成
+				DynamicObject aos_mkt_rcv = BusinessDataServiceHelper.loadSingle("aos_mkt_rcv",
+						new QFilter("aos_sourceid", QCP.equals, aosMktPhotoReq.getPkValue().toString()).toArray());
+				;
+				if (FndGlobal.IsNotNull(aos_mkt_rcv)) {
+					aos_mkt_rcv.set("aos_status", "已完成");
+					aos_mkt_rcv.set("aos_user", system);
+					SaveServiceHelper.save(new DynamicObject[] { aos_mkt_rcv });
+				}
+				// 将拍照清单同步
+				DynamicObject aos_mkt_photolist = BusinessDataServiceHelper.loadSingle("aos_mkt_photolist",
+						new QFilter("billno", QCP.equals, aosMktPhotoReq.getString("billno")).toArray());
+				if (FndGlobal.IsNotNull(aos_mkt_photolist)) {
+					aos_mkt_photolist.set("aos_phstatus", "已完成");
+					SaveServiceHelper.save(new DynamicObject[] { aos_mkt_photolist });
+				}
+
+			}
+		}
+		SaveServiceHelper.save(aosMktPhotoReqS);
 	}
 
 	private static void ListingSync() {
@@ -61,8 +118,8 @@ public class aos_mkt_progphreq_sync extends AbstractTask {
 				if (!Cux_Common_Utl.IsNull(aos_requirepic))
 					ListRequirePic.add(aos_entryentity);
 			}
-			
-			System.out.println("ListRequire.size =" +ListRequire.size());
+
+			System.out.println("ListRequire.size =" + ListRequire.size());
 
 			if (ListRequire != null && ListRequire.size() > 0) {
 				aos_mkt_listingreq_bill.GenerateListingSon(ListRequire, Retrun, dyn);
@@ -71,7 +128,7 @@ public class aos_mkt_progphreq_sync extends AbstractTask {
 					continue;
 				}
 			}
-			System.out.println("ListRequirePic.size =" +ListRequirePic.size());
+			System.out.println("ListRequirePic.size =" + ListRequirePic.size());
 
 			if (ListRequirePic != null && ListRequirePic.size() > 0) {
 				aos_mkt_listingreq_bill.GenerateDesignReq(ListRequirePic, Retrun, dyn);
@@ -115,26 +172,26 @@ public class aos_mkt_progphreq_sync extends AbstractTask {
 			aos_mkt_photolist.set("aos_newvendor", aos_mkt_photoreq.get("aos_newvendor"));
 			aos_mkt_photolist.set("aos_photourl", "拍照");
 			aos_mkt_photolist.set("aos_vediourl", "视频");
-			aos_mkt_photolist.set("aos_address",aos_mkt_photoreq.get("aos_address"));		//地址
-			aos_mkt_photolist.set("aos_orgtext", aos_mkt_photoreq.get("aos_orgtext"));		//下单国别
-			aos_mkt_photolist.set("aos_urgent",aos_mkt_photoreq.get("aos_urgent"));			//紧急提醒
+			aos_mkt_photolist.set("aos_address", aos_mkt_photoreq.get("aos_address")); // 地址
+			aos_mkt_photolist.set("aos_orgtext", aos_mkt_photoreq.get("aos_orgtext")); // 下单国别
+			aos_mkt_photolist.set("aos_urgent", aos_mkt_photoreq.get("aos_urgent")); // 紧急提醒
 
-			String aos_picdesc ="",aos_picdesc1 = "";	//照片需求
-			QFilter filter_id = new QFilter("id","=",aos_mkt_photoreq.get("id"));
-			DynamicObjectCollection dyc_photo =
-					QueryServiceHelper.query("aos_mkt_photoreq","aos_entryentity.aos_picdesc aos_picdesc",new QFilter[]{filter_id});
-			if (dyc_photo.size()>0) {
-				if (dyc_photo.get(0).getString("aos_picdesc")!=null) {
+			String aos_picdesc = "", aos_picdesc1 = ""; // 照片需求
+			QFilter filter_id = new QFilter("id", "=", aos_mkt_photoreq.get("id"));
+			DynamicObjectCollection dyc_photo = QueryServiceHelper.query("aos_mkt_photoreq",
+					"aos_entryentity.aos_picdesc aos_picdesc", new QFilter[] { filter_id });
+			if (dyc_photo.size() > 0) {
+				if (dyc_photo.get(0).getString("aos_picdesc") != null) {
 					aos_picdesc = dyc_photo.get(0).getString("aos_picdesc");
 				}
-				if (dyc_photo.size()>1) {
-					if (dyc_photo.get(1).getString("aos_picdesc")!=null) {
+				if (dyc_photo.size() > 1) {
+					if (dyc_photo.get(1).getString("aos_picdesc") != null) {
 						aos_picdesc1 = dyc_photo.get(0).getString("aos_picdesc");
 					}
 				}
 			}
-			aos_mkt_photolist.set("aos_picdesc",aos_picdesc);
-			aos_mkt_photolist.set("aos_picdesc1",aos_picdesc1);
+			aos_mkt_photolist.set("aos_picdesc", aos_picdesc);
+			aos_mkt_photolist.set("aos_picdesc1", aos_picdesc1);
 
 			if (aos_mkt_photoreq.getBoolean("aos_photoflag"))
 				aos_mkt_photolist.set("aos_phstatus", "新建");
@@ -180,9 +237,7 @@ public class aos_mkt_progphreq_sync extends AbstractTask {
 
 				OperationServiceHelper.executeOperate("save", "aos_mkt_photoreq", new DynamicObject[] { dyn },
 						OperateOption.create());
-				
-				
-				
+
 				aos_mkt_progphreq_bill.SubmitForNew(dyn);
 				FndHistory.Create(dyn, "提交", "新建");
 			}

@@ -237,6 +237,7 @@ public class aos_mkt_popbudgetp_form extends AbstractFormPlugin implements ItemC
 				+ "aos_entryentity.aos_lastbudget aos_lastbudget," + "aos_entryentity.aos_calbudget aos_calbudget,"
 				+ "aos_entryentity.aos_adjbudget aos_adjbudget,"
 				+ "aos_entryentity.aos_saldescription aos_saldescription,"
+				+ "aos_entryentity.aos_seasonattr aos_seasonattr,"
 				+ "aos_entryentity.aos_popbudget aos_popbudget," + "aos_entryentity.aos_adjustrate aos_adjustrate";
 		DynamicObjectCollection aos_mkt_popbudget_dataS = QueryServiceHelper.query("aos_mkt_popbudget_data",
 				SelectField, filters, "aos_entryentity.aos_serialname");
@@ -263,6 +264,8 @@ public class aos_mkt_popbudgetp_form extends AbstractFormPlugin implements ItemC
 			this.getModel().setValue("aos_popbudget", aos_mkt_popbudget_data.get("aos_popbudget"), i);
 			this.getModel().setValue("aos_adjustrate", aos_mkt_popbudget_data.get("aos_adjustrate"), i);
 			this.getModel().setValue("aos_entryid", aos_mkt_popbudget_data.get("aos_entryid"), i);
+			this.getModel().setValue("aos_seasonattr", aos_mkt_popbudget_data.get("aos_seasonattr"), i);
+			
 			i++;
 			TotalLast = TotalLast.add((BigDecimal) aos_mkt_popbudget_data.get("aos_lastbudget"));
 			TotalSpend = TotalSpend.add((BigDecimal) aos_mkt_popbudget_data.get("aos_lastspend_r"));

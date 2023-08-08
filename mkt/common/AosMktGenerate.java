@@ -315,6 +315,16 @@ public class AosMktGenerate {
 			KeyRpt.put(aos_mkt_pop_weekst.getString("aos_ad_name"), Info);
 		}
 		aos_mkt_pop_weekstS.close();
+		// 第四部分 ST关键词初始化表数据
+		DynamicObjectCollection aos_mkt_pop_basestS = QueryServiceHelper.query("aos_mkt_pop_basest",
+				"aos_itemnumer,aos_keyword,aos_match_type", filter_org.toArray());
+		for (DynamicObject aos_mkt_pop_basest : aos_mkt_pop_basestS) {
+			Map<String, Object> Info = KeyRpt.computeIfAbsent(aos_mkt_pop_basest.getString("aos_itemnumer"),
+					k -> new HashMap<>());
+			Info.put(aos_mkt_pop_basest.getString("aos_keyword") + "~" + aos_mkt_pop_basest.getString("aos_match_type"),
+					aos_mkt_pop_basest.getString("aos_keyword") + "~" + aos_mkt_pop_basest.getString("aos_match_type"));
+			KeyRpt.put(aos_mkt_pop_basest.getString("aos_itemnumer"), Info);
+		}
 		return KeyRpt;
 	}
 
@@ -660,7 +670,7 @@ public class AosMktGenerate {
 	public static HashMap<String, Map<String, Object>> GenerateAdvKeyPrice(Object p_ou_code) {
 		HashMap<String, Map<String, Object>> AdPrice = new HashMap<>();
 		QFilter filter_org = new QFilter("entryentity.aos_orgid.number", QCP.equals, p_ou_code);
-		QFilter[] filters = new QFilter[] {  filter_org };
+		QFilter[] filters = new QFilter[] { filter_org };
 		String SelectColumn = "entryentity.aos_orgid aos_orgid," + "entryentity.aos_ad_name aos_ad_name,"
 				+ "entryentity.aos_keyword aos_keyword," + "entryentity.aos_match_type aos_match_type,"
 				+ "entryentity.aos_bid_suggest aos_bid_suggest," + "entryentity.aos_bid_rangestart aos_bid_rangestart,"
