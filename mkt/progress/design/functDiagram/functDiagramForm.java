@@ -686,7 +686,7 @@ public class functDiagramForm extends AbstractBillPlugIn implements HyperLinkCli
         if (!users.contains("中文")) {
             users.add("中文");
         }
-        if (users.contains("EN")) {
+        if (!users.contains("EN")) {
             users.add("EN");
         }
         for (int i = 1; i < 7; i++) {
@@ -698,7 +698,7 @@ public class functDiagramForm extends AbstractBillPlugIn implements HyperLinkCli
                 String pid = dy_row.getString("pid");
                 if (FndGlobal.IsNotNull(pid) && pid.equals("0")){
                     String lan = dy_row.getString("aos_lan" + i);
-                    if (!users.contains(lan)){
+                    if (users.contains(lan)){
                         list.add(row);
                     }
                 }
@@ -707,7 +707,8 @@ public class functDiagramForm extends AbstractBillPlugIn implements HyperLinkCli
             for (int index = 0; index < list.size(); index++) {
                 rows[index] = list.get(index);
             }
-            control.collapse(rows);
+            control.expand(rows);
+//            control.collapse(rows);
         }
     }
     /** 翻译 **/
