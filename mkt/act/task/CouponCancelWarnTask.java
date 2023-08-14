@@ -54,7 +54,7 @@ public class CouponCancelWarnTask extends AbstractTask {
 			}
 		} catch (RuntimeException e) {
 			// 1.打印日志
-			logger.error("生成Coupon取消提醒单报错");
+			logger.error("生成Coupon取消提醒单报错",e);
 			// 2.发送邮件
 		}
 	}

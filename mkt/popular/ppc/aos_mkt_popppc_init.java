@@ -143,11 +143,6 @@ public class aos_mkt_popppc_init extends AbstractTask {
 			try {
 				do_operate(params);
 			} catch (Exception e) {
-				String message = e.toString();
-				String exceptionStr = SalUtil.getExceptionStr(e);
-				String messageStr = message + "\r\n" + exceptionStr;
-				System.out.println(messageStr);
-				logger.error(messageStr);
 			}
 		}
 	}
@@ -988,7 +983,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
 
 					// 2023.08.07 不做低毛利剔除
 					ProFlag = false;
-					
+
 					// 特殊广告不进低毛利剔除
 					if (ProFlag && !"true".equals(saleAdd)) {
 						InsertData(aos_entryentityS, insert_map, "PRO", roiMap);
@@ -1637,12 +1632,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
 			adjs.put("p_ou_code", p_ou_code);
 			aos_mkt_popadjs_init.executerun(adjs);
 		} catch (Exception e) {
-			String message = e.toString();
-			String exceptionStr = SalUtil.getExceptionStr(e);
-			String messageStr = message + "\r\n" + exceptionStr;
-			// FndWebHook.send(FndWebHook.urlMms, p_ou_code +":PPC推广SP初始化失败!");
-			System.out.println(messageStr);
-			logger.error(messageStr);
+			logger.error(p_ou_code + ":PPC推广SP初始化失败!", e);
 		}
 	}
 

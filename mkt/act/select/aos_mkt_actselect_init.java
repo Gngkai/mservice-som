@@ -3,6 +3,7 @@ package mkt.act.select;
 import common.Cux_Common_Utl;
 import common.fnd.AosomLog;
 import common.fnd.FndDate;
+import common.fnd.FndError;
 import common.fnd.FndGlobal;
 import common.sal.util.InStockAvailableDays;
 import common.sal.util.SalUtil;
@@ -89,11 +90,7 @@ public class aos_mkt_actselect_init extends AbstractTask {
 			try {
 				do_operate(params);
 			} catch (Exception e) {
-				String message = e.toString();
-				String exceptionStr = SalUtil.getExceptionStr(e);
-				String messageStr = message + "\r\n" + exceptionStr;
-				logger.error(messageStr);
-				e.printStackTrace();
+				logger.error("活动选品初始化失败", e);
 			}
 		}
 	}

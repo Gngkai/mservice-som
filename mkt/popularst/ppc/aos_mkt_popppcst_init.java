@@ -33,6 +33,7 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
+import kd.bos.servicehelper.operation.SaveServiceHelper;
 import mkt.common.AosMktGenerate;
 import mkt.common.MKTCom;
 import mkt.popular.aos_mkt_pop_common;
@@ -277,9 +278,11 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 		aos_mkt_pop_ppcst.set("aos_poptype", aos_poptype);
 		aos_mkt_pop_ppcst.set("aos_date", Today);
 		aos_mkt_pop_ppcst.set("aos_channel", platform_id);
+		SaveServiceHelper.save(new DynamicObject[] { aos_mkt_pop_ppcst });
+
 		DynamicObjectCollection aos_entryentityS = aos_mkt_pop_ppcst.getDynamicObjectCollection("aos_entryentity");
 		// 初始化历史记录对象
-		FndLog log = FndLog.init("MKT_PPC_ST数据源初始化", p_ou_code.toString() + year + month + day);
+//		FndLog log = FndLog.init("MKT_PPC_ST数据源初始化", p_ou_code.toString() + year + month + day);
 		// 循环1:国别物料
 		fndmsg.setOn();
 		fndmsg.print("========开始 循环1:国别物料========");
@@ -310,7 +313,7 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 				aos_seasonpro = "";
 			Object aos_seasonid = bd_material.get("aos_seasonid");
 			if (aos_seasonid == null) {
-				log.add(aos_itemnumer + "季节属性不存在");
+//				log.add(aos_itemnumer + "季节属性不存在");
 				continue;
 			}
 			// 海外库存
@@ -318,7 +321,7 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 			if (item_overseaqty == null || item_overseaqty.equals("null"))
 				item_overseaqty = 0;
 			if ("C".equals(aos_itemstatus) && (int) item_overseaqty == 0) {
-				log.add(aos_itemnumer + "终止状态且无海外库存");
+//				log.add(aos_itemnumer + "终止状态且无海外库存");
 				continue;
 			}
 			// 产品号
@@ -326,37 +329,37 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 			if (item_intransqty == null || item_intransqty.equals("null"))
 				item_intransqty = 0;
 			if (aos_productno == null || aos_productno.equals("") || aos_productno.equals("null")) {
-				log.add(aos_itemnumer + "产品号不存在");
+//				log.add(aos_itemnumer + "产品号不存在");
 				continue;
 			}
 			// 获取AMAZON店铺货号
 			String aos_shopsku = ProductInfo.get(item_id + "");
 			if (aos_shopsku == null || aos_shopsku.equals("") || aos_shopsku.equals("null")) {
-				log.add(aos_itemnumer + "AMAZON店铺货号不存在");
+//				log.add(aos_itemnumer + "AMAZON店铺货号不存在");
 				continue;
 			}
 			// 可售库存天数7日
 			if (ItemAvaDays.get(aos_itemnumer) == null) {
-				log.add(aos_itemnumer + "无可售库存天数");
+//				log.add(aos_itemnumer + "无可售库存天数");
 				continue;
 			}
 			int aos_avadays = (int) ItemAvaDays.get(aos_itemnumer);
 			// 产品类别
 			String itemCategoryId = CommData.getItemCategoryId(item_id + "");
 			if (itemCategoryId == null || "".equals(itemCategoryId)) {
-				log.add(aos_itemnumer + "产品类别不存在自动剔除");
+//				log.add(aos_itemnumer + "产品类别不存在自动剔除");
 				continue;
 			}
 			// 销售组别
 			String salOrg = CommData.getSalOrgV2(p_org_id + "", itemCategoryId);
 			if (salOrg == null || "".equals(salOrg)) {
-				log.add(aos_itemnumer + "组别不存在自动剔除");
+//				log.add(aos_itemnumer + "组别不存在自动剔除");
 				continue;
 			}
 			// TODO 物料词信息 无词信息 跳过
 			Map<String, Object> KeyRptDetail = KeyRpt.get(aos_itemnumer);
 			if (FndGlobal.IsNull(KeyRptDetail)) {
-				log.add(aos_itemnumer + "无词信息 跳过");
+//				log.add(aos_itemnumer + "无词信息 跳过");
 				continue;
 			}
 
@@ -425,7 +428,7 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 			if (FndGlobal.IsNull(KeyRptDetail)) {
 				insert_map.put("aos_reason", "无词组剔除");
 				InsertData(aos_entryentityS, insert_map);
-				log.add(aos_itemnumer + "无词组剔除");
+//				log.add(aos_itemnumer + "无词组剔除");
 				continue;
 			}
 
@@ -436,7 +439,7 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 					&& (Today.before(SummerSpringStart) || Today.after(SummerSpringEnd))) {
 				insert_map.put("aos_reason", "过季品剔除");
 				InsertData(aos_entryentityS, insert_map);
-				log.add(aos_itemnumer + "过季品剔除");
+//				log.add(aos_itemnumer + "过季品剔除");
 				continue;
 			}
 			if ((FndGlobal.IsNotNull(aos_seasonpro))
@@ -444,7 +447,7 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 					&& (Today.before(AutumnWinterStart) || Today.after(AutumnWinterEnd))) {
 				insert_map.put("aos_reason", "过季品剔除");
 				InsertData(aos_entryentityS, insert_map);
-				log.add(aos_itemnumer + "过季品剔除");
+//				log.add(aos_itemnumer + "过季品剔除");
 				continue;
 			}
 			// .剔除预断货
@@ -456,7 +459,7 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 						aos_freight_day, aos_clear_day, availableDays)))) {
 					insert_map.put("aos_reason", "预断货剔除");
 					InsertData(aos_entryentityS, insert_map);
-					log.add(aos_itemnumer + "预断货剔除");
+//					log.add(aos_itemnumer + "预断货剔除");
 					continue;
 				}
 			}
@@ -511,14 +514,14 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 				if (manualSet.contains(key)) {
 					insert_map.put("aos_reason", "手动建组剔除");
 					InsertData(aos_entryentityS, insert_map);
-					log.add(key + "手动建组剔除");
+//					log.add(key + "手动建组剔除");
 					continue;
 				}
 				// .周调整剔除
 				if (weekSet.contains(key)) {
 					insert_map.put("aos_reason", "周调整剔除");
 					InsertData(aos_entryentityS, insert_map);
-					log.add(key + "周调整剔除");
+//					log.add(key + "周调整剔除");
 					continue;
 				}
 
@@ -539,7 +542,7 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 						&& aos_clicks.compareTo(PointClick) > 0) {
 					insert_map.put("aos_reason", "差ROI剔除");
 					keyInsertData(aos_entryentityS, insert_map, aos_keyword, aos_match_type, aos_keydate);
-					log.add(key + "差ROI剔除");
+//					log.add(key + "差ROI剔除");
 					continue;
 				}
 				// 赋值数据
@@ -675,13 +678,12 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 				GetAdjustRateMap.put("STANDARD", STANDARD);// 标准
 				GetAdjustRateMap.put("WELL", WELL);// 好
 				GetAdjustRateMap.put("EXCELLENT", EXCELLENT);// 优
-				Map<String, Object> AdjustRateMap = GetAdjustRate(GetAdjustRateMap, aos_mkt_bsadjrateST, log,
-						aos_itemnumer);
+				Map<String, Object> AdjustRateMap = GetAdjustRate(GetAdjustRateMap, aos_mkt_bsadjrateST, aos_itemnumer);
 				BigDecimal AdjustRate = (BigDecimal) AdjustRateMap.get("AdjustRate");// 调整幅度 出价调整幅度参数表中获取
 				String rule = (String) AdjustRateMap.get("rule");
 				int aos_level = (int) AdjustRateMap.get("aos_level");
-				log.add(aos_itemnumer + "优先级 =" + aos_level);
-				log.add(aos_itemnumer + "公式 =" + rule);
+//				log.add(aos_itemnumer + "优先级 =" + aos_level);
+//				log.add(aos_itemnumer + "公式 =" + rule);
 				aos_bid = LastBid.multiply(AdjustRate.add(BigDecimal.valueOf(1)));
 			}
 			aos_bid = Cux_Common_Utl.Min(aos_bid, HighValue);// 计算出价不能高于最高出价
@@ -784,8 +786,8 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 			if (SkuRptDetailSerialMap != null && PpcYesterSerial_Map != null) {
 				BigDecimal LastSpend = (BigDecimal) SkuRptDetailSerialMap.get("aos_spend");
 				BigDecimal LastBudget = (BigDecimal) PpcYesterSerial_Map.get("aos_budget");// 昨日预算
-				log.add(aos_itemnumer + "预算3 昨日花出 =" + LastSpend);
-				log.add(aos_itemnumer + "预算3 昨日预算 =" + LastBudget);
+//				log.add(aos_itemnumer + "预算3 昨日花出 =" + LastSpend);
+//				log.add(aos_itemnumer + "预算3 昨日预算 =" + LastBudget);
 				if (LastBudget.compareTo(BigDecimal.ZERO) != 0)
 					CostRate = LastSpend.divide(LastBudget, 2, BigDecimal.ROUND_HALF_UP);
 			}
@@ -815,7 +817,7 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 				if (PpcYesterSerial_Map != null)
 					Lastbudget = (BigDecimal) PpcYesterSerial_Map.get("aos_budget");// 上次设置金额
 				aos_budget = Lastbudget;
-				log.add(aos_itemnumer + "预算2 =" + aos_budget);
+//				log.add(aos_itemnumer + "预算2 =" + aos_budget);
 			} else {
 				// c.计算预算
 				BigDecimal Lastbudget = BigDecimal.ZERO;
@@ -828,7 +830,7 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 				Map<String, Object> BudgetMap = GetBudgetRate(GetBudgetRateMap, aos_mkt_bsadjparaS);// 花出率获取对应预算调整系数
 				BigDecimal BudgetRate = (BigDecimal) BudgetMap.get("BudgetRate");
 				String rule = (String) BudgetMap.get("rule");
-				log.add(aos_itemnumer + "预算3 预算公式 =" + rule);
+//				log.add(aos_itemnumer + "预算3 预算公式 =" + rule);
 				BigDecimal NewSerial = BigDecimal.ZERO;
 				BigDecimal aos_bid = BigDecimal.ZERO;
 				if (ProductNoBid_Map.get(aos_productno) != null)
@@ -839,15 +841,15 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 				BigDecimal budget2 = aos_bid.multiply(BigDecimal.valueOf(20));
 				aos_budget = Cux_Common_Utl.Max(budget1, budget2);
 
-				log.add(aos_itemnumer + "预算3 =" + aos_budget);
-				log.add(aos_itemnumer + "预算3 花出率 =" + CostRate);
-				log.add(aos_itemnumer + "预算3 7日Roi =" + Roi7Days_Serial);
-				log.add(aos_itemnumer + "预算3 上次预算 =" + Lastbudget);
-				log.add(aos_itemnumer + "预算3 花出率对应系数 =" + BudgetRate);
-				log.add(aos_itemnumer + "预算3 新系列 =" + NewSerial);
-				log.add(aos_itemnumer + "预算3 aos_bid =" + aos_bid);
-				log.add(aos_itemnumer + "预算3 budget1 =" + budget1);
-				log.add(aos_itemnumer + "预算3 budget2 =" + budget2);
+//				log.add(aos_itemnumer + "预算3 =" + aos_budget);
+//				log.add(aos_itemnumer + "预算3 花出率 =" + CostRate);
+//				log.add(aos_itemnumer + "预算3 7日Roi =" + Roi7Days_Serial);
+//				log.add(aos_itemnumer + "预算3 上次预算 =" + Lastbudget);
+//				log.add(aos_itemnumer + "预算3 花出率对应系数 =" + BudgetRate);
+//				log.add(aos_itemnumer + "预算3 新系列 =" + NewSerial);
+//				log.add(aos_itemnumer + "预算3 aos_bid =" + aos_bid);
+//				log.add(aos_itemnumer + "预算3 budget1 =" + budget1);
+//				log.add(aos_itemnumer + "预算3 budget2 =" + budget2);
 			}
 
 			aos_entryentity.set("aos_budget", Cux_Common_Utl.Max(aos_budget, BigDecimal.valueOf(2)));
@@ -858,10 +860,9 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 		aos_mkt_bsadjparaS.close();
 
 		// 保存ST单据
-		OperationServiceHelper.executeOperate("save", "aos_mkt_pop_ppcst", new DynamicObject[] { aos_mkt_pop_ppcst },
-				OperateOption.create());
+		SaveServiceHelper.save(new DynamicObject[] { aos_mkt_pop_ppcst });
 		// 保存log
-		log.finnalSave();
+//		log.finnalSave();
 
 		// 开始生成 出价调整(销售)
 		fndmsg.setOn();
@@ -954,7 +955,7 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 	}
 
 	private static Map<String, Object> GetAdjustRate(Map<String, Object> GetAdjustRateMap, DataSet aos_mkt_bsadjrateST,
-			FndLog log, String aos_itemnumer) {
+			String aos_itemnumer) {
 		Map<String, Object> AdjustRateMap = new HashMap<>();
 		BigDecimal AdjustRate = BigDecimal.ZERO;
 

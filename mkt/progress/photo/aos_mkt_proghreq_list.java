@@ -87,7 +87,7 @@ public class aos_mkt_proghreq_list extends AbstractListPlugin {
 				QFilter filter_item = new QFilter("aos_itemid.id", QFilter.in, list_item);
 				qFilters.add(filter_item);
 			}
-			pageCache.put(KEY_Item, null);
+			// pageCache.put(KEY_Item, null);
 		}
 	}
 
@@ -103,6 +103,11 @@ public class aos_mkt_proghreq_list extends AbstractListPlugin {
 			aos_open();// 批量转办
 		else if ("aos_submit".equals(itemKey)) // 提交
 			aos_submit();
+		else if ("aos_clear".equals(itemKey)) {
+			IPageCache pageCache = this.getPageCache();
+			pageCache.put(KEY_Item, null);
+			this.getView().invokeOperation("refresh");
+		}
 	}
 
 	private void aos_submit() {
