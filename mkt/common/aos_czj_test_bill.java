@@ -14,6 +14,7 @@ import kd.bos.bill.AbstractBillPlugIn;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.dataentity.entity.ILocaleString;
+import kd.bos.dataentity.metadata.dynamicobject.DynamicObjectType;
 import kd.bos.entity.datamodel.events.PropertyChangedArgs;
 import kd.bos.form.control.Control;
 import kd.bos.form.control.events.ClickListener;

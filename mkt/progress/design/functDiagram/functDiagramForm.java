@@ -10,9 +10,12 @@ import common.fnd.FndGlobal;
 import common.fnd.FndHistory;
 import kd.bos.bill.AbstractBillPlugIn;
 import kd.bos.context.RequestContext;
+import kd.bos.dataentity.entity.DataEntityState;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.dataentity.entity.LocaleString;
+import kd.bos.dataentity.metadata.IDataEntityProperty;
+import kd.bos.dataentity.metadata.clr.DataEntityPropertyCollection;
 import kd.bos.dataentity.serialization.SerializationUtils;
 import kd.bos.entity.BadgeInfo;
 import kd.bos.entity.datamodel.events.AfterAddRowEventArgs;
@@ -24,14 +27,8 @@ import kd.bos.exception.ErrorCode;
 import kd.bos.exception.KDException;
 import kd.bos.form.*;
 import kd.bos.form.container.TabPage;
-import kd.bos.form.control.AbstractGrid;
-import kd.bos.form.control.EntryGrid;
-import kd.bos.form.control.Image;
-import kd.bos.form.control.TreeEntryGrid;
-import kd.bos.form.events.AfterDoOperationEventArgs;
-import kd.bos.form.events.ClosedCallBackEvent;
-import kd.bos.form.events.HyperLinkClickEvent;
-import kd.bos.form.events.HyperLinkClickListener;
+import kd.bos.form.control.*;
+import kd.bos.form.events.*;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
@@ -138,6 +135,7 @@ public class functDiagramForm extends AbstractBillPlugIn implements HyperLinkCli
         StatusControl();
         InitEntity();
         initSensitiveWords();
+        setEntityStatus();
     }
     @Override
     public void afterAddRow(AfterAddRowEventArgs e) {
@@ -670,11 +668,48 @@ public class functDiagramForm extends AbstractBillPlugIn implements HyperLinkCli
             for (int i = 1;i<7;i++){
                 list_Key.add("aos_addrow"+i);
                 list_Key.add("aos_deleterow"+i);
-
             }
             this.getView().setVisible(false,list_Key.toArray(new String[0]));
         }
+        StringJoiner str = new StringJoiner(",");
+        for (String lan : userCopyLanguage) {
+            str.add(lan);
+        }
+        getModel().setValue("aos_u_lan",str.toString());
         this.getPageCache().put(KEY_USER,SerializationUtils.toJsonString(userCopyLanguage));
+    }
+    /**
+     * 控制单据的能否缩放
+     */
+    private void setEntityStatus(){
+        List<String> users= (List<String>) SerializationUtils.fromJsonStringToList(this.getPageCache().get(KEY_USER), String.class);
+        if (!users.contains("中文")) {
+            users.add("中文");
+        }
+        if (!users.contains("EN")) {
+            users.add("EN");
+        }
+        for (int i = 1; i < 7; i++) {
+            TreeEntryGrid control = getControl("aos_entity"+i);
+            DynamicObjectCollection dyc = this.getModel().getDataEntity(true).getDynamicObjectCollection("aos_entity" + i);
+            List<Integer> list = new ArrayList<>(dyc.size());
+            for (int row = 0; row < dyc.size(); row++) {
+                DynamicObject dy_row = dyc.get(row);
+                String pid = dy_row.getString("pid");
+                if (FndGlobal.IsNotNull(pid) && pid.equals("0")){
+                    String lan = dy_row.getString("aos_lan" + i);
+                    if (users.contains(lan)){
+                        list.add(row);
+                    }
+                }
+            }
+            int [] rows = new int[list.size()];
+            for (int index = 0; index < list.size(); index++) {
+                rows[index] = list.get(index);
+            }
+            control.expand(rows);
+//            control.collapse(rows);
+        }
     }
     /** 翻译 **/
     private void translate(Map<String,Object> paraments) throws InterruptedException, DeepLException {
@@ -1035,5 +1070,34 @@ public class functDiagramForm extends AbstractBillPlugIn implements HyperLinkCli
         dy_new.set("aos_lan"+newImage,dy_source.get("aos_lan"+sourceImage));
         dy_new.set("aos_value_s"+newImage,dy_source.get("aos_value_s"+sourceImage));
         dy_new.set("aos_content_s"+newImage,dy_source.get("aos_content_s"+sourceImage));
+    }
+
+    @Override
+    public void beforeClosed(BeforeClosedEvent e) {
+        super.beforeClosed(e);
+        DynamicObject dataEntity = getModel().getDataEntity(true);
+        DataEntityState dataEntityState = dataEntity.getDataEntityState();
+
+        DataEntityPropertyCollection properties = dataEntity.getDataEntityType().getProperties();
+
+        //取消单据头的 界面控制字段保存校验
+        IDataEntityProperty property = properties.get("aos_limit");
+        dataEntityState.setBizChanged(property.getOrdinal(),false);
+
+        property = dataEntity.getDataEntityType().getProperties().get("aos_u_lan");
+        dataEntityState.setBizChanged(property.getOrdinal(),false);
+
+        //取消树形单据体的 标题 保存校验
+        List<String> fields = Arrays.asList("aos_language", "aos_head", "aos_title", "aos_lan");
+        for (int index = 1; index < 7; index++) {
+            DynamicObjectCollection entityRows = dataEntity.getDynamicObjectCollection("aos_entity" + index);
+            for (DynamicObject entityRow : entityRows) {
+                DataEntityPropertyCollection entryProes = entityRow.getDataEntityType().getProperties();
+                for (String field : fields) {
+                    property = entryProes.get(field + index);
+                    entityRow.getDataEntityState().setBizChanged(property.getOrdinal(),false);
+                }
+            }
+        }
     }
 }
