@@ -77,7 +77,7 @@ public class CouponCancelWarnTask extends AbstractTask {
 		// 物料国别信息 是否爆品
 		DynamicObjectCollection bd_materialS = QueryServiceHelper.query("bd_material",
 				"id,aos_contryentry.aos_is_saleout aos_is_saleout",
-				new QFilter("aos_nationality", QCP.equals, aos_orgid).toArray());
+				new QFilter("aos_contryentry.aos_nationality", QCP.equals, aos_orgid).toArray());
 		Map<String, Boolean> saleOutMap = new HashMap<>();
 		for (DynamicObject bd_material : bd_materialS)
 			saleOutMap.put(bd_material.getString("id"), bd_material.getBoolean("aos_is_saleout"));

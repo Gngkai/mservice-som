@@ -330,7 +330,8 @@ public class aos_mkt_common_redis {
 		QFilter filter_date = new QFilter("aos_date", "=", date_to_str);
 		QFilter filter_match = new QFilter("aos_entryentity.aos_cam_name", "like", "%-AUTO%");
 		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_date, filter_match };
-		String SelectColumn = "aos_orgid," + "aos_entryentity.aos_cam_name aos_productno," + "aos_entryentity.aos_spend aos_spend";
+		String SelectColumn = "aos_orgid," + "aos_entryentity.aos_cam_name aos_productno,"
+				+ "aos_entryentity.aos_spend aos_spend";
 		DataSet aos_base_skupoprptS = QueryServiceHelper.queryDataSet(
 				"aos_mkt_common_redis" + "." + "init_skurptDetail", "aos_base_skupoprpt", SelectColumn, filters, null);
 		String[] GroupBy = new String[] { "aos_orgid", "aos_productno" };
@@ -899,12 +900,13 @@ public class aos_mkt_common_redis {
 		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_date, filter_match };
 		String SelectColumn = "aos_orgid," + "aos_entryentity.aos_ad_sku aos_itemid,"
 				+ "aos_entryentity.aos_spend aos_spend," + "aos_entryentity.aos_total_sales aos_total_sales,"
-				+ "aos_entryentity.aos_impressions aos_impressions," + "aos_entryentity.aos_clicks aos_clicks";
+				+ "aos_entryentity.aos_impressions aos_impressions," + "aos_entryentity.aos_clicks aos_clicks,"
+				+ "aos_entryentity.aos_total_order aos_total_order";
 		DataSet aos_base_skupoprptS = QueryServiceHelper.queryDataSet("aos_mkt_common_redis" + "." + "init_skurpt",
 				"aos_base_skupoprpt", SelectColumn, filters, null);
 		String[] GroupBy = new String[] { "aos_orgid", "aos_itemid" };
 		aos_base_skupoprptS = aos_base_skupoprptS.groupBy(GroupBy).sum("aos_spend").sum("aos_total_sales")
-				.sum("aos_impressions").sum("aos_clicks").finish();
+				.sum("aos_impressions").sum("aos_clicks").sum("aos_total_order").finish();
 		while (aos_base_skupoprptS.hasNext()) {
 			Row aos_base_skupoprpt = aos_base_skupoprptS.next();
 			HashMap<String, Object> Info = new HashMap<>();
@@ -912,6 +914,7 @@ public class aos_mkt_common_redis {
 			Info.put("aos_total_sales", aos_base_skupoprpt.get("aos_total_sales"));
 			Info.put("aos_impressions", aos_base_skupoprpt.get("aos_impressions"));
 			Info.put("aos_clicks", aos_base_skupoprpt.get("aos_clicks"));
+			Info.put("aos_total_order", aos_base_skupoprpt.get("aos_total_order"));
 			SkuRpt.put(aos_base_skupoprpt.getLong("aos_orgid") + "~" + aos_base_skupoprpt.getLong("aos_itemid"), Info);
 		}
 		aos_base_skupoprptS.close();
@@ -983,7 +986,7 @@ public class aos_mkt_common_redis {
 				+ "aos_entryentity.aos_clicks aos_clicks," + "aos_entryentity.aos_impressions aos_impressions,"
 				+ "case when aos_entryentity.aos_impressions > 0 " + "then 1 "
 				+ "when aos_entryentity.aos_impressions <= 0 " + "then 0 " + "end as aos_impcount,"
-						+ "1 as aos_online ";
+				+ "1 as aos_online ";
 		DataSet aos_base_skupoprptS = QueryServiceHelper.queryDataSet("aos_mkt_common_redis" + "." + "init_skurpt14",
 				"aos_base_skupoprpt", SelectColumn, filters, null);
 		String[] GroupBy = new String[] { "aos_orgid", "aos_itemid" };
@@ -997,7 +1000,7 @@ public class aos_mkt_common_redis {
 			Info.put("aos_impressions", aos_base_skupoprpt.get("aos_impressions"));
 			Info.put("aos_impcount", aos_base_skupoprpt.get("aos_impcount"));
 			Info.put("aos_online", aos_base_skupoprpt.get("aos_online"));
-			
+
 			Info.put("aos_clicks", aos_base_skupoprpt.get("aos_clicks"));
 
 			SkuRpt.put(aos_base_skupoprpt.getLong("aos_orgid") + "~" + aos_base_skupoprpt.getLong("aos_itemid"), Info);

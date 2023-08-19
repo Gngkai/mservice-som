@@ -290,8 +290,11 @@ public class aos_mkt_popppc_init extends AbstractTask {
 			}
 			// 获取春夏品 秋冬品开始结束日期 营销日期参数表
 			Date SummerSpringStart = MKTCom.Get_DateRange("aos_datefrom", "SS", p_org_id);
+			Date SummerSpringFirst = DateUtils.setDays(DateUtils.addDays(SummerSpringStart, 63), 1);
 			Date SummerSpringEnd = MKTCom.Get_DateRange("aos_dateto", "SS", p_org_id);
 			Date AutumnWinterStart = MKTCom.Get_DateRange("aos_datefrom", "AW", p_org_id);
+			Date AutumnWinterFirst = DateUtils.setDays(DateUtils.addDays(AutumnWinterStart, 63), 1);
+
 			Date AutumnWinterEnd = MKTCom.Get_DateRange("aos_dateto", "AW", p_org_id);
 			Date SummerSpringUnStart = MKTCom.Get_DateRange("aos_datefrom", "SSUN", p_org_id);// 春夏品不剔除日期
 			Date AutumnWinterUnStart = MKTCom.Get_DateRange("aos_datefrom", "AWUN", p_org_id);// 秋冬品不剔除日期
@@ -325,6 +328,14 @@ public class aos_mkt_popppc_init extends AbstractTask {
 			BigDecimal QtyStandard = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "QTYSTANDARD").get("aos_value");// 国别海外库存标准
 			BigDecimal LOWESTBID = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "LOWESTBID").get("aos_value");
 			BigDecimal CLICK = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "CLICK").get("aos_value");// 点击国别标准
+			// 国别转化率差标准
+			BigDecimal exRateLowSt = getExRateLowSt(p_ou_code, "差");
+			BigDecimal exRateWellSt = getExRateLowSt(p_ou_code, "优");
+			BigDecimal exRateGoodSt = getExRateLowSt(p_ou_code, "好");
+
+			BigDecimal lowClick = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "国别低点击标准(7天)").get("aos_value");
+			BigDecimal HighClick = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "国别高点击标准(7天)").get("aos_value");
+
 			Map<String, BigDecimal> orgCpcMap = queryOrgCpc(p_org_id.toString());
 			HashMap<String, Object> Act = GenerateAct();
 			Map<String, BigDecimal> VatMap = GenerateVat(p_org_id);
@@ -638,6 +649,14 @@ public class aos_mkt_popppc_init extends AbstractTask {
 					Roi7Days = ((BigDecimal) SkuRptMap.get("aos_total_sales")).divide(Spend7Days, 2,
 							BigDecimal.ROUND_HALF_UP);
 				}
+				// 7日转化率
+				BigDecimal aos_rpt_roi = BigDecimal.ZERO;
+				BigDecimal aos_clicks = BigDecimal.ZERO;
+				if (SkuRptMap != null && ((BigDecimal) SkuRptMap.get("aos_clicks")).compareTo(BigDecimal.ZERO) != 0) {
+					aos_clicks = (BigDecimal) SkuRptMap.get("aos_clicks");
+					aos_rpt_roi = ((BigDecimal) SkuRptMap.get("aos_total_order")).divide(aos_clicks, 2,
+							BigDecimal.ROUND_HALF_UP);
+				}
 
 				Map<String, Object> DayMap = new HashMap<>();
 				int availableDays = InStockAvailableDays.calInstockSalDaysForDayMin(orgid_str, itemid_str, DayMap);// 可售天数
@@ -680,326 +699,383 @@ public class aos_mkt_popppc_init extends AbstractTask {
 				insert_map.put("aos_overseaqty", item_overseaqty);
 				insert_map.put("aos_online", onlineDate.get(aos_itemnumer));
 				insert_map.put("aos_is_saleout", aos_is_saleout);
-
 				insert_map.put("aos_special", saleAdd);
 				insert_map.put("aos_firstindate", aos_firstindate);
+				insert_map.put("aos_rpt_roi", aos_rpt_roi);
 
-				// 剔除海外库存
-				if ((int) item_overseaqty <= QtyStandard.intValue() && !aos_itemstatus.equals("E")
-						&& !aos_itemstatus.equals("A") && (int) item_intransqty == 0) {
-					log.add(aos_itemnumer + "海外库存剔除 国别库存标准 =" + item_overseaqty + "<=" + QtyStandard);
-					log.add(aos_itemnumer + "海外库存剔除 在途 =" + item_intransqty);
-					InsertData(aos_entryentityS, insert_map, "LOWQTY", roiMap);
-					continue;
-				}
-				// 低库存剔除
-				if ((int) item_overseaqty < SafeQty) {
-					log.add(aos_itemnumer + "低库存剔除 海外库存小于安全库存 =" + item_overseaqty + "<" + SafeQty);
-					InsertData(aos_entryentityS, insert_map, "LOWQTY", roiMap);
-					continue;
-				}
-				// 固定sku剔除
-				if (list_itemRejectIds.contains(String.valueOf(item_id))) {
-					log.add(aos_itemnumer + "  固定剔除物料");
-					InsertData(aos_entryentityS, insert_map, "ROI", roiMap);
-					continue;
-				}
-				// 判断是否是必推货号
-				Boolean mustFlag = true;
-				if (mustSet.contains(itemid_str))
-					mustFlag = false;
-				if (mustFlag) {
-					if ((int) item_overseaqty < 10
-							&& ("其它节日装饰".equals(aos_category2) || "圣诞装饰".equals(aos_category2))) {
-						log.add(aos_itemnumer + "节日品 低库存小于10剔除  =" + item_overseaqty);
+				Date olDate = onlineDate.get(aos_itemnumer);
+				Boolean olFlag = true;
+//				if (FndGlobal.IsNotNull(olDate) && FndDate.GetBetweenDays(Today, olDate) < 8) {
+//					olFlag = false;
+//				}
+
+				if (olFlag) {
+
+					// 剔除海外库存
+					if ((int) item_overseaqty <= QtyStandard.intValue() && !aos_itemstatus.equals("E")
+							&& !aos_itemstatus.equals("A") && (int) item_intransqty == 0) {
+						log.add(aos_itemnumer + "海外库存剔除 国别库存标准 =" + item_overseaqty + "<=" + QtyStandard);
+						log.add(aos_itemnumer + "海外库存剔除 在途 =" + item_intransqty);
 						InsertData(aos_entryentityS, insert_map, "LOWQTY", roiMap);
 						continue;
 					}
-					// 其它节日装饰 中类 万圣 过季品剔除
-					if ("其它节日装饰".equals(aos_category2)) {
-						log.add(aos_itemnumer + "其他节日装饰 过季品剔除");
-						InsertData(aos_entryentityS, insert_map, "SEASON", roiMap);
+					// 低库存剔除
+					if ((int) item_overseaqty < SafeQty) {
+						log.add(aos_itemnumer + "低库存剔除 海外库存小于安全库存 =" + item_overseaqty + "<" + SafeQty);
+						InsertData(aos_entryentityS, insert_map, "LOWQTY", roiMap);
 						continue;
 					}
-
-					if ("圣诞装饰".equals(aos_category2)) {
-						log.add(aos_itemnumer + "圣诞装饰 过季品剔除");
-						InsertData(aos_entryentityS, insert_map, "SEASON", roiMap);
+					// 固定sku剔除
+					if (list_itemRejectIds.contains(String.valueOf(item_id))) {
+						log.add(aos_itemnumer + "  固定剔除物料");
+						InsertData(aos_entryentityS, insert_map, "ROI", roiMap);
 						continue;
 					}
+					// 判断是否是必推货号
+					Boolean mustFlag = true;
+					if (mustSet.contains(itemid_str))
+						mustFlag = false;
+					if (mustFlag) {
+						if ((int) item_overseaqty < 10
+								&& ("其它节日装饰".equals(aos_category2) || "圣诞装饰".equals(aos_category2))) {
+							log.add(aos_itemnumer + "节日品 低库存小于10剔除  =" + item_overseaqty);
+							InsertData(aos_entryentityS, insert_map, "LOWQTY", roiMap);
+							continue;
+						}
+						// 其它节日装饰 中类 万圣 过季品剔除
+//						if ("其它节日装饰".equals(aos_category2)) {
+//							log.add(aos_itemnumer + "其他节日装饰 过季品剔除");
+//							InsertData(aos_entryentityS, insert_map, "SEASON", roiMap);
+//							continue;
+//						}
 
-					// 非节日品剔除预断货 节日品节日2天内剔除 圣诞装饰 这两个中类不做预断货剔除 销量为3日均与7日均的最小值
-					if ((aos_festivalseting.equals("") || aos_festivalseting.equals("null"))
-							&& !"圣诞装饰".equals(aos_category2)) {
-
-						// 剔除过季品
-						if ((aos_seasonpro != null)
-								&& (aos_seasonpro.equals("SPRING") || aos_seasonpro.equals("SPRING_SUMMER")
-										|| aos_seasonpro.equals("SUMMER"))
-								&& (Today.before(SummerSpringStart) || Today.after(SummerSpringEnd))) {
-							log.add(aos_itemnumer + "过季品剔除");
+						if ("圣诞装饰".equals(aos_category2)) {
+							log.add(aos_itemnumer + "圣诞装饰 过季品剔除");
 							InsertData(aos_entryentityS, insert_map, "SEASON", roiMap);
 							continue;
+						}
+
+						// 非节日品剔除预断货 节日品节日2天内剔除 圣诞装饰 这两个中类不做预断货剔除 销量为3日均与7日均的最小值
+						if ((aos_festivalseting.equals("") || aos_festivalseting.equals("null"))
+								&& !"圣诞装饰".equals(aos_category2) && !"其它节日装饰".equals(aos_category2)) {
+
+							// 剔除过季品
+							if ((aos_seasonpro != null)
+									&& (aos_seasonpro.equals("SPRING") || aos_seasonpro.equals("SPRING_SUMMER")
+											|| aos_seasonpro.equals("SUMMER"))
+									&& (Today.before(SummerSpringStart) || Today.after(SummerSpringEnd))) {
+								log.add(aos_itemnumer + "过季品剔除");
+								InsertData(aos_entryentityS, insert_map, "SEASON", roiMap);
+								continue;
+							} else {
+								if (Deseaon.contains(aos_category1 + "~" + aos_category2 + "~" + aos_category3)) {
+									log.add(aos_itemnumer + "不按季节属性推广品类");
+									InsertData(aos_entryentityS, insert_map, "DESEASON", roiMap);
+									continue;
+								}
+							}
+
+							if ((aos_seasonpro != null)
+									&& (aos_seasonpro.equals("AUTUMN_WINTER") || aos_seasonpro.equals("WINTER"))
+									&& (Today.before(AutumnWinterStart) || Today.after(AutumnWinterEnd))) {
+								InsertData(aos_entryentityS, insert_map, "SEASON", roiMap);
+								log.add(aos_itemnumer + "过季品剔除");
+								continue;
+							}
+
+							log.add(aos_itemnumer + "非节日品预断货参数数据" + "item_intransqty =" + item_intransqty
+									+ "item_overseaqty =" + item_overseaqty + " 可售库存天数 =" + availableDays + " 3日销量 ="
+									+ DayMap.get("for3day") + " 7日销量 =" + DayMap.get("for7day"));
+
+							// 季节品 季节品 季末达标 CONTINUE; 剔除
+							boolean isSeasonEnd = false;
+							if ("SPRING".equals(aos_seasonpro) || "SPRING_SUMMER".equals(aos_seasonpro)
+									|| "SUMMER".equals(aos_seasonpro)) {
+								if (Today.after(summerSpringSeasonEnd)) {
+									// 季末 判断是否达标
+									isSeasonEnd = true;
+									float SeasonRate = MKTCom.Get_SeasonRate(org_id, item_id, aos_seasonpro,
+											item_overseaqty, month);
+									if (!MKTCom.Is_SeasonRate(aos_seasonpro, month, SeasonRate)) {
+										InsertData(aos_entryentityS, insert_map, "OFFSALE", roiMap);
+										continue;
+									}
+								}
+							}
+							if ("AUTUMN_WINTER".equals(aos_seasonpro) || "WINTER".equals(aos_seasonpro)) {
+								// 判断是否季末
+								if (Today.after(autumnWinterSeasonEnd)) {
+									isSeasonEnd = true;
+									// 季末 判断是否达标
+									float SeasonRate = MKTCom.Get_SeasonRate(org_id, item_id, aos_seasonpro,
+											item_overseaqty, month);
+									if (!MKTCom.Is_SeasonRate(aos_seasonpro, month, SeasonRate)) {
+										InsertData(aos_entryentityS, insert_map, "OFFSALE", roiMap);
+										continue;
+									}
+								}
+							}
+							// (海外在库+在途数量)/7日均销量)<30 或 满足销售预断货逻辑 则为营销预断货逻辑 且 不能为季节品季末 且可售天数小于45
+							int itemavadays = map_itemavadays.getOrDefault(p_ou_code + "~" + aos_itemnumer, 0);
+							if (((availableDays < 30) || ((MKTCom.Is_PreSaleOut(org_id, item_id, (int) item_intransqty,
+									aos_shp_day, aos_freight_day, aos_clear_day, availableDays)) && itemavadays < 45))
+									&& !isSeasonEnd) {
+								InsertData(aos_entryentityS, insert_map, "OFFSALE", roiMap);
+								continue;
+							}
 						} else {
-							if (Deseaon.contains(aos_category1 + "~" + aos_category2 + "~" + aos_category3)) {
-								log.add(aos_itemnumer + "不按季节属性推广品类");
-								InsertData(aos_entryentityS, insert_map, "DESEASON", roiMap);
+							if ((aos_festivalseting.equals("HALLOWEEN") || "其它节日装饰".equals(aos_category2))
+									&& (!(Today.after(HalloweenStart) && Today.before(HalloweenEnd)))) {
+								InsertData(aos_entryentityS, insert_map, "SEASON", roiMap);
+								log.add(aos_itemnumer + "节日品剔除");
+								continue;
+							}
+							if ((aos_festivalseting.equals("CHRISTMAS") || "圣诞装饰".equals(aos_category2))
+									&& (!(Today.after(ChristmasStart) && Today.before(ChristmasEnd)))) {
+								InsertData(aos_entryentityS, insert_map, "SEASON", roiMap);
+								log.add(aos_itemnumer + "节日品剔除");
 								continue;
 							}
 						}
 
-						if ((aos_seasonpro != null)
-								&& (aos_seasonpro.equals("AUTUMN_WINTER") || aos_seasonpro.equals("WINTER"))
-								&& (Today.before(AutumnWinterStart) || Today.after(AutumnWinterEnd))) {
-							InsertData(aos_entryentityS, insert_map, "SEASON", roiMap);
-							log.add(aos_itemnumer + "过季品剔除");
+						// 周24持续剔除
+						if ((week == Calendar.THURSDAY || week == Calendar.TUESDAY)
+								&& roiItemSet.contains(aos_itemnumer)) {
+							InsertData(aos_entryentityS, insert_map, "ROI", roiMap);
+							log.add(aos_itemnumer + "差ROI自动剔除");
+							continue;
+						}
+						// 周24持续剔除
+						if ((week == Calendar.THURSDAY || week == Calendar.TUESDAY)
+								&& proItemSet.contains(aos_itemnumer)) {
+							InsertData(aos_entryentityS, insert_map, "PRO", roiMap);
+							log.add(aos_itemnumer + "定价低毛利自动剔除");
 							continue;
 						}
 
-						log.add(aos_itemnumer + "非节日品预断货参数数据" + "item_intransqty =" + item_intransqty
-								+ "item_overseaqty =" + item_overseaqty + " 可售库存天数 =" + availableDays + " 3日销量 ="
-								+ DayMap.get("for3day") + " 7日销量 =" + DayMap.get("for7day"));
+						// =====各类标记=====
+						// 新品
+						Boolean NewFlag = false;
+						if (aos_firstindate == null || ((aos_itemstatus.equals("E") || aos_itemstatus.equals("A"))
+								&& (aos_firstindate != null) && MKTCom.GetBetweenDays(Today, aos_firstindate) <= 14))
+							NewFlag = true;
+						// 春夏品
+						Boolean SpringSummerFlag = false;
+						if ((aos_seasonpro != null)
+								&& (aos_seasonpro.equals("SPRING") || aos_seasonpro.equals("SPRING_SUMMER")
+										|| aos_seasonpro.equals("SUMMER")
+										|| aos_seasonpro.equals("SPRING-SUMMER-CONVENTIONAL"))
+								&& (Today.after(SummerSpringUnStart) && Today.before(SummerSpringUnEnd)))
+							SpringSummerFlag = true;
+						// 秋冬品
+						Boolean AutumnWinterFlag = false;
+						if ((aos_seasonpro != null)
+								&& (aos_seasonpro.equals("AUTUMN_WINTER") || aos_seasonpro.equals("WINTER"))
+								&& (Today.after(AutumnWinterUnStart) && Today.before(AutumnWinterUnEnd)))
+							AutumnWinterFlag = true;
+						// 14日在线
 
-						// 季节品 季节品 季末达标 CONTINUE; 剔除
-						boolean isSeasonEnd = false;
-						if ("SPRING".equals(aos_seasonpro) || "SPRING_SUMMER".equals(aos_seasonpro)
-								|| "SUMMER".equals(aos_seasonpro)) {
-							if (Today.after(summerSpringSeasonEnd)) {
-								// 季末 判断是否达标
-								isSeasonEnd = true;
-								float SeasonRate = MKTCom.Get_SeasonRate(org_id, item_id, aos_seasonpro,
-										item_overseaqty, month);
-								if (!MKTCom.Is_SeasonRate(aos_seasonpro, month, SeasonRate)) {
-									InsertData(aos_entryentityS, insert_map, "OFFSALE", roiMap);
-									continue;
-								}
-							}
+						Boolean Online14Days = false;
+						if (aos_online >= 10 && MKTCom.GetBetweenDays(Today, (Date) aos_groupdate) > 14)
+							Online14Days = true;
+						// 7日在线
+						Boolean Online7Days = false;
+						if (aos_online >= 5 && MKTCom.GetBetweenDays(Today, (Date) aos_groupdate) > 7)
+							Online7Days = true;
+						// =====开始ROI剔除判断=====
+						Boolean ROIFlag = false;
+						String RoiType = null;
+						// a.14 日在线 14天ROI＜4；且7天<8(不包括新品、季节品)
+						if (Online14Days && Roi14Days.compareTo(BigDecimal.valueOf(4)) < 0
+								&& Roi7Days.compareTo(BigDecimal.valueOf(8)) < 0 && !NewFlag && !SpringSummerFlag
+								&& !AutumnWinterFlag) {
+							ROIFlag = true;
+							RoiType = "a";
 						}
-						if ("AUTUMN_WINTER".equals(aos_seasonpro) || "WINTER".equals(aos_seasonpro)) {
-							// 判断是否季末
-							if (Today.after(autumnWinterSeasonEnd)) {
-								isSeasonEnd = true;
-								// 季末 判断是否达标
-								float SeasonRate = MKTCom.Get_SeasonRate(org_id, item_id, aos_seasonpro,
-										item_overseaqty, month);
-								if (!MKTCom.Is_SeasonRate(aos_seasonpro, month, SeasonRate)) {
-									InsertData(aos_entryentityS, insert_map, "OFFSALE", roiMap);
-									continue;
-								}
-							}
+						// b.7日在线 秋冬品7日ROI<3； 所有秋冬
+						if (Online7Days && AutumnWinterFlag && Roi7Days.compareTo(BigDecimal.valueOf(3)) < 0) {
+							ROIFlag = true;
+							RoiType = "b";
 						}
-						// (海外在库+在途数量)/7日均销量)<30 或 满足销售预断货逻辑 则为营销预断货逻辑 且 不能为季节品季末 且可售天数小于45
-						int itemavadays = map_itemavadays.getOrDefault(p_ou_code + "~" + aos_itemnumer, 0);
-						if (((availableDays < 30) || ((MKTCom.Is_PreSaleOut(org_id, item_id, (int) item_intransqty,
-								aos_shp_day, aos_freight_day, aos_clear_day, availableDays)) && itemavadays < 45))
-								&& !isSeasonEnd) {
-							InsertData(aos_entryentityS, insert_map, "OFFSALE", roiMap);
+						// c.在线7天，不到14天，点击＞国别标准(US300,其它150)，ROI＜4(不包括季节品)
+						if (Online7Days && !Online14Days && Roi14Days.compareTo(BigDecimal.valueOf(4)) < 0
+								&& aos_clicks14Days.compareTo(CLICK) > 0 && !SpringSummerFlag && !AutumnWinterFlag) {
+							ROIFlag = true;
+							RoiType = "c";
+						}
+						// d.历史剔除 持续剔除 项鑫报告中不存在才处理
+						if (roiItemSet.contains(aos_itemnumer) && !rptSet.contains(aos_itemnumer)) {
+							ROIFlag = true;
+							RoiType = "d";
+						}
+
+						// ==以下为ROI加回 ==//
+						// d2.爆品加回
+						if (FndGlobal.IsNotNull(aos_is_saleout) && aos_is_saleout) {
+							ROIFlag = false;
+							RoiType = "d2";
+						}
+						// e.秋冬品历史剔除 7月ROI> 8 加回
+						if (AutumnWinterFlag && roiItemSet.contains(aos_itemnumer)
+								&& Roi7Days.compareTo(BigDecimal.valueOf(8)) > 0) {
+							ROIFlag = false;
+							RoiType = "e";
+						}
+						// f.过去14日ROI大于7 则加回
+						if (Roi14Days.compareTo(BigDecimal.valueOf(7)) > 0 && roiItemSet.contains(aos_itemnumer)) {
+							ROIFlag = false;
+							RoiType = "f";
+						}
+						// g.最近一次入库(七天内)前30天全断货不剔除
+						if (map_itemToOutage.containsKey(itemid_str)) {
+							ROIFlag = false;
+							RoiType = "g";
+						}
+						// h.新品14天内不剔除；
+						if (NewFlag) {
+							ROIFlag = false;
+							RoiType = "h";
+						}
+						// i.圣诞装饰默认差ROI不剔除
+						if ("圣诞装饰".equals(aos_category2)) {
+							ROIFlag = false;
+							RoiType = "i";
+						}
+						// j.7DD不剔除
+						if (actFlag) {
+							ROIFlag = false;
+							RoiType = "ji";
+						}
+						// k.
+						if ("true".equals(saleAdd)) {
+							ROIFlag = false;
+							RoiType = "k";
+						}
+
+						// 周2周4不剔除
+						if (week == Calendar.TUESDAY && week == Calendar.THURSDAY) {
+							ROIFlag = false;
+						}
+
+						Boolean exFlag = true;// 差转换
+						// 进行差ROI 与差转换不剔除判断
+						// ①季节品：季初，差ROI，差转化；
+						if ((("SPRING".equals(aos_seasonpro) || "SPRING_SUMMER".equals(aos_seasonpro)
+								|| "SUMMER".equals(aos_seasonpro))
+								&& (Today.after(SummerSpringStart) && Today.before(SummerSpringFirst)))
+								|| ((aos_seasonpro.equals("AUTUMN_WINTER") || aos_seasonpro.equals("WINTER"))
+										&& (Today.after(AutumnWinterStart) && Today.before(AutumnWinterFirst)))) {
+							ROIFlag = false;
+							exFlag = false;// 差转换
+						}
+						// ②首次入库≤30天：差ROI、差转化；
+						if (FndGlobal.IsNotNull(aos_firstindate)
+								&& FndDate.GetBetweenDays(Today, aos_firstindate) <= 30) {
+							ROIFlag = false;
+							exFlag = false;// 差转换
+						}
+						// TODO ③节日品：预断货、差ROI、差转化；
+
+						// ④爆品：差ROI、差转化；
+						if (FndGlobal.IsNotNull(aos_is_saleout) && aos_is_saleout) {
+							ROIFlag = false;
+							exFlag = false;
+						}
+
+						// 进行差ROI 与差转换加回
+						// ①当过去14天ROI≥8，或转化率>国别标准
+						if (Roi14Days.compareTo(BigDecimal.valueOf(8)) > 0 || aos_rpt_roi.compareTo(RoiStandard) > 0) {
+							ROIFlag = false;
+							exFlag = false;
+						}
+						// ②断货天数＞30，再入库;
+						if (map_itemToOutage.containsKey(itemid_str)) {
+							ROIFlag = false;
+							exFlag = false;
+						}
+						// ③本周参加AM-7DD活动的SKU；
+						if (actFlag) {
+							ROIFlag = false;
+							exFlag = false;
+						}
+
+						if (ROIFlag) {
+							InsertData(aos_entryentityS, insert_map, "ROI", roiMap);
+							log.add(aos_itemnumer + " " + RoiType + " 差ROI自动剔除");
+							continue;
+						}
+
+						// 差转化率剔除
+						if (aos_rpt_roi.compareTo(exRateLowSt) <= 0 && Roi7Days.compareTo(BigDecimal.valueOf(8)) < 0
+								&& aos_clicks.compareTo(HighClick) > 0 && exFlag) {
+							InsertData(aos_entryentityS, insert_map, "差转化率剔除", roiMap);
+							log.add(aos_itemnumer + " 差转化率自动剔除");
+							continue;
+						}
+
+						// 低定价毛利剔除
+						Boolean ProFlag = false;
+						// a.历史中未剔除 且定价毛利＜8%；；
+						if (!proItemSet.contains(aos_itemnumer) && Profitrate.compareTo(BigDecimal.valueOf(0.08)) < 0) {
+							ProFlag = true;
+						}
+						// b.历史剔除 持续剔除 项鑫报告中不存在才处理
+						if (proItemSet.contains(aos_itemnumer) && !rptSet.contains(aos_itemnumer)) {
+							ProFlag = true;
+						}
+						// c.历史中剔除 前14天ROI>7 或等于0 且定价毛利>=12% 加回
+						if (proItemSet.contains(aos_itemnumer)
+								&& (Roi14Days.compareTo(BigDecimal.valueOf(7)) > 0
+										|| Roi7Days.compareTo(BigDecimal.ZERO) == 0)
+								&& Profitrate.compareTo(BigDecimal.valueOf(0.12)) >= 0) {
+							ProFlag = false;
+						}
+						// e.秋冬品不剔除；
+						if (AutumnWinterFlag)
+							ProFlag = false;
+						// f.新品不剔除
+						if (NewFlag)
+							ProFlag = false;
+						// g.节日品不剔除
+						if ("圣诞装饰".equals(aos_category2)) {
+							ProFlag = false;
+						}
+						// h.7DD不剔除
+						if (actFlag) {
+							ProFlag = false;
+						}
+
+						// k.周135 正常剔除 销售加回不剔除
+						if (week != Calendar.TUESDAY && week != Calendar.THURSDAY && "true".equals(saleAdd)) {
+							ProFlag = false;
+						}
+
+						// k.周24剔除135部分
+						if (week == Calendar.TUESDAY && week == Calendar.THURSDAY) {
+							ProFlag = false;
+						}
+
+						// 2023.08.07 不做低毛利剔除
+						ProFlag = false;
+
+						// 特殊广告不进低毛利剔除
+						if (ProFlag && !"true".equals(saleAdd)) {
+							InsertData(aos_entryentityS, insert_map, "PRO", roiMap);
+							log.add(aos_itemnumer + "定价低毛利自动剔除");
 							continue;
 						}
 					} else {
-						if ((aos_festivalseting.equals("HALLOWEEN") || "其它节日装饰".equals(aos_category2))
-								&& (!(Today.after(HalloweenStart) && Today.before(HalloweenEnd)))) {
-							InsertData(aos_entryentityS, insert_map, "SEASON", roiMap);
-							log.add(aos_itemnumer + "节日品剔除");
-							continue;
-						}
-						if ((aos_festivalseting.equals("CHRISTMAS") || "圣诞装饰".equals(aos_category2))
-								&& (!(Today.after(ChristmasStart) && Today.before(ChristmasEnd)))) {
-							InsertData(aos_entryentityS, insert_map, "SEASON", roiMap);
-							log.add(aos_itemnumer + "节日品剔除");
-							continue;
-						}
-					}
-
-					// 周24持续剔除
-					if ((week == Calendar.THURSDAY || week == Calendar.TUESDAY) && roiItemSet.contains(aos_itemnumer)) {
-						InsertData(aos_entryentityS, insert_map, "ROI", roiMap);
-						log.add(aos_itemnumer + "差ROI自动剔除");
-						continue;
-					}
-					// 周24持续剔除
-					if ((week == Calendar.THURSDAY || week == Calendar.TUESDAY) && proItemSet.contains(aos_itemnumer)) {
-						InsertData(aos_entryentityS, insert_map, "PRO", roiMap);
-						log.add(aos_itemnumer + "定价低毛利自动剔除");
-						continue;
-					}
-
-					// =====各类标记=====
-					// 新品
-					Boolean NewFlag = false;
-					if (aos_firstindate == null || ((aos_itemstatus.equals("E") || aos_itemstatus.equals("A"))
-							&& (aos_firstindate != null) && MKTCom.GetBetweenDays(Today, aos_firstindate) <= 14))
-						NewFlag = true;
-					// 春夏品
-					Boolean SpringSummerFlag = false;
-					if ((aos_seasonpro != null)
-							&& (aos_seasonpro.equals("SPRING") || aos_seasonpro.equals("SPRING_SUMMER")
-									|| aos_seasonpro.equals("SUMMER")
-									|| aos_seasonpro.equals("SPRING-SUMMER-CONVENTIONAL"))
-							&& (Today.after(SummerSpringUnStart) && Today.before(SummerSpringUnEnd)))
-						SpringSummerFlag = true;
-					// 秋冬品
-					Boolean AutumnWinterFlag = false;
-					if ((aos_seasonpro != null)
-							&& (aos_seasonpro.equals("AUTUMN_WINTER") || aos_seasonpro.equals("WINTER"))
-							&& (Today.after(AutumnWinterUnStart) && Today.before(AutumnWinterUnEnd)))
-						AutumnWinterFlag = true;
-					// 14日在线
-
-					Boolean Online14Days = false;
-					if (aos_online >= 10 && MKTCom.GetBetweenDays(Today, (Date) aos_groupdate) > 14)
-						Online14Days = true;
-					// 7日在线
-					Boolean Online7Days = false;
-					if (aos_online >= 5 && MKTCom.GetBetweenDays(Today, (Date) aos_groupdate) > 7)
-						Online7Days = true;
-					// =====开始ROI剔除判断=====
-					Boolean ROIFlag = false;
-					String RoiType = null;
-					// a.14 日在线 14天ROI＜4；且7天<8(不包括新品、季节品)
-					if (Online14Days && Roi14Days.compareTo(BigDecimal.valueOf(4)) < 0
-							&& Roi7Days.compareTo(BigDecimal.valueOf(8)) < 0 && !NewFlag && !SpringSummerFlag
-							&& !AutumnWinterFlag) {
-						ROIFlag = true;
-						RoiType = "a";
-					}
-					// b.7日在线 秋冬品7日ROI<3； 所有秋冬
-					if (Online7Days && AutumnWinterFlag && Roi7Days.compareTo(BigDecimal.valueOf(3)) < 0) {
-						ROIFlag = true;
-						RoiType = "b";
-					}
-					// c.在线7天，不到14天，点击＞国别标准(US300,其它150)，ROI＜4(不包括季节品)
-					if (Online7Days && !Online14Days && Roi14Days.compareTo(BigDecimal.valueOf(4)) < 0
-							&& aos_clicks14Days.compareTo(CLICK) > 0 && !SpringSummerFlag && !AutumnWinterFlag) {
-						ROIFlag = true;
-						RoiType = "c";
-					}
-					// d.历史剔除 持续剔除 项鑫报告中不存在才处理
-					if (roiItemSet.contains(aos_itemnumer) && !rptSet.contains(aos_itemnumer)) {
-						ROIFlag = true;
-						RoiType = "d";
-					}
-					// d1.春夏滞销差ROI剔除
-					if (baseItemSet.contains(aos_itemnumer) && Roi14Days.compareTo(BigDecimal.valueOf(2.5)) < 0
-							&& Spend14Days.compareTo(BigDecimal.valueOf(10)) > 0) {
-						ROIFlag = true;
-						RoiType = "d1";
-					}
-					// ==以下为ROI加回 ==//
-					// d2.爆品加回
-					if (FndGlobal.IsNotNull(aos_is_saleout) && aos_is_saleout) {
-						ROIFlag = false;
-						RoiType = "d2";
-					}
-					// e.秋冬品历史剔除 7月ROI> 8 加回
-					if (AutumnWinterFlag && roiItemSet.contains(aos_itemnumer)
-							&& Roi7Days.compareTo(BigDecimal.valueOf(8)) > 0) {
-						ROIFlag = false;
-						RoiType = "e";
-					}
-					// f.过去14日ROI大于7 则加回
-					if (Roi14Days.compareTo(BigDecimal.valueOf(7)) > 0 && roiItemSet.contains(aos_itemnumer)) {
-						ROIFlag = false;
-						RoiType = "f";
-					}
-					// g.最近一次入库(七天内)前30天全断货不剔除
-					if (map_itemToOutage.containsKey(itemid_str)) {
-						ROIFlag = false;
-						RoiType = "g";
-					}
-					// h.新品14天内不剔除；
-					if (NewFlag) {
-						ROIFlag = false;
-						RoiType = "h";
-					}
-					// i.圣诞装饰默认差ROI不剔除
-					if ("圣诞装饰".equals(aos_category2)) {
-						ROIFlag = false;
-						RoiType = "i";
-					}
-					// j.7DD不剔除
-					if (actFlag) {
-						ROIFlag = false;
-						RoiType = "ji";
-					}
-					// k.
-					if ("true".equals(saleAdd)) {
-						ROIFlag = false;
-						RoiType = "k";
-					}
-
-					// 周2周4不剔除
-					if (week == Calendar.TUESDAY && week == Calendar.THURSDAY) {
-						ROIFlag = false;
-					}
-
-					if (ROIFlag) {
-						InsertData(aos_entryentityS, insert_map, "ROI", roiMap);
-						log.add(aos_itemnumer + " " + RoiType + " 差ROI自动剔除");
-						continue;
-					}
-
-					// 低定价毛利剔除
-					Boolean ProFlag = false;
-					// a.历史中未剔除 且定价毛利＜8%；；
-					if (!proItemSet.contains(aos_itemnumer) && Profitrate.compareTo(BigDecimal.valueOf(0.08)) < 0) {
-						ProFlag = true;
-					}
-					// b.历史剔除 持续剔除 项鑫报告中不存在才处理
-					if (proItemSet.contains(aos_itemnumer) && !rptSet.contains(aos_itemnumer)) {
-						ProFlag = true;
-					}
-					// c.历史中剔除 前14天ROI>7 或等于0 且定价毛利>=12% 加回
-					if (proItemSet.contains(aos_itemnumer)
-							&& (Roi14Days.compareTo(BigDecimal.valueOf(7)) > 0
-									|| Roi7Days.compareTo(BigDecimal.ZERO) == 0)
-							&& Profitrate.compareTo(BigDecimal.valueOf(0.12)) >= 0) {
-						ProFlag = false;
-					}
-					// e.秋冬品不剔除；
-					if (AutumnWinterFlag)
-						ProFlag = false;
-					// f.新品不剔除
-					if (NewFlag)
-						ProFlag = false;
-					// g.节日品不剔除
-					if ("圣诞装饰".equals(aos_category2)) {
-						ProFlag = false;
-					}
-					// h.7DD不剔除
-					if (actFlag) {
-						ProFlag = false;
-					}
-
-					// k.周135 正常剔除 销售加回不剔除
-					if (week != Calendar.TUESDAY && week != Calendar.THURSDAY && "true".equals(saleAdd)) {
-						ProFlag = false;
-					}
-
-					// k.周24剔除135部分
-					if (week == Calendar.TUESDAY && week == Calendar.THURSDAY) {
-						ProFlag = false;
-					}
-
-					// 2023.08.07 不做低毛利剔除
-					ProFlag = false;
-
-					// 特殊广告不进低毛利剔除
-					if (ProFlag && !"true".equals(saleAdd)) {
-						InsertData(aos_entryentityS, insert_map, "PRO", roiMap);
-						log.add(aos_itemnumer + "定价低毛利自动剔除");
-						continue;
-					}
-				} else {
-					// 必推货号 判断预断货
-					if ((aos_festivalseting.equals("") || aos_festivalseting.equals("null"))
-							&& !"圣诞装饰".equals(aos_category2)) {
-						// (海外在库+在途数量)/7日均销量)<30 或 满足销售预断货逻辑 则为营销预断货逻辑 且 不能为季节品季末 且可售天数小于45
-						int itemavadays = map_itemavadays.getOrDefault(p_ou_code + "~" + aos_itemnumer, 0);
-						if (((availableDays < 30) || ((MKTCom.Is_PreSaleOut(org_id, item_id, (int) item_intransqty,
-								aos_shp_day, aos_freight_day, aos_clear_day, availableDays)) && itemavadays < 45))) {
-							InsertData(aos_entryentityS, insert_map, "OFFSALE", roiMap);
-							continue;
+						// 必推货号 判断预断货
+						if ((aos_festivalseting.equals("") || aos_festivalseting.equals("null"))
+								&& !"圣诞装饰".equals(aos_category2)) {
+							// (海外在库+在途数量)/7日均销量)<30 或 满足销售预断货逻辑 则为营销预断货逻辑 且 不能为季节品季末 且可售天数小于45
+							int itemavadays = map_itemavadays.getOrDefault(p_ou_code + "~" + aos_itemnumer, 0);
+							if (((availableDays < 30)
+									|| ((MKTCom.Is_PreSaleOut(org_id, item_id, (int) item_intransqty, aos_shp_day,
+											aos_freight_day, aos_clear_day, availableDays)) && itemavadays < 45))) {
+								InsertData(aos_entryentityS, insert_map, "OFFSALE", roiMap);
+								continue;
+							}
 						}
 					}
 				}
@@ -1032,6 +1108,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
 				aos_entryentity.set("aos_online", onlineDate.get(aos_itemnumer));
 				aos_entryentity.set("aos_is_saleout", aos_is_saleout);
 				aos_entryentity.set("aos_firstindate", aos_firstindate);
+				aos_entryentity.set("aos_rpt_roi", aos_rpt_roi);
 
 				if (FndGlobal.IsNotNull(onlineDate.get(aos_itemnumer))
 						&& MKTCom.GetBetweenDays(Today, (Date) onlineDate.get(aos_itemnumer)) < 14)
@@ -1089,6 +1166,8 @@ public class aos_mkt_popppc_init extends AbstractTask {
 				long item_id = aos_entryentity.getLong("aos_itemid");
 				String aos_productno = aos_entryentity.getString("aos_productno");
 				String aos_itemnumer = aos_entryentity.getString("aos_itemnumer");
+				BigDecimal aos_rpt_roi = aos_entryentity.getBigDecimal("aos_rpt_roi");
+
 				// =====是否新系列新组判断=====
 				Boolean IsNewGroupFlag = false;
 
@@ -1124,9 +1203,12 @@ public class aos_mkt_popppc_init extends AbstractTask {
 				Map<String, Object> PpcYesterSerial_Map = PpcYesterSerial.get(p_org_id + "~" + aos_productno);
 
 				BigDecimal Roi7Days = BigDecimal.ZERO;// 7天ROI
-				if (SkuRptMap != null && ((BigDecimal) SkuRptMap.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0)
+				BigDecimal aos_clicks = BigDecimal.ZERO;
+				if (SkuRptMap != null && ((BigDecimal) SkuRptMap.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0) {
+					aos_clicks = (BigDecimal) SkuRptMap.get("aos_clicks");
 					Roi7Days = ((BigDecimal) SkuRptMap.get("aos_total_sales"))
 							.divide((BigDecimal) SkuRptMap.get("aos_spend"), 2, BigDecimal.ROUND_HALF_UP);
+				}
 				BigDecimal Roi3Days = BigDecimal.ZERO;// 3天ROI
 				if (SkuRptMap3 != null && ((BigDecimal) SkuRptMap3.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0)
 					Roi3Days = ((BigDecimal) SkuRptMap3.get("aos_total_sales"))
@@ -1244,6 +1326,12 @@ public class aos_mkt_popppc_init extends AbstractTask {
 					GetAdjustRateMap.put("WELL", WELL);// 好
 					GetAdjustRateMap.put("EXCELLENT", EXCELLENT);// 优
 					GetAdjustRateMap.put("EXPOSURE", EXPOSURE);// 国别曝光标准
+
+					GetAdjustRateMap.put("aos_rpt_roi", aos_rpt_roi);
+					GetAdjustRateMap.put("exRateWellSt", exRateWellSt);
+					GetAdjustRateMap.put("lowClick", lowClick);
+					GetAdjustRateMap.put("aos_clicks", aos_clicks);
+
 					Map<String, Object> AdjustRateMap = GetAdjustRate(GetAdjustRateMap, aos_mkt_bsadjrateS, log,
 							aos_itemnumer);
 					BigDecimal AdjustRate = (BigDecimal) AdjustRateMap.get("AdjustRate");// 调整幅度 出价调整幅度参数表中获取
@@ -1521,6 +1609,15 @@ public class aos_mkt_popppc_init extends AbstractTask {
 				BigDecimal aos_exprate = BigDecimal.ZERO;
 				BigDecimal aos_avgexp = BigDecimal.ZERO;
 				BigDecimal aos_clicks = BigDecimal.ZERO;
+
+				// 7日转化率
+				BigDecimal aos_rpt_roi = BigDecimal.ZERO;
+				if (SkuRptMap != null && ((BigDecimal) SkuRptMap.get("aos_clicks")).compareTo(BigDecimal.ZERO) != 0) {
+					aos_clicks = (BigDecimal) SkuRptMap.get("aos_clicks");
+					aos_rpt_roi = ((BigDecimal) SkuRptMap.get("aos_total_order")).divide(aos_clicks, 2,
+							BigDecimal.ROUND_HALF_UP);
+				}
+
 				if (SkuRptMap != null) {
 					aos_avgexp = (BigDecimal) SkuRptMap.get("aos_impressions");
 					aos_clicks = (BigDecimal) SkuRptMap.get("aos_clicks");
@@ -1529,41 +1626,56 @@ public class aos_mkt_popppc_init extends AbstractTask {
 				}
 
 				// 定价
-				BigDecimal aos_fixvalue = BigDecimal.ZERO;
-				if (aos_entryentity.getBigDecimal("aos_fixvalue") != null) {
-					aos_fixvalue = aos_entryentity.getBigDecimal("aos_fixvalue");
-				}
+//				BigDecimal aos_fixvalue = BigDecimal.ZERO;
+//				if (aos_entryentity.getBigDecimal("aos_fixvalue") != null) {
+//					aos_fixvalue = aos_entryentity.getBigDecimal("aos_fixvalue");
+//				}
 				// 季节属性
-				String aos_season = aos_entryentity.getString("aos_seasonseting");
-				String seasonpro = "";
-				// 判断是否为春夏品
-				if ("夏季产品".equals(aos_season) || "春夏产品".equals(aos_season) || "春季产品".equals(aos_season)) {
-					seasonpro = "春夏品";
-				} else if ("常规产品".equals(aos_season) || "春夏常规品".equals(aos_season)) {
-					seasonpro = "常规品";
-				}
+//				String aos_season = aos_entryentity.getString("aos_seasonseting");
+//				String seasonpro = "";
+//				// 判断是否为春夏品
+//				if ("夏季产品".equals(aos_season) || "春夏产品".equals(aos_season) || "春季产品".equals(aos_season)) {
+//					seasonpro = "春夏品";
+//				} else if ("常规产品".equals(aos_season) || "春夏常规品".equals(aos_season)) {
+//					seasonpro = "常规品";
+//				}
 
 				// 春夏品，订单转化率>2%，且定价>国别均价；top of search加50%; //如果和另外两条逻辑重复，取大值加；
-				if ("春夏品".equals(seasonpro) && Roi7Days.compareTo(BigDecimal.valueOf(0.02)) > 0
-						&& aos_fixvalue.compareTo(StandardFix) > 0) {
-					if (aos_topprice.compareTo(BigDecimal.valueOf(0.5)) < 0) {
-						aos_topprice = BigDecimal.valueOf(0.5);
-					}
-				}
+//				if ("春夏品".equals(seasonpro) && Roi7Days.compareTo(BigDecimal.valueOf(0.02)) > 0
+//						&& aos_fixvalue.compareTo(StandardFix) > 0) {
+//					if (aos_topprice.compareTo(BigDecimal.valueOf(0.5)) < 0) {
+//						aos_topprice = BigDecimal.valueOf(0.5);
+//					}
+//				}
 
 				// 曝光>标准*3, CTR<0.2%；top of search常规品+20%；春夏+50%；
+//				if (Impress3Avg.compareTo(EXPOSURE.multiply(BigDecimal.valueOf(3))) > 0
+//						&& aos_exprate.compareTo(BigDecimal.valueOf(0.002)) > 0) {
+//					if ("常规品".equals(seasonpro)) {
+//						if (aos_topprice.compareTo(BigDecimal.valueOf(0.2)) < 0) {
+//							aos_topprice = BigDecimal.valueOf(0.2);
+//						}
+//					} else if ("春夏品".equals(seasonpro)) {
+//						if (aos_topprice.compareTo(BigDecimal.valueOf(0.5)) < 0) {
+//							aos_topprice = BigDecimal.valueOf(0.5);
+//						}
+//					}
+//				}
+
+				// 系列SKU7天转化率>国别好标准，且7天点击数>50，置顶增加20%
+//				if () {
+//					
+//				}
+
 				if (Impress3Avg.compareTo(EXPOSURE.multiply(BigDecimal.valueOf(3))) > 0
 						&& aos_exprate.compareTo(BigDecimal.valueOf(0.002)) > 0) {
-					if ("常规品".equals(seasonpro)) {
-						if (aos_topprice.compareTo(BigDecimal.valueOf(0.2)) < 0) {
-							aos_topprice = BigDecimal.valueOf(0.2);
-						}
-					} else if ("春夏品".equals(seasonpro)) {
-						if (aos_topprice.compareTo(BigDecimal.valueOf(0.5)) < 0) {
-							aos_topprice = BigDecimal.valueOf(0.5);
-						}
-					}
+					aos_topprice = BigDecimal.valueOf(0.2);
 				}
+
+				if (aos_rpt_roi.compareTo(exRateGoodSt) > 0 && aos_clicks.compareTo(BigDecimal.valueOf(50)) > 0) {
+					aos_topprice = BigDecimal.valueOf(0.2);
+				}
+
 				aos_entryentity.set("aos_topprice", aos_topprice);
 				log.add("置顶位置出价 " + "aos_topprice =" + aos_topprice);
 			}
@@ -1632,8 +1744,17 @@ public class aos_mkt_popppc_init extends AbstractTask {
 			adjs.put("p_ou_code", p_ou_code);
 			aos_mkt_popadjs_init.executerun(adjs);
 		} catch (Exception e) {
-			logger.error(p_ou_code + ":PPC推广SP初始化失败!", e);
+			String message = e.toString();
+			String exceptionStr = SalUtil.getExceptionStr(e);
+			String messageStr = message + "\r\n" + exceptionStr;
+			logger.error("PPC推广SP初始化失败!" + messageStr, e);
 		}
+	}
+
+	public static BigDecimal getExRateLowSt(Object p_ou_code, String level) {
+		DynamicObject aos_mkt_ratestd = QueryServiceHelper.queryOne("aos_mkt_ratestd", "aos_" + p_ou_code,
+				new QFilter("aos_project", QCP.equals, level).toArray());
+		return aos_mkt_ratestd.getBigDecimal(0);
 	}
 
 	private static HashMap<String, String> generateProductInfo() {
@@ -1725,6 +1846,12 @@ public class aos_mkt_popppc_init extends AbstractTask {
 		Object WELL = GetAdjustRateMap.get("WELL");
 		Object EXCELLENT = GetAdjustRateMap.get("EXCELLENT");
 		Object EXPOSURE = GetAdjustRateMap.get("EXPOSURE");
+
+		Object aos_rpt_roi = GetAdjustRateMap.get("aos_rpt_roi");
+		Object exRateWellSt = GetAdjustRateMap.get("exRateWellSt");
+		Object lowClick = GetAdjustRateMap.get("lowClick");
+		Object aos_clicks = GetAdjustRateMap.get("aos_clicks");
+
 		String[] OrderBy = { "aos_level" };
 		DataSet mkt_bsadjrateS = aos_mkt_bsadjrateS.copy().orderBy(OrderBy);
 		String rule = "";
@@ -1806,6 +1933,11 @@ public class aos_mkt_popppc_init extends AbstractTask {
 			}
 
 			rule = rule1 + rule2 + rule5;
+
+			if (mkt_bsadjrate.getInteger("aos_level") == 2) {
+				rule = rule + " && " + aos_rpt_roi + " >= " + exRateWellSt + " && " + aos_clicks + " >= " + lowClick;
+			}
+
 			boolean condition = getResult(rule);
 
 			aos_sync_log.add(aos_itemnumer + "rule =" + rule);
@@ -1922,6 +2054,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
 		Object aos_online = insert_map.get("aos_online");
 		Object aos_is_saleout = insert_map.get("aos_is_saleout");
 		Object aos_firstindate = insert_map.get("aos_firstindate");
+		Object aos_rpt_roi = insert_map.get("aos_rpt_roi");
 
 		if (Type.equals("ROI") || Type.equals("PRO"))
 			aos_special = false;
@@ -1960,6 +2093,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
 		aos_entryentity.set("aos_online", aos_online);
 		aos_entryentity.set("aos_is_saleout", aos_is_saleout);
 		aos_entryentity.set("aos_firstindate", aos_firstindate);
+		aos_entryentity.set("aos_rpt_roi", aos_rpt_roi);
 
 		if (FndGlobal.IsNotNull(aos_online) && MKTCom.GetBetweenDays(new Date(), (Date) aos_online) < 14)
 			aos_entryentity.set("aos_offline", "Y");

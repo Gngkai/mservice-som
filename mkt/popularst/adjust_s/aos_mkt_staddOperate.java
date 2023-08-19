@@ -76,15 +76,26 @@ public class aos_mkt_staddOperate extends AbstractOperationServicePlugIn {
         }
         QFilter filter = new QFilter("aos_billno","=",billlno);
         StringJoiner str = new StringJoiner(",");
+//        str.add("id");
+//        str.add("aos_billno");
+//        str.add("aos_entryentity.aos_productno");
+//        str.add("aos_entryentity.aos_itemnumer");
+//        str.add("aos_entryentity.aos_keyword");
+//        str.add("aos_entryentity.aos_match_type");
+//        str.add("aos_entryentity.aos_groupstatus");
+//        str.add("aos_entryentity.aos_bid");
+        
         str.add("id");
         str.add("aos_billno");
-        str.add("aos_entryentity.aos_productno");
-        str.add("aos_entryentity.aos_itemnumer");
-        str.add("aos_entryentity.aos_keyword");
-        str.add("aos_entryentity.aos_match_type");
-        str.add("aos_entryentity.aos_groupstatus");
-        str.add("aos_entryentity.aos_bid");
-        DynamicObject[] dyc_ppc = BusinessDataServiceHelper.load("aos_mkt_pop_ppcst", str.toString(), new QFilter[]{filter});
+        str.add("aos_productno");
+        str.add("aos_itemnumer");
+        str.add("aos_keyword");
+        str.add("aos_match_type");
+        str.add("aos_groupstatus");
+        str.add("aos_bid");
+        
+//      DynamicObject[] dyc_ppc = BusinessDataServiceHelper.load("aos_mkt_pop_ppcst", str.toString(), new QFilter[]{filter});
+        DynamicObject[] dyc_ppc = BusinessDataServiceHelper.load("aos_mkt_ppcst_data", str.toString(), new QFilter[]{filter});
         if (dyc_ppc.length==0)
             return;
         //查找出价

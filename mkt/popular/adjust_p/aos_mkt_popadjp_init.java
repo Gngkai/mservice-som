@@ -372,6 +372,17 @@ public class aos_mkt_popadjp_init extends AbstractTask {
 						aos_serialrate = aos_spend.divide(aos_budget, 2, BigDecimal.ROUND_HALF_UP);
 				}
 				aos_detailentry.set("aos_serialrate", aos_serialrate);
+
+				// 系统建议策略 aos_sys
+				BigDecimal aos_lastprice = aos_detailentry.getBigDecimal("aos_lastprice");
+				BigDecimal aos_calprice = aos_detailentry.getBigDecimal("aos_calprice");
+
+				if (aos_lastprice.compareTo(BigDecimal.ZERO) != 0 && aos_calprice.compareTo(aos_lastprice) > 0)
+					aos_detailentry.set("aos_sys", "提出价");
+				if (aos_calprice.compareTo(aos_lastprice) < 0) {
+					aos_detailentry.set("aos_sys", "降出价");
+				}
+
 			}
 
 			for (DynamicObject aos_detailentry : aos_detailentryS) {
@@ -543,6 +554,7 @@ public class aos_mkt_popadjp_init extends AbstractTask {
 					aos_detailentry.set("aos_type", "ROIHIGH");
 				else
 					aos_detailentry.set("aos_type", "OTHER");
+
 			}
 
 			// 保存正式表

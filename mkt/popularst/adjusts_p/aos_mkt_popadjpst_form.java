@@ -116,8 +116,8 @@ public class aos_mkt_popadjpst_form extends AbstractFormPlugin implements ItemCl
 		DB.execute(DBRoute.of(DB_MKT), sql, params);
 		SimpleDateFormat DF = new SimpleDateFormat("yyyy-MM-dd");
 		String today = DF.format(new Date());
-		sql = " UPDATE tk_aos_mkt_pop_ppcst_r r " + " SET fk_aos_bid = ?," + " fk_aos_lastpricedate = '" + today
-				+ "' " + " WHERE 1=1 " + " and r.FEntryId = ? " + "  and fk_aos_lastbid <> ?   ";
+		sql = " UPDATE tk_aos_mkt_ppcst_data r " + " SET fk_aos_bid = ?," + " fk_aos_lastpricedate = '" + today
+				+ "' " + " WHERE 1=1 " + " and r.fid = ? " + "  and fk_aos_lastbid <> ?   ";
 		Object[] params2 = { aos_adjprice, aos_ppcentryid, aos_adjprice };
 		DB.execute(DBRoute.of(DB_MKT), sql, params2);
 	}

@@ -105,12 +105,17 @@ public class aos_mkt_popweek_init extends AbstractTask {
 
 		filter_date = new QFilter("aos_date", "=", Today);
 		QFilter filter_ppcorg = new QFilter("aos_orgid.number", "=", p_ou_code);
-		QFilter filter_ava = new QFilter("aos_entryentity.aos_keystatus", "=", "AVAILABLE");
+//		QFilter filter_ava = new QFilter("aos_entryentity.aos_keystatus", "=", "AVAILABLE");
+		QFilter filter_ava = new QFilter("aos_keystatus", "=", "AVAILABLE");
 		QFilter[] filters_ppc = new QFilter[] { filter_date, filter_ppcorg, filter_ava };
-		String SelectColumn = "aos_entryentity.aos_itemnumer aos_itemnumer," + "aos_entryentity.aos_itemid aos_itemid,"
-				+ "aos_entryentity.aos_itemname aos_itemname," + "aos_entryentity.aos_season aos_season,"
-				+ "1 aos_count";
-		DataSet aos_mkt_pop_ppcstS = QueryServiceHelper.queryDataSet("aos_mkt_popweek_init.ppcst", "aos_mkt_pop_ppcst",
+//		String SelectColumn = "aos_entryentity.aos_itemnumer aos_itemnumer," + "aos_entryentity.aos_itemid aos_itemid,"
+//				+ "aos_entryentity.aos_itemname aos_itemname," + "aos_entryentity.aos_season aos_season,"
+//				+ "1 aos_count";
+//		DataSet aos_mkt_pop_ppcstS = QueryServiceHelper.queryDataSet("aos_mkt_popweek_init.ppcst", "aos_mkt_pop_ppcst",
+//				SelectColumn, filters_ppc, null);
+		
+		String SelectColumn = "aos_itemnumer,aos_itemid,aos_itemname,aos_season,1 aos_count";
+		DataSet aos_mkt_pop_ppcstS = QueryServiceHelper.queryDataSet("aos_mkt_popweek_init.ppcst", "aos_mkt_ppcst_data",
 				SelectColumn, filters_ppc, null);
 		String[] GroupBy = new String[] { "aos_itemid", "aos_itemnumer", "aos_itemname", "aos_season" };
 		aos_mkt_pop_ppcstS = aos_mkt_pop_ppcstS.groupBy(GroupBy).sum("aos_count").finish();

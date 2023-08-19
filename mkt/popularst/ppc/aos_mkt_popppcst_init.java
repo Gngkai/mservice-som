@@ -2,6 +2,7 @@ package mkt.popularst.ppc;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -123,7 +124,11 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 		date.set(Calendar.SECOND, 0);
 		date.set(Calendar.MILLISECOND, 0);
 		Date Today = date.getTime();
+		// 删除ST主表数据
 		DeleteServiceHelper.delete("aos_mkt_pop_ppcst",
+				new QFilter("aos_orgid.number", QCP.equals, p_ou_code).and("aos_date", QCP.equals, Today).toArray());
+		// 删除ST数据表数据
+		DeleteServiceHelper.delete("aos_mkt_ppcst_data",
 				new QFilter("aos_orgid.number", QCP.equals, p_ou_code).and("aos_date", QCP.equals, Today).toArray());
 		// 获取单号
 		int year = date.get(Calendar.YEAR) - 2000;
@@ -140,45 +145,10 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 		Boolean CopyFlag = aos_mkt_pop_common.GetCopyFlag("PPC_ST", week);
 		fndmsg.print("CopyFlag:" + CopyFlag);
 		if (!CopyFlag) {
-			DynamicObject aos_mkt_pop_ppcst = BusinessDataServiceHelper.newDynamicObject("aos_mkt_pop_ppcst");
-			Calendar calendar = Calendar.getInstance();
-			calendar.set(Calendar.HOUR_OF_DAY, 0);
-			calendar.set(Calendar.MINUTE, 0);
-			calendar.set(Calendar.SECOND, 0);
-			calendar.set(Calendar.MILLISECOND, 0);
-			Date date_to = calendar.getTime();
-			calendar.add(Calendar.DAY_OF_MONTH, -1);
-			Date date_from = calendar.getTime();
-			SimpleDateFormat writeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);// 日期格式化
-			String date_from_str = writeFormat.format(date_from);
-			String date_to_str = writeFormat.format(date_to);
-			QFilter filter_date_from = new QFilter("aos_date", ">=", date_from_str);
-			QFilter filter_date_to = new QFilter("aos_date", "<", date_to_str);
-			QFilter filter_org = new QFilter("aos_orgid", "=", p_org_id);
-			QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_org };
-			long fid = QueryServiceHelper.queryOne("aos_mkt_pop_ppcst", "id", filters).getLong("id");
-			DynamicObject aos_mkt_pop_ppclast = BusinessDataServiceHelper.loadSingle(fid, "aos_mkt_pop_ppcst");
-			if (aos_mkt_pop_ppclast == null)
-				return;// 没有昨日数据则直接退出
-			aos_mkt_pop_ppcst.set("aos_orgid", p_org_id);
-			aos_mkt_pop_ppcst.set("billstatus", "A");
-			aos_mkt_pop_ppcst.set("aos_billno", aos_billno);
-			aos_mkt_pop_ppcst.set("aos_poptype", aos_poptype);
-			aos_mkt_pop_ppcst.set("aos_date", Today);
-			aos_mkt_pop_ppcst.set("aos_channel", platform_id);
-			DynamicObjectCollection aos_entryentityS = aos_mkt_pop_ppcst.getDynamicObjectCollection("aos_entryentity");
-			DynamicObjectCollection aos_entryentityLastS = aos_mkt_pop_ppclast
-					.getDynamicObjectCollection("aos_entryentity");
-			aos_entryentityS.clear();
-			for (int i = 0; i < aos_entryentityLastS.size(); i++) {
-				DynamicObject dyn = aos_entryentityS.addNew();
-				DynamicObject temp = aos_entryentityLastS.get(i);
-				StringComUtils.setValue(temp, dyn);
-			}
-			OperationServiceHelper.executeOperate("save", "aos_mkt_pop_ppcst",
-					new DynamicObject[] { aos_mkt_pop_ppcst }, OperateOption.create());
+			copyLastDayData(p_org_id, aos_billno, aos_poptype, Today, platform_id);
 			return;
 		}
+
 		// 获取前三日
 		date.add(Calendar.DAY_OF_MONTH, -1);
 		String Yester = DF.format(date.getTime());
@@ -858,18 +828,194 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 		}
 		aos_mkt_bsadjrateST.close();// 关闭Dataset
 		aos_mkt_bsadjparaS.close();
-
+		// 生成ST数据表
+		genDataTableST(aos_entryentityS, aos_mkt_pop_ppcst.getPkValue(), p_org_id, Today, aos_billno);
+		aos_entryentityS.clear();
 		// 保存ST单据
 		SaveServiceHelper.save(new DynamicObject[] { aos_mkt_pop_ppcst });
 		// 保存log
 //		log.finnalSave();
-
 		// 开始生成 出价调整(销售)
 		fndmsg.setOn();
 		fndmsg.print("========开始生成 出价调整(销售)ST========");
 		Map<String, Object> adjs = new HashMap<>();
 		adjs.put("p_ou_code", p_ou_code);
 		aos_mkt_popadjst_init.executerun(adjs);
+	}
+
+	/**
+	 * 根据单据体对象生成数据
+	 * 
+	 * @param aos_entryentityS
+	 * @param fid
+	 * @param p_org_id
+	 * @param today
+	 * @param aos_billno
+	 */
+	private static void genDataTableST(DynamicObjectCollection aos_entryentityS, Object fid, Object p_org_id,
+			Date today, String aos_billno) {
+		int size = aos_entryentityS.size();
+		int seq = 1;
+		List<DynamicObject> dataS = new ArrayList<>();// 账单明细集合
+		for (DynamicObject aos_entryentity : aos_entryentityS) {
+			DynamicObject data = BusinessDataServiceHelper.newDynamicObject("aos_mkt_ppcst_data");
+			data.set("aos_sourceid", fid);
+			data.set("aos_orgid", p_org_id);
+			data.set("aos_date", today);
+			data.set("aos_productno", aos_entryentity.get("aos_productno"));
+			data.set("aos_itemnumer", aos_entryentity.get("aos_itemnumer"));
+			data.set("aos_shopsku", aos_entryentity.get("aos_shopsku"));
+			data.set("aos_keyword", aos_entryentity.get("aos_keyword"));
+			data.set("aos_match_type", aos_entryentity.get("aos_match_type"));
+			data.set("aos_itemstatus", aos_entryentity.get("aos_itemstatus"));
+			data.set("aos_type", aos_entryentity.get("aos_type"));
+			data.set("aos_budget", aos_entryentity.get("aos_budget"));
+			data.set("aos_bid", aos_entryentity.get("aos_bid"));
+			data.set("aos_serialstatus", aos_entryentity.get("aos_serialstatus"));
+			data.set("aos_groupstatus", aos_entryentity.get("aos_groupstatus"));
+			data.set("aos_keystatus", aos_entryentity.get("aos_keystatus"));
+			data.set("aos_valid_flag", aos_entryentity.get("aos_valid_flag"));
+			data.set("aos_reason", aos_entryentity.get("aos_reason"));
+			data.set("aos_makedate", aos_entryentity.get("aos_makedate"));
+			data.set("aos_groupdate", aos_entryentity.get("aos_groupdate"));
+			data.set("aos_keydate", aos_entryentity.get("aos_keydate"));
+			data.set("aos_eliminatedate", aos_entryentity.get("aos_eliminatedate"));
+			data.set("aos_lastpricedate", aos_entryentity.get("aos_lastpricedate"));
+			data.set("aos_itemid", aos_entryentity.get("aos_itemid"));
+			data.set("aos_itemname", aos_entryentity.get("aos_itemname"));
+			data.set("aos_season", aos_entryentity.get("aos_season"));
+			data.set("aos_sal_group", aos_entryentity.get("aos_sal_group"));
+			data.set("aos_category1", aos_entryentity.get("aos_category1"));
+			data.set("aos_category2", aos_entryentity.get("aos_category2"));
+			data.set("aos_category3", aos_entryentity.get("aos_category3"));
+			data.set("aos_budget_ori", aos_entryentity.get("aos_budget_ori"));
+			data.set("aos_bid_ori", aos_entryentity.get("aos_bid_ori"));
+			data.set("aos_avadays", aos_entryentity.get("aos_avadays"));
+			data.set("aos_salemanual", aos_entryentity.get("aos_salemanual"));
+			data.set("aos_roi7days", aos_entryentity.get("aos_roi7days"));
+			data.set("aos_impressions", aos_entryentity.get("aos_impressions"));
+			data.set("aos_lastbid", aos_entryentity.get("aos_lastbid"));
+			data.set("aos_marketprice", aos_entryentity.get("aos_marketprice"));
+			data.set("aos_highvalue", aos_entryentity.get("aos_highvalue"));
+			data.set("aos_fixvalue", aos_entryentity.get("aos_fixvalue"));
+			data.set("aos_billno", aos_billno);
+
+			dataS.add(data);
+			if (dataS.size() >= 5000 || seq == size) {
+				DynamicObject[] dataSArray = dataS.toArray(new DynamicObject[0]);
+				SaveServiceHelper.save(dataSArray);
+				dataS.clear();
+			}
+			++seq;
+		}
+	}
+
+	/**
+	 * 赋值昨日数据
+	 * 
+	 * @param p_org_id
+	 * @param aos_billno
+	 * @param aos_poptype
+	 * @param today
+	 * @param platform_id
+	 */
+	private static void copyLastDayData(Object p_org_id, String aos_billno, Object aos_poptype, Date today,
+			Object platform_id) {
+		DynamicObject aos_mkt_pop_ppcst = BusinessDataServiceHelper.newDynamicObject("aos_mkt_pop_ppcst");
+		Calendar calendar = Calendar.getInstance();
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
+		calendar.set(Calendar.MILLISECOND, 0);
+		Date date_to = calendar.getTime();
+		calendar.add(Calendar.DAY_OF_MONTH, -1);
+		Date date_from = calendar.getTime();
+		SimpleDateFormat writeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);// 日期格式化
+		String date_from_str = writeFormat.format(date_from);
+		String date_to_str = writeFormat.format(date_to);
+		QFilter filter_date_from = new QFilter("aos_date", ">=", date_from_str);
+		QFilter filter_date_to = new QFilter("aos_date", "<", date_to_str);
+		QFilter filter_org = new QFilter("aos_orgid", "=", p_org_id);
+		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_org };
+		long lastFid = QueryServiceHelper.queryOne("aos_mkt_pop_ppcst", "id", filters).getLong("id");
+		DynamicObject aos_mkt_pop_ppclast = BusinessDataServiceHelper.loadSingle(lastFid, "aos_mkt_pop_ppcst");
+		if (aos_mkt_pop_ppclast == null)
+			return;// 没有昨日数据则直接退出
+		aos_mkt_pop_ppcst.set("aos_orgid", p_org_id);
+		aos_mkt_pop_ppcst.set("billstatus", "A");
+		aos_mkt_pop_ppcst.set("aos_billno", aos_billno);
+		aos_mkt_pop_ppcst.set("aos_poptype", aos_poptype);
+		aos_mkt_pop_ppcst.set("aos_date", today);
+		aos_mkt_pop_ppcst.set("aos_channel", platform_id);
+		SaveServiceHelper.save(new DynamicObject[] { aos_mkt_pop_ppcst });
+		Object fid = aos_mkt_pop_ppcst.getPkValue();
+		// 查询所有昨日数据
+		DynamicObjectCollection aosMktPpcStDataS = QueryServiceHelper.query("aos_mkt_ppcst_data",
+				"aos_productno,aos_itemnumer,aos_shopsku,aos_keyword,"
+						+ "aos_match_type,aos_itemstatus,aos_type,aos_budget,"
+						+ "aos_bid,aos_serialstatus,aos_groupstatus,aos_keystatus,"
+						+ "aos_valid_flag,aos_reason,aos_makedate,aos_groupdate,"
+						+ "aos_keydate,aos_eliminatedate,aos_lastpricedate,aos_itemid,"
+						+ "aos_itemname,aos_season,aos_sal_group,aos_category1,aos_category2,"
+						+ "aos_category3,aos_budget_ori,aos_bid_ori,aos_avadays,aos_salemanual,"
+						+ "aos_roi7days,aos_impressions,aos_lastbid,aos_marketprice," + "aos_highvalue,aos_fixvalue",
+				new QFilter("aos_sourceid", QCP.equals, lastFid).toArray());
+		int size = aosMktPpcStDataS.size();
+		List<DynamicObject> dataS = new ArrayList<>();// 账单明细集合
+		int seq = 1; // 序列号
+		// 循环昨日数据生成本日数据
+		for (DynamicObject aosMktPpcStData : aosMktPpcStDataS) {
+			DynamicObject data = BusinessDataServiceHelper.newDynamicObject("aos_mkt_ppcst_data");
+			data.set("aos_sourceid", fid);
+			data.set("aos_orgid", p_org_id);
+			data.set("aos_date", today);
+			data.set("aos_productno", aosMktPpcStData.get("aos_productno"));
+			data.set("aos_itemnumer", aosMktPpcStData.get("aos_itemnumer"));
+			data.set("aos_shopsku", aosMktPpcStData.get("aos_shopsku"));
+			data.set("aos_keyword", aosMktPpcStData.get("aos_keyword"));
+			data.set("aos_match_type", aosMktPpcStData.get("aos_match_type"));
+			data.set("aos_itemstatus", aosMktPpcStData.get("aos_itemstatus"));
+			data.set("aos_type", aosMktPpcStData.get("aos_type"));
+			data.set("aos_budget", aosMktPpcStData.get("aos_budget"));
+			data.set("aos_bid", aosMktPpcStData.get("aos_bid"));
+			data.set("aos_serialstatus", aosMktPpcStData.get("aos_serialstatus"));
+			data.set("aos_groupstatus", aosMktPpcStData.get("aos_groupstatus"));
+			data.set("aos_keystatus", aosMktPpcStData.get("aos_keystatus"));
+			data.set("aos_valid_flag", aosMktPpcStData.get("aos_valid_flag"));
+			data.set("aos_reason", aosMktPpcStData.get("aos_reason"));
+			data.set("aos_makedate", aosMktPpcStData.get("aos_makedate"));
+			data.set("aos_groupdate", aosMktPpcStData.get("aos_groupdate"));
+			data.set("aos_keydate", aosMktPpcStData.get("aos_keydate"));
+			data.set("aos_eliminatedate", aosMktPpcStData.get("aos_eliminatedate"));
+			data.set("aos_lastpricedate", aosMktPpcStData.get("aos_lastpricedate"));
+			data.set("aos_itemid", aosMktPpcStData.get("aos_itemid"));
+			data.set("aos_itemname", aosMktPpcStData.get("aos_itemname"));
+			data.set("aos_season", aosMktPpcStData.get("aos_season"));
+			data.set("aos_sal_group", aosMktPpcStData.get("aos_sal_group"));
+			data.set("aos_category1", aosMktPpcStData.get("aos_category1"));
+			data.set("aos_category2", aosMktPpcStData.get("aos_category2"));
+			data.set("aos_category3", aosMktPpcStData.get("aos_category3"));
+			data.set("aos_budget_ori", aosMktPpcStData.get("aos_budget_ori"));
+			data.set("aos_bid_ori", aosMktPpcStData.get("aos_bid_ori"));
+			data.set("aos_avadays", aosMktPpcStData.get("aos_avadays"));
+			data.set("aos_salemanual", aosMktPpcStData.get("aos_salemanual"));
+			data.set("aos_roi7days", aosMktPpcStData.get("aos_roi7days"));
+			data.set("aos_impressions", aosMktPpcStData.get("aos_impressions"));
+			data.set("aos_lastbid", aosMktPpcStData.get("aos_lastbid"));
+			data.set("aos_marketprice", aosMktPpcStData.get("aos_marketprice"));
+			data.set("aos_highvalue", aosMktPpcStData.get("aos_highvalue"));
+			data.set("aos_fixvalue", aosMktPpcStData.get("aos_fixvalue"));
+			data.set("aos_billno", aos_billno);
+
+			dataS.add(data);
+			if (dataS.size() >= 5000 || seq == size) {
+				DynamicObject[] dataSArray = dataS.toArray(new DynamicObject[0]);
+				SaveServiceHelper.save(dataSArray);
+				dataS.clear();
+			}
+			++seq;
+		}
+
 	}
 
 	private static void keyInsertData(DynamicObjectCollection aos_entryentityS, Map<String, Object> insert_map,

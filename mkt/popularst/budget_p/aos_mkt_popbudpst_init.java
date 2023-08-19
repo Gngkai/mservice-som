@@ -143,12 +143,20 @@ public class aos_mkt_popbudpst_init extends AbstractTask {
 				OperateOption.create());
 		// 开始循环今日ST数据源数据
 		filters = new QFilter[] { Qf_Date, Qf_Org };
-		String SelectField = "id," + "aos_billno," + "aos_channel," + "aos_entryentity.aos_productno aos_productno,"
-				+ "aos_entryentity.aos_season aos_season," + "aos_entryentity.aos_budget aos_budget,"
-				+ " case when aos_entryentity.aos_salemanual = 'Y' then 1 "
-				+ " when aos_entryentity.aos_salemanual = 'N' then 0 end as aos_salemanual ";
+//		String SelectField = "id," + "aos_billno," + "aos_channel," + "aos_entryentity.aos_productno aos_productno,"
+//				+ "aos_entryentity.aos_season aos_season," + "aos_entryentity.aos_budget aos_budget,"
+//				+ " case when aos_entryentity.aos_salemanual = 'Y' then 1 "
+//				+ " when aos_entryentity.aos_salemanual = 'N' then 0 end as aos_salemanual ";
+//		DataSet aos_mkt_popular_ppcS = QueryServiceHelper.queryDataSet("aos_mkt_popbudpst_init" + "." + p_ou_code,
+//				"aos_mkt_pop_ppcst", SelectField, filters, null);
+		
+		String SelectField = "aos_sourceid id,aos_billno,aos_channel,aos_productno,"
+				+ "aos_season,aos_budget,"
+				+ " case when aos_salemanual = 'Y' then 1 "
+				+ " when aos_salemanual = 'N' then 0 end as aos_salemanual ";
 		DataSet aos_mkt_popular_ppcS = QueryServiceHelper.queryDataSet("aos_mkt_popbudpst_init" + "." + p_ou_code,
-				"aos_mkt_pop_ppcst", SelectField, filters, null);
+				"aos_mkt_ppcst_data", SelectField, filters, null);
+		
 		String[] GroupBy = new String[] { "id", "aos_billno", "aos_channel", "aos_productno", "aos_season",
 				"aos_budget" };
 		aos_mkt_popular_ppcS = aos_mkt_popular_ppcS.groupBy(GroupBy).max("aos_salemanual").finish();
@@ -331,7 +339,11 @@ public class aos_mkt_popbudpst_init extends AbstractTask {
 
 	private static HashMap<String, BigDecimal> InitAdjsMap(String p_ou_code, Date today) {
 		HashMap<String, BigDecimal> InitAdjs = new HashMap<>();
-		String SelectColumn = "aos_entryentity.aos_bid * 2 aos_bid," + "aos_entryentity.aos_productno aos_productno";
+//		String SelectColumn = "aos_entryentity.aos_bid * 2 aos_bid," + "aos_entryentity.aos_productno aos_productno";
+		
+		String SelectColumn = "aos_bid * 2 aos_bid," + "aos_productno";
+		
+		
 		QFilter Qf_Date = new QFilter("aos_date", "=", today);
 		QFilter filter_bill = new QFilter("aos_orgid.number", "=", p_ou_code);
 		QFilter[] filters = new QFilter[] { Qf_Date, filter_bill };

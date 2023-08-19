@@ -162,17 +162,24 @@ public class aos_mkt_popadjst_init extends AbstractTask {
 
 		QFilter Qf_Date = new QFilter("aos_date", "=", Today);
 		QFilter Qf_Org = new QFilter("aos_orgid.number", "=", p_ou_code);
-		QFilter Qf_type = new QFilter("aos_entryentity.aos_keystatus", "=", "AVAILABLE");
-		QFilter Qf_group = new QFilter("aos_entryentity.aos_sal_group", "=", p_group_id);
+//		QFilter Qf_type = new QFilter("aos_entryentity.aos_keystatus", "=", "AVAILABLE");
+//		QFilter Qf_group = new QFilter("aos_entryentity.aos_sal_group", "=", p_group_id);
+		QFilter Qf_type = new QFilter("aos_keystatus", "=", "AVAILABLE");
+		QFilter Qf_group = new QFilter("aos_sal_group", "=", p_group_id);
 
 		QFilter[] filters = new QFilter[] { Qf_Date, Qf_Org, Qf_type, Qf_group };
-		String SelectField = "id,aos_billno," + "aos_entryentity.aos_itemnumer aos_itemnumer,"
-				+ "aos_entryentity.aos_itemname aos_itemname," + "aos_entryentity.aos_season aos_season,"
-				+ "aos_entryentity.aos_category1 aos_category1," + "aos_entryentity.aos_category2 aos_category2,"
-				+ "aos_entryentity.aos_category3 aos_category3," + "aos_entryentity.aos_avadays aos_avadays,"
-				+ "aos_entryentity.aos_itemid aos_itemid," + "1 aos_count";
+//		String SelectField = "id,aos_billno," + "aos_entryentity.aos_itemnumer aos_itemnumer,"
+//				+ "aos_entryentity.aos_itemname aos_itemname," + "aos_entryentity.aos_season aos_season,"
+//				+ "aos_entryentity.aos_category1 aos_category1," + "aos_entryentity.aos_category2 aos_category2,"
+//				+ "aos_entryentity.aos_category3 aos_category3," + "aos_entryentity.aos_avadays aos_avadays,"
+//				+ "aos_entryentity.aos_itemid aos_itemid," + "1 aos_count";
+//		DataSet aos_mkt_pop_ppcstS = QueryServiceHelper.queryDataSet("aos_mkt_popadjst_init.do_operate" + p_ou_code,
+//				"aos_mkt_pop_ppcst", SelectField, filters, null);
+		String SelectField = "aos_sourceid id,aos_billno," + "aos_itemnumer,"
+				+ "aos_itemname,aos_season,aos_category1,aos_category2,aos_category3," 
+				+ "aos_avadays,aos_itemid,1 aos_count";
 		DataSet aos_mkt_pop_ppcstS = QueryServiceHelper.queryDataSet("aos_mkt_popadjst_init.do_operate" + p_ou_code,
-				"aos_mkt_pop_ppcst", SelectField, filters, null);
+				"aos_mkt_ppcst_data", SelectField, filters, null);
 
 		String[] GroupBy = new String[] { "id", "aos_billno", "aos_itemnumer", "aos_itemname", "aos_season",
 				"aos_category1", "aos_category2", "aos_category3", "aos_avadays", "aos_itemid" };
