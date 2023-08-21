@@ -17,6 +17,8 @@ import kd.bos.form.control.events.RowClickEventListener;
 import kd.bos.form.events.BeforeClosedEvent;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.QueryServiceHelper;
+import kd.fi.bd.util.QFBuilder;
+import kd.fi.bd.util.filter.QFilterBuilder;
 import mkt.act.rule.allCountries.TrackerVipon;
 import mkt.act.rule.de.DotdDE;
 import mkt.act.rule.de.LDAnd7DDDE;
@@ -65,8 +67,9 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 		String Control = evt.getItemKey();
 		try {
 
-			if (Control.equals("aos_generate"))
+			if (Control.equals("aos_generate")){
 				aos_generate();
+			}
 			else if (Control.equals("aos_detailimp")) {
 				genActPlan();// 明细导入
 			} else if ("aos_batchquery".equals(Control)) {
@@ -223,7 +226,10 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 		String ouCode = aos_nationality.getString("number");
 		// 店铺
 		String shop = aos_shop.getString("number");
-		execute(ouCode, shop, actType, this.getModel().getDataEntity());
+		//230821 gk :活动明细导入根据用户配置规则筛选物料导入
+		execute(aos_nationality,aos_channel,aos_shop,aos_acttype,getModel().getDataEntity(true));
+
+		//execute(ouCode, shop, actType, this.getModel().getDataEntity());
 		this.getView().invokeOperation("refresh");
 		String noPriceItem = getNoPriceItem();
 		if (noPriceItem.length()>0){
@@ -232,20 +238,31 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 
 	}
 	private String getNoPriceItem (){
-		try {
-			Object billno = this.getModel().getValue("billno");
-			QFilter filter = new QFilter("aos_billno","=",billno);
-			QFilter filter_item = new QFilter("entryentity.aos_item","!=","");
-			DynamicObjectCollection dyc = QueryServiceHelper.query("aos_mkt_noprice", "entryentity.aos_item aos_item", new QFilter[]{filter,filter_item});
-			StringJoiner str = new StringJoiner(" , ");
-			for (DynamicObject dy : dyc) {
+		Object billno = this.getModel().getValue("billno");
+		QFilter filter = new QFilter("aos_billno","=",billno);
+		QFilter filter_item = new QFilter("entryentity.aos_item","!=","");
+		DynamicObjectCollection dyc = QueryServiceHelper.query("aos_mkt_noprice", "entryentity.aos_item aos_item", new QFilter[]{filter,filter_item});
+		StringJoiner str = new StringJoiner(" , ");
+		for (DynamicObject dy : dyc) {
+			if (dy.get("aos_item")!=null)
 				str.add(dy.getString("aos_item"));
-			}
-			return str.toString();
-		}catch (Exception e){
-			e.printStackTrace();
 		}
-		return null;
+		return str.toString();
+	}
+
+	private void execute(DynamicObject ou,DynamicObject channel ,DynamicObject shop, DynamicObject actType, DynamicObject object){
+		QFBuilder builder = new QFBuilder();
+		builder.add("aos_org","=",ou.getPkValue());
+		builder.add("aos_channel","=",channel.getPkValue());
+		builder.add("aos_shop","=",shop.getPkValue());
+		builder.add("aos_acttype","=",actType.getPkValue());
+		DynamicObject type = QueryServiceHelper.queryOne("aos_sal_act_type_p", "id", builder.toArray());
+		if (type==null) {
+			getView().showTipNotification("活动库选品规则未维护");
+			return;
+		}
+		ActUtil.getItemByRule(type.get("id"),object);
+
 	}
 
 	// 根据国别+活动类型选择代码执行
