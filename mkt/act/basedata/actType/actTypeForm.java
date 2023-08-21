@@ -4,6 +4,7 @@ import common.fnd.FndGlobal;
 import kd.bos.bill.AbstractBillPlugIn;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
+import kd.bos.entity.formula.CalcExprParser;
 import kd.bos.form.CloseCallBack;
 import kd.bos.form.FormShowParameter;
 import kd.bos.form.ShowType;
@@ -17,10 +18,7 @@ import kd.bos.list.ListShowParameter;
 import kd.bos.orm.query.QFilter;
 import sal.act.ActShopProfit.aos_sal_ShopActProfit_form;
 
-import java.util.ArrayList;
-import java.util.EventObject;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author create by gk
@@ -79,18 +77,22 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
         if (returnData==null)
             return;
         if (actionId.equals("aos_rule")) {
-            String value = returnData.get(aos_sal_ShopActProfit_form.Key_return_k);
-            if (FndGlobal.IsNotNull(value)){
+            String key = returnData.get(aos_sal_ShopActProfit_form.Key_return_k);
+            String name = returnData.get(aos_sal_ShopActProfit_form.Key_return_v);
+            if (FndGlobal.IsNotNull(key)){
                 try {
-                    FormulaEngine.parseFormula(value);
-                    getModel().setValue("aos_rule",value);
+                    parseFormula(key);
+                    getModel().setValue("aos_rule",name);
+                    getModel().setValue("aos_rule_v",key);
                 }
                 catch (Exception e){
+                    e.printStackTrace();
                     getView().showTipNotification("表达式输入有误");
                 }
             }
             else{
                 getModel().setValue("aos_rule","");
+                getModel().setValue("aos_rule_v","");
             }
         }
         else if (actionId.equals("aos_priceformula")){
@@ -127,7 +129,8 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
                 return;
             List<String> values = new ArrayList<>(dyc.size());
             for (DynamicObject dy : dyc) {
-                values.add("项目"+dy.getString("seq"));
+                String seq = dy.getString("seq");
+                values.add(seq);
             }
             showParameter.setCustomParam(aos_sal_ShopActProfit_form.Key_entity,"rule");
             showParameter.setCustomParam("value",values);
@@ -147,4 +150,12 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
         this.getView().showForm(showParameter);
     }
 
+    private void parseFormula (String formula){
+        String[] values = CalcExprParser.getExprVariables(formula);
+        Map<String,Object> parameters = new HashMap<>();
+        for (String value : values) {
+            parameters.put(value,true);
+        }
+        FormulaEngine.execExcelFormula(formula,parameters);
+    }
 }
