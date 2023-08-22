@@ -103,6 +103,7 @@ public class EventRule {
                 break;
         }
     }
+
     Map<Long,Integer> itemSotck;
     private void setItemStock(){
         if (itemSotck!=null) {
@@ -128,6 +129,7 @@ public class EventRule {
         }
 
     }
+
     Map<String,String> itemStatus;
     private void setItemStatus(){
         if (itemSotck!=null) {
@@ -161,7 +163,6 @@ public class EventRule {
         }
     }
 
-
     private void setItemAverage(DynamicObject row){
         int days = 7;
         if (FndGlobal.IsNotNull(row.get("aos_rule_day")))
@@ -169,4 +170,9 @@ public class EventRule {
         ItemCacheServiceImpl.calOnlineSalesCache(orgEntity.getLong("id"),days);
 
     }
+
+    /**
+     * 获取在某个日期前的入局数量
+     */
+    private Map<String,Integer> inventQty(){return  null;};
 }
