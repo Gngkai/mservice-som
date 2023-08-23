@@ -1083,7 +1083,7 @@ public class ActUtil {
 	public static void getItemByRule(Object typeID,DynamicObject dy_act){
 		//获取活动规则
 		DynamicObject acTypEntity = BusinessDataServiceHelper.loadSingle(typeID, "aos_sal_act_type_p");
-
+		EventRule eventRule = new EventRule(typeID,dy_act);
 	}
 
 	/**
