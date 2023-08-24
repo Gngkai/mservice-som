@@ -4,13 +4,11 @@ import common.fms.util.FieldUtils;
 import common.fnd.FndGlobal;
 import common.sal.sys.basedata.dao.ItemDao;
 import common.sal.sys.basedata.dao.impl.ItemDaoImpl;
-import common.sal.sys.sync.dao.ItemStockDao;
-import common.sal.sys.sync.dao.OrderLineDao;
-import common.sal.sys.sync.dao.WarehouseStockDao;
-import common.sal.sys.sync.dao.impl.ItemStockDaoImpl;
-import common.sal.sys.sync.dao.impl.OrderLineDaoImpl;
-import common.sal.sys.sync.dao.impl.WarehouseStockDaoImpl;
+import common.sal.sys.sync.dao.*;
+import common.sal.sys.sync.dao.impl.*;
+import common.sal.sys.sync.service.AvailableDaysService;
 import common.sal.sys.sync.service.ItemCacheService;
+import common.sal.sys.sync.service.impl.AvailableDaysServiceImpl;
 import common.sal.sys.sync.service.impl.ItemCacheServiceImpl;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
@@ -44,11 +42,12 @@ public class EventRule {
         this.actPlanEntity = dy_main;
         //活动规则标识
         String aos_rule_v = typEntity.getString("aos_rule_v");
+        setItemInfo();
         rowRule = new HashMap<>();
         rowRuleType = new HashMap<>();
         parsingRule();
         orgEntity = dy_main.getDynamicObject("aos_nationality");
-        setItemInfo();
+
     }
     private void setItemInfo(){
         ItemDao itemDao = new ItemDaoImpl();
@@ -134,6 +133,47 @@ public class EventRule {
                 break;
             case "activityDay":
                 //活动日可售天数
+                setActSaleDay();
+                break;
+            case "reviewScore":
+            case "reviewNumber":
+                //review 分数和个数
+                setReview();
+                break;
+            case "price":
+                //定价
+                setItemPrice();
+                break;
+            case "activityPrice":
+                //活动价格
+                //setItemActPrice();
+                break;
+            case "hot":
+                //爆品
+                break;
+            case "historicalSales":
+                //店铺历史销量(销售订单)
+                setItemShopSale(row);
+                break;
+            case "unsalType":
+                //滞销类型
+                //setItemUnsale();
+                break;
+            case "weekUnsold":
+                //周滞销
+                setItemWeekUnsale();
+                break;
+            case "inventAge":
+                //最大库龄
+                setItemMaxAge();
+                break;
+            case "platform":
+                //平台仓库存
+                setItemPlatStock();
+                break;
+            case "ownWarehouse":
+                setItemNoPlatStock();
+                break;
         }
     }
 
@@ -201,6 +241,7 @@ public class EventRule {
             days = row.getInt("aos_rule_day");
         setItemAverageByDay(days);
     }
+
     Map<String,Map<String, BigDecimal>> itemAverage;
     private void setItemAverageByDay(int day){
         if (itemAverage == null){
@@ -313,16 +354,161 @@ public class EventRule {
 
     }
 
-
-    /*
-    Map<String,Integer> itemActSaleDay(){
+    Map<String,Integer> itemActSalDay;
+    private void setActSaleDay(){
+        if (itemActSalDay !=null)
+            return;
+        itemActSalDay = new HashMap<>(itemInfoes.size());
         //设置活动库存
         setActInv();
         //设置7天日均销量
         setItemAverageByDay(7);
+        Map<String, BigDecimal> itemAverageSale = itemAverage.get("7");
+        itemSaleDay = new HashMap<>();
+        Date startdate = actPlanEntity.getDate("aos_startdate");
+        AvailableDaysService service = new AvailableDaysServiceImpl();
+        for (DynamicObject itemInfoe : itemInfoes) {
+            String itemID = itemInfoe.getString("id");
+            int stock = itemActInv.getOrDefault(itemID, 0);
+            BigDecimal sale = itemAverageSale.getOrDefault(itemID, BigDecimal.ZERO);
+            int day = service.calAvailableDays(orgEntity.getLong("id"), Long.parseLong(itemID), stock, sale, startdate);
+            itemActSalDay.put(itemID,day);
+        }
+    }
+
+    Map<String,BigDecimal> reviewStars;
+    Map<String,Integer> reviewQty;
+    private void setReview(){
+        if (reviewStars!=null)
+            return;
+        reviewStars = new HashMap<>();
+        reviewQty = new HashMap<>();
+        QFBuilder builder = new QFBuilder();
+        builder.add("aos_orgid","=",orgEntity.getPkValue());
+        builder.add("aos_itemid","!=","");
+
+        String select = "aos_itemid,aos_stars,aos_review";
+        DynamicObjectCollection dyc = QueryServiceHelper.query("aos_sync_review", select, builder.toArray(), "modifytime asc");
+        for (DynamicObject dy : dyc) {
+            String itemid = dy.getString("aos_itemid");
+            BigDecimal value = BigDecimal.ZERO;
+            if (FndGlobal.IsNotNull(dy.get("aos_stars"))) {
+                value = dy.getBigDecimal("aos_stars");
+            }
+            reviewStars.put(itemid,value);
+            int qty = 0;
+            if (FndGlobal.IsNotNull("aos_review")) {
+                qty = dy.getInt("aos_review");
+            }
+            reviewQty.put(itemid,qty);
+        }
+    }
+
+    Map<String,BigDecimal> itemPrice;
+    private void setItemPrice(){
+        if (itemPrice!=null)
+            return;
+        ItemPriceDao itemPriceDao = new ItemPriceDaoImpl();
+        Object shopid = actPlanEntity.getDynamicObject("aos_shop").getPkValue();
+        itemPrice = itemPriceDao.queryShopItemPrice(orgEntity.getPkValue(),shopid);
+    }
+
+    Map<String,BigDecimal> itemActPrice;
+    private void setItemActPrice(){
+        if (itemActPrice!=null) {
+            return;
+        }
+        itemActPrice = new HashMap<>(itemInfoes.size());
+        //获取活动价公式
+        String priceformula = typEntity.getString("aos_priceformula_v");
+        if (FndGlobal.IsNull(priceformula)) {
+            return;
+        }
+        //
+    }
+
+    Map<String,Map<Long,Integer>> itemShopSale;
+    private void setItemShopSale(DynamicObject row){
+        if (itemShopSale==null) {
+            itemShopSale = new HashMap<>();
+        }
+        int day = row.getInt("aos_rule_day");
+        if (FndGlobal.IsNull(day))
+            return;
+        if (itemShopSale.containsKey(String.valueOf(day)))
+            return;
+
+        long orgID = orgEntity.getLong("id");
+        long shopId = actPlanEntity.getDynamicObject("aos_shop").getLong("id");
+        Calendar instance = Calendar.getInstance();
+        Date end = instance.getTime();
+        instance.add(Calendar.DATE,-day);
+        Date start = instance.getTime();
+
+        OrderLineDao orderLineDao = new OrderLineDaoImpl();
+        Map<Long, Integer> result = orderLineDao.listItemSales(orgID, null, shopId, start, end);
+        itemShopSale.put(String.valueOf(day),result);
+    }
+
+    Map<String,String> itemUnsaleTyep;
+    private void setItemUnsale(){
 
     }
-    */
 
+    Map<String,String> itemWeekUnsale;
+    private void setItemWeekUnsale(){
+        if (itemWeekUnsale!=null) {
+            return;
+        }
+        itemWeekUnsale = new HashMap<>(itemInfoes.size());
+        //查找最新一期的海外滞销报价日期
+        QFBuilder builder = new QFBuilder();
+        builder.add("aos_org","=",orgEntity.getPkValue());
+        DynamicObject dy = QueryServiceHelper.queryOne("aos_sal_quo_ur", "max(aos_sche_date) aos_sche_date", builder.toArray());
+        LocalDate date = dy.getDate("aos_sche_date").toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        builder.add("aos_sche_date",">=",date.toString());
+        builder.add("aos_sche_date","<",date.plusDays(1));
+        builder.add("aos_entryentity.aos_sku","!=","");
+        builder.add("aos_entryentity.aos_unsalable_type","!=","");
 
+        StringJoiner str = new StringJoiner(",");
+        str.add("aos_entryentity.aos_sku aos_sku");
+        str.add("aos_entryentity.aos_unsalable_type aos_unsalable_type");
+        DynamicObjectCollection results = QueryServiceHelper.query("aos_sal_quo_ur", str.toString(), builder.toArray());
+        for (DynamicObject row : results) {
+            itemWeekUnsale.put(row.getString("aos_sku"),row.getString("aos_unsalable_type"));
+        }
+    }
+
+    Map<Long,Integer> itemMaxAge;
+    private void setItemMaxAge(){
+        if (itemMaxAge!=null)
+            return;
+        ItemAgeDao ageDao = new ItemAgeDaoImpl();
+        itemMaxAge = ageDao.listItemMaxAgeByOrgId(orgEntity.getLong("id"));
+    }
+
+    Map<Long,Integer> itemPlatStock;
+    private void setItemPlatStock(){
+        if (itemPlatStock!=null)
+            return;
+        itemPlatStock = new HashMap<>(itemInfoes.size());
+        setItemStock();
+        setItemNoPlatStock();
+        for (DynamicObject itemInfoe : itemInfoes) {
+            Long itemID = itemInfoe.getLong("id");
+            Integer stock = itemSotck.getOrDefault(itemID, 0);
+            Integer noPlatStock = itemNoPlatStock.getOrDefault(itemID, 0);
+            itemPlatStock.put(itemID,(stock-noPlatStock));
+        }
+
+    }
+
+    Map<Long,Integer> itemNoPlatStock;
+    private void setItemNoPlatStock(){
+        if (itemNoPlatStock!=null)
+            return;
+        ItemStockDao itemStockDao = new ItemStockDaoImpl();
+        itemNoPlatStock = itemStockDao.listItemNoPlatformStock(orgEntity.getLong("id"));
+    }
 }
