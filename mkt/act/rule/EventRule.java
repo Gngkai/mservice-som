@@ -12,6 +12,7 @@ import common.sal.sys.sync.service.impl.AvailableDaysServiceImpl;
 import common.sal.sys.sync.service.impl.ItemCacheServiceImpl;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
+import kd.bos.formula.FormulaEngine;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
@@ -42,6 +43,9 @@ public class EventRule {
         this.actPlanEntity = dy_main;
         //活动规则标识
         String aos_rule_v = typEntity.getString("aos_rule_v");
+        //活动价计算公式标识
+
+        parsingPriceRule(typEntity.getString("aos_priceformula_v"));
         setItemInfo();
         rowRule = new HashMap<>();
         rowRuleType = new HashMap<>();
@@ -49,6 +53,10 @@ public class EventRule {
         orgEntity = dy_main.getDynamicObject("aos_nationality");
 
     }
+
+    /**
+     * 获取国别下的物料
+     */
     private void setItemInfo(){
         ItemDao itemDao = new ItemDaoImpl();
         StringJoiner selectFields = new StringJoiner(",");
@@ -62,6 +70,42 @@ public class EventRule {
         itemInfoes = itemDao.listItemObj(selectFields.toString(),filter,null);
     }
 
+    /**
+     * 解析价格公式
+     * @param formal    公式
+     */
+    private void parsingPriceRule(String formal){
+        String[] values = FormulaEngine.extractVariables(formal);
+        for (String value : values) {
+            //匹配成功
+            boolean match = false;
+            switch (value){
+                case "currentPrice":
+                    match = true;
+                    break;
+                case "webPrice":
+                    match = true;
+                    break;
+                case "vrp":
+                    match = true;
+                    break;
+            }
+            //上面没有匹配成功则说明 需要用到天数
+            if (!match){
+                String caption = value.substring(0, value.length() - 2);
+                String day = value.substring(value.length() - 2);
+                //店铺过去最低定价
+                if (caption.equals("shopPrice")){
+
+                }
+                //店铺过去最低成交价
+                else if (caption.equals("shopSale")){
+
+                }
+
+            }
+        }
+    }
 
     /**
      * 解析规则
@@ -157,7 +201,7 @@ public class EventRule {
                 break;
             case "unsalType":
                 //滞销类型
-                //setItemUnsale();
+                setItemUnsale();
                 break;
             case "weekUnsold":
                 //周滞销
@@ -178,6 +222,9 @@ public class EventRule {
     }
 
     Map<Long,Integer> itemSotck;
+    /**
+     * 海外库存
+     */
     private void setItemStock(){
         if (itemSotck!=null) {
             return;
@@ -188,21 +235,34 @@ public class EventRule {
     }
 
     Map<String,Integer> itemSaleDay;
+    /**
+     * 可售天数
+     */
     private void setSaleDays(){
         if (itemSaleDay !=null) {
             return;
         }
-        QFBuilder builder = new QFBuilder();
-        builder.add("aos_ou_code","=",orgEntity.getString("number"));
-        builder.add("aos_item_code","!=","");
-        builder.add("aos_7avadays",">=",0);
-        DynamicObjectCollection results = QueryServiceHelper.query("aos_sal_dw_invavadays", "aos_item_code,aos_7avadays", builder.toArray());
-        for (DynamicObject result : results) {
-            itemSaleDay.put(result.getString("aos_item_code"),result.getInt("aos_7avadays"));
+        //缓存海外库存
+        setItemStock();
+        //缓存7日日均销量
+        setItemAverageByDay(7);
+        Map<String, BigDecimal> itemAverageSale = itemAverage.get("7");
+        Date startdate = new Date();
+        AvailableDaysService service = new AvailableDaysServiceImpl();
+        itemSaleDay = new HashMap<>(itemInfoes.size());
+        for (DynamicObject itemInfoe : itemInfoes) {
+            String itemID = itemInfoe.getString("id");
+            int stock = itemSotck.getOrDefault(itemID, 0);
+            BigDecimal sale = itemAverageSale.getOrDefault(itemID, BigDecimal.ZERO);
+            int day = service.calAvailableDays(orgEntity.getLong("id"), Long.parseLong(itemID), stock, sale, startdate);
+            itemSaleDay.put(itemID,day);
         }
     }
 
     Map<String,String> itemStatus;
+    /**
+     * 物料状态
+     */
     private void setItemStatus(){
         if (itemSotck!=null) {
             return;
@@ -219,6 +279,9 @@ public class EventRule {
     }
 
     Map<String,String> itemSeason;
+    /**
+     * 季节属性
+     */
     private void setItemSeason(){
         if (itemSeason!=null) {
             return;
@@ -235,6 +298,10 @@ public class EventRule {
         }
     }
 
+    /**
+     *
+     * @param row
+     */
     private void setItemAverage(DynamicObject row){
         int days = 7;
         if (FndGlobal.IsNotNull(row.get("aos_rule_day")))
@@ -452,7 +519,20 @@ public class EventRule {
 
     Map<String,String> itemUnsaleTyep;
     private void setItemUnsale(){
-
+        if (itemUnsaleTyep!=null) {
+            return;
+        }
+        //获取下拉列表
+        Map<String, String> typeValue = FieldUtils.getComboMap("aos_base_stitem", "aos_type");
+        QFBuilder builder = new QFBuilder();
+        builder.add("aos_orgid","=",orgEntity.getPkValue());
+        builder.add("aos_itemid","!=","");
+        builder.add("aos_type","!=","");
+        DynamicObjectCollection results = QueryServiceHelper.query("aos_base_stitem", "aos_itemid,aos_type", builder.toArray());
+        itemUnsaleTyep = new HashMap<>(results.size());
+        for (DynamicObject result : results) {
+            itemUnsaleTyep.put(result.getString("aos_itemid"),typeValue.get(result.getString("aos_type")));
+        }
     }
 
     Map<String,String> itemWeekUnsale;
@@ -510,5 +590,9 @@ public class EventRule {
             return;
         ItemStockDao itemStockDao = new ItemStockDaoImpl();
         itemNoPlatStock = itemStockDao.listItemNoPlatformStock(orgEntity.getLong("id"));
+    }
+
+    private void setCurrentPrice(){
+
     }
 }
