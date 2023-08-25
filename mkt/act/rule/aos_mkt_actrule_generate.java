@@ -16,6 +16,7 @@ import kd.bos.form.control.events.ItemClickListener;
 import kd.bos.form.control.events.RowClickEventListener;
 import kd.bos.form.events.BeforeClosedEvent;
 import kd.bos.orm.query.QFilter;
+import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.fi.bd.util.QFBuilder;
 import kd.fi.bd.util.filter.QFilterBuilder;
@@ -74,14 +75,17 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 				genActPlan();// 明细导入
 			} else if ("aos_batchquery".equals(Control)) {
 				aos_batchquery();
+				getView().updateView();
 			} else if ("aos_batchclose".equals(Control)) {
 				aos_batchclose();
 			} else if ("aos_batchopen".equals(Control)) {
 				aos_batchopen();
 			}
 		} catch (FndError fndMessage) {
+			fndMessage.printStackTrace();
 			this.getView().showTipNotification(fndMessage.getErrorMessage());
 		} catch (Exception e) {
+			e.printStackTrace();
 			this.getView().showErrorNotification(SalUtil.getExceptionStr(e));
 		}
 
@@ -236,6 +240,7 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 			this.getView().showMessage("以下物料缺失价格：  "+noPriceItem);
 		}
 
+
 	}
 	private String getNoPriceItem (){
 		Object billno = this.getModel().getValue("billno");
@@ -250,7 +255,7 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 		return str.toString();
 	}
 
-	private void execute(DynamicObject ou,DynamicObject channel ,DynamicObject shop, DynamicObject actType, DynamicObject object){
+	private void execute(DynamicObject ou,DynamicObject channel ,DynamicObject shop, DynamicObject actType, DynamicObject actPlanEntity){
 		QFBuilder builder = new QFBuilder();
 		builder.add("aos_org","=",ou.getPkValue());
 		builder.add("aos_channel","=",channel.getPkValue());
@@ -261,8 +266,10 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 			getView().showTipNotification("活动库选品规则未维护");
 			return;
 		}
-		ActUtil.getItemByRule(type.get("id"),object);
-
+		//获取活动规则
+		DynamicObject acTypEntity = BusinessDataServiceHelper.loadSingle(type.getString("id"), "aos_sal_act_type_p");
+		EventRule eventRule = new EventRule(acTypEntity,actPlanEntity);
+		eventRule.implementFormula();
 	}
 
 	// 根据国别+活动类型选择代码执行

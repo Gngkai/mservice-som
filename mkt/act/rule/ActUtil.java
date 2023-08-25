@@ -1074,23 +1074,4 @@ public class ActUtil {
 
 		return big_currency;
 	}
-
-	/**
-	 * 根据活动规则查找物料
-	 * @param typeID
-	 * @param dy_act
-	 */
-	public static void getItemByRule(Object typeID,DynamicObject dy_act){
-		//获取活动规则
-		DynamicObject acTypEntity = BusinessDataServiceHelper.loadSingle(typeID, "aos_sal_act_type_p");
-		EventRule eventRule = new EventRule(typeID,dy_act);
-	}
-
-	/**
-	 * 拼凑活动规则
-	 */
-	private static void getRule(DynamicObject acTypEntity){
-
-	}
-
 }
