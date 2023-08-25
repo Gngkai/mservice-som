@@ -3,7 +3,9 @@ package mkt.act.rule;
 import common.fms.util.FieldUtils;
 import common.fnd.FndGlobal;
 import common.fnd.FndLog;
+import common.sal.sys.basedata.dao.ItemCategoryDao;
 import common.sal.sys.basedata.dao.ItemDao;
+import common.sal.sys.basedata.dao.impl.ItemCategoryDaoImpl;
 import common.sal.sys.basedata.dao.impl.ItemDaoImpl;
 import common.sal.sys.sync.dao.*;
 import common.sal.sys.sync.dao.impl.*;
@@ -18,6 +20,7 @@ import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.fi.bd.util.QFBuilder;
+import kd.occ.ocepfp.core.form.control.controls.Qty;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -40,6 +43,8 @@ public class EventRule {
     private DynamicObjectCollection itemInfoes;
     //日志
     private  FndLog fndLog;
+    //物料对应的品类
+    private Map<String,DynamicObject> cateItem;
     EventRule(DynamicObject typeEntity,DynamicObject dy_main){
         this.typEntity = typeEntity;
         this.actPlanEntity = dy_main;
@@ -59,23 +64,137 @@ public class EventRule {
         String ruleValue = typEntity.getString("aos_rule_v");
         String[] parameterKey = FormulaEngine.extractVariables(ruleValue);
         Map<String,Object> parameters = new HashMap<>(parameterKey.length);
-        List<DynamicObject> filterItem = new ArrayList<>(itemInfoes.size());
+        //选品数
+        int selectQty = 100;
+        if (FndGlobal.IsNotNull(typEntity.get("aos_qty"))) {
+            selectQty = Integer.parseInt(typEntity.getString("aos_qty"));
+        }
+        //根据国别品类占比确定每个品类的数量
+        Map<String, Integer> cateQty = new HashMap<>();
+        //最大占比的品类
+        String maxProportCate = calCateQty(selectQty, cateQty);
+        //通过公式筛选的物料，能够填入单据的数据
+        List<DynamicObject> filterItem = new ArrayList<>(selectQty);
+        //备用数据，即最大品类占比下对应的物料，如果其他品类缺少数据，就从中取数补上
+        int backCateSize = cateQty.getOrDefault("maxCate", 0);
+        List<DynamicObject> backupData = new ArrayList<>(backCateSize);
+        //记录每个品类已经填入数据
+        Map<String,Integer> alreadyFilledCate = new HashMap<>();
+        for (Map.Entry<String, Integer> entry : cateQty.entrySet()) {
+            alreadyFilledCate.put(entry.getKey(),0);
+        }
+        //筛选数据
         for (DynamicObject itemInfoe : itemInfoes) {
-            parameters.clear();
             String itemId = itemInfoe.getString("id");
+            //获取物料品类
+            String cate = cateItem.get(itemId).getString("gnumber").split(",")[0];
+            //判断品类是否填满
+            int alreadyQty = alreadyFilledCate.get(cate);
+            //品类能填入的最大数据
+            int cateTotalQty = cateQty.get(cate);
+            //填入类型
+            String fillType;
+            //正常填入该品类
+            if (alreadyQty < cateTotalQty){
+                fillType = "A";
+            }
+            //能够填入备用数据
+            else if (cate.equals(maxProportCate) && backupData.size()< backCateSize){
+               fillType = "B";
+            }
+            //品类已满，跳过
+            else {
+                continue;
+            }
+            parameters.clear();
             for (String key : parameterKey) {
                 parameters.put(key,rowResults.get(key).get(itemId));
             }
             //执行公式
             Boolean result = Boolean.parseBoolean(FormulaEngine.execExcelFormula(ruleValue, parameters).toString());
             if (result){
-                filterItem.add(itemInfoe);
+                //正常填入该品类
+                if (fillType.equals("A")){
+                    filterItem.add(itemInfoe);
+                    alreadyQty++;
+                    alreadyFilledCate.put(cate,alreadyQty);
+                }
+                //填入备用数据
+                else{
+                    backupData.add(itemInfoe);
+                }
             }
+        }
+        //缺失物料时，将备用数据填入
+        int missQty = selectQty - filterItem.size();
+        int fillBackupDataSize = backupData.size();
+        //确定填入的长度
+        missQty = missQty < fillBackupDataSize ? missQty:fillBackupDataSize;
+        for (int index = 0; index < missQty; index++) {
+            filterItem.add(backupData.get(index));
         }
         //将筛选完成的物料填入活动选品表中
         addData(filterItem);
         fndLog.finnalSave();
     }
+
+    /**
+     * 根据国别品类的占比计算 每个品类的数量
+     */
+    private String calCateQty(int selectQty,Map<String, Integer> result){
+        //获取占比
+        QFBuilder builder = new QFBuilder();
+        builder.add("aos_org","=",orgEntity.getPkValue());
+        List<String> selelct = Arrays.asList("aos_home_c", "aos_patio_b", "aos_rattan_e", "aos_sports_a", "aos_pet_d", "aos_baby_f");
+        StringJoiner str = new StringJoiner(",");
+        for (String value : selelct) {
+            str.add(value);
+        }
+        String maxProportCate = "";
+        DynamicObject dy = QueryServiceHelper.queryOne("aos_mkt_cate_pro", str.toString(), builder.toArray());
+        if (dy!=null){
+            Map<String,BigDecimal> cateProport = new HashMap<>();
+            BigDecimal maxProport = BigDecimal.ZERO;
+            //计算每个品类的占比
+            for (String value : selelct) {
+                //占比为空，排除
+                if (FndGlobal.IsNull(dy.get(value))) {
+                    continue;
+                }
+                BigDecimal percentage = dy.getBigDecimal(value);
+                //占比为0，排除
+                if (percentage.compareTo(BigDecimal.ZERO)<=0){
+                    continue;
+                }
+                String cateNumber = value.substring(value.length() - 1);
+                if (maxProport.compareTo(percentage)<0) {
+                    maxProport = percentage;
+                    maxProportCate = cateNumber;
+                }
+                cateProport.put(cateNumber,percentage);
+            }
+            List<String> filterCate = new ArrayList<>(cateProport.keySet());
+            //已经填入的品类数
+            int alreadyPopulated = 0;
+            for (String value : filterCate) {
+                //最后一个品类，最后一个品类用：总数-已经填入的数量；不是最后一个品类：总数*占比
+                boolean lastCate = filterCate.indexOf(value) == filterCate.size() - 1;
+                if (lastCate){
+                    result.put(value,selectQty-alreadyPopulated);
+                }
+                else{
+                    int qty = new BigDecimal(selectQty).multiply(cateProport.get(value)).setScale(0,BigDecimal.ROUND_HALF_UP).intValue();
+                    alreadyPopulated += qty;
+                    result.put(value,qty);
+                }
+            }
+            //最大品类的备用数
+            int maxCateStandQty = selectQty - result.get(maxProportCate);
+            result.put("maxCate",maxCateStandQty);
+        }
+        return maxProportCate;
+    }
+
 
     /**
      * 向活动选品表中添加数据
@@ -102,10 +221,29 @@ public class EventRule {
      */
     private void setItemInfo(){
         //先根据活动库中的品类筛选出合适的物料
+        ItemCategoryDao categoryDao = new ItemCategoryDaoImpl();
         QFBuilder builder = new QFBuilder();
         DynamicObjectCollection cateRowEntity = typEntity.getDynamicObjectCollection("aos_entryentity1");
+
+        cateItem = new HashMap<>();
+        StringJoiner str = new StringJoiner(",");
+        str.add("material");
+        str.add("group.name gname");
+        str.add("group.number gnumber");
         for (DynamicObject row : cateRowEntity) {
-//            builder.add("")
+            builder.clear();
+            if (row.get("aos_cate")!=null) {
+                builder.add("group","=",row.getDynamicObject("aos_cate").getPkValue());
+            }
+            if (FndGlobal.IsNotNull(row.get("aos_name"))){
+                builder.add("material.name","=",row.getString("aos_name"));
+            }
+            if (builder.size()>0){
+                DynamicObjectCollection cateResults = categoryDao.queryData(str.toString(), builder);
+                for (DynamicObject result : cateResults) {
+                    cateItem.put(result.getString("material"),result);
+                }
+            }
         }
 
 
@@ -119,6 +257,7 @@ public class EventRule {
         selectFields.add("aos_contryentry.aos_seasonseting.name season");
         selectFields.add("aos_contryentry.aos_is_saleout aos_is_saleout");
         QFilter filter = new QFilter("aos_contryentry.aos_nationality","=",orgEntity.getPkValue());
+        filter.and(new QFilter("id",QFilter.in,cateItem.keySet()));
         itemInfoes = itemDao.listItemObj(selectFields.toString(),filter,null);
     }
 
