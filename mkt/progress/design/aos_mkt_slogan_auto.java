@@ -43,6 +43,7 @@ public class aos_mkt_slogan_auto extends AbstractTask {
 					continue;
 				}
 				aos_mkt_sloganO.set("aos_status", "翻译");
+				aos_mkt_sloganO.set("aos_osubmit", "系统提交");
 				aos_mkt_sloganO.set("aos_user", aos_mkt_progorguser.get("aos_oueditor"));
 				SaveServiceHelper.saveOperate("aos_mkt_slogan", new DynamicObject[] { aos_mkt_sloganO },
 						OperateOption.create());

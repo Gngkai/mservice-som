@@ -411,6 +411,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
 		else 
 			this.getModel().setValue("aos_user", this.getModel().getValue("aos_oueditor"));
 		this.getModel().setValue("aos_status", "翻译");
+		this.getModel().setValue("aos_osubmit", "人为提交");
 //		MKTCom.SendGlobalMessage(messageId + "", "aos_mkt_slogan", ReqFId + "", billno + "", "Slogan-翻译");
 	}
 
