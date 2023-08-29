@@ -269,7 +269,7 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 		//获取活动规则
 		DynamicObject acTypEntity = BusinessDataServiceHelper.loadSingle(type.getString("id"), "aos_sal_act_type_p");
 		EventRule eventRule = new EventRule(acTypEntity,actPlanEntity);
-		eventRule.implementFormula();
+
 	}
 
 	// 根据国别+活动类型选择代码执行

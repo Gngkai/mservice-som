@@ -31,6 +31,8 @@ import kd.fi.bd.util.QFBuilder;
 import mkt.common.MKTCom;
 import sal.act.ActShopProfit.aos_sal_act_from;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -42,29 +44,41 @@ import java.util.*;
  * @action  活动规则信息
  */
 public class EventRule {
-    private static Log logger = LogFactory.getLog("mkt.act.rule.EventRule");
+    private static final Log logger = LogFactory.getLog("mkt.act.rule.EventRule");
     //活动库单据
-    private DynamicObject typEntity,actPlanEntity;
+    private final DynamicObject typEntity;
+    private final DynamicObject actPlanEntity;
     //活动库每行规则的执行结果，key：project+seq,value: (item:result)
-    private Map<String,Map<String,Boolean>> rowResults;
+    private final Map<String,Map<String,Boolean>> rowResults;
     //国别
-    private DynamicObject orgEntity;
+    private final DynamicObject orgEntity;
     //国别下所有的物料，方便后续筛选
     private DynamicObjectCollection itemInfoes;
     //日志
-    private  FndLog fndLog;
+    private final FndLog fndLog;
     //物料对应的品类
     private Map<String,DynamicObject> cateItem;
     EventRule(DynamicObject typeEntity,DynamicObject dy_main){
-        this.typEntity = typeEntity;
-        this.actPlanEntity = dy_main;
-        orgEntity = dy_main.getDynamicObject("aos_nationality");
-        //获取用于计算的物料
-        setItemInfo();
-        //解析行公式
-        rowResults = new HashMap<>();
-        this.fndLog = FndLog.init("活动选品明细导入", actPlanEntity.getString("billno"));
-        parsingRowRule();
+        try {
+            this.typEntity = typeEntity;
+            this.actPlanEntity = dy_main;
+            orgEntity = dy_main.getDynamicObject("aos_nationality");
+            //获取用于计算的物料
+            setItemInfo();
+            //解析行公式
+            rowResults = new HashMap<>();
+            this.fndLog = FndLog.init("活动选品明细导入", actPlanEntity.getString("billno"));
+            parsingRowRule();
+            implementFormula();
+        }catch (Exception e){
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            if (logger.isErrorEnabled()) {
+                logger.error(sw.toString());
+            }
+            throw new KDException(new ErrorCode("活动选品明细导入异常",e.getMessage()));
+        }
+
     }
 
     /**
@@ -121,7 +135,7 @@ public class EventRule {
                 parameters.put(key,rowResults.get(key).get(itemId));
             }
             //执行公式
-            Boolean result = Boolean.parseBoolean(FormulaEngine.execExcelFormula(ruleValue, parameters).toString());
+            boolean result = Boolean.parseBoolean(FormulaEngine.execExcelFormula(ruleValue, parameters).toString());
             if (result){
                 //正常填入该品类
                 if (fillType.equals("A")){
@@ -139,7 +153,7 @@ public class EventRule {
         int missQty = selectQty - filterItem.size();
         int fillBackupDataSize = backupData.size();
         //确定填入的长度
-        missQty = missQty < fillBackupDataSize ? missQty:fillBackupDataSize;
+        missQty = Math.min(missQty, fillBackupDataSize);
         for (int index = 0; index < missQty; index++) {
             filterItem.add(backupData.get(index));
         }
@@ -215,7 +229,7 @@ public class EventRule {
         if (FndGlobal.IsNotNull(typEntity.get("aos_qty"))) {
             selectQty = Integer.parseInt(typEntity.getString("aos_qty"));
         }
-        selectQty = selectQty < filterItem.size() ? selectQty:filterItem.size();
+        selectQty = Math.min(selectQty, filterItem.size());
         DynamicObjectCollection dyc = actPlanEntity.getDynamicObjectCollection("aos_sal_actplanentity");
         for (int index = 0; index <selectQty; index++) {
             DynamicObject itemInfo = filterItem.get(index);
@@ -498,7 +512,7 @@ public class EventRule {
         itemSaleDay = new HashMap<>(itemInfoes.size());
         for (DynamicObject itemInfoe : itemInfoes) {
             String itemID = itemInfoe.getString("id");
-            int stock = itemSotck.getOrDefault(itemID, 0);
+            int stock = itemSotck.getOrDefault(Long.parseLong(itemID), 0);
             BigDecimal sale = itemAverageSale.getOrDefault(itemID, BigDecimal.ZERO);
             int day = service.calAvailableDays(orgEntity.getLong("id"), Long.parseLong(itemID), stock, sale, startdate);
             itemSaleDay.put(itemID,day);
@@ -625,7 +639,7 @@ public class EventRule {
     private Map<String,Map<String, BigDecimal>> itemAverage;
     /**
      * 国别日均
-     * @param day
+     * @param day 日期
      */
     private void setItemAverageByDay(int day){
         if (itemAverage == null){
@@ -695,7 +709,7 @@ public class EventRule {
         BigDecimal saleDay;
         for (int monthIndex = 0; monthIndex < months+1; monthIndex++) {
             //最后一个之前的时间如 总时间是 7.20-9.21，这段期间为 7.20-8.1 ; 8.1-9.1
-            if (monthIndex<monthIndex){
+            if (monthIndex<months){
                 //结束时间
                 endDate = endDate.plusMonths(1).withDayOfMonth(1);
                 monthValue = startDate.getMonthValue();
@@ -730,7 +744,7 @@ public class EventRule {
         for (DynamicObject itemInfoe : itemInfoes) {
             String itemid = itemInfoe.getString("id");
             //海外库存
-            int stock = itemSotck.getOrDefault(itemid, 0);
+            int stock = itemSotck.getOrDefault(Long.parseLong(itemid), 0);
             //在库
             int revenue = itemRevenue.getOrDefault(itemid, 0);
             //活动前的这段时间的销量
@@ -1221,6 +1235,7 @@ public class EventRule {
         //判断是否低动销
         for (DynamicObject itemInfoe : itemInfoes) {
             StringJoiner str = new StringJoiner(" , ");
+            str.add(key);
             //物料id
             String itemId = itemInfoe.getString("id");
             str.add(itemInfoe.getString("number"));
@@ -1392,52 +1407,57 @@ public class EventRule {
             //如果当前日期出于这个阶段中，那么毛利率标准取这个阶段的数据
             if (startDate.before(now) && now.before(endDate)){
                 //圣诞节 季初
-                if (type.equals("CH-1")) {
-                    seasonStage.put("CHRISTMAS","E");
-                }
-                //圣诞 季中
-                else if (type.equals("CH-2")){
-                    seasonStage.put("CHRISTMAS","F");
-                }
-                //圣诞 季末
-                else if (type.equals("CH-3")){
-                    seasonStage.put("CHRISTMAS","G");
-                }
-                //万圣节 季初
-                else if (type.equals("HA-E-1") || type.equals("HA-U-1")){
-                    seasonStage.put("HALLOWEEN","E");
-                }
-                //万圣节 季中
-                else if (type.equals("HA-E-2") || type.equals("HA-U-2")){
-                    seasonStage.put("HALLOWEEN","F");
-                }
-                //万圣节 季末
-                else if (type.equals("HA-E-3") || type.equals("HA-U-3")){
-                    seasonStage.put("HALLOWEEN","G");
-                }
-                //春夏品 季初
-                else if (type.equals("SS-1")){
-                    seasonStage.put("SPRING_SUMMER_PRO","E");
-                }
-                //春夏品 季中
-                else if (type.equals("SS-2")){
-                    seasonStage.put("SPRING_SUMMER_PRO","F");
-                }
-                //春夏品 季中
-                else if (type.equals("SS-3")){
-                    seasonStage.put("SPRING_SUMMER_PRO","G");
-                }
-                //秋冬品 季初
-                else if (type.equals("AW-1")){
-                    seasonStage.put("AUTUMN_WINTER_PRO","E");
-                }
-                //秋冬品 季中
-                else if (type.equals("AW-1")){
-                    seasonStage.put("AUTUMN_WINTER_PRO","F");
-                }
-                //秋冬品 季末
-                else if (type.equals("AW-1")){
-                    seasonStage.put("AUTUMN_WINTER_PRO","G");
+                switch (type) {
+                    case "CH-1":
+                        seasonStage.put("CHRISTMAS", "E");
+                        break;
+                    //圣诞 季中
+                    case "CH-2":
+                        seasonStage.put("CHRISTMAS", "F");
+                        break;
+                    //圣诞 季末
+                    case "CH-3":
+                        seasonStage.put("CHRISTMAS", "G");
+                        break;
+                    //万圣节 季初
+                    case "HA-E-1":
+                    case "HA-U-1":
+                        seasonStage.put("HALLOWEEN", "E");
+                        break;
+                    //万圣节 季中
+                    case "HA-E-2":
+                    case "HA-U-2":
+                        seasonStage.put("HALLOWEEN", "F");
+                        break;
+                    //万圣节 季末
+                    case "HA-E-3":
+                    case "HA-U-3":
+                        seasonStage.put("HALLOWEEN", "G");
+                        break;
+                    //春夏品 季初
+                    case "SS-1":
+                        seasonStage.put("SPRING_SUMMER_PRO", "E");
+                        break;
+                    //春夏品 季中
+                    case "SS-2":
+                        seasonStage.put("SPRING_SUMMER_PRO", "F");
+                        break;
+                    //春夏品 季中
+                    case "SS-3":
+                        seasonStage.put("SPRING_SUMMER_PRO", "G");
+                        break;
+                    //秋冬品 季初
+                    case "AW-1":
+                        seasonStage.put("AUTUMN_WINTER_PRO", "E");
+                        break;
+                    //秋冬品 季中
+                    case "AW-2":
+                        seasonStage.put("AUTUMN_WINTER_PRO", "F");
+                        break;
+                    //秋冬品 季末
+                    case "AW-3":
+                        seasonStage.put("AUTUMN_WINTER_PRO", "G");
+                        break;
                 }
             }
         }
