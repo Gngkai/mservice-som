@@ -652,9 +652,11 @@ public class aos_mkt_popppc_init extends AbstractTask {
 				// 7日转化率
 				BigDecimal aos_rpt_roi = BigDecimal.ZERO;
 				BigDecimal aos_clicks = BigDecimal.ZERO;
-				if (SkuRptMap != null && ((BigDecimal) SkuRptMap.get("aos_clicks")).compareTo(BigDecimal.ZERO) != 0) {
-					aos_clicks = (BigDecimal) SkuRptMap.get("aos_clicks");
-					aos_rpt_roi = ((BigDecimal) SkuRptMap.get("aos_total_order")).divide(aos_clicks, 2,
+				
+				Map<String, Object> SkuRptSerialMap = SkuRpt_Serial.get(org_id + "~" + aos_productno+ "-AUTO");// Sku报告
+				if (SkuRptSerialMap != null && ((BigDecimal) SkuRptSerialMap.get("aos_clicks")).compareTo(BigDecimal.ZERO) != 0) {
+					aos_clicks = (BigDecimal) SkuRptSerialMap.get("aos_clicks");
+					aos_rpt_roi = ((BigDecimal) SkuRptSerialMap.get("aos_total_order")).divide(aos_clicks, 2,
 							BigDecimal.ROUND_HALF_UP);
 				}
 
@@ -937,7 +939,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
 							RoiType = "h";
 						}
 						// i.圣诞装饰默认差ROI不剔除
-						if ("圣诞装饰".equals(aos_category2)) {
+						if ("圣诞装饰".equals(aos_category2) || "其它节日装饰".equals(aos_category2)) {
 							ROIFlag = false;
 							RoiType = "i";
 						}
@@ -1612,9 +1614,11 @@ public class aos_mkt_popppc_init extends AbstractTask {
 
 				// 7日转化率
 				BigDecimal aos_rpt_roi = BigDecimal.ZERO;
-				if (SkuRptMap != null && ((BigDecimal) SkuRptMap.get("aos_clicks")).compareTo(BigDecimal.ZERO) != 0) {
-					aos_clicks = (BigDecimal) SkuRptMap.get("aos_clicks");
-					aos_rpt_roi = ((BigDecimal) SkuRptMap.get("aos_total_order")).divide(aos_clicks, 2,
+				
+				Map<String, Object> SkuRptSerialMap = SkuRpt_Serial.get(org_id + "~" + aos_productno);// Sku报告
+				if (SkuRptSerialMap != null && ((BigDecimal) SkuRptSerialMap.get("aos_clicks")).compareTo(BigDecimal.ZERO) != 0) {
+					aos_clicks = (BigDecimal) SkuRptSerialMap.get("aos_clicks");
+					aos_rpt_roi = ((BigDecimal) SkuRptSerialMap.get("aos_total_order")).divide(aos_clicks, 2,
 							BigDecimal.ROUND_HALF_UP);
 				}
 

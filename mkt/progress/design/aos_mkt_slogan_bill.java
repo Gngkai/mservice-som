@@ -404,11 +404,11 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
 				}
 			}
 		}
-	
-		Object aos_oueditor = this.getModel().getValue("aos_oueditor") ;
+
+		Object aos_oueditor = this.getModel().getValue("aos_oueditor");
 		if (FndGlobal.IsNull(aos_oueditor))
 			this.getModel().setValue("aos_user", SYSTEM);
-		else 
+		else
 			this.getModel().setValue("aos_user", this.getModel().getValue("aos_oueditor"));
 		this.getModel().setValue("aos_status", "翻译");
 		this.getModel().setValue("aos_osubmit", "人为提交");
@@ -630,14 +630,17 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
 		Object billno = this.getModel().getValue("billno");// 单据编号
 		Object messageId;
 		Object aos_designer = this.getModel().getValue("aos_designer");
-		DynamicObject aos_mkt_progorguserA = QueryServiceHelper.queryOne("aos_mkt_progorguser", "aos_oueditor",
-				new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2)
-						.and("aos_orgid.number", "=", aos_lang).toArray());
-		if (FndGlobal.IsNull(aos_mkt_progorguserA) || FndGlobal.IsNull(aos_mkt_progorguserA.get("aos_oueditor"))) {
-			fndError.add("国别编辑不存在!");
+
+		if (!"CN".equals(aos_lang)) {
+			DynamicObject aos_mkt_progorguserA = QueryServiceHelper.queryOne("aos_mkt_progorguser", "aos_oueditor",
+					new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2)
+							.and("aos_orgid.number", "=", aos_lang).toArray());
+			if (FndGlobal.IsNull(aos_mkt_progorguserA) || FndGlobal.IsNull(aos_mkt_progorguserA.get("aos_oueditor"))) {
+				fndError.add("国别编辑不存在!");
+			}
+			this.getModel().setValue("aos_oueditor", aos_mkt_progorguserA.get("aos_oueditor"));
 		}
-		this.getModel().setValue("aos_oueditor", aos_mkt_progorguserA.get("aos_oueditor"));
-		
+
 		if ("新增".equals(aos_type)) {
 			DynamicObject exist = QueryServiceHelper.queryOne("aos_mkt_slogan", "billno",
 					new QFilter("aos_category1", QCP.equals, aos_category1)

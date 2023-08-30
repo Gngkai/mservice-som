@@ -453,10 +453,10 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 
 				}
 				// 对于置顶位置出价,如果是爆品
-				if (saleOutItem) {
-					ProductRow = sheet.getRow(TopOfSearch);
-					ProductRow = CreateColumn(ProductRow, style, 27, "50%");
-				}
+//				if (saleOutItem) {
+//					ProductRow = sheet.getRow(TopOfSearch);
+//					ProductRow = CreateColumn(ProductRow, style, 27, "50%");
+//				}
 			}
 			aos_mkt_popppc_initS.close();// 保存日志表
 			OperationResult operationrstLog = OperationServiceHelper.executeOperate("save", "aos_sync_log",
@@ -527,13 +527,21 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 		for (DynamicObject aos_entryentity : aos_entryentityS) {
 			String aos_productno = aos_entryentity.getString("aos_productno");
 			BigDecimal roi = SkuRpt.get(aos_productno);
+
+			Date aos_firstindate = aos_entryentity.getDate("aos_firstindate");
+
 			if (FndGlobal.IsNotNull(SkuRpt.get(aos_productno)) && roi.compareTo(PopOrgRoist) < 0) {
 				if (aos_entryentity.getBoolean("aos_special")) {
 					portfolio.put(aos_productno, "aos_special");
 				}
 				if (FndGlobal.IsNull(portfolio.get(aos_productno))
 						&& "Y".equals(aos_entryentity.getString("aos_offline"))) {
-					portfolio.put(aos_productno, "aos_offline");
+					portfolio.put(aos_productno, "aos_special");
+				}
+
+				if ((FndGlobal.IsNotNull(aos_firstindate))
+						&& (FndDate.GetBetweenDays(new Date(), aos_firstindate) < 30)) {
+					portfolio.put(aos_productno, "aos_new");
 				}
 			}
 		}
