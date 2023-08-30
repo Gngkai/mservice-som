@@ -648,12 +648,18 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
             ILocaleString name = cate[0].getLocaleString("name");
             String value_en = name.getLocaleValue_en();
             String[] split = value_en.split(",");
-            if (split.length>0)
+            if (split.length>0){
                 dy_main.set("aos_en_category1",split[0]);
-            if (split.length>1)
+                dy_main.set("aos_category1_name",split[0]);
+            }
+            if (split.length>1){
                 dy_main.set("aos_en_category2",split[1]);
-            if (split.length>2)
+                dy_main.set("aos_category2_name",split[1]);
+            }
+            if (split.length>2){
                 dy_main.set("aos_en_category3",split[2]);
+                dy_main.set("aos_category3_name",split[2]);
+            }
         }
         //设置相关性的英文
         setRelate(dy_main);
