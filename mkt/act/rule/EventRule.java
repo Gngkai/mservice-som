@@ -295,6 +295,7 @@ public class EventRule {
         DynamicObjectCollection rulEntity = typEntity.getDynamicObjectCollection("aos_entryentity2");
         StringBuilder rule = new StringBuilder();
         for (DynamicObject row : rulEntity) {
+            //先拼凑公式
             //序列号
             String seq = row.getString("seq");
             rule.setLength(0);
@@ -379,6 +380,14 @@ public class EventRule {
     }
 
     private Map<String,String> rowRuleName;
+
+    /**
+     * 判断公式的类型并且执行
+     * @param rule      公式
+     * @param dataType  公式类型
+     * @param row       公式行
+     * @return  每个物料对应的执行结果
+     */
     private Map<String,Boolean> cachedData (String rule,String dataType,DynamicObject row){
         Map<String,Boolean> result = new HashMap<>(itemInfoes.size());
         //获取下拉列表
@@ -472,6 +481,7 @@ public class EventRule {
         }
         itemSotck = new HashMap<>();
         ItemStockDao stockDao = new ItemStockDaoImpl();
+        //获取国别下的所有物料的海外库存
         itemSotck = stockDao.listItemOverSeaStock(orgEntity.getLong("id"));
     }
     /**
@@ -481,15 +491,21 @@ public class EventRule {
      * @param result   结果
      */
     private void getItemStock(String key,String rule,Map<String,Boolean> result){
+        //获取海外库存
         setItemStock();
+        //执行公式的参数
         Map<String,Object> paramars = new HashMap<>();
+        //遍历物料
         for (DynamicObject itemInfoe : itemInfoes)
         {
             paramars.clear();
             String itemid = itemInfoe.getString("id");
+            //获取该物料的库存
             Object value = itemSotck.getOrDefault(Long.parseLong(itemid),0);
+            //添加日志
             fndLog.add(itemInfoe.getString("number")+"  "+rowRuleName.get(key)+" : "+value);
             paramars.put(key,value);
+            //执行公式并且将执行结果添加到返回结果里面
             result.put(itemid,Boolean.parseBoolean(FormulaEngine.execExcelFormula(rule,paramars).toString()));
         }
     }
@@ -638,7 +654,7 @@ public class EventRule {
 
     private Map<String,Map<String, BigDecimal>> itemAverage;
     /**
-     * 国别日均
+     * 获取国别日均
      * @param day 日期
      */
     private void setItemAverageByDay(int day){
@@ -652,14 +668,17 @@ public class EventRule {
             if (number.equals("US") || number.equals("CA")){
                 instance.add(Calendar.DATE,-1);
             }
+            //设置开始时间和结束时间
             Date endDate = instance.getTime();
             instance.add(Calendar.DATE,-day);
             Date startDate = instance.getTime();
             OrderLineDao orderLineDao = new OrderLineDaoImpl();
+            //获取销量
             Map<Long, Integer> saleInfo = orderLineDao.listItemSalesByOrgId(orgEntity.getLong("id"), startDate, endDate);
             Map<String,BigDecimal> itemSale = new HashMap<>(saleInfo.size());
             if (day!=0){
                 BigDecimal bd_day = new BigDecimal(day);
+                //计算日均
                 for (Map.Entry<Long, Integer> entry : saleInfo.entrySet()) {
                     BigDecimal value = new BigDecimal(entry.getValue()).divide(bd_day,4,BigDecimal.ROUND_HALF_UP);
                     itemSale.put(entry.getKey().toString(),value);
@@ -946,7 +965,7 @@ public class EventRule {
         }
     }
     /**
-     * 执行关于定价 公式
+     * 执行关于活动价格 公式
      * @param key      参数名
      * @param rule     公式
      * @param result   结果
@@ -993,28 +1012,35 @@ public class EventRule {
     }
 
     private Map<String,Map<Long,Integer>> itemShopSale;
+
+    /**
+     * 计算店铺销量
+     * @param day 天数
+     */
     private void setItemShopSale(int day){
         if (itemShopSale==null) {
             itemShopSale = new HashMap<>();
         }
+        //判断传入天数天数是否为空
         if (FndGlobal.IsNull(day))
             return;
+        //判断这种天数的销量是否已经计算过
         if (itemShopSale.containsKey(String.valueOf(day)))
             return;
-
+        //设置查找销量的开始时间和结束时间
         long orgID = orgEntity.getLong("id");
         long shopId = actPlanEntity.getDynamicObject("aos_shop").getLong("id");
         Calendar instance = Calendar.getInstance();
         Date end = instance.getTime();
         instance.add(Calendar.DATE,-day);
         Date start = instance.getTime();
-
+        //计算销量
         OrderLineDao orderLineDao = new OrderLineDaoImpl();
         Map<Long, Integer> result = orderLineDao.listItemSales(orgID, null, shopId, start, end);
         itemShopSale.put(String.valueOf(day),result);
     }
     /**
-     * 执行关于店铺历史销量
+     * 执行关于店铺历史销量 公式
      * @param key      参数名
      * @param rule     公式
      * @param result   结果
@@ -1038,6 +1064,9 @@ public class EventRule {
     }
 
     private Map<String,String> itemUnsaleTyep;
+    /**
+     * 查找物料滞销类型
+     */
     private void setItemUnsale(){
         if (itemUnsaleTyep!=null) {
             return;
@@ -1075,6 +1104,9 @@ public class EventRule {
     }
 
     private Map<String,String> itemWeekUnsale;
+    /**
+     * 获取物料周滞销类型数据
+     */
     private void setItemWeekUnsale(){
         if (itemWeekUnsale!=null) {
             return;
@@ -1529,7 +1561,7 @@ public class EventRule {
 
     private Map<String,BigDecimal> itemWebPrice;
     /**
-     * 计算店铺当前价格
+     * 计算官网当前价格
      */
     private void setWebPrice(){
         if (itemWebPrice!=null) {
@@ -1565,7 +1597,7 @@ public class EventRule {
 
     private Map<String,BigDecimal> itemVrpPrice;
     /**
-     * 计算店铺当前价格
+     * 计算Vrp价格
      */
     private void setVrpPrice(){
         if (itemVrpPrice!=null) {
