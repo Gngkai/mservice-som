@@ -55,7 +55,8 @@ public class aos_mkt_popadjst_init extends AbstractTask {
 	}
 
 	public static void executerun(Map<String, Object> param) {
-		// 获取传入国别参数
+//		int p_hour = (int) param.get("param");
+		// 获取传入国别参数 
 		Object p_ou_code = param.get("p_ou_code");
 		System.out.println("=====into 出价调整销售ST=====");
 		System.out.println("p_ou_code =" + p_ou_code);

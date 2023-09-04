@@ -804,7 +804,7 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
 		this.getModel().setValue("aos_project_l", "上月", 0);
 		this.getModel().setValue("aos_project_l", "本月", 1);
 		this.getModel().setValue("aos_project_l", "环比", 2);
-		this.getView().invokeOperation("save");
+//		this.getView().invokeOperation("save");
 	}
 
 	/**

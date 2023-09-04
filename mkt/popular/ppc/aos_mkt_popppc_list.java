@@ -495,8 +495,9 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 		calendar.set(Calendar.MINUTE, 0);
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
+		calendar.add(Calendar.DAY_OF_MONTH, -2);
 		Date date_to = calendar.getTime();
-		calendar.add(Calendar.DAY_OF_MONTH, -7);
+		calendar.add(Calendar.DAY_OF_MONTH, -14);
 		Date date_from = calendar.getTime();
 		SimpleDateFormat writeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);// 日期格式化
 		String date_from_str = writeFormat.format(date_from);
@@ -527,9 +528,7 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 		for (DynamicObject aos_entryentity : aos_entryentityS) {
 			String aos_productno = aos_entryentity.getString("aos_productno");
 			BigDecimal roi = SkuRpt.get(aos_productno);
-
 			Date aos_firstindate = aos_entryentity.getDate("aos_firstindate");
-
 			if (FndGlobal.IsNotNull(SkuRpt.get(aos_productno)) && roi.compareTo(PopOrgRoist) < 0) {
 				if (aos_entryentity.getBoolean("aos_special")) {
 					portfolio.put(aos_productno, "aos_special");
@@ -538,7 +537,6 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 						&& "Y".equals(aos_entryentity.getString("aos_offline"))) {
 					portfolio.put(aos_productno, "aos_special");
 				}
-
 				if ((FndGlobal.IsNotNull(aos_firstindate))
 						&& (FndDate.GetBetweenDays(new Date(), aos_firstindate) < 30)) {
 					portfolio.put(aos_productno, "aos_new");
@@ -557,7 +555,7 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 		DynamicObject aos_mkt_popular_ppc = BusinessDataServiceHelper.loadSingle(fid, "aos_mkt_popular_ppc");
 		DynamicObjectCollection aos_entryentityS = aos_mkt_popular_ppc.getDynamicObjectCollection("aos_entryentity");
 		for (DynamicObject aos_entryentity : aos_entryentityS) {
-			BigDecimal aos_roi = aos_entryentity.getBigDecimal("aos_roi");
+			BigDecimal aos_roi = aos_entryentity.getBigDecimal("aos_roi14days"); //TODO 调整为14日
 			String aos_productno = aos_entryentity.getString("aos_productno");
 			Date aos_firstindate = aos_entryentity.getDate("aos_firstindate");
 			BigDecimal aos_rpt_roi = aos_entryentity.getBigDecimal("aos_rpt_roi");

@@ -4,6 +4,7 @@ import common.Cux_Common_Utl;
 import common.fnd.FndDate;
 import common.fnd.FndError;
 import common.fnd.FndGlobal;
+import common.fnd.FndMath;
 import common.fnd.FndMsg;
 import common.sal.util.SalUtil;
 import kd.bos.algo.DataSet;
@@ -51,8 +52,9 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 		this.addItemClickListeners("tbmain");
 		this.addItemClickListeners("aos_generate"); // 生成销售数据
 
-		this.addItemClickListeners("aos_toolbarap"); // 生成销售数据
-		this.addItemClickListeners("aos_batchquery"); // 生成销售数据
+		this.addItemClickListeners("aos_toolbarap");
+		this.addItemClickListeners("aos_batchquery");
+		this.addItemClickListeners("aos_qtycal");
 
 		EntryGrid entryGrid = this.getControl("aos_sal_actplanentity");
 		entryGrid.addFilterChangedListener(this);
@@ -83,7 +85,7 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 				aos_batchclose();
 			} else if ("aos_batchopen".equals(Control)) {
 				aos_batchopen();
-			}  else if ("aos_qtycal".equals(Control)) {
+			} else if ("aos_qtycal".equals(Control)) {
 				// 从新批量设置活动数量
 				batchSetActQty();
 			}
@@ -257,20 +259,20 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 		String shopIdStr = aos_shop.getPkValue().toString();
 		String orgIdStr = aos_nationality.getPkValue().toString();
 		HashMap<String, Integer> itemShopMap = getItemShopQty(orgIdStr);
-		DynamicObjectCollection aos_sal_actplanentityS = aos_act_select_plan
-				.getDynamicObjectCollection("aos_sal_actplanentity");
+		DynamicObjectCollection aos_sal_actplanentityS = this.getModel().getEntryEntity("aos_sal_actplanentity");
 		int size = aos_sal_actplanentityS.size();
+		FndMsg.debug("size:" + size);
 		int count = 0;
 		for (DynamicObject aos_sal_actplanentity : aos_sal_actplanentityS) {
 			FndMsg.debug(count++ + "/" + size);
 			DynamicObject aos_itemnum = aos_sal_actplanentity.getDynamicObject("aos_itemnum");
 			Date aos_l_startdate = aos_sal_actplanentity.getDate("aos_l_startdate");
 			Date aos_enddate = aos_sal_actplanentity.getDate("aos_enddate");
-			int betweenDays = FndDate.GetBetweenDays(aos_l_startdate, aos_enddate);
-
+			int betweenDays = FndDate.GetBetweenDays(aos_enddate, aos_l_startdate);
 			String itemIdStr = aos_itemnum.getPkValue().toString();
 			DynamicObjectCollection queryLastThreeS = QueryServiceHelper.query("aos_act_select_plan",
-					"aos_sal_actplanentity.aos_actproid_salqty aos_actproid_salqty",
+					"aos_sal_actplanentity.aos_actproid_salqty aos_actproid_salqty,"
+							+ "aos_sal_actplanentity.aos_actbefore_salqty aos_actbefore_salqty",
 					new QFilter("aos_nationality.id", QCP.equals, orgIdStr).and("id", QCP.not_equals, fid)
 							.and("aos_sal_actplanentity.aos_itemnum.id", QCP.equals, itemIdStr)
 							.and("aos_acttype.id", QCP.equals, aos_acttype.getPkValue().toString()).toArray(),
@@ -281,9 +283,12 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 			if (FndGlobal.IsNotNull(itemShopMap) && FndGlobal.IsNotNull(itemShopMap.get(key)))
 				hisQty = itemShopMap.get(key);
 			if (queryLastThreeS.size() == 3) {
-				for (DynamicObject queryLastThree : queryLastThreeS)
-					aos_actqty = aos_actqty.add(BigDecimal.valueOf(queryLastThree.getInt("aos_actproid_salqty")));
-				aos_actqty = aos_actqty.divide(BigDecimal.valueOf(3), 2, BigDecimal.ROUND_HALF_UP)
+				for (DynamicObject queryLastThree : queryLastThreeS) {
+					aos_actqty = aos_actqty.add(BigDecimal.valueOf(queryLastThree.getInt("aos_actproid_salqty")))
+							.subtract(BigDecimal.valueOf(queryLastThree.getInt("aos_actbefore_salqty")));
+				}
+				aos_actqty = FndMath
+						.max(aos_actqty.divide(BigDecimal.valueOf(3), 2, BigDecimal.ROUND_HALF_UP), BigDecimal.ZERO)
 						.add(BigDecimal.valueOf(hisQty)).multiply(BigDecimal.valueOf(betweenDays));
 			} else {
 				aos_actqty = BigDecimal.valueOf(hisQty).multiply(BigDecimal.valueOf(1.1))
@@ -292,6 +297,7 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 			aos_sal_actplanentity.set("aos_actqty", aos_actqty);
 		}
 		this.getView().updateView();
+		this.getView().showSuccessNotification("批量计算" + size + "条活动数量成功!");
 	}
 
 	/**

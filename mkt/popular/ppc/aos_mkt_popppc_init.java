@@ -195,6 +195,11 @@ public class aos_mkt_popppc_init extends AbstractTask {
 			byte[] serialize_skurptSerial7 = cache.getByteValue("mkt_skurptSerial7"); // SKU报告系列7日
 			HashMap<String, Map<String, Object>> SkuRpt_Serial = SerializationUtils
 					.deserialize(serialize_skurptSerial7);
+
+			byte[] serialize_skurptSerial14 = cache.getByteValue("mkt_skurptSerial14"); // SKU报告系列7日
+			HashMap<String, Map<String, Object>> SkuRpt_Serial14 = SerializationUtils
+					.deserialize(serialize_skurptSerial14);
+
 			byte[] serialize_skurpt3Serial = cache.getByteValue("mkt_skurpt3Serial"); // SKU报告系列近3日
 			HashMap<String, Map<String, Map<String, Object>>> SkuRpt3Serial = SerializationUtils
 					.deserialize(serialize_skurpt3Serial);
@@ -652,9 +657,10 @@ public class aos_mkt_popppc_init extends AbstractTask {
 				// 7日转化率
 				BigDecimal aos_rpt_roi = BigDecimal.ZERO;
 				BigDecimal aos_clicks = BigDecimal.ZERO;
-				
-				Map<String, Object> SkuRptSerialMap = SkuRpt_Serial.get(org_id + "~" + aos_productno+ "-AUTO");// Sku报告
-				if (SkuRptSerialMap != null && ((BigDecimal) SkuRptSerialMap.get("aos_clicks")).compareTo(BigDecimal.ZERO) != 0) {
+
+				Map<String, Object> SkuRptSerialMap = SkuRpt_Serial.get(org_id + "~" + aos_productno + "-AUTO");// Sku报告
+				if (SkuRptSerialMap != null
+						&& ((BigDecimal) SkuRptSerialMap.get("aos_clicks")).compareTo(BigDecimal.ZERO) != 0) {
 					aos_clicks = (BigDecimal) SkuRptSerialMap.get("aos_clicks");
 					aos_rpt_roi = ((BigDecimal) SkuRptSerialMap.get("aos_total_order")).divide(aos_clicks, 2,
 							BigDecimal.ROUND_HALF_UP);
@@ -895,7 +901,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
 							RoiType = "a";
 						}
 						// b.7日在线 秋冬品7日ROI<3； 所有秋冬
-						if (Online7Days && AutumnWinterFlag && Roi7Days.compareTo(BigDecimal.valueOf(3)) < 0) {
+						if (Online7Days && AutumnWinterFlag && Roi14Days.compareTo(BigDecimal.valueOf(3)) < 0) {
 							ROIFlag = true;
 							RoiType = "b";
 						}
@@ -919,7 +925,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
 						}
 						// e.秋冬品历史剔除 7月ROI> 8 加回
 						if (AutumnWinterFlag && roiItemSet.contains(aos_itemnumer)
-								&& Roi7Days.compareTo(BigDecimal.valueOf(8)) > 0) {
+								&& Roi14Days.compareTo(BigDecimal.valueOf(8)) > 0) {
 							ROIFlag = false;
 							RoiType = "e";
 						}
@@ -1008,7 +1014,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
 						}
 
 						// 差转化率剔除
-						if (aos_rpt_roi.compareTo(exRateLowSt) <= 0 && Roi7Days.compareTo(BigDecimal.valueOf(8)) < 0
+						if (aos_rpt_roi.compareTo(exRateLowSt) <= 0 && Roi14Days.compareTo(BigDecimal.valueOf(8)) < 0
 								&& aos_clicks.compareTo(HighClick) > 0 && exFlag) {
 							InsertData(aos_entryentityS, insert_map, "差转化率剔除", roiMap);
 							log.add(aos_itemnumer + " 差转化率自动剔除");
@@ -1199,8 +1205,8 @@ public class aos_mkt_popppc_init extends AbstractTask {
 				// =====结束是否新系列新组判断=====
 
 				// =====Start 出价&预算 参数=====
-				Map<String, Object> SkuRptMap = SkuRpt.get(org_id + "~" + item_id);// Sku报告7日
-				Map<String, Object> SkuRptMap3 = SkuRpt3.get(org_id + "~" + item_id);// Sku报告3日
+				Map<String, Object> SkuRptMap = SkuRpt14.get(org_id + "~" + item_id);// Sku报告14日 原为7日
+				Map<String, Object> SkuRptMap3 = SkuRpt.get(org_id + "~" + item_id);// Sku报告7日 原为3日
 				Map<String, Object> PpcYester_Map = PpcYester.get(p_org_id + "~" + item_id);// 默认昨日数据
 				Map<String, Object> PpcYesterSerial_Map = PpcYesterSerial.get(p_org_id + "~" + aos_productno);
 
@@ -1434,7 +1440,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
 
 				BigDecimal Roi7Days_Serial = BigDecimal.ZERO;// 7天ROI 系列维度
 				Map<String, Object> PpcYesterSerial_Map = PpcYesterSerial.get(p_org_id + "~" + aos_productno);
-				Map<String, Object> SkuRptMap_Serial = SkuRpt_Serial.get(org_id + "~" + aos_productno);// Sku报告
+				Map<String, Object> SkuRptMap_Serial = SkuRpt_Serial14.get(org_id + "~" + aos_productno);// Sku报告
 				if (SkuRptMap_Serial != null
 						&& ((BigDecimal) SkuRptMap_Serial.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0)
 					Roi7Days_Serial = ((BigDecimal) SkuRptMap_Serial.get("aos_total_sales"))
@@ -1594,13 +1600,6 @@ public class aos_mkt_popppc_init extends AbstractTask {
 				if (Roi14Days.compareTo(RoiStandard) > 0 && SerialAvaFix.compareTo(StandardFix) > 0)
 					aos_topprice = BigDecimal.valueOf(0.2);
 
-				// 7天订单转化率
-				Map<String, Object> SkuRptMap = SkuRpt.get(org_id + "~" + item_id);// Sku报告
-				BigDecimal Roi7Days = BigDecimal.ZERO;// 7天ROI
-				if (SkuRptMap != null && ((BigDecimal) SkuRptMap.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0)
-					Roi7Days = ((BigDecimal) SkuRptMap.get("aos_total_sales"))
-							.divide((BigDecimal) SkuRptMap.get("aos_spend"), 2, BigDecimal.ROUND_HALF_UP);
-
 				Map<String, Object> SkuRpt3AvgMap = SkuRpt3Avg.get(p_org_id + "~" + item_id);
 				// 曝光3天平均
 				BigDecimal Impress3Avg = BigDecimal.ZERO;
@@ -1614,62 +1613,23 @@ public class aos_mkt_popppc_init extends AbstractTask {
 
 				// 7日转化率
 				BigDecimal aos_rpt_roi = BigDecimal.ZERO;
-				
+
 				Map<String, Object> SkuRptSerialMap = SkuRpt_Serial.get(org_id + "~" + aos_productno);// Sku报告
-				if (SkuRptSerialMap != null && ((BigDecimal) SkuRptSerialMap.get("aos_clicks")).compareTo(BigDecimal.ZERO) != 0) {
+				if (SkuRptSerialMap != null
+						&& ((BigDecimal) SkuRptSerialMap.get("aos_clicks")).compareTo(BigDecimal.ZERO) != 0) {
 					aos_clicks = (BigDecimal) SkuRptSerialMap.get("aos_clicks");
 					aos_rpt_roi = ((BigDecimal) SkuRptSerialMap.get("aos_total_order")).divide(aos_clicks, 2,
 							BigDecimal.ROUND_HALF_UP);
 				}
 
+				// 7天订单转化率
+				Map<String, Object> SkuRptMap = SkuRpt.get(org_id + "~" + item_id);// Sku报告
 				if (SkuRptMap != null) {
 					aos_avgexp = (BigDecimal) SkuRptMap.get("aos_impressions");
 					aos_clicks = (BigDecimal) SkuRptMap.get("aos_clicks");
 					if (aos_avgexp.compareTo(BigDecimal.ZERO) != 0)
 						aos_exprate = aos_clicks.divide(aos_avgexp, 6, BigDecimal.ROUND_HALF_UP);
 				}
-
-				// 定价
-//				BigDecimal aos_fixvalue = BigDecimal.ZERO;
-//				if (aos_entryentity.getBigDecimal("aos_fixvalue") != null) {
-//					aos_fixvalue = aos_entryentity.getBigDecimal("aos_fixvalue");
-//				}
-				// 季节属性
-//				String aos_season = aos_entryentity.getString("aos_seasonseting");
-//				String seasonpro = "";
-//				// 判断是否为春夏品
-//				if ("夏季产品".equals(aos_season) || "春夏产品".equals(aos_season) || "春季产品".equals(aos_season)) {
-//					seasonpro = "春夏品";
-//				} else if ("常规产品".equals(aos_season) || "春夏常规品".equals(aos_season)) {
-//					seasonpro = "常规品";
-//				}
-
-				// 春夏品，订单转化率>2%，且定价>国别均价；top of search加50%; //如果和另外两条逻辑重复，取大值加；
-//				if ("春夏品".equals(seasonpro) && Roi7Days.compareTo(BigDecimal.valueOf(0.02)) > 0
-//						&& aos_fixvalue.compareTo(StandardFix) > 0) {
-//					if (aos_topprice.compareTo(BigDecimal.valueOf(0.5)) < 0) {
-//						aos_topprice = BigDecimal.valueOf(0.5);
-//					}
-//				}
-
-				// 曝光>标准*3, CTR<0.2%；top of search常规品+20%；春夏+50%；
-//				if (Impress3Avg.compareTo(EXPOSURE.multiply(BigDecimal.valueOf(3))) > 0
-//						&& aos_exprate.compareTo(BigDecimal.valueOf(0.002)) > 0) {
-//					if ("常规品".equals(seasonpro)) {
-//						if (aos_topprice.compareTo(BigDecimal.valueOf(0.2)) < 0) {
-//							aos_topprice = BigDecimal.valueOf(0.2);
-//						}
-//					} else if ("春夏品".equals(seasonpro)) {
-//						if (aos_topprice.compareTo(BigDecimal.valueOf(0.5)) < 0) {
-//							aos_topprice = BigDecimal.valueOf(0.5);
-//						}
-//					}
-//				}
-
-				// 系列SKU7天转化率>国别好标准，且7天点击数>50，置顶增加20%
-//				if () {
-//					
-//				}
 
 				if (Impress3Avg.compareTo(EXPOSURE.multiply(BigDecimal.valueOf(3))) > 0
 						&& aos_exprate.compareTo(BigDecimal.valueOf(0.002)) > 0) {
