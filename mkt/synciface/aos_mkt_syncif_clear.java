@@ -67,7 +67,8 @@ public class aos_mkt_syncif_clear extends AbstractTask {
 		filter_date = new QFilter("aos_date", "<=", Before7);
 		filters = new QFilter[] { filter_date };
 		DeleteServiceHelper.delete("aos_mkt_pop_ppcst", filters);
-
+		DeleteServiceHelper.delete("aos_mkt_ppcst_data", filters);
+		
 		/** 活动选品查询 **/
 		DeleteServiceHelper.delete("aos_mkt_actquery",null);
 	}

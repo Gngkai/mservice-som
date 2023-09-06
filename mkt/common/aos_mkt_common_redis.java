@@ -57,6 +57,9 @@ public class aos_mkt_common_redis {
 			init_ppcyesterSerial();// PPC昨日 系列维度
 			init_skurptDetailSerial();// SKU推广报告1日系列
 			init_ppcdateSerial();
+
+			init_skurptSerial14();
+			init_skurpt14Detail_total();
 		}
 		if (type.equals("ppcadj")) {
 			init_poporg();// 营销国别参数
@@ -108,7 +111,7 @@ public class aos_mkt_common_redis {
 		String date_from_str = writeFormat.format(date_from);
 		String date_to_str = writeFormat.format(date_to);
 		QFilter filter_date_from = new QFilter("aos_entryentity.aos_date_l", ">=", date_from_str);
-		QFilter filter_date_to = new QFilter("aos_entryentity.aos_date_l", "<=", date_to_str);
+		QFilter filter_date_to = new QFilter("aos_entryentity.aos_date_l", "<", date_to_str);
 		QFilter filter_date = new QFilter("aos_date", "=", date_to_str);
 		QFilter filter_match = new QFilter("aos_entryentity.aos_cam_name", "like", "%-AUTO%");
 		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_date, filter_match };
@@ -238,15 +241,18 @@ public class aos_mkt_common_redis {
 		calendar.set(Calendar.MINUTE, 0);
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
+		Date aos_date = calendar.getTime();
+		calendar.add(Calendar.DAY_OF_MONTH, -2);
 		Date date_to = calendar.getTime();
 		calendar.add(Calendar.DAY_OF_MONTH, -14);
 		Date date_from = calendar.getTime();
 		SimpleDateFormat writeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);// 日期格式化
 		String date_from_str = writeFormat.format(date_from);
 		String date_to_str = writeFormat.format(date_to);
+		String aos_date_str = writeFormat.format(aos_date);
 		QFilter filter_date_from = new QFilter("aos_entryentity.aos_date_l", ">=", date_from_str);
-		QFilter filter_date_to = new QFilter("aos_entryentity.aos_date_l", "<=", date_to_str);
-		QFilter filter_date = new QFilter("aos_date", "=", date_to_str);
+		QFilter filter_date_to = new QFilter("aos_entryentity.aos_date_l", "<", date_to_str);
+		QFilter filter_date = new QFilter("aos_date", "=", aos_date_str);
 		QFilter filter_match = new QFilter("aos_entryentity.aos_cam_name", "like", "%-AUTO%");
 		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_date, filter_match };
 		String SelectColumn = "aos_orgid," + "aos_entryentity.aos_ad_sku.aos_productno||'-AUTO' aos_productno,"
@@ -330,7 +336,8 @@ public class aos_mkt_common_redis {
 		QFilter filter_date = new QFilter("aos_date", "=", date_to_str);
 		QFilter filter_match = new QFilter("aos_entryentity.aos_cam_name", "like", "%-AUTO%");
 		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_date, filter_match };
-		String SelectColumn = "aos_orgid," + "aos_entryentity.aos_cam_name aos_productno," + "aos_entryentity.aos_spend aos_spend";
+		String SelectColumn = "aos_orgid," + "aos_entryentity.aos_cam_name aos_productno,"
+				+ "aos_entryentity.aos_spend aos_spend";
 		DataSet aos_base_skupoprptS = QueryServiceHelper.queryDataSet(
 				"aos_mkt_common_redis" + "." + "init_skurptDetail", "aos_base_skupoprpt", SelectColumn, filters, null);
 		String[] GroupBy = new String[] { "aos_orgid", "aos_productno" };
@@ -353,6 +360,9 @@ public class aos_mkt_common_redis {
 		calendar.set(Calendar.MINUTE, 0);
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
+
+		Date aos_date = calendar.getTime();
+		calendar.add(Calendar.DAY_OF_MONTH, -2);
 		Date date_to = calendar.getTime();
 		calendar.add(Calendar.DAY_OF_MONTH, -3);
 		Date date_from = calendar.getTime();
@@ -360,9 +370,10 @@ public class aos_mkt_common_redis {
 		SimpleDateFormat DF = new SimpleDateFormat("yyyy-MM-dd");
 		String date_from_str = writeFormat.format(date_from);
 		String date_to_str = writeFormat.format(date_to);
+		String aos_datestr = writeFormat.format(aos_date);
 		QFilter filter_date_from = new QFilter("aos_entryentity.aos_date_l", ">=", date_from_str);
-		QFilter filter_date_to = new QFilter("aos_entryentity.aos_date_l", "<=", date_to_str);
-		QFilter filter_date = new QFilter("aos_date", "=", date_to_str);
+		QFilter filter_date_to = new QFilter("aos_entryentity.aos_date_l", "<", date_to_str);
+		QFilter filter_date = new QFilter("aos_date", "=", aos_datestr);
 		QFilter filter_match = new QFilter("aos_entryentity.aos_cam_name", "like", "%-AUTO%");
 		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_date, filter_match };
 		String SelectColumn = "aos_orgid," + "aos_entryentity.aos_ad_sku.aos_productno||'-AUTO' aos_productno,"
@@ -419,35 +430,90 @@ public class aos_mkt_common_redis {
 		calendar.set(Calendar.MINUTE, 0);
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
+
+		Date aos_date = calendar.getTime();
+		calendar.add(Calendar.DAY_OF_MONTH, -2);
 		Date date_to = calendar.getTime();
 		calendar.add(Calendar.DAY_OF_MONTH, -7);
 		Date date_from = calendar.getTime();
 		SimpleDateFormat writeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);// 日期格式化
 		String date_from_str = writeFormat.format(date_from);
 		String date_to_str = writeFormat.format(date_to);
+		String aos_date_str = writeFormat.format(aos_date);
 		QFilter filter_date_from = new QFilter("aos_entryentity.aos_date_l", ">=", date_from_str);
-		QFilter filter_date_to = new QFilter("aos_entryentity.aos_date_l", "<=", date_to_str);
-		QFilter filter_date = new QFilter("aos_date", "=", date_to_str);
+		QFilter filter_date_to = new QFilter("aos_entryentity.aos_date_l", "<", date_to_str);
+		QFilter filter_date = new QFilter("aos_date", "=", aos_date_str);
 		QFilter filter_match = new QFilter("aos_entryentity.aos_cam_name", "like", "%-AUTO%");
 		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_date, filter_match };
 		String SelectColumn = "aos_orgid," + "aos_entryentity.aos_ad_sku.aos_productno||'-AUTO' aos_productno,"
-				+ "aos_entryentity.aos_spend aos_spend," + "aos_entryentity.aos_total_sales aos_total_sales";
+				+ "aos_entryentity.aos_spend aos_spend," + "aos_entryentity.aos_total_sales aos_total_sales,"
+				+ "aos_entryentity.aos_clicks aos_clicks,aos_entryentity.aos_total_order aos_total_order";
 		DataSet aos_base_skupoprptS = QueryServiceHelper.queryDataSet("aos_mkt_common_redis" + "." + "init_skurpt",
 				"aos_base_skupoprpt", SelectColumn, filters, null);
 		String[] GroupBy = new String[] { "aos_orgid", "aos_productno" };
-		aos_base_skupoprptS = aos_base_skupoprptS.groupBy(GroupBy).sum("aos_spend").sum("aos_total_sales").finish();
+		aos_base_skupoprptS = aos_base_skupoprptS.groupBy(GroupBy).sum("aos_spend").sum("aos_total_sales")
+				.sum("aos_clicks").sum("aos_total_order").finish();
 		while (aos_base_skupoprptS.hasNext()) {
 			Row aos_base_skupoprpt = aos_base_skupoprptS.next();
 			HashMap<String, Object> Info = new HashMap<>();
 			Info.put("aos_spend", aos_base_skupoprpt.get("aos_spend"));
 			Info.put("aos_total_sales", aos_base_skupoprpt.get("aos_total_sales"));
+
+			Info.put("aos_clicks", aos_base_skupoprpt.get("aos_clicks"));
+			Info.put("aos_total_order", aos_base_skupoprpt.get("aos_total_order"));
+
 			SkuRpt.put(aos_base_skupoprpt.getLong("aos_orgid") + "~" + aos_base_skupoprpt.getString("aos_productno"),
 					Info);
 		}
 		aos_base_skupoprptS.close();
 		byte[] serialize_skurpt = SerializationUtils.serialize(SkuRpt);
 		cache.put("mkt_skurptSerial7", serialize_skurpt, 3600);
+	}
 
+	private static void init_skurptSerial14() {
+		HashMap<String, Map<String, Object>> SkuRpt = new HashMap<>();
+		Calendar calendar = Calendar.getInstance();
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
+		calendar.set(Calendar.MILLISECOND, 0);
+		Date aos_date = calendar.getTime();
+		calendar.add(Calendar.DAY_OF_MONTH, -2);
+		Date date_to = calendar.getTime();
+		calendar.add(Calendar.DAY_OF_MONTH, -14);
+		Date date_from = calendar.getTime();
+		SimpleDateFormat writeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);// 日期格式化
+		String date_from_str = writeFormat.format(date_from);
+		String date_to_str = writeFormat.format(date_to);
+		String aos_date_str = writeFormat.format(aos_date);
+		QFilter filter_date_from = new QFilter("aos_entryentity.aos_date_l", ">=", date_from_str);
+		QFilter filter_date_to = new QFilter("aos_entryentity.aos_date_l", "<", date_to_str);
+		QFilter filter_date = new QFilter("aos_date", "=", aos_date_str);
+		QFilter filter_match = new QFilter("aos_entryentity.aos_cam_name", "like", "%-AUTO%");
+		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_date, filter_match };
+		String SelectColumn = "aos_orgid," + "aos_entryentity.aos_ad_sku.aos_productno||'-AUTO' aos_productno,"
+				+ "aos_entryentity.aos_spend aos_spend," + "aos_entryentity.aos_total_sales aos_total_sales,"
+				+ "aos_entryentity.aos_clicks aos_clicks,aos_entryentity.aos_total_order aos_total_order";
+		DataSet aos_base_skupoprptS = QueryServiceHelper.queryDataSet("aos_mkt_common_redis" + "." + "init_skurpt",
+				"aos_base_skupoprpt", SelectColumn, filters, null);
+		String[] GroupBy = new String[] { "aos_orgid", "aos_productno" };
+		aos_base_skupoprptS = aos_base_skupoprptS.groupBy(GroupBy).sum("aos_spend").sum("aos_total_sales")
+				.sum("aos_clicks").sum("aos_total_order").finish();
+		while (aos_base_skupoprptS.hasNext()) {
+			Row aos_base_skupoprpt = aos_base_skupoprptS.next();
+			HashMap<String, Object> Info = new HashMap<>();
+			Info.put("aos_spend", aos_base_skupoprpt.get("aos_spend"));
+			Info.put("aos_total_sales", aos_base_skupoprpt.get("aos_total_sales"));
+
+			Info.put("aos_clicks", aos_base_skupoprpt.get("aos_clicks"));
+			Info.put("aos_total_order", aos_base_skupoprpt.get("aos_total_order"));
+
+			SkuRpt.put(aos_base_skupoprpt.getLong("aos_orgid") + "~" + aos_base_skupoprpt.getString("aos_productno"),
+					Info);
+		}
+		aos_base_skupoprptS.close();
+		byte[] serialize_skurpt = SerializationUtils.serialize(SkuRpt);
+		cache.put("mkt_skurptSerial14", serialize_skurpt, 3600);
 	}
 
 	private static void init_ppcyester7() {
@@ -543,6 +609,8 @@ public class aos_mkt_common_redis {
 		calendar.set(Calendar.MINUTE, 0);
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
+		Date aos_date = calendar.getTime();
+		calendar.add(Calendar.DAY_OF_MONTH, -2);
 		Date date_to = calendar.getTime();
 		calendar.add(Calendar.DAY_OF_MONTH, -7);
 		Date date_from = calendar.getTime();
@@ -550,9 +618,10 @@ public class aos_mkt_common_redis {
 		SimpleDateFormat DF = new SimpleDateFormat("yyyy-MM-dd");
 		String date_from_str = writeFormat.format(date_from);
 		String date_to_str = writeFormat.format(date_to);
+		String aos_datestr = writeFormat.format(aos_date);
 		QFilter filter_date_from = new QFilter("aos_entryentity.aos_date_l", ">=", date_from_str);
-		QFilter filter_date_to = new QFilter("aos_entryentity.aos_date_l", "<=", date_to_str);
-		QFilter filter_date = new QFilter("aos_date", "=", date_to_str);
+		QFilter filter_date_to = new QFilter("aos_entryentity.aos_date_l", "<", date_to_str);
+		QFilter filter_date = new QFilter("aos_date", "=", aos_datestr);
 		QFilter filter_match = new QFilter("aos_entryentity.aos_cam_name", "like", "%-AUTO%");
 		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_date, filter_match };
 		String SelectColumn = "aos_orgid," + "aos_entryentity.aos_ad_sku aos_itemid,"
@@ -609,15 +678,18 @@ public class aos_mkt_common_redis {
 		calendar.set(Calendar.MINUTE, 0);
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
+		Date aos_date = calendar.getTime();
+		calendar.add(Calendar.DAY_OF_MONTH, -2);
 		Date date_to = calendar.getTime();
 		calendar.add(Calendar.DAY_OF_MONTH, -3);
 		Date date_from = calendar.getTime();
 		SimpleDateFormat writeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);// 日期格式化
 		String date_from_str = writeFormat.format(date_from);
 		String date_to_str = writeFormat.format(date_to);
+		String aos_date_str = writeFormat.format(aos_date);
 		QFilter filter_date_from = new QFilter("aos_entryentity.aos_date_l", ">=", date_from_str);
-		QFilter filter_date_to = new QFilter("aos_entryentity.aos_date_l", "<=", date_to_str);
-		QFilter filter_date = new QFilter("aos_date", "=", date_to_str);
+		QFilter filter_date_to = new QFilter("aos_entryentity.aos_date_l", "<", date_to_str);
+		QFilter filter_date = new QFilter("aos_date", "=", aos_date_str);
 		QFilter filter_match = new QFilter("aos_entryentity.aos_cam_name", "like", "%-AUTO%");
 		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_date, filter_match };
 		String SelectColumn = "aos_orgid," + "aos_entryentity.aos_ad_sku aos_itemid,"
@@ -822,6 +894,74 @@ public class aos_mkt_common_redis {
 		calendar.set(Calendar.MINUTE, 0);
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
+
+		Date aos_date = calendar.getTime();
+		calendar.add(Calendar.DAY_OF_MONTH, -2);
+		Date date_to = calendar.getTime();
+		calendar.add(Calendar.DAY_OF_MONTH, -14);
+		Date date_from = calendar.getTime();
+		SimpleDateFormat writeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);// 日期格式化
+		SimpleDateFormat DF = new SimpleDateFormat("yyyy-MM-dd");
+		String date_from_str = writeFormat.format(date_from);
+		String date_to_str = writeFormat.format(date_to);
+		String aos_datestr = writeFormat.format(aos_date);
+		QFilter filter_date_from = new QFilter("aos_entryentity.aos_date_l", ">=", date_from_str);
+		QFilter filter_date_to = new QFilter("aos_entryentity.aos_date_l", "<", date_to_str);
+		QFilter filter_date = new QFilter("aos_date", "=", aos_datestr);
+		QFilter filter_match = new QFilter("aos_entryentity.aos_cam_name", "like", "%-AUTO%");
+		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_date, filter_match };
+		String SelectColumn = "aos_orgid," + "aos_entryentity.aos_ad_sku aos_itemid,"
+				+ "aos_entryentity.aos_spend aos_spend," + "aos_entryentity.aos_total_sales aos_total_sales,"
+				+ "aos_entryentity.aos_impressions aos_impressions," + "aos_entryentity.aos_date_l aos_date_l,"
+				+ "aos_entryentity.aos_clicks aos_clicks";
+		DataSet aos_base_skupoprptS = QueryServiceHelper.queryDataSet(
+				"aos_mkt_common_redis" + "." + "init_skurpt14Detail", "aos_base_skupoprpt", SelectColumn, filters,
+				null);
+		String[] GroupBy = new String[] { "aos_orgid", "aos_itemid", "aos_date_l" };
+		aos_base_skupoprptS = aos_base_skupoprptS.groupBy(GroupBy).sum("aos_spend").sum("aos_total_sales")
+				.sum("aos_impressions").sum("aos_clicks").finish();
+		while (aos_base_skupoprptS.hasNext()) {
+			Row aos_base_skupoprpt = aos_base_skupoprptS.next();
+			Map<String, Object> Detail = new HashMap<>();
+			Detail.put("aos_spend", aos_base_skupoprpt.get("aos_spend"));
+			Detail.put("aos_total_sales", aos_base_skupoprpt.get("aos_total_sales"));
+			Detail.put("aos_impressions", aos_base_skupoprpt.get("aos_impressions"));
+			BigDecimal aos_roi = BigDecimal.ZERO;
+			if (aos_base_skupoprpt.get("aos_spend") != null
+					&& ((BigDecimal) aos_base_skupoprpt.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0) {
+				aos_roi = ((BigDecimal) aos_base_skupoprpt.get("aos_total_sales"))
+						.divide((BigDecimal) aos_base_skupoprpt.get("aos_spend"), 2, BigDecimal.ROUND_HALF_UP);
+			}
+			Detail.put("aos_roi", aos_roi);
+
+			BigDecimal aos_bid = BigDecimal.ZERO;
+			if (aos_base_skupoprpt.get("aos_clicks") != null
+					&& ((BigDecimal) aos_base_skupoprpt.get("aos_clicks")).compareTo(BigDecimal.ZERO) != 0) {
+				aos_bid = ((BigDecimal) aos_base_skupoprpt.get("aos_spend"))
+						.divide((BigDecimal) aos_base_skupoprpt.get("aos_clicks"), 2, BigDecimal.ROUND_HALF_UP);
+			}
+			Detail.put("aos_bid", aos_bid);
+			Date aos_date_l = aos_base_skupoprpt.getDate("aos_date_l");
+			String aos_date_str = DF.format(aos_date_l);
+			Map<String, Map<String, Object>> Info = SkuRpt
+					.get(aos_base_skupoprpt.getLong("aos_orgid") + "~" + aos_base_skupoprpt.getLong("aos_itemid"));
+			if (Info == null)
+				Info = new HashMap<>();
+			Info.put(aos_date_str, Detail);
+			SkuRpt.put(aos_base_skupoprpt.getLong("aos_orgid") + "~" + aos_base_skupoprpt.getLong("aos_itemid"), Info);
+		}
+		aos_base_skupoprptS.close();
+		byte[] serialize_skurpt = SerializationUtils.serialize(SkuRpt);
+		cache.put("mkt_skurpt14Detail", serialize_skurpt, 3600);
+	}
+	
+	private static void init_skurpt14Detail_total() {
+		HashMap<String, Map<String, Map<String, Object>>> SkuRpt = new HashMap<>();
+		Calendar calendar = Calendar.getInstance();
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
+		calendar.set(Calendar.MILLISECOND, 0);
 		Date date_to = calendar.getTime();
 		calendar.add(Calendar.DAY_OF_MONTH, -14);
 		Date date_from = calendar.getTime();
@@ -876,7 +1016,7 @@ public class aos_mkt_common_redis {
 		}
 		aos_base_skupoprptS.close();
 		byte[] serialize_skurpt = SerializationUtils.serialize(SkuRpt);
-		cache.put("mkt_skurpt14Detail", serialize_skurpt, 3600);
+		cache.put("mkt_skurpt14Detail_total", serialize_skurpt, 3600);
 	}
 
 	private static void init_skurpt() {
@@ -886,25 +1026,29 @@ public class aos_mkt_common_redis {
 		calendar.set(Calendar.MINUTE, 0);
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
+		Date aos_date = calendar.getTime();
+		calendar.add(Calendar.DAY_OF_MONTH, -2);
 		Date date_to = calendar.getTime();
 		calendar.add(Calendar.DAY_OF_MONTH, -7);
 		Date date_from = calendar.getTime();
 		SimpleDateFormat writeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);// 日期格式化
 		String date_from_str = writeFormat.format(date_from);
 		String date_to_str = writeFormat.format(date_to);
+		String aos_date_str = writeFormat.format(aos_date);
 		QFilter filter_date_from = new QFilter("aos_entryentity.aos_date_l", ">=", date_from_str);
-		QFilter filter_date_to = new QFilter("aos_entryentity.aos_date_l", "<=", date_to_str);
-		QFilter filter_date = new QFilter("aos_date", "=", date_to_str);
+		QFilter filter_date_to = new QFilter("aos_entryentity.aos_date_l", "<", date_to_str);
+		QFilter filter_date = new QFilter("aos_date", "=", aos_date_str);
 		QFilter filter_match = new QFilter("aos_entryentity.aos_cam_name", "like", "%-AUTO%");
 		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_date, filter_match };
 		String SelectColumn = "aos_orgid," + "aos_entryentity.aos_ad_sku aos_itemid,"
 				+ "aos_entryentity.aos_spend aos_spend," + "aos_entryentity.aos_total_sales aos_total_sales,"
-				+ "aos_entryentity.aos_impressions aos_impressions," + "aos_entryentity.aos_clicks aos_clicks";
+				+ "aos_entryentity.aos_impressions aos_impressions," + "aos_entryentity.aos_clicks aos_clicks,"
+				+ "aos_entryentity.aos_total_order aos_total_order";
 		DataSet aos_base_skupoprptS = QueryServiceHelper.queryDataSet("aos_mkt_common_redis" + "." + "init_skurpt",
 				"aos_base_skupoprpt", SelectColumn, filters, null);
 		String[] GroupBy = new String[] { "aos_orgid", "aos_itemid" };
 		aos_base_skupoprptS = aos_base_skupoprptS.groupBy(GroupBy).sum("aos_spend").sum("aos_total_sales")
-				.sum("aos_impressions").sum("aos_clicks").finish();
+				.sum("aos_impressions").sum("aos_clicks").sum("aos_total_order").finish();
 		while (aos_base_skupoprptS.hasNext()) {
 			Row aos_base_skupoprpt = aos_base_skupoprptS.next();
 			HashMap<String, Object> Info = new HashMap<>();
@@ -912,6 +1056,7 @@ public class aos_mkt_common_redis {
 			Info.put("aos_total_sales", aos_base_skupoprpt.get("aos_total_sales"));
 			Info.put("aos_impressions", aos_base_skupoprpt.get("aos_impressions"));
 			Info.put("aos_clicks", aos_base_skupoprpt.get("aos_clicks"));
+			Info.put("aos_total_order", aos_base_skupoprpt.get("aos_total_order"));
 			SkuRpt.put(aos_base_skupoprpt.getLong("aos_orgid") + "~" + aos_base_skupoprpt.getLong("aos_itemid"), Info);
 		}
 		aos_base_skupoprptS.close();
@@ -926,15 +1071,18 @@ public class aos_mkt_common_redis {
 		calendar.set(Calendar.MINUTE, 0);
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
+		Date aos_date = calendar.getTime();
+		calendar.add(Calendar.DAY_OF_MONTH, -2);
 		Date date_to = calendar.getTime();
 		calendar.add(Calendar.DAY_OF_MONTH, -3);
 		Date date_from = calendar.getTime();
 		SimpleDateFormat writeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);// 日期格式化
 		String date_from_str = writeFormat.format(date_from);
 		String date_to_str = writeFormat.format(date_to);
+		String aos_date_str = writeFormat.format(aos_date);
 		QFilter filter_date_from = new QFilter("aos_entryentity.aos_date_l", ">=", date_from_str);
-		QFilter filter_date_to = new QFilter("aos_entryentity.aos_date_l", "<=", date_to_str);
-		QFilter filter_date = new QFilter("aos_date", "=", date_to_str);
+		QFilter filter_date_to = new QFilter("aos_entryentity.aos_date_l", "<", date_to_str);
+		QFilter filter_date = new QFilter("aos_date", "=", aos_date_str);
 		QFilter filter_match = new QFilter("aos_entryentity.aos_cam_name", "like", "%-AUTO%");
 		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_date, filter_match };
 		String SelectColumn = "aos_orgid," + "aos_entryentity.aos_ad_sku aos_itemid,"
@@ -966,15 +1114,18 @@ public class aos_mkt_common_redis {
 		calendar.set(Calendar.MINUTE, 0);
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
+		Date aos_date = calendar.getTime();
+		calendar.add(Calendar.DAY_OF_MONTH, -2);
 		Date date_to = calendar.getTime();
 		calendar.add(Calendar.DAY_OF_MONTH, -14);
 		Date date_from = calendar.getTime();
 		SimpleDateFormat writeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);// 日期格式化
 		String date_from_str = writeFormat.format(date_from);
 		String date_to_str = writeFormat.format(date_to);
+		String aos_date_str = writeFormat.format(aos_date);
 		QFilter filter_date_from = new QFilter("aos_entryentity.aos_date_l", ">=", date_from_str);
-		QFilter filter_date_to = new QFilter("aos_entryentity.aos_date_l", "<=", date_to_str);
-		QFilter filter_date = new QFilter("aos_date", "=", date_to_str);
+		QFilter filter_date_to = new QFilter("aos_entryentity.aos_date_l", "<", date_to_str);
+		QFilter filter_date = new QFilter("aos_date", "=", aos_date_str);
 		QFilter filter_match = new QFilter("aos_entryentity.aos_cam_name", "like", "%-AUTO%");
 
 		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_date, filter_match };
@@ -983,7 +1134,7 @@ public class aos_mkt_common_redis {
 				+ "aos_entryentity.aos_clicks aos_clicks," + "aos_entryentity.aos_impressions aos_impressions,"
 				+ "case when aos_entryentity.aos_impressions > 0 " + "then 1 "
 				+ "when aos_entryentity.aos_impressions <= 0 " + "then 0 " + "end as aos_impcount,"
-						+ "1 as aos_online ";
+				+ "1 as aos_online ";
 		DataSet aos_base_skupoprptS = QueryServiceHelper.queryDataSet("aos_mkt_common_redis" + "." + "init_skurpt14",
 				"aos_base_skupoprpt", SelectColumn, filters, null);
 		String[] GroupBy = new String[] { "aos_orgid", "aos_itemid" };
@@ -997,7 +1148,7 @@ public class aos_mkt_common_redis {
 			Info.put("aos_impressions", aos_base_skupoprpt.get("aos_impressions"));
 			Info.put("aos_impcount", aos_base_skupoprpt.get("aos_impcount"));
 			Info.put("aos_online", aos_base_skupoprpt.get("aos_online"));
-			
+
 			Info.put("aos_clicks", aos_base_skupoprpt.get("aos_clicks"));
 
 			SkuRpt.put(aos_base_skupoprpt.getLong("aos_orgid") + "~" + aos_base_skupoprpt.getLong("aos_itemid"), Info);

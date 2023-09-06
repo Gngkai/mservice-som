@@ -92,8 +92,8 @@ public class aos_mkt_popbudpst_form extends AbstractFormPlugin implements ItemCl
 		Object[] params = { aos_adjprice, aos_description, aos_entryid };
 		DB.execute(DBRoute.of(DB_MKT), sql, params);
 
-		sql = " UPDATE tk_aos_mkt_pop_ppcst_r r " + " SET fk_aos_budget = ?" + " WHERE 1=1 "
-				+ " and r.fk_aos_productno = ? and r.fid = ?  ";
+		sql = " UPDATE tk_aos_mkt_ppcst_data r " + " SET fk_aos_budget = ?" + " WHERE 1=1 "
+				+ " and r.fk_aos_productno = ? and r.aos_sourceid = ?  ";
 		Object[] params2 = { aos_adjprice, aos_serialname, aos_ppcid };
 		DB.execute(DBRoute.of(DB_MKT), sql, params2);
 	}

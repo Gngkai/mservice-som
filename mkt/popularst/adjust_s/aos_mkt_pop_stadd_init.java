@@ -128,20 +128,37 @@ public class aos_mkt_pop_stadd_init extends AbstractTask {
     /** 查找ppc数据 **/
     public static Map<String, List<DynamicObject>> queryPPC(Object ppcStId,Object groupName){
         QFilter filter_id = new QFilter("id","=",ppcStId);
-        QFilter filter_group = new QFilter("aos_entryentity.aos_sal_group","=",groupName);
-        QFilter filter_reason = new QFilter("aos_entryentity.aos_reason","=","ROI");
+//        QFilter filter_group = new QFilter("aos_entryentity.aos_sal_group","=",groupName);
+//        QFilter filter_reason = new QFilter("aos_entryentity.aos_reason","=","ROI");
+        QFilter filter_group = new QFilter("aos_sal_group","=",groupName);
+        QFilter filter_reason = new QFilter("aos_reason","=","ROI");
+        
         QFilter [] qfs = new QFilter[]{filter_id,filter_group,filter_reason};
         StringJoiner str = new StringJoiner(",");
-        str.add("aos_entryentity.aos_productno aos_productno");
-        str.add("aos_entryentity.aos_itemnumer aos_itemnumer");
-        str.add("aos_entryentity.aos_category1 aos_category1");
-        str.add("aos_entryentity.aos_category2 aos_category2");
-        str.add("aos_entryentity.aos_category3 aos_category3");
-        str.add("aos_entryentity.aos_avadays aos_avadays");
-        str.add("aos_entryentity.aos_eliminatedate aos_eliminatedate");
-        str.add("aos_entryentity.aos_keyword aos_keyword");
-        str.add("aos_entryentity.aos_match_type aos_match_type");
-        return QueryServiceHelper.query("aos_mkt_pop_ppcst", str.toString(), qfs)
+//        str.add("aos_entryentity.aos_productno aos_productno");
+//        str.add("aos_entryentity.aos_itemnumer aos_itemnumer");
+//        str.add("aos_entryentity.aos_category1 aos_category1");
+//        str.add("aos_entryentity.aos_category2 aos_category2");
+//        str.add("aos_entryentity.aos_category3 aos_category3");
+//        str.add("aos_entryentity.aos_avadays aos_avadays");
+//        str.add("aos_entryentity.aos_eliminatedate aos_eliminatedate");
+//        str.add("aos_entryentity.aos_keyword aos_keyword");
+//        str.add("aos_entryentity.aos_match_type aos_match_type");
+
+        str.add("aos_productno");
+        str.add("aos_itemnumer");
+        str.add("aos_category1");
+        str.add("aos_category2");
+        str.add("aos_category3");
+        str.add("aos_avadays");
+        str.add("aos_eliminatedate");
+        str.add("aos_keyword");
+        str.add("aos_match_type");
+//        return QueryServiceHelper.query("aos_mkt_pop_ppcst", str.toString(), qfs)
+//                .stream()
+//                .collect(Collectors.groupingBy(dy -> dy.getString("aos_productno") + "/" +dy.getString("aos_itemnumer")));
+        
+        return QueryServiceHelper.query("aos_mkt_ppcst_data", str.toString(), qfs)
                .stream()
                .collect(Collectors.groupingBy(dy -> dy.getString("aos_productno") + "/" +dy.getString("aos_itemnumer")));
     }

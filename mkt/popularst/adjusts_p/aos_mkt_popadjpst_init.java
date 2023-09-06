@@ -129,23 +129,38 @@ public class aos_mkt_popadjpst_init extends AbstractTask {
 			BigDecimal SkuExptandard = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "EXPOSURE").get("aos_value");// SKU曝光标准
 			BigDecimal SKUEXP = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "SKUEXP").get("aos_value");// SKU曝光点击
 
+//			QFilter Qf_Date = new QFilter("aos_date", "=", Today);
+//			QFilter Qf_Org = new QFilter("aos_orgid.number", "=", p_ou_code);
+//			QFilter Qf_type = new QFilter("aos_entryentity.aos_keystatus", "=", "AVAILABLE");
+//			QFilter[] filters = new QFilter[] { Qf_Date, Qf_Org, Qf_type };
+
+//			String SelectField = "id,aos_billno,aos_entryentity.aos_productno aos_productno,"
+//					+ "aos_entryentity.aos_season aos_season," + "aos_entryentity.aos_category1 aos_category1,"
+//					+ "aos_entryentity.aos_itemname aos_itemname," + "aos_entryentity.aos_itemnumer aos_itemnumer,"
+//					+ "aos_entryentity.aos_keyword aos_keyword," + "aos_entryentity.aos_match_type aos_match_type,"
+//					+ "aos_entryentity.aos_roi7days aos_roi7days," + "aos_entryentity.aos_impressions aos_impressions,"
+//					+ "aos_entryentity.aos_lastbid aos_lastbid," + "aos_entryentity.aos_highvalue aos_highvalue,"
+//					+ "aos_entryentity.aos_lastpricedate aos_lastpricedate,"
+//					+ "aos_entryentity.aos_groupdate aos_groupdate," + "aos_entryentity.aos_itemid aos_itemid,"
+//					+ "aos_entryentity.aos_lastbid aos_lastprice," + "aos_entryentity.aos_avadays aos_avadays,"
+//					+ "aos_entryentity.id aos_entryid," + "aos_entryentity.aos_bid aos_bid";
+//			DynamicObjectCollection aos_mkt_pop_ppcstS = QueryServiceHelper.query("aos_mkt_pop_ppcst", SelectField,
+//					filters, "aos_entryentity.aos_productno");
+			
 			QFilter Qf_Date = new QFilter("aos_date", "=", Today);
 			QFilter Qf_Org = new QFilter("aos_orgid.number", "=", p_ou_code);
-			QFilter Qf_type = new QFilter("aos_entryentity.aos_keystatus", "=", "AVAILABLE");
+			QFilter Qf_type = new QFilter("aos_keystatus", "=", "AVAILABLE");
 			QFilter[] filters = new QFilter[] { Qf_Date, Qf_Org, Qf_type };
-
-			String SelectField = "id,aos_billno,aos_entryentity.aos_productno aos_productno,"
-					+ "aos_entryentity.aos_season aos_season," + "aos_entryentity.aos_category1 aos_category1,"
-					+ "aos_entryentity.aos_itemname aos_itemname," + "aos_entryentity.aos_itemnumer aos_itemnumer,"
-					+ "aos_entryentity.aos_keyword aos_keyword," + "aos_entryentity.aos_match_type aos_match_type,"
-					+ "aos_entryentity.aos_roi7days aos_roi7days," + "aos_entryentity.aos_impressions aos_impressions,"
-					+ "aos_entryentity.aos_lastbid aos_lastbid," + "aos_entryentity.aos_highvalue aos_highvalue,"
-					+ "aos_entryentity.aos_lastpricedate aos_lastpricedate,"
-					+ "aos_entryentity.aos_groupdate aos_groupdate," + "aos_entryentity.aos_itemid aos_itemid,"
-					+ "aos_entryentity.aos_lastbid aos_lastprice," + "aos_entryentity.aos_avadays aos_avadays,"
-					+ "aos_entryentity.id aos_entryid," + "aos_entryentity.aos_bid aos_bid";
-			DynamicObjectCollection aos_mkt_pop_ppcstS = QueryServiceHelper.query("aos_mkt_pop_ppcst", SelectField,
+			
+			String SelectField = "aos_sourceid id,aos_billno,aos_productno,"
+					+ "aos_season,aos_category1,aos_itemname,aos_itemnumer,"
+					+ "aos_keyword,aos_match_type,aos_roi7days,aos_impressions,"
+					+ "aos_lastbid,aos_highvalue,aos_lastpricedate,aos_groupdate,aos_itemid,"
+					+ "aos_lastbid aos_lastprice,aos_avadays,"
+					+ "id aos_entryid," + "aos_bid";
+			DynamicObjectCollection aos_mkt_pop_ppcstS = QueryServiceHelper.query("aos_mkt_ppcst_data", SelectField,
 					filters, "aos_entryentity.aos_productno");
+			
 			int rows = aos_mkt_pop_ppcstS.size();
 			int count = 0;
 			System.out.println("rows =" + rows);
@@ -354,13 +369,22 @@ public class aos_mkt_popadjpst_init extends AbstractTask {
 			QFilter[] qfs = list_qfs.toArray(new QFilter[list_qfs.size()]);
 			// 查询字段
 			StringJoiner str = new StringJoiner(",");
-			str.add("substring(aos_date,1,10) as aos_date");
-			str.add("aos_entryentity.aos_bid as aos_ppcbid"); // 出价
-			str.add("aos_entryentity.aos_itemnumer as aos_itemnumer"); // 组名
-			str.add("aos_entryentity.aos_keyword as aos_keyword"); // 关键词
-			str.add("aos_entryentity.aos_match_type as aos_match_type"); // 匹配类型
+//			str.add("substring(aos_date,1,10) as aos_date");
+//			str.add("aos_entryentity.aos_bid as aos_ppcbid"); // 出价
+//			str.add("aos_entryentity.aos_itemnumer as aos_itemnumer"); // 组名
+//			str.add("aos_entryentity.aos_keyword as aos_keyword"); // 关键词
+//			str.add("aos_entryentity.aos_match_type as aos_match_type"); // 匹配类型
 			
-			DynamicObjectCollection dyc_ppc = QueryServiceHelper.query("aos_mkt_pop_ppcst", str.toString(), qfs);
+			str.add("substring(aos_date,1,10) as aos_date");
+			str.add("aos_bid as aos_ppcbid"); // 出价
+			str.add("aos_itemnumer as aos_itemnumer"); // 组名
+			str.add("aos_keyword as aos_keyword"); // 关键词
+			str.add("aos_match_type as aos_match_type"); // 匹配类型
+			
+			
+//			DynamicObjectCollection dyc_ppc = QueryServiceHelper.query("aos_mkt_pop_ppcst", str.toString(), qfs);
+			DynamicObjectCollection dyc_ppc = QueryServiceHelper.query("aos_mkt_ppcst_data", str.toString(), qfs);
+			
 			Map<String, BigDecimal[]> map_ppc = dyc_ppc.stream()
 					.collect(Collectors.toMap(e -> e.getString("aos_date") + "?" + e.getString("aos_itemnumer")+"~"
 							+ e.getString("aos_keyword") +"~"+e.getString("aos_match_type"), e -> {

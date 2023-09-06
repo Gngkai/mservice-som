@@ -108,6 +108,13 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 		List<DynamicObject> aosBillDeatilS = new ArrayList<>();
 		DeleteServiceHelper.delete("aos_aadd_model_detail",
 				new QFilter("aos_sourceid", QCP.equals, fid).and("aos_button", QCP.equals, button).toArray());
+
+		int i = 1;
+		for (DynamicObject aos_entryentity : aos_entryentityS) {
+			aos_entryentity.set("aos_seq", i);
+			i++;
+		}
+
 		for (DynamicObject aos_entryentity : aos_entryentityS) {
 			DynamicObject aos_aadd_model_detail = BusinessDataServiceHelper.newDynamicObject("aos_aadd_model_detail");
 			aos_aadd_model_detail.set("aos_cate1", aos_entryentity.get("aos_cate1"));
@@ -119,6 +126,7 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 			aos_aadd_model_detail.set("aos_fr", aos_entryentity.get("aos_fr"));
 			aos_aadd_model_detail.set("aos_it", aos_entryentity.get("aos_it"));
 			aos_aadd_model_detail.set("aos_es", aos_entryentity.get("aos_es"));
+			aos_aadd_model_detail.set("aos_seq", aos_entryentity.get("aos_seq"));
 			aos_aadd_model_detail.set("aos_sourceid", fid);
 			aos_aadd_model_detail.set("aos_button", Integer.parseInt(button));
 			aosBillDeatilS.add(aos_aadd_model_detail);
@@ -150,7 +158,6 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 			map.put(ClientProperties.Text, new LocaleString((String) this.getModel().getValue("aos_textfield" + i)));
 			this.getView().updateControlMetadata("aos_button" + i, map);
 		}
-
 		FormShowParameter parameter = new FormShowParameter();
 		parameter.setFormId("aos_aadd_model_form");
 		parameter.getOpenStyle().setShowType(ShowType.InContainer);

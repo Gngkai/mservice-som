@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.Map;
 
 import common.Cux_Common_Utl;
+import common.fnd.FndDate;
 import common.fnd.FndHistory;
 import kd.bos.context.RequestContext;
 import kd.bos.dataentity.OperateOption;
@@ -46,9 +47,7 @@ public class aos_mkt_funcsum_auto extends AbstractTask {
 			Date aos_funcdate = aos_mkt_listing_min.getDate("aos_funcdate");
 			if (aos_funcdate==null)
 				continue;
-			LocalDate funcDate = aos_funcdate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-			long day = now.toEpochDay() - funcDate.toEpochDay();
-			if (day < 3)
+			if (FndDate.BetweenWeekendDays(new Date(), aos_funcdate) < 3)
 				continue; // 只处理三个工作日以上单据
 			String aos_status = aos_mkt_listing_min.getString("aos_status");
 			DynamicObject aos_mkt_listing_minold = BusinessDataServiceHelper.loadSingle(id, "aos_mkt_listing_min");

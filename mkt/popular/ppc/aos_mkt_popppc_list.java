@@ -237,9 +237,10 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 			headRow = CreateColumn(headRow, style, 27, "Increase bids by placement");
 
 			// 查询当前单据国别
-			DynamicObject dynamicObject = QueryServiceHelper.queryOne("aos_mkt_popular_ppc", "aos_orgid",
-					new QFilter[] { new QFilter("id", QCP.equals, fid) });
+			DynamicObject dynamicObject = QueryServiceHelper.queryOne("aos_mkt_popular_ppc",
+					"aos_orgid," + "aos_orgid.number p_ou_code", new QFilter[] { new QFilter("id", QCP.equals, fid) });
 			String aos_orgid = dynamicObject.getString("aos_orgid");
+			String p_ou_code = dynamicObject.getString("p_ou_code");
 			// 获取fba数据
 			Map<String, List<String>> fbaMap = getFbaMap(aos_orgid);
 			// 初始化组数据
@@ -250,10 +251,12 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 			// 获取该国别下，所有的爆品物料编码
 			List<String> list_saleOutItems = getSaleItemByOu(aos_orgid);
 
-			Map<String, String> comp = initSerialGroup(fid, aos_orgid);// 竞价策略
+			BigDecimal exRateWellSt = aos_mkt_popppc_init.getExRateLowSt(p_ou_code, "优");
+
+			Map<String, String> comp = initSerialGroup(fid, aos_orgid, exRateWellSt);// 竞价策略
 
 			Map<String, String> portfolio = initSerialRoi(fid, aos_orgid);// 特殊广告
-			
+
 			Map<String, String> portid = initportid(fid, aos_orgid);// 特殊广告
 
 			// 循环单子下所有的产品号
@@ -450,10 +453,10 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 
 				}
 				// 对于置顶位置出价,如果是爆品
-				if (saleOutItem) {
-					ProductRow = sheet.getRow(TopOfSearch);
-					ProductRow = CreateColumn(ProductRow, style, 27, "50%");
-				}
+//				if (saleOutItem) {
+//					ProductRow = sheet.getRow(TopOfSearch);
+//					ProductRow = CreateColumn(ProductRow, style, 27, "50%");
+//				}
 			}
 			aos_mkt_popppc_initS.close();// 保存日志表
 			OperationResult operationrstLog = OperationServiceHelper.executeOperate("save", "aos_sync_log",
@@ -472,12 +475,12 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 
 	private Map<String, String> initportid(String fid, String aos_orgid) {
 		Map<String, String> portfolio = new HashMap<>();
-		DynamicObjectCollection aos_mkt_advS =QueryServiceHelper.query("aos_mkt_adv", "aos_idpro,aos_type", new QFilter("aos_orgid.id", QCP.equals, aos_orgid).toArray());
-		for (DynamicObject aos_mkt_adv : aos_mkt_advS)
-		{
+		DynamicObjectCollection aos_mkt_advS = QueryServiceHelper.query("aos_mkt_adv", "aos_idpro,aos_type",
+				new QFilter("aos_orgid.id", QCP.equals, aos_orgid).toArray());
+		for (DynamicObject aos_mkt_adv : aos_mkt_advS) {
 			portfolio.put(aos_mkt_adv.getString("aos_type"), aos_mkt_adv.getString("aos_idpro"));
 		}
-		
+
 		return portfolio;
 	}
 
@@ -492,8 +495,9 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 		calendar.set(Calendar.MINUTE, 0);
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
+		calendar.add(Calendar.DAY_OF_MONTH, -2);
 		Date date_to = calendar.getTime();
-		calendar.add(Calendar.DAY_OF_MONTH, -7);
+		calendar.add(Calendar.DAY_OF_MONTH, -14);
 		Date date_from = calendar.getTime();
 		SimpleDateFormat writeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);// 日期格式化
 		String date_from_str = writeFormat.format(date_from);
@@ -524,43 +528,48 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 		for (DynamicObject aos_entryentity : aos_entryentityS) {
 			String aos_productno = aos_entryentity.getString("aos_productno");
 			BigDecimal roi = SkuRpt.get(aos_productno);
+			Date aos_firstindate = aos_entryentity.getDate("aos_firstindate");
 			if (FndGlobal.IsNotNull(SkuRpt.get(aos_productno)) && roi.compareTo(PopOrgRoist) < 0) {
 				if (aos_entryentity.getBoolean("aos_special")) {
 					portfolio.put(aos_productno, "aos_special");
 				}
 				if (FndGlobal.IsNull(portfolio.get(aos_productno))
 						&& "Y".equals(aos_entryentity.getString("aos_offline"))) {
-					portfolio.put(aos_productno, "aos_offline");
+					portfolio.put(aos_productno, "aos_special");
+				}
+				if ((FndGlobal.IsNotNull(aos_firstindate))
+						&& (FndDate.GetBetweenDays(new Date(), aos_firstindate) < 30)) {
+					portfolio.put(aos_productno, "aos_new");
 				}
 			}
 		}
 		return portfolio;
 	}
 
-	private Map<String, String> initSerialGroup(String fid, String p_org_id) {
+	private Map<String, String> initSerialGroup(String fid, String p_org_id, BigDecimal exRateWellSt) {
 		HashMap<String, Map<String, Object>> PopOrgInfo = genPop();
 		Map<String, String> comp = new HashMap<>();
 		BigDecimal PopOrgRoist = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "ROIST").get("aos_value");// 国别标准ROI
 		BigDecimal WORRY = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "WORRY").get("aos_value");// 差
+
 		DynamicObject aos_mkt_popular_ppc = BusinessDataServiceHelper.loadSingle(fid, "aos_mkt_popular_ppc");
 		DynamicObjectCollection aos_entryentityS = aos_mkt_popular_ppc.getDynamicObjectCollection("aos_entryentity");
 		for (DynamicObject aos_entryentity : aos_entryentityS) {
-			BigDecimal aos_roi = aos_entryentity.getBigDecimal("aos_roi");
+			BigDecimal aos_roi = aos_entryentity.getBigDecimal("aos_roi14days"); //TODO 调整为14日
 			String aos_productno = aos_entryentity.getString("aos_productno");
 			Date aos_firstindate = aos_entryentity.getDate("aos_firstindate");
-			if ("A".equals(aos_entryentity.getString("aos_contryentrystatus"))
+			BigDecimal aos_rpt_roi = aos_entryentity.getBigDecimal("aos_rpt_roi");
+
+			if (aos_rpt_roi.compareTo(exRateWellSt) > 0 && aos_roi.compareTo(WORRY) > 0) {
+				comp.put(aos_productno, "Dynamic bidding(up and down)");
+			} else if (("A".equals(aos_entryentity.getString("aos_contryentrystatus"))
 					|| ((FndGlobal.IsNotNull(aos_firstindate))
-							&& (FndDate.GetBetweenDays(new Date(), aos_firstindate) < 30))) {
+							&& (FndDate.GetBetweenDays(new Date(), aos_firstindate) < 30)))
+					&& !"Dynamic bidding(up and down)".equals(comp.get(aos_productno))) {
 				comp.put(aos_productno, "Fixed bids");
-			} else if (aos_roi.compareTo(PopOrgRoist.multiply(BigDecimal.valueOf(3))) > 0
-					&& aos_roi.compareTo(WORRY) > 0) {
-				if (!"Fixed bids".equals(comp.get(aos_productno))) {
-					comp.put(aos_productno, "Dynamic bidding(up and down)");
-				}
-			} else {
-				if (!"Fixed bids".equals(comp.get(aos_productno))
-						&& !"Dynamic bidding(up and down)".equals(comp.get(aos_productno)))
-					comp.put(aos_productno, "Dynamic bidding (down only)");
+			} else if (!"Fixed bids".equals(comp.get(aos_productno))
+					&& !"Dynamic bidding(up and down)".equals(comp.get(aos_productno))) {
+				comp.put(aos_productno, "Dynamic bidding (down only)");
 			}
 		}
 

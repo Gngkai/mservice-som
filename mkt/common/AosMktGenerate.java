@@ -89,10 +89,14 @@ public class AosMktGenerate {
 		HashMap<String, Object> KeyDateMap = new HashMap<>();
 		QFilter filter_org = new QFilter("aos_orgid.number", QCP.equals, p_ou_code);
 		QFilter[] filters = new QFilter[] { filter_org };
-		String SelectColumn = "aos_entryentity.aos_itemnumer aos_itemnumer,aos_entryentity.aos_keyword aos_keyword,"
-				+ "aos_entryentity.aos_keydate aos_keydate,aos_entryentity.aos_match_type aos_match_type";
+//		String SelectColumn = "aos_entryentity.aos_itemnumer aos_itemnumer,aos_entryentity.aos_keyword aos_keyword,"
+//				+ "aos_entryentity.aos_keydate aos_keydate,aos_entryentity.aos_match_type aos_match_type";
+//		DataSet aos_mkt_pop_ppcstS = QueryServiceHelper.queryDataSet("AosMktGenerate.GenerateLastKeyDate" + p_ou_code,
+//				"aos_mkt_pop_ppcst", SelectColumn, filters, null);
+		String SelectColumn = "aos_itemnumer,aos_keyword,aos_keydate,aos_match_type";
 		DataSet aos_mkt_pop_ppcstS = QueryServiceHelper.queryDataSet("AosMktGenerate.GenerateLastKeyDate" + p_ou_code,
-				"aos_mkt_pop_ppcst", SelectColumn, filters, null);
+				"aos_mkt_ppcst_data", SelectColumn, filters, null);
+		
 		String[] GroupBy = new String[] { "aos_itemnumer", "aos_keyword", "aos_match_type" };
 		aos_mkt_pop_ppcstS = aos_mkt_pop_ppcstS.groupBy(GroupBy).min("aos_keydate").finish();
 		while (aos_mkt_pop_ppcstS.hasNext()) {
@@ -116,10 +120,14 @@ public class AosMktGenerate {
 		HashMap<String, Object> GroupDateMap = new HashMap<>();
 		QFilter filter_org = new QFilter("aos_orgid.number", QCP.equals, p_ou_code);
 		QFilter[] filters = new QFilter[] { filter_org };
-		String SelectColumn = "aos_entryentity.aos_itemnumer aos_itemnumer,"
-				+ "aos_entryentity.aos_groupdate aos_groupdate";
+//		String SelectColumn = "aos_entryentity.aos_itemnumer aos_itemnumer,"
+//				+ "aos_entryentity.aos_groupdate aos_groupdate";
+//		DataSet aos_mkt_pop_ppcstS = QueryServiceHelper.queryDataSet("AosMktGenerate.GenerateLastGroupDate" + p_ou_code,
+//				"aos_mkt_pop_ppcst", SelectColumn, filters, null);
+		String SelectColumn = "aos_itemnumer,aos_groupdate";
 		DataSet aos_mkt_pop_ppcstS = QueryServiceHelper.queryDataSet("AosMktGenerate.GenerateLastGroupDate" + p_ou_code,
-				"aos_mkt_pop_ppcst", SelectColumn, filters, null);
+				"aos_mkt_ppcst_data", SelectColumn, filters, null);
+		
 		String[] GroupBy = new String[] { "aos_itemnumer" };
 		aos_mkt_pop_ppcstS = aos_mkt_pop_ppcstS.groupBy(GroupBy).min("aos_groupdate").finish();
 		while (aos_mkt_pop_ppcstS.hasNext()) {
@@ -140,10 +148,13 @@ public class AosMktGenerate {
 		HashMap<String, Object> SerialDateMap = new HashMap<>();
 		QFilter filter_org = new QFilter("aos_orgid.number", QCP.equals, p_ou_code);
 		QFilter[] filters = new QFilter[] { filter_org };
-		String SelectColumn = "aos_entryentity.aos_productno aos_productno,"
-				+ "aos_entryentity.aos_makedate aos_makedate";
+//		String SelectColumn = "aos_entryentity.aos_productno aos_productno,"
+//				+ "aos_entryentity.aos_makedate aos_makedate";
+//		DataSet aos_mkt_pop_ppcstS = QueryServiceHelper.queryDataSet(
+//				"AosMktGenerate.GenerateLastSerialDate" + p_ou_code, "aos_mkt_pop_ppcst", SelectColumn, filters, null);
+		String SelectColumn = "aos_productno,aos_makedate";
 		DataSet aos_mkt_pop_ppcstS = QueryServiceHelper.queryDataSet(
-				"AosMktGenerate.GenerateLastSerialDate" + p_ou_code, "aos_mkt_pop_ppcst", SelectColumn, filters, null);
+				"AosMktGenerate.GenerateLastSerialDate" + p_ou_code, "aos_mkt_ppcst_data", SelectColumn, filters, null);
 		String[] GroupBy = new String[] { "aos_productno" };
 		aos_mkt_pop_ppcstS = aos_mkt_pop_ppcstS.groupBy(GroupBy).min("aos_makedate").finish();
 		while (aos_mkt_pop_ppcstS.hasNext()) {
@@ -400,9 +411,14 @@ public class AosMktGenerate {
 		QFilter filter_date_from = new QFilter("aos_date", ">=", date_from_str);
 		QFilter filter_date_to = new QFilter("aos_date", "<", date_to_str);
 		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_org };
-		String SelectColumn = "aos_entryentity.aos_itemid aos_itemid";
+//		String SelectColumn = "aos_entryentity.aos_itemid aos_itemid";
+//		DataSet aos_mkt_pop_ppcstS = QueryServiceHelper.queryDataSet("AosMktGenerate.GeneratePpcStLast" + p_ou_code,
+//				"aos_mkt_pop_ppcst", SelectColumn, filters, null);
+		
+		String SelectColumn = "aos_itemid";
 		DataSet aos_mkt_pop_ppcstS = QueryServiceHelper.queryDataSet("AosMktGenerate.GeneratePpcStLast" + p_ou_code,
-				"aos_mkt_pop_ppcst", SelectColumn, filters, null);
+				"aos_mkt_ppcst_data", SelectColumn, filters, null);
+		
 		String[] GroupBy = new String[] { "aos_itemid" };
 		aos_mkt_pop_ppcstS = aos_mkt_pop_ppcstS.groupBy(GroupBy).finish();
 		while (aos_mkt_pop_ppcstS.hasNext()) {
@@ -512,11 +528,17 @@ public class AosMktGenerate {
 		QFilter filter_org = new QFilter("aos_orgid.number", QCP.equals, p_ou_code);
 		QFilter filter_date = new QFilter("aos_date", "=", Today);
 		QFilter[] filters = new QFilter[] { filter_date, filter_org };
-		String SelectColumn = "aos_entryentity.aos_itemid aos_itemid," + "aos_entryentity.aos_keyword aos_keyword,"
-				+ "aos_entryentity.aos_match_type aos_match_type," + "aos_entryentity.aos_keystatus aos_keystatus ";
+//		String SelectColumn = "aos_entryentity.aos_itemid aos_itemid," + "aos_entryentity.aos_keyword aos_keyword,"
+//				+ "aos_entryentity.aos_match_type aos_match_type," + "aos_entryentity.aos_keystatus aos_keystatus ";
+//		DataSet aos_mkt_pop_ppcstS = QueryServiceHelper.queryDataSet(
+//				"AosMktGenerate.GeneratePpcStTodayKeyStatus" + p_ou_code, "aos_mkt_pop_ppcst", SelectColumn, filters,
+//				null);
+		
+		String SelectColumn = "aos_itemid,aos_keyword,aos_match_type,aos_keystatus";
 		DataSet aos_mkt_pop_ppcstS = QueryServiceHelper.queryDataSet(
 				"AosMktGenerate.GeneratePpcStTodayKeyStatus" + p_ou_code, "aos_mkt_pop_ppcst", SelectColumn, filters,
 				null);
+		
 		while (aos_mkt_pop_ppcstS.hasNext()) {
 			Row aos_mkt_pop_ppcst = aos_mkt_pop_ppcstS.next();
 			String aos_itemid = aos_mkt_pop_ppcst.getLong("aos_itemid") + "";
@@ -774,12 +796,15 @@ public class AosMktGenerate {
 		QFilter filter_date_to = new QFilter("aos_date", "<", date_to_str);
 		QFilter filter_org = new QFilter("aos_orgid.number", QCP.equals, p_ou_code);
 		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_org };
-		String SelectColumn = "aos_entryentity.aos_itemnumer aos_itemnumer,"
-				+ "aos_entryentity.aos_keyword aos_keyword," + "aos_entryentity.aos_match_type aos_match_type,"
-				+ "aos_entryentity.aos_budget aos_budget," + "aos_entryentity.aos_bid aos_bid,"
-				+ "aos_entryentity.aos_lastpricedate aos_lastpricedate";
+//		String SelectColumn = "aos_entryentity.aos_itemnumer aos_itemnumer,"
+//				+ "aos_entryentity.aos_keyword aos_keyword," + "aos_entryentity.aos_match_type aos_match_type,"
+//				+ "aos_entryentity.aos_budget aos_budget," + "aos_entryentity.aos_bid aos_bid,"
+//				+ "aos_entryentity.aos_lastpricedate aos_lastpricedate";
+		String SelectColumn = "aos_itemnumer,aos_keyword,aos_match_type,aos_budget,aos_bid,aos_lastpricedate";
+//		DataSet aos_mkt_popular_ppcS = QueryServiceHelper.queryDataSet("AosMktGenerate.GeneratePpcYesterSt" + p_ou_code,
+//				"aos_mkt_pop_ppcst", SelectColumn, filters, null);
 		DataSet aos_mkt_popular_ppcS = QueryServiceHelper.queryDataSet("AosMktGenerate.GeneratePpcYesterSt" + p_ou_code,
-				"aos_mkt_pop_ppcst", SelectColumn, filters, null);
+				"aos_mkt_ppcst_data", SelectColumn, filters, null);
 		while (aos_mkt_popular_ppcS.hasNext()) {
 			Row aos_mkt_popular_ppc = aos_mkt_popular_ppcS.next();
 			HashMap<String, Object> Info = new HashMap<>();
@@ -806,12 +831,18 @@ public class AosMktGenerate {
 		QFilter filter_org = new QFilter("aos_orgid.number", QCP.equals, p_ou_code);
 		QFilter filter_date = new QFilter("aos_date", "=", Today);
 		QFilter[] filters = new QFilter[] { filter_date, filter_org };
-		String SelectColumn = "aos_entryentity.aos_itemnumer aos_itemnumer,"
-				+ "aos_entryentity.aos_keyword aos_keyword," + "aos_entryentity.aos_match_type aos_match_type,"
-				+ "aos_entryentity.aos_budget aos_budget," + "aos_entryentity.aos_bid aos_bid,"
-				+ "aos_entryentity.aos_keystatus aos_keystatus";
+//		String SelectColumn = "aos_entryentity.aos_itemnumer aos_itemnumer,"
+//				+ "aos_entryentity.aos_keyword aos_keyword," + "aos_entryentity.aos_match_type aos_match_type,"
+//				+ "aos_entryentity.aos_budget aos_budget," + "aos_entryentity.aos_bid aos_bid,"
+//				+ "aos_entryentity.aos_keystatus aos_keystatus";
+//		DataSet aos_mkt_popular_ppcS = QueryServiceHelper.queryDataSet("AosMktGenerate.GeneratePpcTodaySt" + p_ou_code,
+//				"aos_mkt_pop_ppcst", SelectColumn, filters, null);
+		
+		String SelectColumn = "aos_itemnumer,aos_keyword,aos_match_type,aos_budget,"
+				+ "aos_bid,aos_keystatus";
 		DataSet aos_mkt_popular_ppcS = QueryServiceHelper.queryDataSet("AosMktGenerate.GeneratePpcTodaySt" + p_ou_code,
-				"aos_mkt_pop_ppcst", SelectColumn, filters, null);
+				"aos_mkt_ppcst_data", SelectColumn, filters, null);
+		
 		while (aos_mkt_popular_ppcS.hasNext()) {
 			Row aos_mkt_popular_ppc = aos_mkt_popular_ppcS.next();
 			HashMap<String, Object> Info = new HashMap<>();
@@ -837,9 +868,14 @@ public class AosMktGenerate {
 		QFilter filter_org = new QFilter("aos_orgid.number", QCP.equals, p_ou_code);
 		QFilter filter_date = new QFilter("aos_date", "=", Today);
 		QFilter[] filters = new QFilter[] { filter_date, filter_org };
-		String SelectColumn = "aos_entryentity.aos_itemnumer aos_itemnumer," + "1 aos_count";
+//		String SelectColumn = "aos_entryentity.aos_itemnumer aos_itemnumer," + "1 aos_count";
+//		DataSet aos_mkt_popular_ppcS = QueryServiceHelper.queryDataSet(
+//				"AosMktGenerate.GeneratePpcTodayStGroup" + p_ou_code, "aos_mkt_pop_ppcst", SelectColumn, filters, null);
+		
+		String SelectColumn = "aos_itemnumer," + "1 aos_count";
 		DataSet aos_mkt_popular_ppcS = QueryServiceHelper.queryDataSet(
-				"AosMktGenerate.GeneratePpcTodayStGroup" + p_ou_code, "aos_mkt_pop_ppcst", SelectColumn, filters, null);
+				"AosMktGenerate.GeneratePpcTodayStGroup" + p_ou_code, "aos_mkt_ppcst_data", SelectColumn, filters, null);
+		
 		String[] GroupBy = new String[] { "aos_itemnumer" };
 		aos_mkt_popular_ppcS = aos_mkt_popular_ppcS.groupBy(GroupBy).sum("aos_count").finish();
 		while (aos_mkt_popular_ppcS.hasNext()) {
@@ -863,11 +899,17 @@ public class AosMktGenerate {
 		QFilter filter_org = new QFilter("aos_orgid.number", QCP.equals, p_ou_code);
 		QFilter filter_date = new QFilter("aos_date", "=", Today);
 		QFilter[] filters = new QFilter[] { filter_date, filter_org };
-		String SelectColumn = "aos_entryentity.aos_productno aos_productno ,"
-				+ "aos_entryentity.aos_itemnumer aos_itemnumer";
+//		String SelectColumn = "aos_entryentity.aos_productno aos_productno ,"
+//				+ "aos_entryentity.aos_itemnumer aos_itemnumer";
+//		DataSet aos_mkt_popular_ppcS = QueryServiceHelper.queryDataSet(
+//				"AosMktGenerate.GeneratePpcTodayStSerialGroup" + p_ou_code, "aos_mkt_pop_ppcst", SelectColumn, filters,
+//				null);
+		String SelectColumn = "aos_productno ,aos_itemnumer";
 		DataSet aos_mkt_popular_ppcS = QueryServiceHelper.queryDataSet(
-				"AosMktGenerate.GeneratePpcTodayStSerialGroup" + p_ou_code, "aos_mkt_pop_ppcst", SelectColumn, filters,
+				"AosMktGenerate.GeneratePpcTodayStSerialGroup" + p_ou_code, "aos_mkt_ppcst_data", SelectColumn, filters,
 				null);
+		
+		
 		String[] GroupBy = new String[] { "aos_productno", "aos_itemnumer" };
 		aos_mkt_popular_ppcS = aos_mkt_popular_ppcS.groupBy(GroupBy).finish();
 		while (aos_mkt_popular_ppcS.hasNext()) {
@@ -899,10 +941,16 @@ public class AosMktGenerate {
 		QFilter filter_org = new QFilter("aos_orgid.number", QCP.equals, p_ou_code);
 		QFilter filter_date = new QFilter("aos_date", "=", Today);
 		QFilter[] filters = new QFilter[] { filter_date, filter_org };
-		String SelectColumn = "aos_entryentity.aos_productno aos_productno," + "1 aos_count";
+//		String SelectColumn = "aos_entryentity.aos_productno aos_productno," + "1 aos_count";
+//		DataSet aos_mkt_popular_ppcS = QueryServiceHelper.queryDataSet(
+//				"AosMktGenerate.GeneratePpcTodayStSerial" + p_ou_code, "aos_mkt_pop_ppcst", SelectColumn, filters,
+//				null);
+		
+		String SelectColumn = "aos_productno," + "1 aos_count";
 		DataSet aos_mkt_popular_ppcS = QueryServiceHelper.queryDataSet(
-				"AosMktGenerate.GeneratePpcTodayStSerial" + p_ou_code, "aos_mkt_pop_ppcst", SelectColumn, filters,
+				"AosMktGenerate.GeneratePpcTodayStSerial" + p_ou_code, "aos_mkt_ppcst_data", SelectColumn, filters,
 				null);
+		
 		String[] GroupBy = new String[] { "aos_productno" };
 		aos_mkt_popular_ppcS = aos_mkt_popular_ppcS.groupBy(GroupBy).sum("aos_count").finish();
 		while (aos_mkt_popular_ppcS.hasNext()) {
@@ -938,9 +986,14 @@ public class AosMktGenerate {
 		QFilter filter_date_to = new QFilter("aos_date", "<", date_to_str);
 		QFilter filter_org = new QFilter("aos_orgid.number", QCP.equals, p_ou_code);
 		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_org };
-		String SelectColumn = "aos_entryentity.aos_productno aos_productno," + "aos_entryentity.aos_budget aos_budget";
+//		String SelectColumn = "aos_entryentity.aos_productno aos_productno," + "aos_entryentity.aos_budget aos_budget";
+//		DataSet aos_mkt_popular_ppcS = QueryServiceHelper.queryDataSet(
+//				"AosMktGenerate.GeneratePpcYeStSerial" + p_ou_code, "aos_mkt_pop_ppcst", SelectColumn, filters, null);
+		
+		String SelectColumn = "aos_productno,aos_budget";
 		DataSet aos_mkt_popular_ppcS = QueryServiceHelper.queryDataSet(
-				"AosMktGenerate.GeneratePpcYeStSerial" + p_ou_code, "aos_mkt_pop_ppcst", SelectColumn, filters, null);
+				"AosMktGenerate.GeneratePpcYeStSerial" + p_ou_code, "aos_mkt_ppcst_data", SelectColumn, filters, null);
+		
 		String[] GroupBy = new String[] { "aos_productno", "aos_budget" };
 		aos_mkt_popular_ppcS = aos_mkt_popular_ppcS.groupBy(GroupBy).finish();
 		while (aos_mkt_popular_ppcS.hasNext()) {
@@ -1177,14 +1230,24 @@ public class AosMktGenerate {
 		SimpleDateFormat writeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);// 日期格式化
 		String date_from_str = writeFormat.format(date_from);
 		String date_to_str = writeFormat.format(date_to);
+//		QFilter filter_date_from = new QFilter("aos_date", ">=", date_from_str);
+//		QFilter filter_date_to = new QFilter("aos_date", "<", date_to_str);
+//		QFilter filter_org = new QFilter("aos_orgid.number", QCP.equals, p_ou_code);
+//		QFilter Qf_type = new QFilter("aos_entryentity.aos_groupstatus", "=", "AVAILABLE");
+//		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, Qf_type, filter_org };
+//		String SelectColumn = "aos_entryentity.aos_productno aos_productno," + "aos_entryentity.aos_budget aos_budget";
+//		DataSet aos_mkt_popular_ppcS = QueryServiceHelper.queryDataSet("AosMktGenerate.GenerateSalSummarySerial",
+//				"aos_mkt_pop_ppcst", SelectColumn, filters, null);
+		
 		QFilter filter_date_from = new QFilter("aos_date", ">=", date_from_str);
 		QFilter filter_date_to = new QFilter("aos_date", "<", date_to_str);
 		QFilter filter_org = new QFilter("aos_orgid.number", QCP.equals, p_ou_code);
-		QFilter Qf_type = new QFilter("aos_entryentity.aos_groupstatus", "=", "AVAILABLE");
+		QFilter Qf_type = new QFilter("aos_groupstatus", "=", "AVAILABLE");
 		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, Qf_type, filter_org };
-		String SelectColumn = "aos_entryentity.aos_productno aos_productno," + "aos_entryentity.aos_budget aos_budget";
+		String SelectColumn = "aos_productno," + "aos_budget";
 		DataSet aos_mkt_popular_ppcS = QueryServiceHelper.queryDataSet("AosMktGenerate.GenerateSalSummarySerial",
-				"aos_mkt_pop_ppcst", SelectColumn, filters, null);
+				"aos_mkt_ppcst_data", SelectColumn, filters, null);
+		
 		String[] GroupBy = new String[] { "aos_productno", "aos_budget" };
 		aos_mkt_popular_ppcS = aos_mkt_popular_ppcS.groupBy(GroupBy).finish();
 		while (aos_mkt_popular_ppcS.hasNext()) {
@@ -1418,14 +1481,21 @@ public class AosMktGenerate {
 		Date Today = today.getTime();
 		QFilter Qf_Date = new QFilter("aos_date", "=", Today);
 		QFilter Qf_Org = new QFilter("aos_orgid.number", "=", p_ou_code);
-		QFilter Qf_type = new QFilter("aos_entryentity.aos_groupstatus", "=", "AVAILABLE");
-		QFilter Qf_typekey = new QFilter("aos_entryentity.aos_keystatus", "=", "AVAILABLE");
-		QFilter Qf_group = new QFilter("aos_entryentity.aos_sal_group", "=", p_group_id);
+//		QFilter Qf_type = new QFilter("aos_entryentity.aos_groupstatus", "=", "AVAILABLE");
+//		QFilter Qf_typekey = new QFilter("aos_entryentity.aos_keystatus", "=", "AVAILABLE");
+//		QFilter Qf_group = new QFilter("aos_entryentity.aos_sal_group", "=", p_group_id);
+		QFilter Qf_type = new QFilter("aos_groupstatus", "=", "AVAILABLE");
+		QFilter Qf_typekey = new QFilter("aos_keystatus", "=", "AVAILABLE");
+		QFilter Qf_group = new QFilter("aos_sal_group", "=", p_group_id);
+		
 		QFilter[] filters = new QFilter[] { Qf_Date, Qf_Org, Qf_type, Qf_group, Qf_typekey };
-		String SelectColumn = "aos_entryentity.aos_itemnumer aos_ad_name," + "aos_entryentity.aos_keyword aos_keyword,"
-				+ "aos_entryentity.aos_match_type aos_match_type";
+//		String SelectColumn = "aos_entryentity.aos_itemnumer aos_ad_name," + "aos_entryentity.aos_keyword aos_keyword,"
+//				+ "aos_entryentity.aos_match_type aos_match_type";
+//		DataSet aos_base_skupoprptS = QueryServiceHelper.queryDataSet(
+//				"AosMktGenerate.GenerateKeyDetailToday" + p_ou_code, "aos_mkt_pop_ppcst", SelectColumn, filters, null);
+		String SelectColumn = "aos_itemnumer aos_ad_name,aos_keyword,aos_match_type";
 		DataSet aos_base_skupoprptS = QueryServiceHelper.queryDataSet(
-				"AosMktGenerate.GenerateKeyDetailToday" + p_ou_code, "aos_mkt_pop_ppcst", SelectColumn, filters, null);
+				"AosMktGenerate.GenerateKeyDetailToday" + p_ou_code, "aos_mkt_ppcst_data", SelectColumn, filters, null);
 		while (aos_base_skupoprptS.hasNext()) {
 			Row aos_base_skupoprpt = aos_base_skupoprptS.next();
 			String key = aos_base_skupoprpt.getString("aos_ad_name");
@@ -1458,11 +1528,17 @@ public class AosMktGenerate {
 		QFilter filter_date_from = new QFilter("aos_date", ">=", date_from_str);
 		QFilter filter_date_to = new QFilter("aos_date", "<=", date_to_str);
 		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_org };
-		String SelectColumn = "aos_date," + "aos_entryentity.aos_budget aos_budget,"
-				+ "aos_entryentity.aos_productno aos_productno,1 aos_keycount";
+//		String SelectColumn = "aos_date," + "aos_entryentity.aos_budget aos_budget,"
+//				+ "aos_entryentity.aos_productno aos_productno,1 aos_keycount";
+//		DataSet aos_mkt_popular_ppcS = QueryServiceHelper.queryDataSet(
+//				"AosMktGenerate.GenerateYesterSTSerial7D" + p_ou_code, "aos_mkt_pop_ppcst", SelectColumn, filters,
+//				null);
+		String SelectColumn = "aos_date,aos_budget,aos_productno,1 aos_keycount";
 		DataSet aos_mkt_popular_ppcS = QueryServiceHelper.queryDataSet(
-				"AosMktGenerate.GenerateYesterSTSerial7D" + p_ou_code, "aos_mkt_pop_ppcst", SelectColumn, filters,
+				"AosMktGenerate.GenerateYesterSTSerial7D" + p_ou_code, "aos_mkt_ppcst_data", SelectColumn, filters,
 				null);
+		
+		
 		String[] GroupBy = new String[] { "aos_date", "aos_productno", "aos_budget" };
 		aos_mkt_popular_ppcS = aos_mkt_popular_ppcS.groupBy(GroupBy).sum("aos_keycount").finish();
 		while (aos_mkt_popular_ppcS.hasNext()) {
@@ -1501,11 +1577,17 @@ public class AosMktGenerate {
 		QFilter filter_date_from = new QFilter("aos_date", ">=", date_from_str);
 		QFilter filter_date_to = new QFilter("aos_date", "<=", date_to_str);
 		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_org };
-		String SelectColumn = "aos_date," + "aos_entryentity.aos_productno aos_productno,"
-				+ "aos_entryentity.aos_itemnumer aos_itemnumer";
+//		String SelectColumn = "aos_date," + "aos_entryentity.aos_productno aos_productno,"
+//				+ "aos_entryentity.aos_itemnumer aos_itemnumer";
+//		DataSet aos_mkt_popular_ppcS = QueryServiceHelper.queryDataSet(
+//				"AosMktGenerate.GenerateYesterSTSerial7G" + p_ou_code, "aos_mkt_pop_ppcst", SelectColumn, filters,
+//				null);
+		
+		String SelectColumn = "aos_date,aos_productno,aos_itemnumer";
 		DataSet aos_mkt_popular_ppcS = QueryServiceHelper.queryDataSet(
-				"AosMktGenerate.GenerateYesterSTSerial7G" + p_ou_code, "aos_mkt_pop_ppcst", SelectColumn, filters,
+				"AosMktGenerate.GenerateYesterSTSerial7G" + p_ou_code, "aos_mkt_ppcst_data", SelectColumn, filters,
 				null);
+		
 		String[] GroupBy = new String[] { "aos_date", "aos_productno", "aos_itemnumer" };
 		aos_mkt_popular_ppcS = aos_mkt_popular_ppcS.groupBy(GroupBy).finish();
 		while (aos_mkt_popular_ppcS.hasNext()) {

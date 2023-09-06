@@ -43,6 +43,7 @@ import common.fnd.FndHistory;
 @SuppressWarnings("unchecked")
 public class aos_mkt_proghreq_list extends AbstractListPlugin {
 	private static final String KEY_Item = "item";
+	public final static String system = Cux_Common_Utl.SYSTEM;
 
 	@Override
 	public void packageData(PackageDataEvent e) {
@@ -107,7 +108,41 @@ public class aos_mkt_proghreq_list extends AbstractListPlugin {
 			IPageCache pageCache = this.getPageCache();
 			pageCache.put(KEY_Item, null);
 			this.getView().invokeOperation("refresh");
+		} else if ("aos_close".equals(itemKey)) {
+			aos_close();
 		}
+	}
+
+	/**
+	 * 批量关闭
+	 */
+	private void aos_close() {
+		List<Object> list = getSelectedRows().stream().map(row -> row.getPrimaryKeyValue()).distinct()
+				.collect(Collectors.toList());
+		Object CurrentUserId = UserServiceHelper.getCurrentUserId();
+		Object CurrentUserName = UserServiceHelper.getUserInfoByID((long) CurrentUserId).get("name");
+		if (!"赵轩".equals(CurrentUserName)) {
+			this.getView().showErrorNotification("无关闭权限,请联系管理员!");
+			return;
+		}
+		for (int i = 0; i < list.size(); i++) {
+			String id = list.get(i).toString();
+			DynamicObject aos_mkt_photoreq = BusinessDataServiceHelper.loadSingle(id, "aos_mkt_photoreq");
+			aos_mkt_photoreq.set("aos_status", "已完成");
+			aos_mkt_photoreq.set("aos_user", system);
+			OperationServiceHelper.executeOperate("save", "aos_mkt_photoreq", new DynamicObject[] { aos_mkt_photoreq },
+					OperateOption.create());
+			FndHistory fndHistory = new FndHistory();
+			fndHistory.SetActionBy(CurrentUserId);
+			fndHistory.SetFormId("aos_mkt_photoreq");
+			fndHistory.SetSourceId(id);
+			fndHistory.SetActionCode("手工关闭");// 操作动作
+			fndHistory.SetDesc(CurrentUserName + "手工关闭!"); // 操作备注
+			Cux_Common_Utl.History(fndHistory);// 插入历史记录;
+		}
+
+		this.getView().showSuccessNotification("关闭成功");
+		this.getView().invokeOperation("refresh");// 刷新列表
 	}
 
 	private void aos_submit() {
