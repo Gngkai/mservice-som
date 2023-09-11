@@ -164,6 +164,8 @@ public class MKTCom {
 	 * @return
 	 */
 	public static BigDecimal Get_ActQtyRate(String aos_itemstatus, String aos_seasonpro, String aos_festivalseting) {
+		try
+		{
 		// TODO 获取活动数量占比
 		BigDecimal ActQtyRate = null;
 		// 终止品80%节日品50%新品30%季节品30%正常产品30%
@@ -183,6 +185,10 @@ public class MKTCom {
 		else
 			ActQtyRate = BigDecimal.ONE;
 		return ActQtyRate;
+		}
+		catch (Exception ex) {
+			return null;
+		}
 	}
 
 	public static float Get_SeasonRate(long org_id, long item_id, String aos_season, Object item_overseaqty,
