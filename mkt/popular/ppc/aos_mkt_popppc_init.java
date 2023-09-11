@@ -351,6 +351,8 @@ public class aos_mkt_popppc_init extends AbstractTask {
 			Set<String> OnlineSkuSet = GenerateOnlineSkuSet(p_org_id);// 平台上架信息
 			Set<String> Deseaon = GenerateDeseaon();
 			Set<String> mustSet = GenerateMustSet(p_org_id);
+			Map<String, Integer> orgCateClickMap = genOrgCateClick(p_org_id);// 国别大类点击标准
+
 			// 获取昨天的所有差ROI剔除数据
 			DynamicObjectCollection list = QueryServiceHelper.query("aos_mkt_popular_ppc",
 					"aos_entryentity.aos_itemnumer aos_itemnumer",
@@ -587,6 +589,9 @@ public class aos_mkt_popppc_init extends AbstractTask {
 					}
 				}
 
+				// 点击数标准
+				int clickStd = orgCateClickMap.getOrDefault(aos_category1, 0);
+
 				// 获取销售组别并赋值
 				// 2.获取产品小类
 				String itemCategoryId = CommData.getItemCategoryId(item_id + "");
@@ -658,11 +663,11 @@ public class aos_mkt_popppc_init extends AbstractTask {
 				BigDecimal aos_rpt_roi = BigDecimal.ZERO;
 				BigDecimal aos_clicks = BigDecimal.ZERO;
 
-				Map<String, Object> SkuRptSerialMap = SkuRpt_Serial.get(org_id + "~" + aos_productno + "-AUTO");// Sku报告
+				Map<String, Object> SkuRptSerialMap = SkuRpt_Serial14.get(org_id + "~" + aos_productno + "-AUTO");// Sku报告
 				if (SkuRptSerialMap != null
 						&& ((BigDecimal) SkuRptSerialMap.get("aos_clicks")).compareTo(BigDecimal.ZERO) != 0) {
 					aos_clicks = (BigDecimal) SkuRptSerialMap.get("aos_clicks");
-					aos_rpt_roi = ((BigDecimal) SkuRptSerialMap.get("aos_total_order")).divide(aos_clicks, 2,
+					aos_rpt_roi = ((BigDecimal) SkuRptSerialMap.get("aos_total_order")).divide(aos_clicks, 3,
 							BigDecimal.ROUND_HALF_UP);
 				}
 
@@ -895,8 +900,8 @@ public class aos_mkt_popppc_init extends AbstractTask {
 						String RoiType = null;
 						// a.14 日在线 14天ROI＜4；且7天<8(不包括新品、季节品)
 						if (Online14Days && Roi14Days.compareTo(BigDecimal.valueOf(4)) < 0
-								&& Roi7Days.compareTo(BigDecimal.valueOf(8)) < 0 && !NewFlag && !SpringSummerFlag
-								&& !AutumnWinterFlag) {
+								&& aos_clicks14Days.compareTo(BigDecimal.valueOf(clickStd)) > 0 && !NewFlag
+								&& !SpringSummerFlag && !AutumnWinterFlag) {
 							ROIFlag = true;
 							RoiType = "a";
 						}
@@ -907,7 +912,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
 						}
 						// c.在线7天，不到14天，点击＞国别标准(US300,其它150)，ROI＜4(不包括季节品)
 						if (Online7Days && !Online14Days && Roi14Days.compareTo(BigDecimal.valueOf(4)) < 0
-								&& aos_clicks14Days.compareTo(CLICK) > 0 && !SpringSummerFlag && !AutumnWinterFlag) {
+								&& aos_clicks14Days.compareTo(BigDecimal.valueOf(clickStd)) > 0 && !SpringSummerFlag && !AutumnWinterFlag) {
 							ROIFlag = true;
 							RoiType = "c";
 						}
@@ -1015,7 +1020,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
 
 						// 差转化率剔除
 						if (aos_rpt_roi.compareTo(exRateLowSt) <= 0 && Roi14Days.compareTo(BigDecimal.valueOf(8)) < 0
-								&& aos_clicks.compareTo(HighClick) > 0 && exFlag) {
+								&& aos_clicks14Days.compareTo(BigDecimal.valueOf(clickStd)) > 0 && exFlag) {
 							InsertData(aos_entryentityS, insert_map, "差转化率剔除", roiMap);
 							log.add(aos_itemnumer + " 差转化率自动剔除");
 							continue;
@@ -1614,11 +1619,11 @@ public class aos_mkt_popppc_init extends AbstractTask {
 				// 7日转化率
 				BigDecimal aos_rpt_roi = BigDecimal.ZERO;
 
-				Map<String, Object> SkuRptSerialMap = SkuRpt_Serial.get(org_id + "~" + aos_productno);// Sku报告
+				Map<String, Object> SkuRptSerialMap = SkuRpt_Serial14.get(org_id + "~" + aos_productno);// Sku报告
 				if (SkuRptSerialMap != null
 						&& ((BigDecimal) SkuRptSerialMap.get("aos_clicks")).compareTo(BigDecimal.ZERO) != 0) {
 					aos_clicks = (BigDecimal) SkuRptSerialMap.get("aos_clicks");
-					aos_rpt_roi = ((BigDecimal) SkuRptSerialMap.get("aos_total_order")).divide(aos_clicks, 2,
+					aos_rpt_roi = ((BigDecimal) SkuRptSerialMap.get("aos_total_order")).divide(aos_clicks, 3,
 							BigDecimal.ROUND_HALF_UP);
 				}
 
@@ -1713,6 +1718,19 @@ public class aos_mkt_popppc_init extends AbstractTask {
 			String messageStr = message + "\r\n" + exceptionStr;
 			logger.error("PPC推广SP初始化失败!" + messageStr, e);
 		}
+	}
+
+	/**
+	 * 生成国别品类点击标准
+	 * 
+	 * @param p_org_id
+	 * @return
+	 */
+	private static Map<String, Integer> genOrgCateClick(Object p_org_id) {
+		DynamicObjectCollection list = QueryServiceHelper.query("aos_base_cateclick", "aos_category1,aos_click",
+				new QFilter("aos_orgid", QCP.equals, p_org_id).toArray());
+		return list.stream().collect(Collectors.toMap(obj -> obj.getString("aos_category1"),
+				obj -> obj.getInt("aos_click"), (k1, k2) -> k1));
 	}
 
 	public static BigDecimal getExRateLowSt(Object p_ou_code, String level) {
