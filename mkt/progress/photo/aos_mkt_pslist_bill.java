@@ -22,6 +22,7 @@ import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.MKTCom;
 import mkt.common.MKTS3PIC;
 import mkt.progress.ProgressUtil;
+import mkt.progress.design.aos_mkt_designreq_bill;
 import mkt.progress.iface.iteminfo;
 
 public class aos_mkt_pslist_bill extends AbstractBillPlugIn implements ItemClickListener {
@@ -267,6 +268,7 @@ public class aos_mkt_pslist_bill extends AbstractBillPlugIn implements ItemClick
 		aos_subentryentity.set("aos_broitem", aos_broitem);
 		aos_subentryentity.set("aos_orgtext", aos_orgtext);
 
+		aos_mkt_designreq_bill.createDesiginBeforeSave(aos_mkt_designreq);
 		OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_designreq",
 				new DynamicObject[] { aos_mkt_designreq }, OperateOption.create());
 		if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
