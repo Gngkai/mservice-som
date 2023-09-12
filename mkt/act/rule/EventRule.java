@@ -112,6 +112,9 @@ public class EventRule {
             String itemId = itemInfoe.getString("id");
             //获取物料品类
             String cate = cateItem.get(itemId).getString("gnumber").split(",")[0];
+            if (!alreadyFilledCate.containsKey(cate)){
+                continue;
+            }
             //判断品类是否填满
             int alreadyQty = alreadyFilledCate.get(cate);
             //品类能填入的最大数据
