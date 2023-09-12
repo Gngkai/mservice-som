@@ -25,9 +25,12 @@ import kd.bos.formula.FormulaEngine;
 import kd.bos.logging.Log;
 import kd.bos.logging.LogFactory;
 import kd.bos.orm.query.QFilter;
+import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.fi.bd.util.QFBuilder;
+import mkt.act.rule.service.ActPlanService;
+import mkt.act.rule.service.impl.ActPlanServiceImpl;
 import mkt.common.MKTCom;
 import sal.act.ActShopProfit.aos_sal_act_from;
 
@@ -46,25 +49,25 @@ import java.util.*;
 public class EventRule {
     private static final Log logger = LogFactory.getLog("mkt.act.rule.EventRule");
     //活动库单据
-    private final DynamicObject typEntity;
-    private final DynamicObject actPlanEntity;
+    private  DynamicObject typEntity;
+    private DynamicObject actPlanEntity;
     //活动库每行规则的执行结果，key：project+seq,value: (item:result)
-    private final Map<String,Map<String,Boolean>> rowResults;
+    private  Map<String,Map<String,Boolean>> rowResults;
     //国别
     private final DynamicObject orgEntity;
     //国别下所有的物料，方便后续筛选
     private DynamicObjectCollection itemInfoes;
     //日志
-    private final FndLog fndLog;
+    private  FndLog fndLog;
     //物料对应的品类
     private Map<String,DynamicObject> cateItem;
-    EventRule(DynamicObject typeEntity,DynamicObject dy_main){
+    public EventRule(DynamicObject typeEntity,DynamicObject dy_main){
         try {
             this.typEntity = typeEntity;
             this.actPlanEntity = dy_main;
             orgEntity = dy_main.getDynamicObject("aos_nationality");
             //获取用于计算的物料
-            setItemInfo();
+            setItemInfo(null);
             //解析行公式
             rowResults = new HashMap<>();
             this.fndLog = FndLog.init("活动选品明细导入", actPlanEntity.getString("billno"));
@@ -80,6 +83,58 @@ public class EventRule {
         }
 
     }
+
+    public EventRule(DynamicObject dy_main){
+        this.actPlanEntity = dy_main;
+        orgEntity = dy_main.getDynamicObject("aos_nationality");
+
+        QFBuilder builder = new QFBuilder();
+        if (orgEntity==null){
+            return;
+        }
+        if (actPlanEntity.get("aos_channel")==null){
+            return;
+        }
+        if (actPlanEntity.get("aos_shop")==null){
+            return;
+        }
+        if (actPlanEntity.get("aos_acttype")==null){
+            return;
+        }
+
+
+        builder.add("aos_org","=",orgEntity.getPkValue());
+        builder.add("aos_channel","=",actPlanEntity.getDynamicObject("aos_channel").getPkValue());
+        builder.add("aos_shop","=",actPlanEntity.getDynamicObject("aos_shop").getPkValue());
+        builder.add("aos_acttype","=",actPlanEntity.getDynamicObject("aos_acttype").getPkValue());
+        DynamicObject type = QueryServiceHelper.queryOne("aos_sal_act_type_p", "id", builder.toArray());
+        if (type==null) {
+            return;
+        }
+        //获取活动规则
+        typEntity = BusinessDataServiceHelper.loadSingle(type.getString("id"), "aos_sal_act_type_p");
+        //判断公式是否维护了
+        if (FndGlobal.IsNull(typEntity.get("aos_rule_v"))) {
+            return;
+        }
+
+        //获取用于计算的物料
+        DynamicObjectCollection entityRows = actPlanEntity.getDynamicObjectCollection("aos_sal_actplanentity");
+        List<String> itemids = new ArrayList<>(entityRows.size());
+        for (DynamicObject row : entityRows) {
+            if (row.getDynamicObject("aos_itemnum")!=null) {
+                itemids.add(row.getDynamicObject("aos_itemnum").getString("id"));
+            }
+        }
+        setItemInfo(itemids);
+
+        //解析行公式
+        rowResults = new HashMap<>();
+        this.fndLog = FndLog.init("活动选品明细导入", actPlanEntity.getString("billno"));
+        parsingRowRule();
+        addData(itemids);
+    }
+
 
     /**
      * 执行选品公式，判断物料是否应该剔除
@@ -161,8 +216,9 @@ public class EventRule {
             filterItem.add(backupData.get(index));
         }
         //将筛选完成的物料填入活动选品表中
-        addData(filterItem);
-        fndLog.finnalSave();
+        //选品数
+
+        addData(filterItem,selectQty);
     }
 
     /**
@@ -226,27 +282,112 @@ public class EventRule {
     /**
      * 向活动选品表中添加数据
      */
-    private void addData(List<DynamicObject> filterItem){
-        //选品数
-        int selectQty = 100;
-        if (FndGlobal.IsNotNull(typEntity.get("aos_qty"))) {
-            selectQty = Integer.parseInt(typEntity.getString("aos_qty"));
-        }
+    private void addData(List<DynamicObject> filterItem,int selectQty){
         selectQty = Math.min(selectQty, filterItem.size());
         DynamicObjectCollection dyc = actPlanEntity.getDynamicObjectCollection("aos_sal_actplanentity");
+        Date startdate = actPlanEntity.getDate("aos_startdate");
+        Date enddate = actPlanEntity.getDate("aos_enddate1");
+        //查找帖子id
+        Object shopid = actPlanEntity.getDynamicObject("aos_shop").getPkValue();
+        List<String> list_filterItem = new ArrayList<>(filterItem.size());
+        for (DynamicObject info : filterItem) {
+            list_filterItem.add(info.getString("id"));
+        }
+        Map<String, String> map_asin = ActUtil.queryOrgShopItemASIN(orgEntity.getPkValue(),shopid, list_filterItem);
+
         for (int index = 0; index <selectQty; index++) {
             DynamicObject itemInfo = filterItem.get(index);
             DynamicObject addNewRow = dyc.addNew();
-            addNewRow.set("aos_itemnum",itemInfo.getString("id"));
+            String itemid = itemInfo.getString("id");
+            addNewRow.set("aos_itemnum",itemid);
             addNewRow.set("aos_itemname",itemInfo.getString("name"));
+            addNewRow.set("aos_l_startdate",startdate);
+            addNewRow.set("aos_enddate",enddate);
+            addNewRow.set("aos_postid",map_asin.get(itemid));
+            addNewRow.set("aos_is_saleout",itemInfo.get("aos_is_saleout"));
+            addNewRow.set("aos_fit","Y");
+            if (cateItem.containsKey(itemid)){
+                String cateName = cateItem.get(itemid).getString("gname");
+                String[] split = cateName.split(",");
+                if (split.length>0){
+                    addNewRow.set("aos_category_stat1",split[0]);
+                }
+                if (split.length>1){
+                    addNewRow.set("aos_category_stat2",split[1]);
+                }
+            }
         }
         SaveServiceHelper.save(new DynamicObject[]{actPlanEntity});
+        // 赋值库存信息、活动信息
+        ActPlanService actPlanService = new ActPlanServiceImpl();
+        actPlanEntity = BusinessDataServiceHelper.loadSingle(actPlanEntity.getPkValue(),"aos_act_select_plan");
+        actPlanService.updateActInfo(actPlanEntity);
+        fndLog.finnalSave();
+    }
+
+    /**
+     * 判断活动选品表中的数据是否符合规定
+     */
+    private void addData(List<String> list_filterItem){
+        String ruleValue = typEntity.getString("aos_rule_v");
+        String[] parameterKey = FormulaEngine.extractVariables(ruleValue);
+        Map<String,Object> parameters = new HashMap<>(parameterKey.length);
+
+        DynamicObjectCollection dyc = actPlanEntity.getDynamicObjectCollection("aos_sal_actplanentity");
+        Date startdate = actPlanEntity.getDate("aos_startdate");
+        Date enddate = actPlanEntity.getDate("aos_enddate1");
+        //查找帖子id
+        Object shopid = actPlanEntity.getDynamicObject("aos_shop").getPkValue();
+        Map<String, String> map_asin = ActUtil.queryOrgShopItemASIN(orgEntity.getPkValue(),shopid, list_filterItem);
+
+        Map<String,DynamicObject> map_itemInfo = new HashMap<>(itemInfoes.size());
+        for (DynamicObject infoe : itemInfoes) {
+            map_itemInfo.put(infoe.getString("id"),infoe);
+        }
+
+        for (DynamicObject row : dyc) {
+            if (row.getDynamicObject("aos_itemnum")==null) {
+                continue;
+            }
+            String itemid = row.getDynamicObject("aos_itemnum").getString("id");
+            row.set("aos_itemname",row.getDynamicObject("aos_itemnum").getString("name"));
+            row.set("aos_postid",map_asin.get(itemid));
+            if (row.get("aos_l_startdate") ==null){
+                row.set("aos_l_startdate",startdate);
+            }
+            if (row.get("aos_enddate")==null){
+                row.set("aos_enddate",enddate);
+
+            }
+
+            DynamicObject info = map_itemInfo.get(itemid);
+            if (info==null){
+                row.set("aos_fit","N");
+            }
+            else {
+                row.set("aos_is_saleout",info.getString("aos_is_saleout"));
+                //执行公式
+                parameters.clear();
+                for (String key : parameterKey) {
+                    parameters.put(key,rowResults.get(key).get(itemid));
+                }
+                //执行公式
+                boolean result = Boolean.parseBoolean(FormulaEngine.execExcelFormula(ruleValue, parameters).toString());
+                if (result) {
+                    row.set("aos_fit","Y");
+                }
+                else {
+                    row.set("aos_fit","N");
+                }
+            }
+        }
+        fndLog.finnalSave();
     }
 
     /**
      * 获取国别下的物料
      */
-    private void setItemInfo(){
+    private void setItemInfo(List<String> itemids){
         //先根据活动库中的品类筛选出合适的物料
         ItemCategoryDao categoryDao = new ItemCategoryDaoImpl();
         QFBuilder builder = new QFBuilder();
@@ -265,12 +406,14 @@ public class EventRule {
             if (FndGlobal.IsNotNull(row.get("aos_name"))){
                 builder.add("material.name","=",row.getString("aos_name"));
             }
-            if (builder.size()>0){
-                DynamicObjectCollection cateResults = categoryDao.queryData(str.toString(), builder);
-                for (DynamicObject result : cateResults) {
-                    cateItem.put(result.getString("material"),result);
-                }
+            if (itemids!=null && itemids.size()>0){
+                builder.add("material",QFilter.in,itemids);
             }
+            DynamicObjectCollection cateResults = categoryDao.queryData(str.toString(), builder);
+            for (DynamicObject result : cateResults) {
+                cateItem.put(result.getString("material"),result);
+            }
+
         }
 
 
@@ -287,6 +430,9 @@ public class EventRule {
         selectFields.add("aos_contryentry.aos_seasonseting.aos_seasonal_pro.number seasonpro");
         QFilter filter = new QFilter("aos_contryentry.aos_nationality","=",orgEntity.getPkValue());
         filter.and(new QFilter("id",QFilter.in,cateItem.keySet()));
+        if (itemids!=null && itemids.size()>0){
+          filter.and(new QFilter("id",QFilter.in,itemids));
+        }
         itemInfoes = itemDao.listItemObj(selectFields.toString(),filter,null);
     }
 
