@@ -61,7 +61,7 @@ public class DesignSkuList {
             list_save.add(dy);
             SaveUtils.SaveEntity("aos_mkt_3ditem",list_save,false);
         }
-        SaveUtils.SaveEntity("aos_mkt_3ditem",list_save,false);
+        SaveUtils.SaveEntity("aos_mkt_3ditem",list_save,true);
 
     }
 
