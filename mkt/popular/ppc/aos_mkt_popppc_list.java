@@ -3,6 +3,7 @@ package mkt.popular.ppc;
 import common.Cux_Common_Utl;
 import common.fnd.FndDate;
 import common.fnd.FndGlobal;
+import common.fnd.FndMsg;
 import common.sal.sys.basedata.dao.ItemDao;
 import common.sal.sys.basedata.dao.impl.ItemDaoImpl;
 import kd.bos.algo.DataSet;
@@ -488,6 +489,9 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 		Map<String, String> portfolio = new HashMap<>();
 		HashMap<String, Map<String, Object>> PopOrgInfo = genPop();
 		BigDecimal PopOrgRoist = (BigDecimal) PopOrgInfo.get(aos_orgid + "~" + "ROIST").get("aos_value");// 国别标准ROI
+		
+		FndMsg.debug("PopOrgRoist:"+PopOrgRoist);
+		
 		// 系列ROI
 		HashMap<String, BigDecimal> SkuRpt = new HashMap<>();
 		Calendar calendar = Calendar.getInstance();
@@ -495,16 +499,20 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 		calendar.set(Calendar.MINUTE, 0);
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
+		Date date = calendar.getTime();
 		calendar.add(Calendar.DAY_OF_MONTH, -2);
 		Date date_to = calendar.getTime();
 		calendar.add(Calendar.DAY_OF_MONTH, -14);
 		Date date_from = calendar.getTime();
+		
 		SimpleDateFormat writeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);// 日期格式化
 		String date_from_str = writeFormat.format(date_from);
 		String date_to_str = writeFormat.format(date_to);
+		String date_str = writeFormat.format(date);
+		
 		QFilter filter_date_from = new QFilter("aos_entryentity.aos_date_l", ">=", date_from_str);
 		QFilter filter_date_to = new QFilter("aos_entryentity.aos_date_l", "<=", date_to_str);
-		QFilter filter_date = new QFilter("aos_date", "=", date_to_str);
+		QFilter filter_date = new QFilter("aos_date", "=", date_str);
 		QFilter filter_match = new QFilter("aos_entryentity.aos_cam_name", "like", "%-AUTO%");
 		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_date, filter_match };
 		String SelectColumn = "aos_orgid," + "aos_entryentity.aos_ad_sku.aos_productno||'-AUTO' aos_productno,"

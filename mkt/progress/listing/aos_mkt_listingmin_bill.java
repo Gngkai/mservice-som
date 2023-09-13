@@ -40,6 +40,7 @@ import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.MKTCom;
 import mkt.common.MKTS3PIC;
 import mkt.progress.ProgressUtil;
+import mkt.progress.design.aos_mkt_designreq_bill;
 import mkt.progress.iface.iteminfo;
 import mkt.progress.parameter.errorListing.ErrorListEntity;
 import sal.synciface.imp.aos_sal_import_pub;
@@ -1143,6 +1144,7 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
 				MessageId = bos_user.getString("id");
 			}
 		}
+		aos_mkt_designreq_bill.createDesiginBeforeSave(aos_mkt_designreq);
 		OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_designreq",
 				new DynamicObject[] { aos_mkt_designreq }, OperateOption.create());
 		if (operationrst.isSuccess()) {
