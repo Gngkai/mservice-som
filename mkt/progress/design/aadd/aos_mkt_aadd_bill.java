@@ -624,10 +624,12 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 			this.getView().setVisible(false, "bar_save");// 保存
 			this.getView().setVisible(false, "aos_submit");// 提交
 		}
+
+		EntryGrid entryGrid = this.getControl("aos_entryentity");
+		entryGrid.setColumnProperty("aos_contrast", ClientProperties.Lock, true);
 		// 状态控制
 		if ("新建".equals(aosStatus)) {
 			this.getView().setEnable(false, "aos_osconfirm");// 是否海外确认
-			EntryGrid entryGrid = this.getControl("aos_entryentity");
 			entryGrid.setColumnProperty("aos_aadd", ClientProperties.Lock, true);
 			entryGrid.setColumnProperty("aos_new", ClientProperties.Lock, true);
 			entryGrid.setColumnProperty("aos_same", ClientProperties.Lock, true);
@@ -680,6 +682,7 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 			this.getView().setEnable(false, 0, "aos_same");// 同款
 			this.getView().setEnable(false, 0, "aos_trans");// 翻译
 			this.getView().setEnable(false, 0, "aos_itemid");// 货号
+			entryGrid.setColumnProperty("aos_contrast", ClientProperties.Lock, false);
 		} else if ("销售上线".equals(aosStatus)) {
 			this.getView().setVisible(false, "bar_save");// 保存
 			this.getView().setEnable(false, "aos_osconfirm");// 是否海外确认
