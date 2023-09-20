@@ -60,10 +60,7 @@ public class aos_mkt_act_query_imp extends BatchImportPlugin {
 	private synchronized void Before() {
 		String currentUserId = UserServiceHelper.getCurrentUserId() + "";
 		String ImpInitFlag = cache.get(currentUserId);
-		System.out.println("currentUserId =" + currentUserId);
-		System.out.println("ImpInitFlag =" + ImpInitFlag);
 		if (ImpInitFlag == null || "".equals(ImpInitFlag) || "null".equals(ImpInitFlag) || ItemCategory == null) {
-			System.out.println("======into first======");
 			ItemCategory = GenerateCategory();
 			ItemInfo = GenerateItemInfo();
 			ItemPrice = GenerateItemPrice();
@@ -80,9 +77,7 @@ public class aos_mkt_act_query_imp extends BatchImportPlugin {
 			deStockQtyMap = calInventory();
 			IeInstockQty = getIeInStockQty();
 			cache.put(currentUserId, "Y", 3600);
-			System.out.println("cache.get =" + cache.get(currentUserId));
 		} else {
-			System.out.println("======into remove======");
 			cache.remove(currentUserId);
 		}
 
@@ -157,7 +152,6 @@ public class aos_mkt_act_query_imp extends BatchImportPlugin {
 				String orgid_str = "";
 				String itemid_str = "";
 				String key = org_number + "~" + item_number;
-				System.out.println(key);
 				// 类别
 				String itemCategoryName = ItemCategory.get(item_number);
 				String aos_category1 = "";
@@ -292,7 +286,6 @@ public class aos_mkt_act_query_imp extends BatchImportPlugin {
 			ItemInfo.put(aos_sync_invprice.getString("ou_code") + "~" + aos_sync_invprice.getString("item_number"),
 					Info);
 		}
-		System.out.println("=====结束官网价格初始化=====");
 		return ItemInfo;
 	}
 
@@ -312,7 +305,6 @@ public class aos_mkt_act_query_imp extends BatchImportPlugin {
 			ItemInfo.put(aos_sync_invprice.getString("ou_code") + "~" + aos_sync_invprice.getString("item_number"),
 					Info);
 		}
-		System.out.println("=====结束每日价格初始化=====");
 		return ItemInfo;
 	}
 
@@ -357,7 +349,6 @@ public class aos_mkt_act_query_imp extends BatchImportPlugin {
 				categoryNameMap.put(item_number, categoryName);
 			}
 		}
-		System.out.println("=====结束物料类别初始化=====");
 		return categoryNameMap;
 	}
 
@@ -416,7 +407,6 @@ public class aos_mkt_act_query_imp extends BatchImportPlugin {
 			
 			ItemInfo.put(bd_material.getString("ou_code") + "~" + bd_material.getString("number"), Info);
 		}
-		System.out.println("=====结束物料信息初始化=====");
 		return ItemInfo;
 	}
 
@@ -427,7 +417,6 @@ public class aos_mkt_act_query_imp extends BatchImportPlugin {
 		item.put("item_inprocess", maps.get(1));// 1 国内在制
 		item.put("item_complete", maps.get(2));// 2 完工数量
 		item.put("item_intransqty", maps.get(3));// 3 在途数量
-		System.out.println("=====结束物料库存初始化=====");
 		return item;
 	}
 
@@ -584,7 +573,6 @@ public class aos_mkt_act_query_imp extends BatchImportPlugin {
 					aos_sync_omonth_summary.getInteger("aos_order_qty"));
 		}
 		orderDataSet.close();
-		System.out.println("====结束7日店铺订单销量====");
 		return Order7Shop;
 	}
 

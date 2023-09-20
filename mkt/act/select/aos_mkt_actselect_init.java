@@ -126,7 +126,6 @@ public class aos_mkt_actselect_init extends AbstractTask {
 		DynamicObjectCollection bd_materialS = QueryServiceHelper.query("bd_material", SelectField, filters);
 		int rows = bd_materialS.size();
 		int count = 0;
-		System.out.println("rows =" + rows);
 		// 清除同维度
 		QFilter filter_type = new QFilter("aos_type_code", "=", "MKT_活动选品初始化");
 		QFilter filter_group = new QFilter("aos_groupid", "=", p_ou_code.toString() + year + month + day);
@@ -159,7 +158,6 @@ public class aos_mkt_actselect_init extends AbstractTask {
 
 		for (DynamicObject bd_material : bd_materialS) {
 			count++;
-			System.out.println(p_ou_code + "进度" + "(" + count + "/" + rows + ")");
 			// 判断是否跳过
 			long l1 = System.currentTimeMillis();
 			long item_id = bd_material.getLong("id");
@@ -296,7 +294,6 @@ public class aos_mkt_actselect_init extends AbstractTask {
 					}
 
 					long l2 = System.currentTimeMillis();
-					System.out.println("耗时:" + (l2 - l1) + "ms");
 
 					// 季节品
 					boolean seasonProduct = aos_seasonpro.equals("AUTUMN_WINTER") || aos_seasonpro.equals("WINTER")

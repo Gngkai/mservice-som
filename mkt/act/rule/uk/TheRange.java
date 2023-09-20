@@ -42,7 +42,6 @@ public class TheRange implements ActStrategy {
 		long actTime = instance.getTime().getTime();
 		// 间隔天数
 		long currentToAct = ActUtil.betweenDays(current, actTime);
-		System.out.println("间隔天数 = " + currentToAct);
 
 
 		Set<String> apartFromAmzAndEbayItem = ActUtil.queryApartFromAmzAndEbayItem(aos_orgid, new String[]{"AMAZON", "EBAY"}, start);
@@ -233,7 +232,6 @@ public class TheRange implements ActStrategy {
 
 			String aos_typedetail = obj.getString("aos_typedetail");
 			int nonPlatQty = InStockAvailableDays.getNonPlatQty(aos_orgid, aos_itemid);
-			System.out.println("nonPlatQty = " + nonPlatQty);
 			// 线上7天日均销量 R
 			float R = InStockAvailableDays.getOrgItemOnlineAvgQty(aos_orgid, aos_itemid);
 			BigDecimal aos_preactqty = BigDecimal.valueOf(nonPlatQty).subtract(BigDecimal.valueOf(R).multiply(BigDecimal.valueOf(currentToAct)));
@@ -246,7 +244,6 @@ public class TheRange implements ActStrategy {
 				actPrice = aos_currentprice.subtract(aos_disamt);
 			}
 
-			System.out.println("actPrice = " + actPrice);
 
 			JSONObject itemObject = new JSONObject();
 			itemObject.put("aos_itemnum", aos_itemid);

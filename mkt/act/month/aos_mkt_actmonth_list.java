@@ -51,7 +51,6 @@ public class aos_mkt_actmonth_list extends AbstractListPlugin {
     
 	private void aos_init() {
 		// TODO 周期性活动初始化
-		System.out.println("===into 周期性活动初始化===");
 		FormShowParameter showParameter=new FormShowParameter();
 		showParameter.setFormId("aos_mkt_act_cal_form");
 		showParameter.getOpenStyle().setShowType(ShowType.Modal);
@@ -67,14 +66,12 @@ public class aos_mkt_actmonth_list extends AbstractListPlugin {
 		if (StringUtils.equals(actionId, "form")) {
 			Object map =  closedCallBackEvent.getReturnData();
 			Object aos_date =  ((Map<String, Object>) map).get("aos_date");
-			System.out.println("aos_date ="+aos_date);
 			try{
 				aos_mkt_actmonth_init.do_operate(aos_date);
 			}
 			catch(Exception ex) {
 				ex.printStackTrace();
 			}
-			System.out.println("OUT DO OP");
 			this.getView().showSuccessNotification("已成功生成数据!");
 			this.getView().invokeOperation("refresh");
 		}

@@ -40,14 +40,12 @@ public class DotdES implements ActStrategy {
         Map<String, Integer> nonPlatItemSet = ActUtil.queryNonPlatQty(aos_orgid);
         // 满足review条件的物料
         Map<String, DynamicObject> reviewItemSet = ActUtil.queryReview(aos_orgid);
-        System.out.println("reviewItemSet.size() = " + reviewItemSet.size());
         // 第一次过滤选品清单
         List<DynamicObject> firstFilterList = new ArrayList<>();
         // 物料list
         List<String> itemFilterList = new ArrayList<>();
 
         DynamicObjectCollection selectList = ActUtil.queryActSelectList(aos_orgnum);
-        System.out.println("selectList.size() = " + selectList.size());
         for (DynamicObject obj : selectList) {
             String aos_sku = obj.getString("aos_sku");
             String aos_seasonattr = obj.getString("aos_seasonattr");

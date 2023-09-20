@@ -40,7 +40,6 @@ public class Wayfair implements ActStrategy {
 		long actTime = instance.getTime().getTime();
 		// 间隔天数
 		long currentToAct = ActUtil.betweenDays(current, actTime);
-		System.out.println("间隔天数 = " + currentToAct);
 
 		Set<String> apartFromAmzAndEbayItem = ActUtil.queryApartFromAmzAndEbayItem(aos_orgid, new String[]{"AMAZON", "EBAY"},start);
 		// 自有仓库可用量大于等于30的物料

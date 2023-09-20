@@ -131,7 +131,6 @@ public class ManoES implements ActStrategy {
 
             // 预计活动日可售天数
             int salDaysForAct = InStockAvailableDays.calInstockSalDaysForAct(aos_orgid, aos_itemid, start);
-//            System.out.println("salDaysForAct = " + salDaysForAct);
             // 常规品: 预计活动日可售天数>= 90
             if ("REGULAR".equals(aos_seasonattr) || "SPRING-SUMMER-CONVENTIONAL".equals(aos_seasonattr)) {
                 if (salDaysForAct < 90) {

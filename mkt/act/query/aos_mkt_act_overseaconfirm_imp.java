@@ -44,29 +44,16 @@ public class aos_mkt_act_overseaconfirm_imp extends BatchImportPlugin {
         String key = "aos_mkt_act_overseaconfirm_list:" + currentUserId;
         String ImpInitFlag = cache.get(key);
         if (itemInfo == null || ImpInitFlag == null) {
-            System.out.println("======into first======");
             itemInfo = queryItemInfo();
-            System.out.println("1 = " + 1);
             orderQty = queryOrderQtyN();
-            System.out.println("2 = " + 2);
             costParam = queryVatAndPlatform();
-            System.out.println("3 = " + 3);
             priceMap = queryPrice();
-            System.out.println("4 = " + 4);
             nonPlatQtyMap = queryNonPlatQty();
-            System.out.println("5 = " + 5);
             platQtyMap = queryPlatQty();
-            System.out.println("6 = " + 6);
             costMap = initItemCost();
-            System.out.println("7 = " + 7);
             ShipFee = GenerateShipFee();
-            System.out.println("8 = " + 8);
             cache.put(key, "Y", 900);
         }
-//        else {
-//            System.out.println("======into remove======");
-//            cache.remove(key);
-//        }
     }
 
     private Map<String, Integer> queryOrderQtyN() {
@@ -247,7 +234,6 @@ public class aos_mkt_act_overseaconfirm_imp extends BatchImportPlugin {
             BigDecimal inventoryCost = costMap.getOrDefault(aos_orgid + aos_itemid, BigDecimal.ZERO);
             // 活动价格
             BigDecimal aos_activityprice = BigDecimal.valueOf(Float.parseFloat(object.getString("aos_activityprice")));
-//            System.out.println("aos_activityprice = " + aos_activityprice);
             // 当前价格
             BigDecimal aos_currentprice = priceMap.getOrDefault(aos_orgnum + aos_itemnum + aos_shopnum, BigDecimal.ZERO);
 

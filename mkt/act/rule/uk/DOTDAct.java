@@ -37,11 +37,9 @@ public class DOTDAct implements ActStrategy {
 
         // 满足review条件的物料
         Map<String, DynamicObject> reviewItemSet = ActUtil.queryReview(aos_orgid);
-        System.out.println("itemSet.size() = " + reviewItemSet.size());
 
         // 自有仓库可用量大于等于30的物料
         Map<String, DynamicObject> nonPlatItemSet = ActUtil.queryNonPlatQtyLgN(aos_orgid, 30);
-        System.out.println("nonPlatItemSet.size() = " + nonPlatItemSet.size());
 
         // 至活动日间隔天数
         Calendar instance = Calendar.getInstance();
@@ -55,14 +53,12 @@ public class DOTDAct implements ActStrategy {
         long actTime = instance.getTime().getTime();
         // 间隔天数
         long currentToAct = ActUtil.betweenDays(current, actTime);
-        System.out.println("间隔天数 = " + currentToAct);
         // 第一次过滤选品清单
         List<DynamicObject> firstFilterList = new ArrayList<>();
         // 物料list
         List<String> itemFilterList = new ArrayList<>();
         DynamicObjectCollection selectList = ActUtil.queryActSelectList(ouCode);
 
-        System.out.println("selectList.size() = " + selectList.size());
         for (DynamicObject obj : selectList) {
             String aos_sku = obj.getString("aos_sku");
             String aos_seasonattr = obj.getString("aos_seasonattr");
@@ -183,7 +179,6 @@ public class DOTDAct implements ActStrategy {
             if (beforeAfter30Set.contains(aos_itemid)) continue;
             // 预计活动日可售天数
             int salDaysForAct = InStockAvailableDays.calInstockSalDaysForAct(aos_orgid, aos_itemid, start);
-//            System.out.println("salDaysForAct = " + salDaysForAct);
             // 常规品: 预计活动日可售天数>= 90
             if ("REGULAR".equals(aos_seasonattr) || "SPRING-SUMMER-CONVENTIONAL".equals(aos_seasonattr)) {
                 if (salDaysForAct < 90) continue;
@@ -265,7 +260,6 @@ public class DOTDAct implements ActStrategy {
             //
             // 非平台可用量
             int nonPlatQty = InStockAvailableDays.getNonPlatQty(aos_orgid, aos_itemid);
-            System.out.println("nonPlatQty = " + nonPlatQty);
             // 线上7天日均销量 R
             float R = InStockAvailableDays.getOrgItemOnlineAvgQty(aos_orgid, aos_itemid);
             BigDecimal aos_preactqty = BigDecimal.valueOf(nonPlatQty).subtract(BigDecimal.valueOf(R).multiply(BigDecimal.valueOf(currentToAct)));
@@ -277,7 +271,6 @@ public class DOTDAct implements ActStrategy {
             BigDecimal minPrice30 = lowestPriceObj.getBigDecimal("aos_min_price30");
             // 活动价 = min(当年最低定价，当前价格*折扣力度,过去30天最低定价*0.95)
             BigDecimal actPrice = aos_currentprice.multiply(BigDecimal.ONE.subtract(aos_disstrength));
-            System.out.println("actPrice = " + actPrice);
             if (minPriceYear.compareTo(actPrice) < 0) {
                 actPrice = minPriceYear;
             }
@@ -313,7 +306,6 @@ public class DOTDAct implements ActStrategy {
             itemObject.put("aos_seasonattr", aos_seasonattr);// 季节属性
             secFilterList.add(itemObject);
         }
-        System.out.println("secFilterList.size() = " + secFilterList.size());
 
         if (secFilterList.isEmpty()) return;
 

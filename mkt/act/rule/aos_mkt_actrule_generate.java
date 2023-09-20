@@ -635,7 +635,5 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 
 	@Override
 	public void entryFilterChanged(EntryFilterChangedEvent e) {
-		System.out.println("into entryFilterChanged");
-		System.out.println(e.getEntryFilterArgs().toString());
 	}
 }

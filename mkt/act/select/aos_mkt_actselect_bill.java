@@ -13,11 +13,9 @@ public class aos_mkt_actselect_bill extends AbstractBillPlugIn {
 
 	@Override
 	public void afterLoadData(EventObject e) {
-		System.out.println("===== into afterLoadData =====");
 	}
 
 	public void afterCreateNewData(EventObject e) {
-		System.out.println("===== into afterCreateNewData =====");
 	}
 
 }
