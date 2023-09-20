@@ -315,7 +315,6 @@ public class SyncStandardLib extends AbstractTask {
             HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
             connection.connect();
             int responseCode = connection.getResponseCode();
-            System.out.println("responseCode = " + responseCode);
             if (HttpURLConnection.HTTP_OK==connection.getResponseCode()) {
                 return true;
             }

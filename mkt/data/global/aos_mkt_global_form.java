@@ -54,10 +54,8 @@ public class aos_mkt_global_form extends AbstractFormPlugin
 	}
 
 	private void aos_query() {
-		System.out.println("====into aos_query====");
 		this.getModel().deleteEntryData("aos_entryentity");
 		Object aos_text = this.getModel().getValue("aos_text");
-		System.out.println("aos_text =" + aos_text);
 		if (aos_text == null || aos_text.toString().equals("") || aos_text.toString().equals("null")) {
 			this.getView().showTipNotification("文本不能为空!");
 			return;

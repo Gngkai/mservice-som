@@ -37,7 +37,6 @@ public class ItemSelectFormPlugin extends AbstractFormPlugin {
                     itemIdList.add(aos_itemid.getString("id"));
                 }
             }
-            System.out.println("itemIdList = " + itemIdList);
             if (itemIdList.size() == 0) {
                 this.getView().showTipNotification("请选择SKU!");
                 return;

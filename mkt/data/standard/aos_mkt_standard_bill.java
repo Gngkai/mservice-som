@@ -159,7 +159,6 @@ public class aos_mkt_standard_bill extends AbstractBillPlugIn implements RowClic
 		// 国别权限控制
 		try {
 			String name = beforeF7SelectEvent.getProperty().getName();
-			System.out.println("name =" + name);
 			// 获取当前人员id
 			long CurrentUserId = UserServiceHelper.getCurrentUserId();
 			if (StringUtils.equals(name, "aos_orgid")) {

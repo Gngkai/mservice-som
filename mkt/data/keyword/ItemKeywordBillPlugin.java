@@ -103,7 +103,6 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
 			// 这里返回对象为Object，可强转成相应的其他类型，
 			// 单条数据可用String类型传输，返回多条数据可放入map中，也可使用json等方式传输
 			Object returnData = closedCallBackEvent.getReturnData();
-			System.out.println("returnData = " + returnData);
 			if (returnData instanceof List) {
 				DynamicObject aos_orgid = (DynamicObject) this.getModel().getValue("aos_orgid");
 				@SuppressWarnings("unchecked")
@@ -128,7 +127,6 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
 
 				Object[] save = SaveServiceHelper.save(load);
 				for (Object obj : save) {
-					System.out.println("obj = " + obj);
 				}
 			}
 		}
