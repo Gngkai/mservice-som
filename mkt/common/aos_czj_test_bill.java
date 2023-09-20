@@ -222,19 +222,13 @@ public class aos_czj_test_bill extends AbstractBillPlugIn implements ItemClickLi
 
 	public void beforePropertyChanged(PropertyChangedArgs e) {
 		String name = e.getProperty().getName();
-		System.out.println("name =" + name);
 		if (name.equals("aos_test_item")) {
-			System.out.println("====into before aos_test_item====");
-			System.out.println(this.getModel().getValue(name));
 		}
 	}
 
 	public void propertyChanged(PropertyChangedArgs e) {
 		String name = e.getProperty().getName();
-		System.out.println("name =" + name);
 		if (name.equals("aos_test_item")) {
-			System.out.println("====into aos_test_item====");
-			System.out.println(this.getModel().getValue(name));
 		}
 	}
 

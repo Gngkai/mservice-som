@@ -16,7 +16,6 @@ public class aos_mkt_actselect_list extends AbstractListPlugin {
     
 	private void aos_init() {
 		// TODO 周期性活动初始化
-		System.out.println("===into 周期性活动初始化===");
 		aos_mkt_actselect_init.ManualitemClick();
 		this.getView().invokeOperation("refresh");
 		this.getView().showSuccessNotification("已手工提交周期性活动初始化,请等待,务重复提交!");

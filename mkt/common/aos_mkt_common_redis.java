@@ -19,7 +19,6 @@ public class aos_mkt_common_redis {
 			.getDistributeSessionlessCache("mkt_redis");
 
 	public static void init_redis(String type) {
-		System.out.println("====into init_redis====");
 		// if (redis_notneed()) return;
 		if (type.equals("act")) {
 			init_itemorg();// 国别物料维度
