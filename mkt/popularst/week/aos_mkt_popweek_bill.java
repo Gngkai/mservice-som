@@ -89,11 +89,8 @@ public class aos_mkt_popweek_bill extends AbstractBillPlugIn implements RowClick
 	}
 
 	private void aos_valid() {
-		System.out.println("=== aos_valid ===");
 		int CurrentRowIndex = this.getModel().getEntryCurrentRowIndex("aos_subentryentity");
 		boolean aos_valid = (boolean) this.getModel().getValue("aos_valid", CurrentRowIndex);
-		System.out.println("CurrentRowIndex ="+CurrentRowIndex);
-		System.out.println("aos_valid ="+aos_valid);
 		if (aos_valid)
 			this.getModel().setValue("aos_status", "paused", CurrentRowIndex);
 		else

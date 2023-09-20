@@ -69,7 +69,6 @@ public class aos_mkt_syncif_point extends AbstractTask {
 				String message = e.toString();
 				String exceptionStr = SalUtil.getExceptionStr(e);
 				String messageStr = message + "\r\n" + exceptionStr;
-				System.out.println(messageStr);
 			}
 		}
 	}

@@ -32,7 +32,6 @@ public class aos_mkt_syncif_advice extends AbstractTask {
 		
 		
 		int length = p_ret_cursor.size();
-		System.out.println("length =" + length);
 		Calendar Today = Calendar.getInstance();
 		Today.set(Calendar.HOUR_OF_DAY, 0);
 		Today.set(Calendar.MINUTE, 0);

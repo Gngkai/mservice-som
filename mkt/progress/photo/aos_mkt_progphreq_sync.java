@@ -119,21 +119,17 @@ public class aos_mkt_progphreq_sync extends AbstractTask {
 					ListRequirePic.add(aos_entryentity);
 			}
 
-			System.out.println("ListRequire.size =" + ListRequire.size());
 
 			if (ListRequire != null && ListRequire.size() > 0) {
 				aos_mkt_listingreq_bill.GenerateListingSon(ListRequire, Retrun, dyn);
 				if (Retrun.GetErrorCount() > 0) {
-					System.out.println(Retrun.GetErrorMessage());
 					continue;
 				}
 			}
-			System.out.println("ListRequirePic.size =" + ListRequirePic.size());
 
 			if (ListRequirePic != null && ListRequirePic.size() > 0) {
 				aos_mkt_listingreq_bill.GenerateDesignReq(ListRequirePic, Retrun, dyn);
 				if (Retrun.GetErrorCount() > 0) {
-					System.out.println(Retrun.GetErrorMessage());
 					continue;
 				}
 			}

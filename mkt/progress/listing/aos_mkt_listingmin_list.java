@@ -171,8 +171,6 @@ public class aos_mkt_listingmin_list extends AbstractListPlugin {
 			DynamicObject aos_mkt_listing_min = BusinessDataServiceHelper.loadSingle(id, "aos_mkt_listing_min");
 			String aos_userold = aos_mkt_listing_min.getDynamicObject("aos_user").getPkValue().toString();
 			String billno = aos_mkt_listing_min.getString("billno");
-			System.out.println("aos_userold =" + aos_userold);
-			System.out.println("CurrentUserId =" + CurrentUserId);
 
 			if (!(CurrentUserId + "").equals(aos_userold)) {
 				this.getView().showTipNotification(billno + "只允许转办自己的单据!");

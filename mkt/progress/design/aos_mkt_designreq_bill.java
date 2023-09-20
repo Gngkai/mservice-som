@@ -1908,7 +1908,6 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 
 	/** 是否3D建模=否，功能图翻译语种=空，且任务类型=翻译或者四者一致，流程到结束节点 并生成Listing优化销售确认单 **/
 	private static void GenerateListingSal(DynamicObject dy_main, String type) throws FndError {
-		System.out.println("==== into GenerateListingSal ====");
 		String ErrorMessage = "";
 		// 信息处理
 		String MessageId = null;
@@ -1998,7 +1997,6 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 
 		// 循环每个分组后的国家 创建一个头
 		for (String ou : Oumap.keySet()) {
-			System.out.println("ou =" + ou);
 			Object org_id = aos_sal_import_pub.get_import_id(ou, "bd_country");
 			DynamicObject aos_mkt_listing_sal = BusinessDataServiceHelper.newDynamicObject("aos_mkt_listing_sal");
 			aos_mkt_listing_sal.set("aos_requireby", aos_designer);

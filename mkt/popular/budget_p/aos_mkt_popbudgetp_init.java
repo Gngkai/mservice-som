@@ -92,7 +92,6 @@ public class aos_mkt_popbudgetp_init extends AbstractTask {
 				String message = e.toString();
 				String exceptionStr = SalUtil.getExceptionStr(e);
 				String messageStr = message + "\r\n" + exceptionStr;
-				System.out.println(messageStr);
 				logger.error(messageStr);
 			}
 		}
@@ -100,7 +99,6 @@ public class aos_mkt_popbudgetp_init extends AbstractTask {
 
 	@SuppressWarnings("deprecation")
 	public static void do_operate(Map<String, Object> params) {
-		System.out.println("===== into aos_mkt_popbudgetp_init =====");
 		logger.info("===== into aos_mkt_popbudgetp_init =====");
 		
 		SimpleDateFormat DF = new SimpleDateFormat("yyyy-MM-dd");
@@ -183,7 +181,6 @@ public class aos_mkt_popbudgetp_init extends AbstractTask {
 			Row aos_mkt_popular_ppc = aos_mkt_popular_ppcS.next();
 			count++;
 			if (count == 1) {
-				System.out.println(p_ou_code + count);
 				// 初始化 预算调整(推广)
 				DynamicObject aos_mkt_pop_budgetp = BusinessDataServiceHelper.newDynamicObject("aos_mkt_pop_budgetp");
 				aos_mkt_pop_budgetp.set("aos_billno", aos_mkt_popular_ppc.get("aos_billno"));
@@ -322,7 +319,6 @@ public class aos_mkt_popbudgetp_init extends AbstractTask {
 				String message = ex.toString();
 				String exceptionStr = SalUtil.getExceptionStr(ex);
 				String messageStr = message + "\r\n" + exceptionStr;
-				System.out.println(messageStr);
 				logger.error(messageStr);
 			}
 		}

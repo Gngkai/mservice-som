@@ -181,7 +181,6 @@ public class aos_mkt_popbudpst_form extends AbstractFormPlugin implements ItemCl
 		arr_q.add(filter_budgetfrom);
 		arr_q.add(filter_budgetto);
 		arr_q.add(filter_desc);
-		System.out.println(arr_q);
 		InitData(arr_q);
 	}
 
@@ -257,7 +256,6 @@ public class aos_mkt_popbudpst_form extends AbstractFormPlugin implements ItemCl
 	}
 
 	private void InitGroup(Object aos_entryid) {
-		System.out.println("=== InitGroup ===");
 		this.getModel().deleteEntryData("aos_detailentry");
 		Object fid = this.getView().getParentView().getModel().getDataEntity().getPkValue();
 		QFilter Qf_id = new QFilter("aos_sourceid", "=", fid);

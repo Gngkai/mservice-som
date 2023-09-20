@@ -534,7 +534,6 @@ public class aos_mkt_rcv_bill extends AbstractBillPlugIn implements ItemClickLis
 					aos_mkt_photoreq.get("aos_linenumber"));
 			QFilter[] qFilters = { qFilter_contra, qFilter_lineno, qFilter_ponumber, qFilter_linenumber };
 			DynamicObject dy_date = QueryServiceHelper.queryOne("aos_qctasklist", "aos_quainscomdate", qFilters);
-			System.out.println("rcv中dy_date = " + dy_date);
 			if (dy_date != null) {
 				AosMktPhotoReq.set("aos_quainscomdate", dy_date.get("aos_quainscomdate"));
 			}
@@ -801,7 +800,6 @@ public class aos_mkt_rcv_bill extends AbstractBillPlugIn implements ItemClickLis
 	}
 
 	private void AosProTypeChange() {
-		System.out.println("into AosProTypeChange");
 		Object aos_vendor = this.getModel().getValue("aos_vendor");
 		QFilter filter_vendor = new QFilter("aos_vendor", "=", aos_vendor);
 		QFilter filter_type = new QFilter("aos_protype", "=", "退回");

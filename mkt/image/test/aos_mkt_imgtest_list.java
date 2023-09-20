@@ -20,7 +20,6 @@ public class aos_mkt_imgtest_list extends AbstractListPlugin {
 	public void itemClick(ItemClickEvent evt) {
 		super.itemClick(evt);
 		String control = evt.getItemKey();
-		System.out.println("control =" + control);
 		if ("aos_batchchange".equals(control))
 			aos_batchchange();// 批量修改
 		else if ("aos_test".equals(control))
@@ -46,9 +45,6 @@ public class aos_mkt_imgtest_list extends AbstractListPlugin {
 
 		for (int i = 0; i < list.size(); i++) {
 			String fid = list.get(i).toString();
-			System.out.println("==================");
-			System.out.println("i =" + i);
-			System.out.println("fid =" + fid);
 
 			DynamicObject aos_mkt_img_test2 = BusinessDataServiceHelper.loadSingle(fid, "aos_mkt_img_test2");
 			aos_mkt_img_test2.set("aos_text2", "批量修改" + fid);

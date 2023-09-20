@@ -96,8 +96,6 @@ public class aos_mkt_popadjs_form extends AbstractFormPlugin implements ItemClic
 		filters = new QFilter[] { Qf_id, Qf_status };
 		aos_mkt_popular_adjsS = QueryServiceHelper.query("aos_mkt_popular_adjs", SelectField, filters);
 		int confirm = aos_mkt_popular_adjsS.size();
-		System.out.println("total =" + total);
-		System.out.println("confirm =" + confirm);
 		if (total == confirm + 1) {
 			DynamicObject aos_mkt_popular_ppc = BusinessDataServiceHelper.loadSingle(aos_ppcid, "aos_mkt_popular_ppc");
 			aos_mkt_popular_ppc.set("aos_adjusts", true);
@@ -442,7 +440,6 @@ public class aos_mkt_popadjs_form extends AbstractFormPlugin implements ItemClic
 
 	public void afterBindData(EventObject e) {
 		super.afterBindData(e);
-		System.out.println("==== afterBindData ====");
 		String aos_status = this.getView().getParentView().getModel().getValue("aos_status") + "";
 		if (aos_status.equals("B")) {
 			this.getView().setEnable(false, "aos_detailentry");

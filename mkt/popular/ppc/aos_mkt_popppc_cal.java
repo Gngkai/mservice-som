@@ -66,7 +66,6 @@ public class aos_mkt_popppc_cal extends AbstractTask {
 
 		Calendar Today = Calendar.getInstance();
 		int hour = Today.get(Calendar.HOUR_OF_DAY);
-		System.out.println("hour =" + hour);
 		long is_oversea_flag = aos_sal_sche_pub.get_lookup_values("AOS_YES_NO", "Y");
 		QFilter qf_time = null;
 
@@ -96,7 +95,6 @@ public class aos_mkt_popppc_cal extends AbstractTask {
 	@SuppressWarnings("deprecation")
 	public static void do_operate(Map<String, Object> params) {
 		try {
-			System.out.println("===== into aos_mkt_popppc_init =====");
 			// 获取缓存
 			byte[] serialize_item = cache.getByteValue("item");
 			HashMap<String, Map<String, Object>> item = SerializationUtils.deserialize(serialize_item);
@@ -139,7 +137,6 @@ public class aos_mkt_popppc_cal extends AbstractTask {
 			// 获取单号
 			int month = date.get(Calendar.MONTH) + 1;
 			int week = date.get(Calendar.DAY_OF_WEEK);
-			System.out.println("week =" + week);
 
 			// 获取春夏品 秋冬品开始结束日期 营销日期参数表
 			Date SummerSpringStart = MKTCom.Get_DateRange("aos_datefrom", "SS", p_org_id);
@@ -186,7 +183,6 @@ public class aos_mkt_popppc_cal extends AbstractTask {
 					"aos_productno");
 			int rows = bd_materialS.size();
 			int count = 0;
-			System.out.println("rows =" + rows);
 			Set<String> eliminateItemSet = getEliminateItem(p_org_id.toString());
 
 			DynamicObject aos_sync_log = BusinessDataServiceHelper.newDynamicObject("aos_sync_log");
@@ -197,7 +193,6 @@ public class aos_mkt_popppc_cal extends AbstractTask {
 
 			for (DynamicObject bd_material : bd_materialS) {
 				count++;
-				System.out.println(p_ou_code + "循环1" + "(" + count + "/" + rows + ")");
 				// 判断是否跳过
 				long item_id = bd_material.getLong("id");
 				long org_id = bd_material.getLong("aos_orgid");
@@ -529,7 +524,6 @@ public class aos_mkt_popppc_cal extends AbstractTask {
 		}
 		aos_sal_act_type_pS.close();
 		aos_act_select_planS.close();
-		System.out.println("====AM平台活动====");
 		return Act;
 	}
 

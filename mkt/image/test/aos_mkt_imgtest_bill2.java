@@ -130,11 +130,7 @@ public class aos_mkt_imgtest_bill2 extends AbstractBillPlugIn implements ItemCli
 	}
 
 	private void aos_test() {
-		
 		String billno = Cux_Common_Utl.GetBaseBillNo("D2022");
-		
-		System.out.println("billno ="+billno);
-		
 	}
 
 	/** 值改变事件 **/
@@ -156,13 +152,11 @@ public class aos_mkt_imgtest_bill2 extends AbstractBillPlugIn implements ItemCli
 	public void entryRowClick(RowClickEvent evt) {
 		Control source = (Control) evt.getSource();
 		String name = source.getKey();
-		System.out.println("name = " + name);
 
 		if (source.getKey().equals("aos_entryentity")) {
 			int CurrentRowIndex = this.getView().getModel().getEntryCurrentRowIndex("aos_entryentity");
 
 			this.getModel().setValue("aos_textfield", "AAA", CurrentRowIndex);
-			System.out.println("CurrentRowIndex =" + CurrentRowIndex);
 
 		}
 	}
@@ -171,37 +165,27 @@ public class aos_mkt_imgtest_bill2 extends AbstractBillPlugIn implements ItemCli
 	public void afterCreateNewData(EventObject e) {
 		super.afterCreateNewData(e);
 
-		System.out.println("into afterCreateNewData");
 		this.getModel().setValue("aos_text", "遨森电子商务股份有限公司");
 		this.getView().getModel().setValue("aos_text", "遨森电子商务股份有限公司");
 		Object aos_text2 = this.getModel().getValue("aos_text2");
-		System.out.println("aos_text2 =" + aos_text2);
 	}
 
 	/** 打开已存在单据时触发 **/
 	public void afterLoadData(EventObject e) {
 		super.afterLoadData(e);
-		System.out.println("into afterLoadData");
 		// 文本
 		Object aos_text = this.getModel().getValue("aos_text");
 		Object aos_text2 = this.getModel().getValue("aos_text2");
-		System.out.println("aos_text =" + aos_text);
-		System.out.println("aos_text2 =" + aos_text2);
 		Object aos_orgid = this.getModel().getValue("aos_orgid");
 
 		if (this.getModel().getValue("aos_big") != null) {
 			BigDecimal aos_big = (BigDecimal) this.getModel().getValue("aos_big");
-			System.out.println("aos_big =" + aos_big);
-
-			System.out.println(aos_big.add(BigDecimal.valueOf(0.1)));
-			System.out.println(aos_big.multiply(BigDecimal.valueOf(0.1)));
 		}
 
 		// 基础资料
 		if (aos_orgid != null) {
 			DynamicObject aos_org = (DynamicObject) aos_orgid;
 			String aos_orgnumber = aos_org.getString("number");
-			System.out.println("aos_orgnumber =" + aos_orgnumber);
 		}
 	}
 

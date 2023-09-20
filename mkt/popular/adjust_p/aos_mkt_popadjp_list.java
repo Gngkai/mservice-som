@@ -49,7 +49,6 @@ public class aos_mkt_popadjp_list extends AbstractListPlugin {
 	}
 	private void aos_init() {
 		// TODO PPC数据源初始化
-		System.out.println("===into 出价调整(推广) 初始化===");
 		CommData.init();
 		aos_mkt_common_redis.init_redis("ppc");
 		Map<String, Object> params = new HashMap<>();

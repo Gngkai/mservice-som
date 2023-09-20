@@ -51,7 +51,6 @@ public class aos_mkt_syncif_connect {
 		JSONObject json = null;
 		String lasturl = null;
 		String ShopToken = get_Shop_Token();
-		System.out.println("http =" + httpip + adress);
 		if (adress.equals(Token))
 			lasturl = httpip + adress + "?username=" + username + "&password=" + password;
 		else {
@@ -62,15 +61,12 @@ public class aos_mkt_syncif_connect {
 			lasturl = lasturl.substring(0, lasturl.length() - 1);
 		}
 		
-		System.out.println("lasturl =" + lasturl);
-		System.out.println("token =" + token);
 		try {
 			URL url = new URL(lasturl);
 			HttpURLConnection urlConn = (HttpURLConnection) url.openConnection();
 			urlConn.setRequestProperty("accept", "*/*");
 			urlConn.setRequestProperty("connection", "Keep-Alive");
 			urlConn.setRequestProperty("Accept-Charset", "utf-8");
-			System.out.println("ShopToken =" + ShopToken);
 			urlConn.setRequestProperty("Authorization", ShopToken);
 			urlConn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
 			if (!adress.equals(Token))
@@ -80,7 +76,6 @@ public class aos_mkt_syncif_connect {
 			urlConn.setRequestMethod("GET");// GET和POST必须全大写
 			urlConn.connect();
 			int code = urlConn.getResponseCode();// 获得响应码
-			System.out.println("code =" + code);
 			if (code == 200) {// 响应成功，获得响应的数据
 				InputStream is = urlConn.getInputStream();// 得到数据流（输入流）
 				JSONParser jsonParser = new JSONParser();
@@ -136,12 +131,10 @@ public class aos_mkt_syncif_connect {
 			body = body.substring(0, body.length() - 1);
 			body += "}";
 
-			System.out.println("body =" + body);
 			urlConn.connect();
 			urlConn.getOutputStream().write(body.getBytes("UTF-8"));
 
 			int code = urlConn.getResponseCode();// 获得响应码
-			System.out.println("code =" + code);
 			if (code == 200) {// 响应成功，获得响应的数据
 			}
 			urlConn.disconnect(); // 断开连接
@@ -157,7 +150,6 @@ public class aos_mkt_syncif_connect {
 		requestJson.put("password", password);
 		String lasturl = httpip + Token;
 		String token = postToken(lasturl, requestJson);
-		System.out.println(token);
 		return token;
 	}
 
@@ -294,7 +286,6 @@ public class aos_mkt_syncif_connect {
 	 */
 	public static void set_log(String bill, String status, String p_sys_datetime) {
 		try {
-			System.out.println("status =" + status);
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 			QFilter filter = new QFilter("aos_code", "=", bill);
 			DynamicObject para = BusinessDataServiceHelper.loadSingle("aos_sync_common_bill", "id", filter.toArray());

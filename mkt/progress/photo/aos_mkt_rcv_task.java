@@ -78,11 +78,10 @@ public class aos_mkt_rcv_task extends AbstractTask {
             QFilter qFilter3 = new QFilter("aos_insrecordentity.aos_instypedetailchk","=","1");
             QFilter[] qFilter_rcv = {qFilter, qFilter1,qFilter2,qFilter3};
             DynamicObject dy_qct = BusinessDataServiceHelper.loadSingle("aos_qctasklist", "aos_quainscomdate", qFilter_rcv);//质检任务单
-            System.out.println("dy_qct = " + dy_qct);
+           
             if(dy_qct != null) {
                 dy_.set("aos_quainscomdate", dy_qct.get("aos_quainscomdate"));
                 //SaveServiceHelper.update(dy_);
-                System.out.println("aos_quainscomdate = " + dy_qct.get("aos_quainscomdate"));
                 SaveServiceHelper.save(new DynamicObject[]{dy_});
             }
         }

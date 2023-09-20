@@ -41,7 +41,6 @@ public class aos_mkt_popadjp_bill extends AbstractBillPlugIn implements ItemClic
 	}
 
 	private void aos_confirm() {
-		System.out.println("==== aos_confirm ====");
 		Object aos_ppcid = this.getModel().getValue("aos_ppcid");
 		DynamicObject aos_mkt_popular_ppc = BusinessDataServiceHelper.loadSingle(aos_ppcid, "aos_mkt_popular_ppc");
 		aos_mkt_popular_ppc.set("aos_adjustsp", true);

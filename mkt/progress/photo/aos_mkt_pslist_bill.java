@@ -76,7 +76,6 @@ public class aos_mkt_pslist_bill extends AbstractBillPlugIn implements ItemClick
 	}
 
 	private void aos_submit() {
-		System.out.println("===into aos_submit===");
 		String aos_status = this.getModel().getValue("aos_status").toString();
 		switch (aos_status) {
 		case "新建":

@@ -70,7 +70,6 @@ public class aos_mkt_syncif_target extends AbstractTask {
 		JSONArray p_ret_cursor = obj.getJSONArray("p_real_model");
 		
 		int length = p_ret_cursor.size();
-		System.out.println(length);
 		Object p_ou_code = param.get("ou_name");
 		Object p_org_id = aos_sal_import_pub.get_import_id(p_ou_code, "bd_country");
 		Calendar Today = Calendar.getInstance();

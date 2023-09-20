@@ -128,7 +128,6 @@ public class aos_report_test extends AbstractListPlugin {
             //qfBuilder.add("aos_itemid", "=", "baseDate");
 
         }
-        //System.out.println(aos_materielfield);
 
         Object aos_pname = this.getModel().getValue("aos_pname");
         if(!Cux_Common_Utl.IsNull(aos_pname)){

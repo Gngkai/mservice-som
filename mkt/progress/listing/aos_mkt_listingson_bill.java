@@ -595,7 +595,6 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
 
 	// 生成销售信息确认单
 	private static void GenerateListingSal(DynamicObject dy_main) throws FndError {
-		System.out.println("==== into GenerateListingSal ====");
 		// 信息处理
 		String MessageId = null;
 		String Message = "";
@@ -637,7 +636,6 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
 			String[] aos_orgtextArray = aos_orgtext.split(";");
 			for (int i = 0; i < aos_orgtextArray.length; i++) {
 				String org = aos_orgtextArray[i];
-				System.out.println("org =" + org);
 				if (!("US".equals(org) || "CA".equals(org) || "UK".equals(org)))
 					continue;
 				if (aos_orgid != null && !(((DynamicObject) aos_orgid).getString("number")).equals(org))
@@ -653,7 +651,6 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
 
 		// 循环每个分组后的国家 创建一个头
 		for (String ou : Oumap.keySet()) {
-			System.out.println("ou =" + ou);
 			Object org_id = aos_sal_import_pub.get_import_id(ou, "bd_country");
 			DynamicObject aos_mkt_listing_sal = BusinessDataServiceHelper.newDynamicObject("aos_mkt_listing_sal");
 			aos_mkt_listing_sal.set("aos_requireby", UserServiceHelper.getCurrentUserId());

@@ -87,8 +87,6 @@ public class aos_mkt_popadjst_form extends AbstractFormPlugin implements ItemCli
 		filters = new QFilter[] { Qf_id, Qf_status };
 		aos_mkt_popular_adjsS = QueryServiceHelper.query("aos_mkt_pop_adjst", SelectField, filters);
 		int confirm = aos_mkt_popular_adjsS.size();
-		System.out.println("total =" + total);
-		System.out.println("confirm =" + confirm + 1);
 		if (total == confirm + 1) {
 			DynamicObject aos_mkt_popular_ppc = BusinessDataServiceHelper.loadSingle(aos_ppcid, "aos_mkt_pop_ppcst");
 			aos_mkt_popular_ppc.set("aos_adjusts", true);
@@ -146,12 +144,6 @@ public class aos_mkt_popadjst_form extends AbstractFormPlugin implements ItemCli
 		Object aos_match_type = Param.get("aos_match_type");
 		Object aos_manualprz = Param.get("aos_manualprz");
 
-		System.out.println("===============================");
-		System.out.println("aos_itemnumer =" + aos_itemnumer);
-		System.out.println("aos_groupentryid =" + aos_groupentryid);
-		System.out.println("aos_keyword =" + aos_keyword);
-		System.out.println("aos_match_type =" + aos_match_type);
-		System.out.println("aos_manualprz =" + aos_manualprz);
 		String sql = null;
 
 		if (Param.containsKey("aos_valid_flag")) {

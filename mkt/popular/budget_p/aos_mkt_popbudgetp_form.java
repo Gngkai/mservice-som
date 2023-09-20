@@ -210,7 +210,6 @@ public class aos_mkt_popbudgetp_form extends AbstractFormPlugin implements ItemC
 		arr_q.add(filter_budgetfrom);
 		arr_q.add(filter_budgetto);
 		arr_q.add(filter_desc);
-		System.out.println(arr_q);
 		InitData(arr_q);
 	}
 

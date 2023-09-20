@@ -61,7 +61,6 @@ public class aos_mkt_popadjpn_form extends AbstractFormPlugin implements ItemCli
 	}
 
 	private void aos_confirm() {
-		System.out.println("==== aos_confirm ====");
 		Object aos_ppcid = this.getView().getParentView().getModel().getValue("aos_ppcid");
 		DynamicObject aos_mkt_popular_ppc = BusinessDataServiceHelper.loadSingle(aos_ppcid, "aos_mkt_popular_ppc");
 		aos_mkt_popular_ppc.set("aos_adjustsp", true);

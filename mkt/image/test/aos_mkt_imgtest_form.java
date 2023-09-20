@@ -20,7 +20,6 @@ public class aos_mkt_imgtest_form extends AbstractFormPlugin{
 		super.itemClick(evt);
 		String Control = evt.getItemKey();
 		
-		System.out.println("Control ="+Control);
 		
 		if (Control.equals("aos_query")) {
 			aos_query();
@@ -28,7 +27,6 @@ public class aos_mkt_imgtest_form extends AbstractFormPlugin{
 	}
 
 	private void aos_query() {
-		System.out.println("into aos_query");
 		
 		Object aos_itemid = this.getModel().getValue("aos_itemid");
 		

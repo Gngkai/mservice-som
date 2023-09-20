@@ -50,7 +50,6 @@ public class aos_mkt_popadds_init extends AbstractTask {
 	public static void Run() {
 		Calendar Today = Calendar.getInstance();
 		int hour = Today.get(Calendar.HOUR_OF_DAY);
-		System.out.println("hour =" + hour);
 		// OU循环
 		QFilter qf_time = null;
 		long is_oversea_flag = aos_sal_sche_pub.get_lookup_values("AOS_YES_NO", "Y");
@@ -79,8 +78,6 @@ public class aos_mkt_popadds_init extends AbstractTask {
 
 	public static void executerun(Map<String, Object> param) {
 		Object p_ou_code = param.get("p_ou_code");
-		System.out.println("=====into 销售加回=====");
-		System.out.println("p_ou_code =" + p_ou_code);
 		// 删除数据
 		Calendar today = Calendar.getInstance();
 		today.add(Calendar.DAY_OF_MONTH, -1);
@@ -101,7 +98,6 @@ public class aos_mkt_popadds_init extends AbstractTask {
 		QFilter group_enable = new QFilter("enable", "=", 1);// 可用
 		QFilter[] filters_group = new QFilter[] { group_org, group_enable };
 		DynamicObjectCollection aos_salgroup = QueryServiceHelper.query("aos_salgroup", "id", filters_group);
-		System.out.println("aos_salgroup.size() = " + aos_salgroup.size());
 		logger.info("aos_salgroup.size() = " + aos_salgroup.size());
 		for (DynamicObject group : aos_salgroup) {
 			Map<String, Object> params = new HashMap<>();
@@ -170,9 +166,7 @@ public class aos_mkt_popadds_init extends AbstractTask {
 		SimpleDateFormat writeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);// 日期格式化
 		String now_str = writeFormat.format(now);
 
-		System.out.println(now_str);
 		logger.info("now_str:" + now_str);
-		System.out.println(p_ou_code);
 		logger.info("p_ou_code:" + p_ou_code);
 		// 今天PPC单据
 		QFilter Qf_Date = new QFilter("aos_date", ">=", now_str);
@@ -208,7 +202,6 @@ public class aos_mkt_popadds_init extends AbstractTask {
 				filters, "aos_entryentity.aos_productno");
 		int rows = aos_mkt_popular_ppcS.size();
 		int count = 0;
-		System.out.println("rows =" + rows);
 		logger.info("rows =" + rows);
 		if (rows == 0)
 			return;
@@ -237,7 +230,6 @@ public class aos_mkt_popadds_init extends AbstractTask {
 
 		for (DynamicObject aos_mkt_popular_ppc : aos_mkt_popular_ppcS) {
 			count++;
-			System.out.println(p_ou_code + "进度" + "(" + count + "/" + rows + ")");
 			String aos_itemnumer = aos_mkt_popular_ppc.getString("aos_itemnumer");
 			Boolean aos_roiflag = aos_mkt_popular_ppc.getBoolean("aos_roiflag");
 			String aos_groupstatus = aos_mkt_popular_ppc.getString("aos_groupstatus");
@@ -518,7 +510,6 @@ public class aos_mkt_popadds_init extends AbstractTask {
 			Order.put(aos_itemid, aos_total_qty);
 		}
 		orderDataSet.close();
-		System.out.println("====订单月度结存====");
 		return Order;
 	}
 

@@ -122,7 +122,6 @@ public class aos_mkt_pslist_form extends AbstractBillPlugIn implements ItemClick
 
 	/** 批量保存 **/
 	private void aos_save() throws FndError {
-		System.out.println("=====into aos_submit=====");
 		// 数据层
 		int ErrorCount = 0;
 		String ErrorMessage = "";
@@ -155,7 +154,6 @@ public class aos_mkt_pslist_form extends AbstractBillPlugIn implements ItemClick
 
 	/** 批量提交 **/
 	private void aos_submit() throws FndError {
-		System.out.println("=====into aos_submit=====");
 
 		// 数据层
 		int ErrorCount = 0;

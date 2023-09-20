@@ -14,6 +14,5 @@ public class demo11 extends AbstractBillPlugIn {
             int r = (int)(a + b);
             this.getModel().setValue("aos_integerfield2", r);
         }
-        else System.out.println("输入数字格式有误");
     }
 }

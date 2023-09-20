@@ -37,11 +37,9 @@ public class demo03 extends AbstractFormPlugin {
         String fieldKey = e.getProperty().getName();
         if (StringUtils.equals("aos_timerangefield1", fieldKey)){
             // 开始时间值改变
-            System.out.println("propertyChanged开始时间值改变");
         }
         else if (StringUtils.equals("aos_timerangefield2", fieldKey)){
             // 结束时间值改变
-            System.out.println("propertyChanged结束时间改变");
         }
     }
 
@@ -49,11 +47,9 @@ public class demo03 extends AbstractFormPlugin {
         String fieldKey = e.getProperty().getName();
         if (StringUtils.equals("aos_timerangefield1", fieldKey)) {
             // 开始时间值改变
-            System.out.println("beforePropertyChanged开始时间值改变");
         }
         else if (StringUtils.equals("aos_timerangefield2", fieldKey)){
             // 结束时间值改变
-            System.out.println("beforePropertyChanged结束时间值改变");
         }
     }
 
@@ -69,7 +65,6 @@ public class demo03 extends AbstractFormPlugin {
         super.beforeClick(evt);
         Control source = (Control)evt.getSource();
         if (StringUtils.equals("aos_picturefield", source.getKey())){
-            System.out.println("图片被点击");
         }
     }
 }

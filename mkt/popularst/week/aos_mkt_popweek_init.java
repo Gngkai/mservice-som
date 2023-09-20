@@ -50,7 +50,6 @@ public class aos_mkt_popweek_init extends AbstractTask {
 			return;// 如果不是周一 直接跳过
 		}
 //		int hour = Today.get(Calendar.HOUR_OF_DAY);
-//		System.out.println("hour =" + hour);
 		long is_oversea_flag = aos_sal_sche_pub.get_lookup_values("AOS_YES_NO", "Y");
 		QFilter qf_time = null;
 		DynamicObject dynamicObject = QueryServiceHelper.queryOne("aos_mkt_base_orgvalue", "aos_value",

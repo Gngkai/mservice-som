@@ -25,11 +25,9 @@ public class zsgc extends AbstractBillPlugIn {
         //str.add("aos_entryentity.aos_enable");
         str.add("aos_entryentity.aos_basedatafield.name");
         DynamicObject dy = QueryServiceHelper.queryOne("aos_mkt_test_work",str.toString(),new QFilter[]{filter_billno});
-        System.out.println("dy = " + dy);
         //第二种查询
         DynamicObject[] dy_01 = load("aos_mkt_test_work",str.toString(),new QFilter[]{filter_billno});
         for(DynamicObject dy_ : dy_01){
-            System.out.println("dy_01 = " + dy_);
         }
 
 

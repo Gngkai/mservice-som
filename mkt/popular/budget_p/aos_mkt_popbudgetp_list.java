@@ -47,7 +47,6 @@ public class aos_mkt_popbudgetp_list extends AbstractListPlugin {
 	}
 	private void aos_init() {
 		// TODO PPC数据源初始化
-		System.out.println("===into 预算调整(推广) 初始化===");
 		Map<String, Object> params = new HashMap<>();
 		params.put("p_ou_code", "UK");
 		aos_mkt_popbudgetp_init.ManualitemClick(params);

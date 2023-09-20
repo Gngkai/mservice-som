@@ -58,8 +58,6 @@ public class aos_mkt_popadjst_init extends AbstractTask {
 //		int p_hour = (int) param.get("param");
 		// 获取传入国别参数 
 		Object p_ou_code = param.get("p_ou_code");
-		System.out.println("=====into 出价调整销售ST=====");
-		System.out.println("p_ou_code =" + p_ou_code);
 		// 删除数据
 		Calendar today = Calendar.getInstance();
 		today.set(Calendar.HOUR_OF_DAY, 0);
@@ -89,7 +87,6 @@ public class aos_mkt_popadjst_init extends AbstractTask {
 			QFilter[] filters_group = new QFilter[] { group_org, group_enable };
 			DynamicObjectCollection aos_salgroup = QueryServiceHelper.query("aos_salgroup", "id", filters_group);
 			cache.put(p_ou_code + "_GroupSizeST", aos_salgroup.size() + "", 3600);
-			System.out.println(p_ou_code + "_GroupSizeST =" + aos_salgroup.size());
 			for (DynamicObject group : aos_salgroup) {
 				long group_id = group.getLong("id");
 				Map<String, Object> params = new HashMap<>();
@@ -116,7 +113,6 @@ public class aos_mkt_popadjst_init extends AbstractTask {
 				String message = e.toString();
 				String exceptionStr = SalUtil.getExceptionStr(e);
 				String messageStr = message + "\r\n" + exceptionStr;
-				System.out.println(messageStr);
 				logger.error(messageStr);
 			}
 		}
@@ -418,8 +414,6 @@ public class aos_mkt_popadjst_init extends AbstractTask {
 		int GroupSizeCount = GroupSizeCountAdd(p_ou_code);
 		int GroupSize = Integer.parseInt(cache.get(p_ou_code + "_GroupSizeST"));
 		// 本国家 出价调整(销售)已全部执行完毕 后 执行 出价调整(推广)
-		System.out.println("GroupSizeCountST =" + GroupSizeCount);
-		System.out.println("GroupSizeST =" + GroupSize);
 		if (GroupSizeCount == GroupSize) {
 			Map<String, Object> adjs = new HashMap<>();
 			adjs.put("p_ou_code", p_ou_code);

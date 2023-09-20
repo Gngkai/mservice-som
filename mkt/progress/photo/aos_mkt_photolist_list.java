@@ -58,10 +58,8 @@ public class aos_mkt_photolist_list extends AbstractListPlugin
 	public void billListHyperLinkClick(HyperLinkClickArgs hyperLinkClickEvent) {
 		String FieldName = hyperLinkClickEvent.getFieldName();
 		hyperLinkClickEvent.setCancel(true);
-		System.out.println("FieldName =" + FieldName);
 		if ("aos_photourl".equals(FieldName)) {
 			Object fid = getFocusRowPkId();
-			System.out.println(fid);
 			QFilter filter_billno = new QFilter("aos_sourceid", QCP.equals, fid);
 			QFilter filter_type = new QFilter("aos_type", QCP.equals, "拍照").or("aos_type", QCP.equals, "");
 			QFilter[] filters = new QFilter[] { filter_billno, filter_type };
@@ -70,7 +68,6 @@ public class aos_mkt_photolist_list extends AbstractListPlugin
 				Cux_Common_Utl.OpenSingleBill(this.getView(), "aos_mkt_photoreq", aos_mkt_photoreq.get("id"));
 		} else if ("aos_vediourl".equals(FieldName)) {
 			Object fid = getFocusRowPkId();
-			System.out.println(fid);
 			QFilter filter_billno = new QFilter("aos_sourceid", QCP.equals, fid);
 			QFilter filter_type = new QFilter("aos_type", QCP.equals, "视频").or("aos_type", QCP.equals, "");
 			QFilter[] filters = new QFilter[] { filter_billno, filter_type };

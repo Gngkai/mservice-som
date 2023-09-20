@@ -344,7 +344,6 @@ public class aos_mkt_rcv_list extends AbstractListPlugin {
 
 	private void GenerateSheetDefualt(XSSFSheet sheet, XSSFCellStyle styletitle, XSSFCellStyle stylehead,
 			XSSFCellStyle styletitleleft, XSSFCellStyle styleheadblank, int TotalColumn, String aos_address) {
-		System.out.println("aos_address = " + aos_address);
 		// 每组创建默认业务实体抬头
 		int row = sheet.getLastRowNum() + 1;
 		XSSFRow headRow = sheet.createRow(row);
@@ -708,7 +707,6 @@ public class aos_mkt_rcv_list extends AbstractListPlugin {
 			inputStream.close();
 			return path;
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
 		}
 		return "";
 	}

@@ -32,11 +32,9 @@ public class demo10 extends AbstractBillPlugIn {
         str.add("aos_entryentity.aos_basedatafield");//单据体中的基础资料字段
         //str.add("aos_entryentity.aos_basedatafield.number");//单据体中的基础资料的编码字段
         DynamicObject dy = QueryServiceHelper.queryOne("aos_mkt_test_work", str.toString(), new QFilter[]{filter_billno});
-        System.out.println("dy = " + dy);
         /** 第二种查询方法 **/
         DynamicObject[] dyc_tsetWork = BusinessDataServiceHelper.load("aos_mkt_test_work", str.toString(), new QFilter[]{filter_billno});
         for (DynamicObject testWork : dyc_tsetWork) {
-            System.out.println("testWork = " + testWork);
         }
         
         /** 改 **/
@@ -55,11 +53,10 @@ public class demo10 extends AbstractBillPlugIn {
         dy_test.set("aos_integerfield1","1000");
 //        SaveServiceHelper.save(new DynamicObject[]{dy_test});
         OperationResult result = SaveServiceHelper.saveOperate("aos_mkt_test_work", new DynamicObject[]{dy_test}, OperateOption.create());
-        System.out.println("result.isSuccess() = " + result.isSuccess());
+       
         /** 打印保存失败信息 **/
         if (!result.isSuccess()) {
             for (IOperateInfo info : result.getAllErrorOrValidateInfo()) {
-                System.out.println("info.getMessage() = " + info.getMessage());
             }
         }
 

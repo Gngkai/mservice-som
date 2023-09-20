@@ -99,7 +99,6 @@ public class aos_mkt_popppc_init extends AbstractTask {
 		Calendar Today = Calendar.getInstance();
 		int hour = Today.get(Calendar.HOUR_OF_DAY);
 		int week = Today.get(Calendar.DAY_OF_WEEK);
-		System.out.println("hour =" + hour);
 		long is_oversea_flag = aos_sal_sche_pub.get_lookup_values("AOS_YES_NO", "Y");
 		QFilter qf_time = null;
 
@@ -150,7 +149,6 @@ public class aos_mkt_popppc_init extends AbstractTask {
 	public static void do_operate(Map<String, Object> params) {
 		Object p_ou_code = params.get("p_ou_code");
 		try {
-			System.out.println("===== into aos_mkt_popppc_init =====");
 			// 获取缓存
 			byte[] serialize_item = cache.getByteValue("item");
 			HashMap<String, Map<String, Object>> item = SerializationUtils.deserialize(serialize_item);
@@ -234,7 +232,6 @@ public class aos_mkt_popppc_init extends AbstractTask {
 			int month = date.get(Calendar.MONTH) + 1;
 			int day = date.get(Calendar.DAY_OF_MONTH);
 			int week = date.get(Calendar.DAY_OF_WEEK);
-			System.out.println("week =" + week);
 
 			SimpleDateFormat DF = new SimpleDateFormat("yyyy-MM-dd");
 			date.add(Calendar.DAY_OF_MONTH, -1);
@@ -445,7 +442,6 @@ public class aos_mkt_popppc_init extends AbstractTask {
 					"aos_productno");
 			int rows = bd_materialS.size();
 			int count = 0;
-			System.out.println("rows =" + rows);
 			DynamicObject aos_mkt_popular_ppc = BusinessDataServiceHelper.newDynamicObject("aos_mkt_popular_ppc");
 			aos_mkt_popular_ppc.set("aos_orgid", p_org_id);
 			aos_mkt_popular_ppc.set("billstatus", "A");
@@ -485,7 +481,6 @@ public class aos_mkt_popppc_init extends AbstractTask {
 
 			for (DynamicObject bd_material : bd_materialS) {
 				count++;
-				System.out.println(p_ou_code + "循环1" + "(" + count + "/" + rows + ")");
 				// 判断是否跳过
 				long item_id = bd_material.getLong("id");
 				long org_id = bd_material.getLong("aos_orgid");
@@ -1142,7 +1137,6 @@ public class aos_mkt_popppc_init extends AbstractTask {
 			Map<String, BigDecimal> NewSerial_Map = new HashMap<>();
 			for (DynamicObject aos_entryentity : aos_entryentityS) {
 				count++;
-				System.out.println(p_ou_code + "循环2" + "(" + count + "/" + size + ")");
 				// 新系列预算计算 = MAX(广告系列中SKU预测营收*AM营收占比*AM付费营收占比/国别标准ROI，2*广告系列中SKU个数)
 				long org_id = (long) p_org_id;
 				long item_id = aos_entryentity.getLong("aos_itemid");
@@ -1171,7 +1165,6 @@ public class aos_mkt_popppc_init extends AbstractTask {
 			// 循环计算 预算
 			for (DynamicObject aos_entryentity : aos_entryentityS) {
 				count++;
-				System.out.println(p_ou_code + "循环3" + "(" + count + "/" + size + ")");
 				String aos_groupstatus = aos_entryentity.getString("aos_groupstatus");
 				if (!aos_groupstatus.equals("AVAILABLE"))
 					continue;// 剔除不计算出价与预算
@@ -2252,7 +2245,6 @@ public class aos_mkt_popppc_init extends AbstractTask {
 					sign.toString());
 		}
 		aos_act_select_planS.close();
-		System.out.println("====AM平台活动====");
 		return Act;
 	}
 

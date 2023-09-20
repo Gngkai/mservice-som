@@ -1019,7 +1019,6 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
 
 			DynamicObject des_entryentity = des_entryentityS.addNew();
 			LastItemId = aos_itemid;
-			System.out.println("aos_itemid =" + aos_itemid);
 			String aos_contrybrandStr = "";
 			String aos_orgtext = "";
 			DynamicObject bd_material = BusinessDataServiceHelper.loadSingle(aos_itemid, "bd_material");

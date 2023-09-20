@@ -27,7 +27,6 @@ public class demo05 extends AbstractBillPlugIn {
 
             IDataModel model = this.getModel();
             String remark = (String)model .getValue("aos_userfield");//用户字段输出为null
-            System.out.println("remark = "+ remark);
 
             /*
             简单字段的赋值，直接通过当前页面的数据模型IDataModel 赋值给字段赋值
@@ -39,7 +38,6 @@ public class demo05 extends AbstractBillPlugIn {
              */
             //设置打印次数
             this.getModel().setValue("aos_printcountfield", "9");
-            System.out.println("打印次数 = " + this.getModel().getValue("aos_printcountfield"));
 
      //================================================================================================================================
             long currentUserId = UserServiceHelper.getCurrentUserId();//获取用户ID
@@ -57,15 +55,11 @@ public class demo05 extends AbstractBillPlugIn {
                 //  String headtext1 = (String) this.getModel().getValue("aos_userfield");
                 //读取单据体字段值
             String entrytext = (String) this.getModel().getValue("aos_textfield",0);
-                 // System.out.println("单据头用户id字段值= " + headtext + "单据头用户字段值= " + headtext1);
                 //用户字段获取不了
-            // System.out.println("单据头用户字段值= " + headtext1);
 
-            System.out.println("单据体字段值= " + entrytext);
 
             this.getModel().setValue("aos_integerfield",99);
             Integer headint = (Integer) this.getModel().getValue("aos_integerfield");
-            System.out.println("整数字段 = " + headint);
 
 
     }

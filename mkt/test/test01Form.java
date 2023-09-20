@@ -29,7 +29,6 @@ public class test01Form extends AbstractBillPlugIn {
     @Override
     public void itemClick(ItemClickEvent evt) {
         super.itemClick(evt);
-        System.out.println("evt.getItemKey() = " + evt.getItemKey());
         if (evt.getItemKey().equals("")){}
     }
 }

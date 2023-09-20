@@ -66,8 +66,6 @@ public class aos_mkt_popadjs_init extends AbstractTask {
 
 	public static void executerun(Map<String, Object> param) {
 		Object p_ou_code = param.get("p_ou_code");
-		System.out.println("=====into 出价调整销售=====");
-		System.out.println("p_ou_code =" + p_ou_code);
 		// 删除数据
 		Calendar today = Calendar.getInstance();
 		today.set(Calendar.HOUR_OF_DAY, 0);
@@ -207,7 +205,6 @@ public class aos_mkt_popadjs_init extends AbstractTask {
 				filters, "aos_entryentity.aos_productno");
 		int rows = aos_mkt_popular_ppcS.size();
 		int count = 0;
-		System.out.println("rows =" + rows);
 		if (rows == 0)
 			return;
 		DynamicObject Head = aos_mkt_popular_ppcS.get(0);
@@ -242,7 +239,6 @@ public class aos_mkt_popadjs_init extends AbstractTask {
 
 		for (DynamicObject aos_mkt_popular_ppc : aos_mkt_popular_ppcS) {
 			count++;
-			System.out.println(p_ou_code + "进度" + "(" + count + "/" + rows + ")");
 
 			// TODO 全部跳过
 			if ("A".equals("A"))
@@ -521,7 +517,6 @@ public class aos_mkt_popadjs_init extends AbstractTask {
 					}
 					return big;
 				}));
-		System.out.println("aos_detailentryS.size() = " + aos_detailentryS.size());
 		for (DynamicObject aos_detailentry : aos_detailentryS) {
 			try {
 				long item_id = aos_detailentry.getLong("aos_itemid");
@@ -562,7 +557,6 @@ public class aos_mkt_popadjs_init extends AbstractTask {
 				ex.printStackTrace();
 			}
 		}
-		System.out.println("aos_detailentryS.size() = " + aos_detailentryS.size());
 		for (DynamicObject aos_detailentry : aos_detailentryS) {
 			try {
 				String aos_itemnumer = aos_detailentry.getString("aos_itemnumer");
@@ -677,7 +671,6 @@ public class aos_mkt_popadjs_init extends AbstractTask {
 		}
 		aos_act_select_planS.close();
 		aos_act_select_planS.close();
-		System.out.println("====AM平台活动====");
 		return Act;
 	}
 }

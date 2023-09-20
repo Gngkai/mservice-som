@@ -44,7 +44,6 @@ public class aos_mkt_dayprice_bak extends AbstractTask {
 		JSONArray p_ret_cursor = obj.getJSONArray("p_real_model");
 
 		int length = p_ret_cursor.size();
-		System.out.println("length =" + length);
 		if (length > 0) {
 			DynamicObject aos_base_przbak = BusinessDataServiceHelper.newDynamicObject("aos_base_przbak");
 			aos_base_przbak.set("aos_date", Today);

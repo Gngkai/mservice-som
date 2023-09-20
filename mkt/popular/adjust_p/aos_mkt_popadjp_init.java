@@ -101,7 +101,6 @@ public class aos_mkt_popadjp_init extends AbstractTask {
 			QFilter[] filters_adj = new QFilter[] { filter_id, filter_date };
 			DeleteServiceHelper.delete("aos_mkt_popular_adjpn", filters_adj);
 			DeleteServiceHelper.delete("aos_mkt_popadjustp_data", filters_adj);
-			System.out.println("=====into 出价调整(推广)=====" + p_ou_code);
 			Object p_org_id = aos_sal_import_pub.get_import_id(p_ou_code, "bd_country");
 
 			byte[] serialize_skurpt14 = cache.getByteValue("mkt_skurpt14Detail_total"); // SKU报告14日
@@ -168,7 +167,6 @@ public class aos_mkt_popadjp_init extends AbstractTask {
 					filters, "aos_entryentity.aos_productno");
 			int rows = aos_mkt_popular_ppcS.size();
 			int count = 0;
-			System.out.println("rows =" + rows);
 			DynamicObject Head = aos_mkt_popular_ppcS.get(0);
 			DynamicObject aos_mkt_popular_adjpn = BusinessDataServiceHelper.newDynamicObject("aos_mkt_popular_adjpn");
 			aos_mkt_popular_adjpn.set("aos_billno", Head.get("aos_billno"));
@@ -214,7 +212,6 @@ public class aos_mkt_popadjp_init extends AbstractTask {
 
 			for (DynamicObject aos_mkt_popular_ppc : aos_mkt_popular_ppcS) {
 				count++;
-				System.out.println(p_ou_code + "进度" + "(" + count + "/" + rows + ")");
 				long item_id = aos_mkt_popular_ppc.getLong("aos_itemid");
 				String aos_itemnumer = aos_mkt_popular_ppc.getString("aos_itemnumer");
 
@@ -573,7 +570,6 @@ public class aos_mkt_popadjp_init extends AbstractTask {
 			String message = e.toString();
 			String exceptionStr = SalUtil.getExceptionStr(e);
 			String messageStr = message + "\r\n" + exceptionStr;
-			System.out.println(messageStr);
 			logger.error(messageStr);
 		} finally {
 			try {
@@ -582,7 +578,6 @@ public class aos_mkt_popadjp_init extends AbstractTask {
 				String message = e.toString();
 				String exceptionStr = SalUtil.getExceptionStr(e);
 				String messageStr = message + "\r\n" + exceptionStr;
-				System.out.println(messageStr);
 				logger.error(messageStr);
 			}
 		}
@@ -679,7 +674,6 @@ public class aos_mkt_popadjp_init extends AbstractTask {
 		}
 		aos_act_select_planS.close();
 		aos_sal_act_type_pS.close();
-		System.out.println("====AM平台活动====");
 		return Act;
 	}
 

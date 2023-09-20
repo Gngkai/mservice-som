@@ -82,7 +82,6 @@ public class aos_mkt_popbudpst_init extends AbstractTask {
 				String message = e.toString();
 				String exceptionStr = SalUtil.getExceptionStr(e);
 				String messageStr = message + "\r\n" + exceptionStr;
-				System.out.println(messageStr);
 				logger.error(messageStr);
 			}
 		}
@@ -166,7 +165,6 @@ public class aos_mkt_popbudpst_init extends AbstractTask {
 		while (aos_mkt_popular_ppcS.hasNext()) {
 			Row aos_mkt_popular_ppc = aos_mkt_popular_ppcS.next();
 			count++;
-			System.out.println(p_ou_code + count);
 			if (count == 1) {
 				// 初始化 预算调整(推广)
 				DynamicObject aos_mkt_pop_budgetp = BusinessDataServiceHelper.newDynamicObject("aos_mkt_pop_budgetst");
@@ -306,7 +304,6 @@ public class aos_mkt_popbudpst_init extends AbstractTask {
 				String message = ex.toString();
 				String exceptionStr = SalUtil.getExceptionStr(ex);
 				String messageStr = message + "\r\n" + exceptionStr;
-				System.out.println(messageStr);
 				logger.error(messageStr);
 			}
 		}

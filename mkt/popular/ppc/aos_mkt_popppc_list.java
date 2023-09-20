@@ -137,7 +137,6 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 	}
 
 	private void aos_init() {
-		System.out.println("===into PPC数据源初始化===");
 		FormShowParameter showParameter = new FormShowParameter();
 		showParameter.setFormId("aos_mkt_cal_form");
 		showParameter.getOpenStyle().setShowType(ShowType.Modal);
@@ -146,7 +145,6 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 	}
 
 	private void aos_export() throws ParseException {
-		System.out.println("===into 打印报告===");
 		List<ListSelectedRow> list = getSelectedRows();// 获取选中行
 		for (int i = 0; i < list.size(); i++) {
 			String fid = list.get(i).toString();
@@ -161,7 +159,6 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 	}
 
 	private void aos_exportnew() throws ParseException {
-		System.out.println("===into 打印新版报告===");
 		List<ListSelectedRow> list = getSelectedRows();// 获取选中行
 		for (int i = 0; i < list.size(); i++) {
 			String fid = list.get(i).toString();
@@ -847,7 +844,6 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 			inputStream.close();
 			return path;
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
 		}
 		return "";
 	}

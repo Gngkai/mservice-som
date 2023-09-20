@@ -233,7 +233,6 @@ public class aos_mkt_image_qrcode {
         String text = "https://cls3.s3.amazonaws.com/100110-009BW/1-1.jpg";
         String logoPath = "C:\\Users\\aosom\\Desktop\\aosom.png";
         String destPath = "C:\\Users\\aosom\\Desktop";
-        System.out.println(aos_mkt_image_qrcode.encode(text, logoPath, destPath, true));
     }
 
 }

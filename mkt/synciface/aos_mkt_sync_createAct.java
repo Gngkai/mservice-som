@@ -47,9 +47,7 @@ public class aos_mkt_sync_createAct extends AbstractTask {
 
         int day = Today.get(Calendar.DAY_OF_MONTH);
         Date today = Today.getTime();
-        System.out.println(today);
 
-        System.out.println("今天计算为周" + week + ";当月的第" + day + "天");
         // 周期表 周类型 计划提报日为当前周几 月由于写法复杂 在循环中跳过
         QFilter filter_day = new QFilter("aos_periodtype", "=", "W").and("aos_plandays", "=", week).or("aos_periodtype",
                 "=", "M");
@@ -64,7 +62,6 @@ public class aos_mkt_sync_createAct extends AbstractTask {
         int count = 0;
         for (DynamicObject aos_mkt_actperiod : aos_mkt_actperiodS) {
             count++;
-            System.out.println("进度" + "(" + count + "/" + rows + ")");
             boolean jump = true;
             String aos_periodtype = aos_mkt_actperiod.get("aos_periodtype").toString(); //周期
             String aos_plandays = aos_mkt_actperiod.get("aos_plandays").toString();     //计划提报日期
@@ -81,7 +78,6 @@ public class aos_mkt_sync_createAct extends AbstractTask {
                 jump = false;// 周类型直接为true
             }
             if (jump){
-                System.out.println("   剔除      ");
                 continue;
             }
 
@@ -93,7 +89,6 @@ public class aos_mkt_sync_createAct extends AbstractTask {
             int aos_earlydays = (int) aos_mkt_actperiod.get("aos_earlydays");
             Date aos_datefrom = add_days(today, aos_earlydays);
             Date aos_dateto = add_days(aos_datefrom, aos_period - 1);
-            System.out.println("aos_datefrom =" + aos_datefrom);
             DynamicObject aos_act_select_plan = BusinessDataServiceHelper.newDynamicObject("aos_act_select_plan");
             aos_act_select_plan.set("aos_nationality", aos_orgid);
             aos_act_select_plan.set("aos_channel", aos_platformid);

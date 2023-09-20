@@ -156,8 +156,6 @@ public class aos_mkt_3design_list extends AbstractListPlugin {
 			DynamicObject aos_mkt_3design = BusinessDataServiceHelper.loadSingle(id, "aos_mkt_3design");
 			String aos_userold = aos_mkt_3design.getDynamicObject("aos_user").getPkValue().toString();
 			String billno = aos_mkt_3design.getString("billno");
-			System.out.println("aos_userold =" + aos_userold);
-			System.out.println("CurrentUserId =" + CurrentUserId);
 
 			if (!(CurrentUserId + "").equals(aos_userold)) {
 				this.getView().showTipNotification(billno + "只允许转办自己的单据!");
