@@ -19,31 +19,32 @@ import java.util.Map;
  */
 public class aos_mkt_proghreq_task extends AbstractTask {
 
-    @Override
-    public void execute(RequestContext requestContext, Map<String, Object> map) throws KDException {
-        QFBuilder builder_pro = new QFBuilder();
-        builder_pro.add("aos_status", QCP.not_equals,"已完成");
-        builder_pro.add("aos_quainscomdate", "=",null);
-        builder_pro.add("aos_ponumber",QCP.not_equals,"");
-        builder_pro.add("aos_linenumber",QCP.not_equals,"");
-        DynamicObject[] dy_pro = BusinessDataServiceHelper.load("aos_mkt_photoreq",
-                "id,aos_quainscomdate,aos_ponumber,aos_linenumber",builder_pro.toArray());//需要修改的拍照需求表
+	@Override
+	public void execute(RequestContext requestContext, Map<String, Object> map) throws KDException {
+		QFBuilder builder_pro = new QFBuilder();
+		builder_pro.add("aos_status", QCP.not_equals, "已完成");
+		builder_pro.add("aos_quainscomdate", "=", null);
+		builder_pro.add("aos_ponumber", QCP.not_equals, "");
+		builder_pro.add("aos_linenumber", QCP.not_equals, "");
+		DynamicObject[] dy_pro = BusinessDataServiceHelper.load("aos_mkt_photoreq",
+				"id,aos_quainscomdate,aos_ponumber,aos_linenumber", builder_pro.toArray());// 需要修改的拍照需求表
 
-        for(DynamicObject dy_ : dy_pro) {
-            QFilter qFilter = new QFilter("aos_insrecordentity.aos_contractnochk", "=", dy_.get("aos_ponumber"));
-            QFilter qFilter1 = new QFilter("aos_insrecordentity.aos_lineno", "=", dy_.get("aos_linenumber"));
-            QFilter qFilter2 = new QFilter("aos_insrecordentity.aos_insresultchk","=","A");
-            QFilter qFilter3 = new QFilter("aos_insrecordentity.aos_instypedetailchk","=","1");
-            QFilter[] qFilter_rcv = {qFilter, qFilter1,qFilter2,qFilter3};
-            DynamicObject dy_qct = BusinessDataServiceHelper.loadSingle("aos_qctasklist", "aos_quainscomdate", qFilter_rcv);//质检任务单
-            System.out.println("dy_qct = " + dy_qct);
-            if(dy_qct != null) {
-                dy_.set("aos_quainscomdate", dy_qct.get("aos_quainscomdate"));
-                //SaveServiceHelper.update(dy_);
-                System.out.println("aos_quainscomdate = " + dy_qct.get("aos_quainscomdate"));
-                SaveServiceHelper.save(new DynamicObject[]{dy_});
-            }
-        }
-        SaveServiceHelper.update(dy_pro);
-    }
+		for (DynamicObject dy_ : dy_pro) {
+			QFilter qFilter = new QFilter("aos_insrecordentity.aos_contractnochk", "=", dy_.get("aos_ponumber"));
+			QFilter qFilter1 = new QFilter("aos_insrecordentity.aos_lineno", "=", dy_.get("aos_linenumber"));
+			QFilter qFilter2 = new QFilter("aos_insrecordentity.aos_insresultchk", "=", "A");
+			QFilter qFilter3 = new QFilter("aos_insrecordentity.aos_instypedetailchk", "=", "1");
+			QFilter[] qFilter_rcv = { qFilter, qFilter1, qFilter2, qFilter3 };
+			DynamicObject dy_qct = BusinessDataServiceHelper.loadSingle("aos_qctasklist", "aos_quainscomdate",
+					qFilter_rcv);// 质检任务单
+			System.out.println("dy_qct = " + dy_qct);
+			if (dy_qct != null) {
+				dy_.set("aos_quainscomdate", dy_qct.get("aos_quainscomdate"));
+				// SaveServiceHelper.update(dy_);
+				System.out.println("aos_quainscomdate = " + dy_qct.get("aos_quainscomdate"));
+				SaveServiceHelper.save(new DynamicObject[] { dy_ });
+			}
+		}
+		SaveServiceHelper.update(dy_pro);
+	}
 }

@@ -42,10 +42,10 @@ public class aos_mkt_popadds_init extends AbstractTask {
 	public final static String system = Cux_Common_Utl.SYSTEM;
 
 	public void execute(RequestContext ctx, Map<String, Object> param) throws KDException {
-		executerun();// 多线程执行
+//		executerun();// 多线程执行
 	}
 
-	public static void executerun() {
+	public static void executerun(int p_hour) {
 		// CommData.init();
 		Calendar Today = Calendar.getInstance();
 		int week = Today.get(Calendar.DAY_OF_WEEK);
@@ -53,8 +53,7 @@ public class aos_mkt_popadds_init extends AbstractTask {
 		if (!CopyFlag) {
 			return;// 如果不是周一 直接跳过
 		}
-		int hour = Today.get(Calendar.HOUR_OF_DAY);
-		System.out.println("hour =" + hour);
+//		int hour = Today.get(Calendar.HOUR_OF_DAY);
 		long is_oversea_flag = aos_sal_sche_pub.get_lookup_values("AOS_YES_NO", "Y");
 		QFilter qf_time = null;
 		DynamicObject dynamicObject = QueryServiceHelper.queryOne("aos_mkt_base_orgvalue", "aos_value",
@@ -62,7 +61,7 @@ public class aos_mkt_popadds_init extends AbstractTask {
 		int time = 16;
 		if (dynamicObject != null)
 			time = dynamicObject.getBigDecimal("aos_value").intValue();
-		if (hour < time)
+		if (p_hour < time)
 			qf_time = new QFilter("aos_is_north_america", QCP.not_equals, is_oversea_flag);
 		else
 			qf_time = new QFilter("aos_is_north_america", QCP.equals, is_oversea_flag);

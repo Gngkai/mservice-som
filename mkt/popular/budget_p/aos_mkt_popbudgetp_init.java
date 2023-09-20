@@ -265,6 +265,15 @@ public class aos_mkt_popbudgetp_init extends AbstractTask {
 				AdjsBid = AdjsMap.get(aos_productno);
 			aos_entryentity.set("aos_adjbudget", AdjsBid);
 			aos_entryentity.set("aos_popbudget", max(aos_budget,AdjsBid));
+			
+			BigDecimal aos_lastbudget = aos_entryentity.getBigDecimal("aos_lastbudget");
+			BigDecimal aos_calbudget = aos_entryentity.getBigDecimal("aos_calbudget");
+
+			if (aos_lastbudget.compareTo(BigDecimal.ZERO) != 0 && aos_calbudget.compareTo(aos_lastbudget) > 0) 
+				aos_entryentity.set("aos_sys", "加预算");
+			if (aos_calbudget.compareTo(aos_lastbudget) < 0) 
+				aos_entryentity.set("aos_sys", "减预算");
+			
 		}
 
 		aos_mkt_popular_ppcS.close();

@@ -42,7 +42,7 @@ public class aos_mkt_popweek_list extends AbstractListPlugin {
 	}
 
 	private void aos_manual() {
-		aos_mkt_popweek_init.executerun();
+//		aos_mkt_popweek_init.executerun();
 		this.getView().invokeOperation("refresh");
 	}
 

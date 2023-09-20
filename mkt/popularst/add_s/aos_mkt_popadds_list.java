@@ -41,7 +41,7 @@ public class aos_mkt_popadds_list extends AbstractListPlugin {
 	}
 
 	private void aos_manual() {
-		aos_mkt_popadds_init.executerun();
+//		aos_mkt_popadds_init.executerun();
 		this.getView().invokeOperation("refresh");
 	}
 

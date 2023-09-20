@@ -15,7 +15,7 @@ public class aos_mkt_popppcst_list extends AbstractListPlugin {
 
 	private void aos_manual() {
 		FndMsg.debug("123");
-		aos_mkt_popppcst_init.executerun();
+//		aos_mkt_popppcst_init.executerun();
 		this.getView().invokeOperation("refresh");
 	}
 

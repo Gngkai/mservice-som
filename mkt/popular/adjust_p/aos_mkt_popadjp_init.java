@@ -103,9 +103,13 @@ public class aos_mkt_popadjp_init extends AbstractTask {
 			DeleteServiceHelper.delete("aos_mkt_popadjustp_data", filters_adj);
 			System.out.println("=====into 出价调整(推广)=====" + p_ou_code);
 			Object p_org_id = aos_sal_import_pub.get_import_id(p_ou_code, "bd_country");
-			byte[] serialize_skurpt14 = cache.getByteValue("mkt_skurpt14Detail"); // SKU报告14日
+
+			byte[] serialize_skurpt14 = cache.getByteValue("mkt_skurpt14Detail_total"); // SKU报告14日
 			HashMap<String, Map<String, Map<String, Object>>> SkuRpt14Detail = SerializationUtils
 					.deserialize(serialize_skurpt14);
+			
+			
+			
 			byte[] serialize_skurptdetail = cache.getByteValue("mkt_skurptDetail"); // SKU报告1日
 			HashMap<String, Map<String, Object>> SkuRptDetail = SerializationUtils.deserialize(serialize_skurptdetail);
 			byte[] serialize_skurptdetailSerial = cache.getByteValue("mkt_skurptDetailSerial"); // SKU报告1日

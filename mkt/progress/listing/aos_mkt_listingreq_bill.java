@@ -47,7 +47,6 @@ import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.MKTCom;
 import mkt.common.MKTS3PIC;
 import mkt.progress.ProgressUtil;
-import mkt.progress.design.aos_mkt_designreq_bill;
 import mkt.progress.iface.iteminfo;
 
 public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
@@ -871,7 +870,6 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
 			aos_subentryentity.set("aos_orgtext", aos_orgtext);
 
 			mkt.progress.design.aos_mkt_designreq_bill.setEntityValue(aos_mkt_designreq);
-			aos_mkt_designreq_bill.createDesiginBeforeSave(aos_mkt_designreq);
 			OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_designreq",
 					new DynamicObject[] { aos_mkt_designreq }, OperateOption.create());
 
