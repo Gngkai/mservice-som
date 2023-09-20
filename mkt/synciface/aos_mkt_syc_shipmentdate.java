@@ -18,8 +18,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import common.Cux_Common_Utl;
-import common.fnd.FndError;
 import common.fnd.FndGlobal;
+import common.fnd.FndMsg;
 import common.sal.util.SalUtil;
 
 /**
@@ -37,49 +37,66 @@ public class aos_mkt_syc_shipmentdate extends AbstractTask {
 		SyncFirstDate();
 	}
 
-	private void SyncFirstDate() {
+	public static void SyncFirstDate() {
 		// 刷新多人会审日期与操作人
 		DynamicObject[] aosMktPhotoReqS = BusinessDataServiceHelper.load("aos_mkt_photoreq",
-				"aos_firstindate,aos_salehelper,aos_orgid,aos_itemid",
+				"aos_firstindate,aos_salehelper,aos_orgid,aos_itemid,aos_user",
 				new QFilter("aos_status", QCP.equals, "视频更新:多人会审").and("aos_sonflag", QCP.equals, true)
 						.and("aos_firstindate", QCP.equals, null).toArray());
 		for (DynamicObject aosMktPhotoReq : aosMktPhotoReqS) {
-			String aos_orgid = aosMktPhotoReq.getString("aos_orgid");
-			String aos_itemid = aosMktPhotoReq.getString("aos_itemid");
-			DynamicObject bd_material = QueryServiceHelper.queryOne("bd_material",
-					"id,aos_contryentry.aos_firstindate aos_firstindate", new QFilter("id", QCP.equals, aos_itemid)
-							.and("aos_contryentry.aos_nationality.id", QCP.equals, aos_orgid).toArray());
-			if (FndGlobal.IsNotNull(aosMktPhotoReq)) {
-				String category = (String) SalUtil.getCategoryByItemId(aos_itemid + "").get("name");
-				String[] category_group = category.split(",");
-				String AosCategory1 = null;
-				String AosCategory2 = null;
-				int category_length = category_group.length;
-				if (category_length > 0)
-					AosCategory1 = category_group[0];
-				if (category_length > 1)
-					AosCategory2 = category_group[1];
-				Object aos_salehelper = null;
-				if (FndGlobal.IsNotNull(AosCategory1) && FndGlobal.IsNotNull(AosCategory2)) {
-					QFilter filter_category1 = new QFilter("aos_category1", "=", AosCategory1);
-					QFilter filter_category2 = new QFilter("aos_category2", "=", AosCategory2);
-					QFilter filter_org = new QFilter("aos_orgid", "=", aos_orgid);
-					QFilter[] filters_category = new QFilter[] { filter_category1, filter_category2, filter_org };
-					String SelectStr = "aos_salehelper.number aos_salehelper";
-					DynamicObject aos_mkt_progorguser = QueryServiceHelper.queryOne("aos_mkt_progorguser", SelectStr,
-							filters_category);
-					if (aos_mkt_progorguser != null)
-						aos_salehelper = aos_mkt_progorguser.getString("id");
+//			try {
+			    Object org = aosMktPhotoReq.get("aos_orgid");
+			    if (FndGlobal.IsNull(org))	
+			    	continue;
+				String aos_orgid = aosMktPhotoReq.getDynamicObject("aos_orgid").getPkValue().toString();
+				FndMsg.debug("aos_orgid:" + aos_orgid);
+				String aos_itemid = aosMktPhotoReq.getDynamicObject("aos_itemid").getPkValue().toString();
+				FndMsg.debug("aos_itemid:" + aos_itemid);
+				DynamicObject bd_material = QueryServiceHelper.queryOne("bd_material",
+						"id,aos_contryentry.aos_firstindate aos_firstindate", new QFilter("id", QCP.equals, aos_itemid)
+								.and("aos_contryentry.aos_nationality.id", QCP.equals, aos_orgid).toArray());
+				FndMsg.debug("bd_material:" + bd_material);
+				if (FndGlobal.IsNotNull(bd_material)) {
+					FndMsg.debug("into not null");
+					String category = (String) SalUtil.getCategoryByItemId(aos_itemid).get("name");
+					String[] category_group = category.split(",");
+					String AosCategory1 = null;
+					String AosCategory2 = null;
+					int category_length = category_group.length;
+					if (category_length > 0)
+						AosCategory1 = category_group[0];
+					if (category_length > 1)
+						AosCategory2 = category_group[1];
+					Object aos_salehelper = null;
+					if (FndGlobal.IsNotNull(AosCategory1) && FndGlobal.IsNotNull(AosCategory2)) {
+						QFilter filter_category1 = new QFilter("aos_category1", "=", AosCategory1);
+						QFilter filter_category2 = new QFilter("aos_category2", "=", AosCategory2);
+						QFilter filter_org = new QFilter("aos_orgid", "=", aos_orgid);
+						QFilter[] filters_category = new QFilter[] { filter_category1, filter_category2, filter_org };
+						String SelectStr = "aos_salehelper.id aos_salehelper";
+						DynamicObject aos_mkt_progorguser = QueryServiceHelper.queryOne("aos_mkt_progorguser",
+								SelectStr, filters_category);
+						if (aos_mkt_progorguser != null)
+							aos_salehelper = aos_mkt_progorguser.getString("aos_salehelper");
+					}
+					Date aos_firstindate = bd_material.getDate("aos_firstindate");
+					
+				    if (FndGlobal.IsNull(aos_firstindate))	
+				    	continue;
+
+					FndMsg.debug("aos_firstindate" + aos_firstindate);
+					
+					if (FndGlobal.IsNotNull(bd_material) && FndGlobal.IsNotNull(aos_salehelper)) {
+						aosMktPhotoReq.set("aos_user", aos_salehelper);
+						aosMktPhotoReq.set("aos_firstindate", aos_firstindate);
+					} else {
+						aosMktPhotoReq.set("aos_user", system);
+						aosMktPhotoReq.set("aos_firstindate", null);
+					}
 				}
-				Date aos_firstindate = bd_material.getDate("aos_firstindate");
-				if (FndGlobal.IsNotNull(aosMktPhotoReqS) && FndGlobal.IsNotNull(aos_salehelper)) {
-					aosMktPhotoReq.set("aos_user", aos_salehelper);
-					aosMktPhotoReq.set("aos_firstindate", aos_firstindate);
-				} else {
-					aosMktPhotoReq.set("aos_user", system);
-					aosMktPhotoReq.set("aos_firstindate", null);
-				}
-			}
+//			} catch (Exception ex) {
+//				continue;
+//			}
 		}
 		SaveServiceHelper.update(aosMktPhotoReqS);
 	}

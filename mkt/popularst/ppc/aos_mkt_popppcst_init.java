@@ -65,7 +65,7 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 	private static final String AMAZON = "AMAZON";
 
 	public void execute(RequestContext ctx, Map<String, Object> param) throws KDException {
-		executerun();
+		executerun();// EU
 	}
 
 	public static void executerun() {
@@ -80,9 +80,9 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 		if (CopyFlag)
 			CommData.init();
 		// 当前整点
-		int hour = Today.get(Calendar.HOUR_OF_DAY);
+		int p_hour = Today.get(Calendar.HOUR_OF_DAY);
 		// 根据当前整点判断执行的是欧洲与美加
-		QFilter qf_time = aos_mkt_pop_common.getEuOrUsQf(hour);
+		QFilter qf_time = aos_mkt_pop_common.getEuOrUsQf(p_hour);
 		// 获取所有当前整点应执行的销售国别
 		DynamicObjectCollection bd_country = QueryServiceHelper.query("bd_country", "id,number",
 				new QFilter("aos_is_oversea_ou.number", QCP.equals, "Y").and("aos_isomvalid", QCP.equals, true)
@@ -95,10 +95,10 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 		}
 		// 生成销售手动调整ST
 		FndMsg.debug("=======生成销售手动调整ST=======");
-		aos_mkt_popadds_init.executerun();
+		aos_mkt_popadds_init.executerun(p_hour);
 		// 生成销售周调整ST
 		FndMsg.debug("=======生成销售周调整ST=======");
-		aos_mkt_popweek_init.executerun();
+		aos_mkt_popweek_init.executerun(p_hour);
 		// 生成ST销售加回
 		FndMsg.debug("=======生成ST销售加回=======");
 		aos_mkt_pop_stadd_init.stInit();
