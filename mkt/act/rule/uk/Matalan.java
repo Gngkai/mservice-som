@@ -42,7 +42,6 @@ public class Matalan implements ActStrategy {
         long actTime = instance.getTime().getTime();
         // 间隔天数
         long currentToAct = ActUtil.betweenDays(current, actTime);
-        System.out.println("间隔天数 = " + currentToAct);
         Set<String> apartFromAmzAndEbayItem = ActUtil.queryApartFromAmzAndEbayItem(aos_orgid, new String[]{"AMAZON", "EBAY"}, start);
         // 自有仓库可用量大于等于30的物料
         Map<String, DynamicObject> nonPlatItemSet = ActUtil.queryNonPlatQtyLgN(aos_orgid, 30);
@@ -59,7 +58,6 @@ public class Matalan implements ActStrategy {
         DynamicObjectCollection aos_sync_logS = aos_sync_log.getDynamicObjectCollection("aos_entryentity");
 
         DynamicObjectCollection selectList = ActUtil.queryActSelectList(aos_orgnum);
-        System.out.println("selectList.size() = " + selectList.size());
         for (DynamicObject obj : selectList) {
             String aos_sku = obj.getString("aos_sku");
             String aos_seasonattr = obj.getString("aos_seasonattr");
@@ -285,7 +283,6 @@ public class Matalan implements ActStrategy {
 //            itemObject.put("aos_reviewqty", aos_review);// review个数
             secFilterList.add(itemObject);
         }
-        System.out.println("secFilterList.size() = " + secFilterList.size());
         // 按类别分类
 
 

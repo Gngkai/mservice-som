@@ -590,7 +590,7 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
 						"aos_sal_actplanentity.aos_incre_reven aos_incre_reven",
 						new QFilter("aos_nationality.id", QCP.equals, aosOrgIdStr)
 								.and("aos_acttype.id", QCP.equals, aosSalActLib)
-								.and("aos_planentity.aos_livinghome", QCP.equals, "Y")
+								.and("aos_planentity.aos_home_plan", QCP.equals, "Y")
 								.and("aos_sal_actplanentity.aos_category_stat1", QCP.equals, "居家系列")
 								.and("aos_enddate1", QCP.large_equals, toDate)
 								.and("aos_enddate1", QCP.less_equals, fromDate).toArray());
@@ -600,7 +600,7 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
 				DynamicObjectCollection countHomeS = QueryServiceHelper.query("aos_act_select_plan", "id",
 						new QFilter("aos_nationality.id", QCP.equals, aosOrgIdStr)
 								.and("aos_acttype.id", QCP.equals, aosSalActLib)
-								.and("aos_planentity.aos_livinghome", QCP.equals, "Y")
+								.and("aos_planentity.aos_home_plan", QCP.equals, "Y")
 								.and("aos_sal_actplanentity.aos_category_stat1", QCP.equals, "居家系列")
 								.and("aos_enddate1", QCP.large_equals, toDate)
 								.and("aos_enddate1", QCP.less_equals, fromDate).toArray());
@@ -804,7 +804,7 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
 		this.getModel().setValue("aos_project_l", "上月", 0);
 		this.getModel().setValue("aos_project_l", "本月", 1);
 		this.getModel().setValue("aos_project_l", "环比", 2);
-//		this.getView().invokeOperation("save");
+		this.getView().invokeOperation("save");
 	}
 
 	/**

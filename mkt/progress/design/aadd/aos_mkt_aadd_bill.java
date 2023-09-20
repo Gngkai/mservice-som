@@ -209,6 +209,7 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 		String aosBillNo = this.getModel().getValue("aos_billno").toString();
 		Object aosItemId = this.getModel().getValue("aos_itemid", 0);
 		Object aos_productno = ((DynamicObject) aosItemId).get("aos_productno");
+		FndMsg.debug("aos_productno:"+aos_productno);
 		Object aos_org = this.getModel().getValue("aos_org");
 
 		if ("新款".equals(aos_type)) {
@@ -229,7 +230,7 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 			FndMsg.debug("=======2=======");
 			DynamicObjectCollection sameSegmentS = QueryServiceHelper.query("bd_material", "id",
 					new QFilter("aos_productno", QCP.equals, aos_productno).and("aos_protype", QCP.equals, "N")
-							.and("id", QCP.not_equals, ((DynamicObject) aosItemId).getPkValue()).toArray());
+							.toArray());
 			for (DynamicObject sameSegment : sameSegmentS) {
 				Set<String> segmentSet = getItemOrg(sameSegment.get("id"));
 				if (segmentSet.size() > 0) {
@@ -249,10 +250,13 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 			Map<String, Integer> ouCount = new HashMap<>();
 			for (DynamicObject sameSegment : sameSegmentS) {
 				Set<String> segmentSet = getItemOrg(sameSegment.get("id"));
+				FndMsg.debug("segmentSet.size():"+segmentSet.size());
 				if (segmentSet.size() > 0) {
 					Iterator<String> iterSeg = segmentSet.iterator();
 					while (iterSeg.hasNext()) {
 						String ou = iterSeg.next();
+						FndMsg.debug("ou:"+ou);
+						FndMsg.debug("aos_org"+aos_org);
 						if ("IT,ES,DE,FR".contains(ou) && !aos_org.equals(ou)) {
 							if (FndGlobal.IsNull(ouCount.get(ou)))
 								ouCount.put(ou, 0);
@@ -625,9 +629,10 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 			this.getView().setVisible(false, "aos_submit");// 提交
 		}
 		// 状态控制
+		EntryGrid entryGrid = this.getControl("aos_entryentity");
+		entryGrid.setColumnProperty("aos_contrast", ClientProperties.Lock, true);
 		if ("新建".equals(aosStatus)) {
 			this.getView().setEnable(false, "aos_osconfirm");// 是否海外确认
-			EntryGrid entryGrid = this.getControl("aos_entryentity");
 			entryGrid.setColumnProperty("aos_aadd", ClientProperties.Lock, true);
 			entryGrid.setColumnProperty("aos_new", ClientProperties.Lock, true);
 			entryGrid.setColumnProperty("aos_same", ClientProperties.Lock, true);
@@ -680,6 +685,8 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 			this.getView().setEnable(false, 0, "aos_same");// 同款
 			this.getView().setEnable(false, 0, "aos_trans");// 翻译
 			this.getView().setEnable(false, 0, "aos_itemid");// 货号
+			
+			entryGrid.setColumnProperty("aos_contrast", ClientProperties.Lock, false);
 		} else if ("销售上线".equals(aosStatus)) {
 			this.getView().setVisible(false, "bar_save");// 保存
 			this.getView().setEnable(false, "aos_osconfirm");// 是否海外确认
@@ -777,7 +784,6 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 		aosMktAadd.set("aos_design", sourceBill.get("aos_design"));
 		aosMktAadd.set("aos_osconfirm", sourceBill.get("aos_osconfirm"));
 		aosMktAadd.set("aos_oueditor", sourceBill.get("aos_oueditor"));
-		aosMktAadd.set("aos_monitor", sourceBill.get("aos_monitor"));
 		aosMktAadd.set("aos_sale", sourceBill.get("aos_sale"));
 		aosMktAadd.set("aos_sourceid", sourceBill.get("id"));
 		aosMktAadd.set("aos_sourcebillno", sourceBill.get("aos_billno"));
@@ -793,23 +799,36 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 		aos_entryentity.set("aos_same", sourceEntry.get("aos_same"));
 		aos_entryentity.set("aos_trans", sourceEntry.get("aos_trans"));
 		aos_entryentity.set("aos_url", sourceEntry.get("aos_url"));
+		
+		String category = MKTCom.getItemCateNameZH(itemId);
+		String[] category_group = category.split(",");
+		String AosCategory1 = null;// 大类
+		String AosCategory2 = null;// 中类
+		int category_length = category_group.length;
+		if (category_length > 0)
+			AosCategory1 = category_group[0];
+		if (category_length > 1)
+			AosCategory2 = category_group[1];
+		
+		DynamicObject aosMktProgOrgUser = QueryServiceHelper.queryOne("aos_mkt_progorguser", "aos_02hq",
+				new QFilter("aos_orgid.number", QCP.equals, ou).and("aos_category1", QCP.equals, AosCategory1)
+						.and("aos_category2", QCP.equals, AosCategory2).toArray());
+		if (FndGlobal.IsNull(aosMktProgOrgUser) || FndGlobal.IsNull(aosMktProgOrgUser.get("aos_02hq"))) {
+			fndError.add(ou + "~" + AosCategory1 + "~" + AosCategory2 + ",组长不存在!");
+			DeleteServiceHelper.delete("aos_mkt_aadd",
+					new QFilter("aos_sourceid", "=", sourceBill.get("id")).toArray());
+			throw fndError;
+		}
+		aosMktAadd.set("aos_monitor", aosMktProgOrgUser.get("aos_02hq"));
 
 		if (count == 0) {
 			if ("MIN".equals(type)) {
 				aosMktAadd.set("aos_min", true);// 小语种同步主单
 				aosMktAadd.set("aos_status", "文案确认");
 				// 小语种国别的品类编辑
-				String category = MKTCom.getItemCateNameZH(itemId);
-				String[] category_group = category.split(",");
-				String AosCategory1 = null;// 大类
-				String AosCategory2 = null;// 中类
-				int category_length = category_group.length;
-				if (category_length > 0)
-					AosCategory1 = category_group[0];
-				if (category_length > 1)
-					AosCategory2 = category_group[1];
+				
 				// 根据国别+大类+小类 从营销国别品类人员表中取国别
-				DynamicObject aosMktProgOrgUser = QueryServiceHelper.queryOne("aos_mkt_progorguser", "aos_oueditor",
+				aosMktProgOrgUser = QueryServiceHelper.queryOne("aos_mkt_progorguser", "aos_oueditor",
 						new QFilter("aos_orgid.number", QCP.equals, ou).and("aos_category1", QCP.equals, AosCategory1)
 								.and("aos_category2", QCP.equals, AosCategory2).toArray());
 				if (FndGlobal.IsNull(aosMktProgOrgUser) || FndGlobal.IsNull(aosMktProgOrgUser.get("aos_oueditor"))) {
@@ -821,6 +840,10 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 				Object aos_user = aosMktProgOrgUser.get("aos_oueditor");
 				aosMktAadd.set("aos_user", aos_user);
 				aosMktAadd.set("aos_oueditor", aos_user);
+				
+				
+				
+				
 			} else if ("NORMAL".equals(type)) {
 				aosMktAadd.set("aos_status", "设计制作");
 				aosMktAadd.set("aos_user", sourceBill.get("aos_design"));

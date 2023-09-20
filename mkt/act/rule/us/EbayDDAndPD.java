@@ -24,7 +24,6 @@ import mkt.common.MKTCom;
 public class EbayDDAndPD implements ActStrategy {
 	@Override
 	public void doOperation(DynamicObject object) throws Exception {
-		System.out.println("=======Start doOperation=======");
 		/** 数据层 **/
 		String aos_orgnum = object.getDynamicObject("aos_nationality").getString("number");// 国别
 		String aos_orgid = object.getDynamicObject("aos_nationality").getString("id"); // 国别id
@@ -60,7 +59,6 @@ public class EbayDDAndPD implements ActStrategy {
 		DynamicObject aos_sync_log = ActUtil.getCommonLog("DotdUS", aos_orgnum);// 日志对象
 		DynamicObjectCollection aos_sync_logS = aos_sync_log.getDynamicObjectCollection("aos_entryentity");// 日志行
 		for (DynamicObject aos_mkt_actselect : aos_mkt_actselectS) {
-			System.out.println("进度" + "(" + row + "/" + total + ")");
 			row++;
 			/** 行数据层 **/
 			String aos_sku = aos_mkt_actselect.getString("aos_sku");// 物料编码

@@ -49,7 +49,6 @@ public class EbayAndDailyDeal implements ActStrategy {
         long actTime = instance.getTime().getTime();
         // 间隔天数
         long currentToAct = ActUtil.betweenDays(current, actTime);
-        System.out.println("间隔天数 = " + currentToAct);
 
         // 自有仓库可用量大于等于30的物料
         Map<String, DynamicObject> nonPlatItemSet = ActUtil.queryNonPlatQtyLgN(aos_orgid, 30);
@@ -69,7 +68,6 @@ public class EbayAndDailyDeal implements ActStrategy {
         DynamicObjectCollection aos_sync_logS = aos_sync_log.getDynamicObjectCollection("aos_entryentity");
 
         DynamicObjectCollection selectList = ActUtil.queryActSelectList(ouCode);
-        System.out.println("selectList.size() = " + selectList.size());
         for (DynamicObject obj : selectList) {
             String aos_sku = obj.getString("aos_sku");
             String aos_seasonattr = obj.getString("aos_seasonattr");
@@ -135,7 +133,6 @@ public class EbayAndDailyDeal implements ActStrategy {
 
             // 预计活动日可售天数
             int salDaysForAct = InStockAvailableDays.calInstockSalDaysForAct(aos_orgid, aos_itemid, start);
-//            System.out.println("salDaysForAct = " + salDaysForAct);
             // 常规品: 预计活动日可售天数>= 90
             if ("REGULAR".equals(aos_seasonattr) || "SPRING-SUMMER-CONVENTIONAL".equals(aos_seasonattr)) {
                 if (salDaysForAct < 90) {

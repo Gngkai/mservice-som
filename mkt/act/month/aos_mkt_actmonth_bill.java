@@ -61,16 +61,11 @@ public class aos_mkt_actmonth_bill extends AbstractBillPlugIn implements RowClic
 	}
 
 	private void init_billno() {
-		System.out.println("=== into init_billno ===");
 		// TODO 初始化单据编号
 		Object aos_orgid = this.getModel().getValue("aos_orgid");
 		Object aos_platformid = this.getModel().getValue("aos_platformid");
 		Object aos_shopid = this.getModel().getValue("aos_shopid");
 		Object aos_activity_name = this.getModel().getValue("aos_activity_name");
-		System.out.println("aos_orgid="+aos_orgid);
-		System.out.println("aos_platformid="+aos_platformid);
-		System.out.println("aos_shopid="+aos_shopid);
-		System.out.println("aos_activity_name="+aos_activity_name);
 		if (aos_orgid != null && aos_platformid != null && aos_shopid != null && aos_activity_name != null) {
 			String aos_orgnumber = ((DynamicObject) aos_orgid).getString("number");
 			String aos_shopnumber = ((DynamicObject) aos_shopid).getString("aos_short_code");
@@ -97,7 +92,6 @@ public class aos_mkt_actmonth_bill extends AbstractBillPlugIn implements RowClic
 		// 国别权限控制
 		try {
 			String name = beforeF7SelectEvent.getProperty().getName();
-			System.out.println("name =" + name);
 			// 获取当前人员id
 			long CurrentUserId = UserServiceHelper.getCurrentUserId();
 			if (StringUtils.equals(name, "aos_orgid")) {

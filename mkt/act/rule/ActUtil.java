@@ -569,7 +569,6 @@ public class ActUtil {
 			OrderData.put(aos_sync_om_order_r.getString("aos_item"), aos_sync_om_order_r.getInteger("aos_order_qty"));
 		}
 		aos_sync_om_order_rS.close();
-		System.out.println("=====结束销售订单数据=====");
 		return OrderData;
 	}
 

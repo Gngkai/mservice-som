@@ -48,7 +48,6 @@ public class LDAnd7DD implements ActStrategy {
         long actTime = instance.getTime().getTime();
         // 间隔天数
         long currentToAct = ActUtil.betweenDays(current, actTime);
-        System.out.println("间隔天数 = " + currentToAct);
 
         // 第一次过滤选品清单
         List<DynamicObject> firstFilterList = new ArrayList<>();
@@ -139,7 +138,6 @@ public class LDAnd7DD implements ActStrategy {
 
             // 预计活动日可售天数
             int salDaysForAct = InStockAvailableDays.calInstockSalDaysForAct(aos_orgid, aos_itemid, start);
-//            System.out.println("salDaysForAct = " + salDaysForAct);
             // 常规品: 预计活动日可售天数>= 90
             if ("REGULAR".equals(aos_seasonattr) || "SPRING-SUMMER-CONVENTIONAL".equals(aos_seasonattr)) {
                 if (salDaysForAct < 90) {

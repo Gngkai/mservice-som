@@ -226,9 +226,13 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
 				if (FndGlobal.IsNull(aos_cname)) {
 					this.getModel().setValue("aos_itemid", null);
 				}
+
+				refreshLine();
 			} else if (name.equals("aos_itemid")) {
 				aos_egsku_change();
-			} else if (name.equals("aos_slogan")) {
+			} else if (name.equals("aos_detail")) {
+				refreshLine();
+			}else if (name.equals("aos_slogan")) {
 				int row = this.getModel().getEntryCurrentRowIndex("aos_entryentity");
 				Object aos_slogan = this.getModel().getValue("aos_slogan", row);
 				if (FndGlobal.IsNotNull(aos_slogan))
@@ -270,12 +274,47 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
 				AosCategory2 = category_group[1];
 			if (category_length > 2)
 				AosCategory3 = category_group[2];
-
 			this.getModel().setValue("aos_cname", name);
+			this.getModel().setValue("aos_itemname", name, 0);
 			this.getModel().setValue("aos_category3", AosCategory3);
 			this.getModel().setValue("aos_category2", AosCategory2);
 			this.getModel().setValue("aos_category1", AosCategory1);
+			refreshLine();
 		}
+	}
+
+	/**
+	 * 刷前两行
+	 */
+	private void refreshLine() {
+		// 大类
+		Object aos_category1 = this.getModel().getValue("aos_category1");
+		// 中类
+		Object aos_category2 = this.getModel().getValue("aos_category2");
+		// 小类
+		Object aos_category3 = this.getModel().getValue("aos_category3");
+		Object aos_detail = this.getModel().getValue("aos_detail");
+		DynamicObjectCollection aos_entryentityS = this.getModel().getEntryEntity("aos_entryentity");
+		String aos_cname = aos_entryentityS.get(0).getString("aos_itemname");
+
+		if (FndGlobal.IsNotNull(aos_category1) && FndGlobal.IsNotNull(aos_category2)
+				&& FndGlobal.IsNotNull(aos_category3) 
+				&& FndGlobal.IsNotNull(aos_cname)) {
+			DynamicObject aos_mkt_data_slogan = QueryServiceHelper.queryOne("aos_mkt_data_slogan",
+					"aos_itemnamecn,aos_slogancn,aos_itemnameen,aos_sloganen",
+					new QFilter("aos_category1", QCP.equals, aos_category1)
+							.and("aos_category2", QCP.equals, aos_category2)
+							.and("aos_category3", QCP.equals, aos_category3)
+							.and("aos_itemnamecn", QCP.equals, aos_cname).and("aos_detail", QCP.equals, aos_detail)
+							.toArray());
+			if (FndGlobal.IsNotNull(aos_mkt_data_slogan)) {
+				this.getModel().setValue("aos_itemname", aos_mkt_data_slogan.get("aos_itemnamecn"), 0);
+				this.getModel().setValue("aos_slogan", aos_mkt_data_slogan.get("aos_slogancn"), 0);
+				this.getModel().setValue("aos_itemname", aos_mkt_data_slogan.get("aos_itemnameen"), 1);
+				this.getModel().setValue("aos_slogan", aos_mkt_data_slogan.get("aos_sloganen"), 1);
+			}
+		}
+		
 	}
 
 	/** 新建设置默认值 **/

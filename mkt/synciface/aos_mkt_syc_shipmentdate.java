@@ -17,7 +17,10 @@ import mkt.progress.iface.iteminfo;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import common.Cux_Common_Utl;
+import common.fnd.FndError;
 import common.fnd.FndGlobal;
+import common.sal.util.SalUtil;
 
 /**
  * @author create by gk
@@ -25,6 +28,9 @@ import common.fnd.FndGlobal;
  * @action 同步出运日期(主要是未结束的拍照需求表和设计需求表)
  */
 public class aos_mkt_syc_shipmentdate extends AbstractTask {
+
+	public final static String system = Cux_Common_Utl.SYSTEM;
+
 	@Override
 	public void execute(RequestContext requestContext, Map<String, Object> map) throws KDException {
 		SyncPhotoReq();
@@ -41,13 +47,38 @@ public class aos_mkt_syc_shipmentdate extends AbstractTask {
 			String aos_orgid = aosMktPhotoReq.getString("aos_orgid");
 			String aos_itemid = aosMktPhotoReq.getString("aos_itemid");
 			DynamicObject bd_material = QueryServiceHelper.queryOne("bd_material",
-					"aos_contryentry.aos_firstindate aos_firstindate", new QFilter("id", QCP.equals, aos_itemid)
-							.and("aos_contryentry.aos_nationality", QCP.equals, aos_orgid).toArray());
-			Date aos_firstindate = bd_material.getDate("aos_firstindate");
-			Object aos_salehelper = aosMktPhotoReq.get("aos_salehelper");
-			if (FndGlobal.IsNotNull(aosMktPhotoReqS) && FndGlobal.IsNotNull(aos_salehelper)) {
-				aosMktPhotoReq.set("aos_user", aos_salehelper);
-				aosMktPhotoReq.set("aos_firstindate", aos_firstindate);
+					"id,aos_contryentry.aos_firstindate aos_firstindate", new QFilter("id", QCP.equals, aos_itemid)
+							.and("aos_contryentry.aos_nationality.id", QCP.equals, aos_orgid).toArray());
+			if (FndGlobal.IsNotNull(aosMktPhotoReq)) {
+				String category = (String) SalUtil.getCategoryByItemId(aos_itemid + "").get("name");
+				String[] category_group = category.split(",");
+				String AosCategory1 = null;
+				String AosCategory2 = null;
+				int category_length = category_group.length;
+				if (category_length > 0)
+					AosCategory1 = category_group[0];
+				if (category_length > 1)
+					AosCategory2 = category_group[1];
+				Object aos_salehelper = null;
+				if (FndGlobal.IsNotNull(AosCategory1) && FndGlobal.IsNotNull(AosCategory2)) {
+					QFilter filter_category1 = new QFilter("aos_category1", "=", AosCategory1);
+					QFilter filter_category2 = new QFilter("aos_category2", "=", AosCategory2);
+					QFilter filter_org = new QFilter("aos_orgid", "=", aos_orgid);
+					QFilter[] filters_category = new QFilter[] { filter_category1, filter_category2, filter_org };
+					String SelectStr = "aos_salehelper.number aos_salehelper";
+					DynamicObject aos_mkt_progorguser = QueryServiceHelper.queryOne("aos_mkt_progorguser", SelectStr,
+							filters_category);
+					if (aos_mkt_progorguser != null)
+						aos_salehelper = aos_mkt_progorguser.getString("id");
+				}
+				Date aos_firstindate = bd_material.getDate("aos_firstindate");
+				if (FndGlobal.IsNotNull(aosMktPhotoReqS) && FndGlobal.IsNotNull(aos_salehelper)) {
+					aosMktPhotoReq.set("aos_user", aos_salehelper);
+					aosMktPhotoReq.set("aos_firstindate", aos_firstindate);
+				} else {
+					aosMktPhotoReq.set("aos_user", system);
+					aosMktPhotoReq.set("aos_firstindate", null);
+				}
 			}
 		}
 		SaveServiceHelper.update(aosMktPhotoReqS);

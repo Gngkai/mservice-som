@@ -43,13 +43,11 @@ public class aos_mkt_actmonth_init extends AbstractTask {
 		int year = Today.get(Calendar.YEAR);
 		int month = Today.get(Calendar.MONTH) + 1;
 		Date today = Today.getTime();
-		System.out.println(today);
 		// 删除那天生成的数据
 		QFilter filter_id = new QFilter("aos_plandate", "=", today);
 		QFilter[] filters_del = new QFilter[] { filter_id };
 		DeleteServiceHelper.delete("aos_mkt_actmonth", filters_del);
 
-		System.out.println("今天计算为周" + week + ";当月的第" + day + "天");
 		// 周期表 周类型 计划提报日为当前周几 月由于写法复杂 在循环中跳过
 		QFilter filter_day = new QFilter("aos_periodtype", "=", "W").and("aos_plandays", "=", week).or("aos_periodtype",
 				"=", "M");
@@ -61,7 +59,6 @@ public class aos_mkt_actmonth_init extends AbstractTask {
 				filters);
 		int rows = aos_mkt_actperiodS.size();
 		int count = 0;
-		System.out.println("rows =" + rows);
 		for (DynamicObject aos_mkt_actperiod : aos_mkt_actperiodS) {
 			Boolean jump = true;
 			String aos_periodtype = aos_mkt_actperiod.get("aos_periodtype").toString();
@@ -80,8 +77,6 @@ public class aos_mkt_actmonth_init extends AbstractTask {
 			if (jump)
 				continue;
 			count++;
-			System.out.println("===============================");
-			System.out.println("进度" + "(" + count + "/" + rows + ")");
 			Object aos_orgid = aos_mkt_actperiod.get("aos_orgid");
 			Object aos_platformid = aos_mkt_actperiod.get("aos_platformfid");
 			Object aos_shopid = aos_mkt_actperiod.get("aos_shopfid");
@@ -90,7 +85,6 @@ public class aos_mkt_actmonth_init extends AbstractTask {
 			int aos_earlydays = (int) aos_mkt_actperiod.get("aos_earlydays");
 			Date aos_datefrom = add_days(today, aos_earlydays);
 			Date aos_dateto = add_days(aos_datefrom, aos_period - 1);
-			System.out.println("aos_datefrom =" + aos_datefrom);
 			DynamicObject aos_mkt_actmonth = BusinessDataServiceHelper.newDynamicObject("aos_mkt_actmonth");
 			aos_mkt_actmonth.set("aos_orgid", aos_orgid);
 			aos_mkt_actmonth.set("aos_platformid", aos_platformid);
