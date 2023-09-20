@@ -40,7 +40,6 @@ import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.MKTCom;
 import mkt.common.MKTS3PIC;
 import mkt.progress.ProgressUtil;
-import mkt.progress.design.aos_mkt_designreq_bill;
 import mkt.progress.iface.iteminfo;
 import mkt.progress.parameter.errorListing.ErrorListEntity;
 import sal.synciface.imp.aos_sal_import_pub;
@@ -320,13 +319,13 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
 	}
 
 	/** 设置改错任务清单 **/
-	public static void setErrorList(DynamicObject dy_main){
+	public static void setErrorList(DynamicObject dy_main) {
 		String status = dy_main.getString("aos_status");
 		if (!status.equals("结束")) {
 			return;
 		}
 		DynamicObject dy_org = dy_main.getDynamicObject("aos_orgid");
-		if (dy_org==null) {
+		if (dy_org == null) {
 			return;
 		}
 		String aos_type = dy_main.getString("aos_type");
@@ -337,10 +336,10 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
 		DynamicObjectCollection dyc_ent = dy_main.getDynamicObjectCollection("aos_entryentity");
 		for (DynamicObject dy : dyc_ent) {
 			DynamicObject dy_item = dy.getDynamicObject("aos_itemid");
-			if (dy_item==null) {
+			if (dy_item == null) {
 				continue;
 			}
-			ErrorListEntity errorListEntity = new ErrorListEntity(billno,aos_type,orgid,dy_item.getString("id"));
+			ErrorListEntity errorListEntity = new ErrorListEntity(billno, aos_type, orgid, dy_item.getString("id"));
 			errorListEntity.save();
 		}
 	}
@@ -1080,11 +1079,11 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
 			}
 
 			// 翻译类型的设计需求表需带出申请人要求
-			des_entryentity.set("aos_desreq",aos_entryentity.get("aos_require") );
+			des_entryentity.set("aos_desreq", aos_entryentity.get("aos_require"));
 			des_entryentity.set("aos_itemid", aos_itemid);
 			des_entryentity.set("aos_is_saleout", ProgressUtil.Is_saleout(aos_itemid));
 			des_entryentity.set("aos_srcrowseq", aos_entryentity.get("SEQ"));
-			des_entryentity.set("aos_remakes", aos_entryentity.get("aos_remakes"));  
+			des_entryentity.set("aos_remakes", aos_entryentity.get("aos_remakes"));
 
 			DynamicObjectCollection aos_subentryentityS = des_entryentity
 					.getDynamicObjectCollection("aos_subentryentity");
@@ -1144,7 +1143,6 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
 				MessageId = bos_user.getString("id");
 			}
 		}
-		aos_mkt_designreq_bill.createDesiginBeforeSave(aos_mkt_designreq);
 		OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_designreq",
 				new DynamicObject[] { aos_mkt_designreq }, OperateOption.create());
 		if (operationrst.isSuccess()) {
@@ -1334,11 +1332,12 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
 		else
 			AosUserId = ((DynamicObject) AosUser).getString("id");
 		Object CurrentUserId = UserServiceHelper.getCurrentUserId();
-		//Object CurrentUserName = UserServiceHelper.getUserInfoByID((long) CurrentUserId).get("name");
+		// Object CurrentUserName = UserServiceHelper.getUserInfoByID((long)
+		// CurrentUserId).get("name");
 		Object ReqFId = this.getModel().getDataEntity().getPkValue(); // 当前界面主键
 
 		FndMsg.debug("into min StatusControl");
-		
+
 		// 锁住需要控制的字段
 		this.getView().setVisible(false, "aos_back");
 		this.getView().setVisible(true, "bar_save");
@@ -1427,15 +1426,19 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
 			QFilter[] filters = new QFilter[] { filter_productno };
 			String SelectColumn = "number,aos_type";
 			String aos_broitem = "";
-			DynamicObjectCollection bd_materialS = QueryServiceHelper.query("bd_material", SelectColumn, filters);
-			for (DynamicObject bd : bd_materialS) {
-				if ("B".equals(bd.getString("aos_type")))
-					continue; // 配件不获取
-				String number = bd.getString("number");
-				if (item_number.equals(number))
-					continue;
-				else
-					aos_broitem = aos_broitem + number + ";";
+
+			if (FndGlobal.IsNotNull(aos_productno)) {
+				DynamicObjectCollection bd_materialS = QueryServiceHelper.query("bd_material", SelectColumn, filters);
+				for (DynamicObject bd : bd_materialS) {
+					if ("B".equals(bd.getString("aos_type")))
+						continue; // 配件不获取
+					String number = bd.getString("number");
+					if (item_number.equals(number))
+						continue;
+					else
+						aos_broitem = aos_broitem + number + ";";
+				}
+
 			}
 
 			// 获取英语编辑

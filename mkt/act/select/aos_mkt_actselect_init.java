@@ -209,7 +209,12 @@ public class aos_mkt_actselect_init extends AbstractTask {
 				if (availableDaysByPlatQty < 120) {
 					flag3 = true;
 				}
-				
+
+				boolean flag4 = false;// 是否剔除
+				if (availableDaysByPlatQty < 60) {
+					flag4 = true;
+				}
+
 				// (最大库龄 < 15 || 海外库存 <= 30) && 平台仓可售天数 < 120
 				if ((flag1 || flag2) && flag3) {
 					if (flag1) {
@@ -257,10 +262,9 @@ public class aos_mkt_actselect_init extends AbstractTask {
 
 				float SeasonRate = 0;
 
-
 				// 判断当前月份
 				Boolean speFlag = false;
-				if (monthOri == Calendar.SEPTEMBER && unsalableProducts.contains(item_id + "")) {
+				if (/* monthOri == Calendar.SEPTEMBER && */unsalableProducts.contains(item_id + "")) {
 					boolean preSaleOut = MKTCom.Is_PreSaleOut(org_id, item_id, (int) item_intransqty, aos_shp_day,
 							aos_freight_day, aos_clear_day, availableDays);
 					if (!preSaleOut) {
@@ -270,9 +274,6 @@ public class aos_mkt_actselect_init extends AbstractTask {
 				}
 
 				if (!speFlag) {
-					
-					
-
 					// 日均销量与可售库存天数参数申明
 					String aos_seasonprostr = null;
 					if (aos_seasonpro.equals("AUTUMN_WINTER") || aos_seasonpro.equals("WINTER"))
@@ -283,9 +284,11 @@ public class aos_mkt_actselect_init extends AbstractTask {
 
 					// 4. 如果是春夏品:当前日期大于8/31直接剔除,如果为秋冬品，当前日期大于3月31日小于7月1日直接剔除
 					if ("SPRING_SUMMER_PRO".equals(aos_seasonprostr)) {
-						if (month - 1 >= Calendar.SEPTEMBER) {
+						if (!unsalableProducts.contains(item_id + "") && flag1 && flag2 && flag4
+								&& month - 1 >= Calendar.SEPTEMBER)
+							;
+						else
 							continue;
-						}
 					} else if ("AUTUMN_WINTER_PRO".equals(aos_seasonprostr)) {
 						if (month - 1 >= Calendar.APRIL && month - 1 < Calendar.JULY) {
 							continue;
