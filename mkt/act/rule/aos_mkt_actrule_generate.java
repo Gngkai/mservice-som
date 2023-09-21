@@ -212,6 +212,16 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 	}
 
 	private void genActPlan() throws Exception {
+		Object actstatus = this.getModel().getValue("aos_actstatus");
+		if (FndGlobal.IsNotNull(actstatus)){
+			if (String.valueOf(actstatus).equals("E")) {
+				this.getView().showTipNotification("明细导入中，请勿重复点击");
+				return;
+			}
+		}
+		this.getModel().setValue("aos_actstatus","E");
+
+
 		// 获取头信息关键字段
 		Date aos_startdate = (Date) this.getModel().getValue("aos_startdate");
 		Date aos_enddate1 = (Date) this.getModel().getValue("aos_enddate1");
@@ -239,10 +249,10 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 		// 店铺
 		String shop = aos_shop.getString("number");
 		//230821 gk :活动明细导入根据用户配置规则筛选物料导入
-		execute(aos_nationality,aos_channel,aos_shop,aos_acttype,getModel().getDataEntity(true));
+		execute(actstatus,aos_nationality,aos_channel,aos_shop,aos_acttype,getModel().getDataEntity(true));
 
 		//execute(ouCode, shop, actType, this.getModel().getDataEntity());
-		this.getView().invokeOperation("refresh");
+
 		String noPriceItem = getNoPriceItem();
 		if (noPriceItem.length() > 0) {
 			this.getView().showMessage("以下物料缺失价格：  " + noPriceItem);
@@ -250,7 +260,7 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 		// 从新批量设置活动数量
 		batchSetActQty();
 	}
-	private void execute(DynamicObject ou,DynamicObject channel ,DynamicObject shop, DynamicObject actType, DynamicObject actPlanEntity){
+	private void execute(Object actstatus,DynamicObject ou,DynamicObject channel ,DynamicObject shop, DynamicObject actType, DynamicObject actPlanEntity){
 		QFBuilder builder = new QFBuilder();
 		builder.add("aos_org","=",ou.getPkValue());
 		builder.add("aos_channel","=",channel.getPkValue());
@@ -264,6 +274,7 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 		//获取活动规则
 		DynamicObject acTypEntity = BusinessDataServiceHelper.loadSingle(type.getString("id"), "aos_sal_act_type_p");
 		new EventRule(acTypEntity,actPlanEntity);
+		actPlanEntity.set("aos_actstatus",actstatus);
 
 	}
 

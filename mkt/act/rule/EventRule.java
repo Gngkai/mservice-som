@@ -27,7 +27,6 @@ import kd.bos.logging.LogFactory;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
-import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.fi.bd.util.QFBuilder;
 import mkt.act.rule.service.ActPlanService;
 import mkt.act.rule.service.impl.ActPlanServiceImpl;
@@ -37,7 +36,6 @@ import sal.act.ActShopProfit.aos_sal_act_from;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
@@ -57,7 +55,7 @@ public class EventRule {
     //国别
     private final DynamicObject orgEntity;
     //国别下所有的物料，方便后续筛选
-    private DynamicObjectCollection itemInfoes;
+    private List<DynamicObject> itemInfoes;
     //日志
     private  FndLog fndLog;
     //物料对应的品类
@@ -288,6 +286,11 @@ public class EventRule {
         }
         Map<String, String> map_asin = ActUtil.queryOrgShopItemASIN(orgEntity.getPkValue(),shopid, list_filterItem);
 
+        //店铺现价
+        setCurrentPrice();
+        //活动价
+        setItemActPrice();
+
         for (int index = 0; index <selectQty; index++) {
             DynamicObject itemInfo = filterItem.get(index);
             DynamicObject addNewRow = dyc.addNew();
@@ -299,6 +302,8 @@ public class EventRule {
             addNewRow.set("aos_postid",map_asin.get(itemid));
             addNewRow.set("aos_is_saleout",itemInfo.get("aos_is_saleout"));
             addNewRow.set("aos_fit","Y");
+            addNewRow.set("aos_price",itemCurrentPrice.getOrDefault(itemid,BigDecimal.ZERO));
+            addNewRow.set("aos_actprice",itemActPrice.getOrDefault(itemid,BigDecimal.ZERO));
             if (cateItem.containsKey(itemid)){
                 String cateName = cateItem.get(itemid).getString("gname");
                 String[] split = cateName.split(",");
@@ -310,7 +315,7 @@ public class EventRule {
                 }
             }
         }
-        SaveServiceHelper.save(new DynamicObject[]{actPlanEntity});
+
         // 赋值库存信息、活动信息
         ActPlanService actPlanService = new ActPlanServiceImpl();
         actPlanEntity = BusinessDataServiceHelper.loadSingle(actPlanEntity.getPkValue(),"aos_act_select_plan");
@@ -337,6 +342,9 @@ public class EventRule {
         for (DynamicObject infoe : itemInfoes) {
             map_itemInfo.put(infoe.getString("id"),infoe);
         }
+
+        //店铺现价
+        setCurrentPrice();
 
         for (DynamicObject row : dyc) {
             if (row.getDynamicObject("aos_itemnum")==null) {
@@ -368,6 +376,8 @@ public class EventRule {
                 boolean result = Boolean.parseBoolean(FormulaEngine.execExcelFormula(ruleValue, parameters).toString());
                 if (result) {
                     row.set("aos_fit","Y");
+                    row.set("aos_price",itemCurrentPrice.getOrDefault(itemid,BigDecimal.ZERO));
+                    row.set("aos_actprice",itemActPrice.getOrDefault(itemid,BigDecimal.ZERO));
                 }
                 else {
                     row.set("aos_fit","N");
@@ -405,16 +415,14 @@ public class EventRule {
             if (itemids!=null && itemids.size()>0){
                 builder.add("material",QFilter.in,itemids);
             }
-            if (ruleItem!=null){
-                builder.add("material",QFilter.not_in,ruleItem);
-            }
+
+            builder.add("material",QFilter.not_in,ruleItem);
+
             DynamicObjectCollection cateResults = categoryDao.queryData(str.toString(), builder);
             for (DynamicObject result : cateResults) {
                 cateItem.put(result.getString("material"),result);
             }
         }
-
-
 
         ItemDao itemDao = new ItemDaoImpl();
         StringJoiner selectFields = new StringJoiner(",");
@@ -432,7 +440,37 @@ public class EventRule {
         if (itemids!=null && itemids.size()>0){
           filter.and(new QFilter("id",QFilter.in,itemids));
         }
-        itemInfoes = itemDao.listItemObj(selectFields.toString(),filter,null);
+        //判断是否参与考核，如果参与考核，需要取值物料清单
+        if (typEntity.get("aos_assessment")!=null) {
+            if (typEntity.getDynamicObject("aos_assessment").getString("number").equals("Y")) {
+                builder.clear();
+                LocalDate now = LocalDate.now();
+                builder.add("createtime",">=",now.toString());
+                builder.add("createtime","<",now.plusDays(1).toString());
+                builder.add("aos_entryentity.aos_orgid","=",orgEntity.getString("number"));
+                DynamicObjectCollection dyc = QueryServiceHelper.query("aos_mkt_actselect", "aos_entryentity.aos_sku aos_sku", builder.toArray());
+                List<String> itemNumber = new ArrayList<>(dyc.size());
+                for (DynamicObject dy : dyc) {
+                    itemNumber.add(dy.getString("aos_sku"));
+                }
+                filter.and(new QFilter("number",QFilter.not_in,itemNumber));
+            }
+        }
+        DynamicObjectCollection dyc = itemDao.listItemObj(selectFields.toString(), filter, null);
+        itemInfoes = new ArrayList<>(dyc.size());
+        for (DynamicObject dy : dyc) {
+            itemInfoes.add(dy);
+        }
+        //设置毛利率过滤
+        Map<String,Boolean> map_actProfit = new HashMap<>(dyc.size());
+        getActProfit("actProfit",map_actProfit);
+        itemInfoes = new ArrayList<>(dyc.size());
+        for (DynamicObject row : dyc) {
+            String itemid = row.getString("id");
+            if (map_actProfit.containsKey(itemid) && map_actProfit.get(itemid)){
+                itemInfoes.add(row);
+            }
+        }
     }
 
     /**
@@ -502,8 +540,11 @@ public class EventRule {
         builder.add("aos_channel.number",QFilter.not_in,channels);
         String shop = orgEntity.getString("number")+"-Wayfair";
         builder.add("aos_shop.number","!=",shop);
+        //大型活动
         List<String> actType = Arrays.asList("B", "C");
         builder.add("aos_act_type",QFilter.not_in,actType);
+        //活动为平台活动
+        builder.add("aos_acttype",QFilter.in,listActTypes);
         builder.add("aos_sal_actplanentity.aos_itemnum","!=","");
 
         dyc = QueryServiceHelper.query("aos_act_select_plan",
@@ -1511,12 +1552,12 @@ public class EventRule {
         //7天日均
         setItemAverageByDay(7);
         Map<String, BigDecimal> itemSaleAve = this.itemAverage.get(String.valueOf(7));
-        //毛利标准
-        setProfitStand();
         //物料滞销类型
         setItemUnsale();
         //设置季节品的阶段
         setSeasonStage();
+        //毛利标准
+        setProfitStand();
         //判断是否低动销
         for (DynamicObject itemInfoe : itemInfoes) {
             StringJoiner str = new StringJoiner(" , ");
@@ -1539,24 +1580,23 @@ public class EventRule {
             String type = MKTCom.Get_RegularUn(orgEntity.getString("number"), saleDay, saleAve);
             fndLog.add(str.toString());
             if (type.equals("低动销")){
-                BigDecimal stand = profitStand.getOrDefault("A",BigDecimal.ZERO);
-                if (itemProfit.compareTo(stand)>=0){
+                if (profitStand.containsKey("低动销1") && profitStand.get("低动销1").contains(itemId) ){
                     result.put(itemId,true);
                 }
             }
             else if (type.equals("低周转")){
-                BigDecimal stand;
+                String stand;
                 if (saleAve<=3){
-                    stand = profitStand.getOrDefault("B",BigDecimal.ZERO);
+                    stand = "低周转1";
                 }else {
-                    stand = profitStand.getOrDefault("C",BigDecimal.ZERO);
+                    stand = "低周转2";
                 }
-                if (itemProfit.compareTo(stand)>=0){
+                if (profitStand.containsKey(stand) && profitStand.get(stand).contains(itemId)){
                     result.put(itemId,true);
                 }
             }
-
         }
+
         //判断是否常规品滞销类型
         for (DynamicObject itemInfoe : itemInfoes) {
             String itemId = itemInfoe.getString("id");
@@ -1565,35 +1605,24 @@ public class EventRule {
             }
             if (itemUnsaleTyep.containsKey(itemId)){
                 String unsaleType = itemUnsaleTyep.get(itemId);
+                String stand;
                 //货多销少;货少销少
-                if (unsaleType.equals("货多销少") || unsaleType.equals("货少销少")) {
-                    if (itemActProfit.containsKey(itemId)){
-                        Map<String, BigDecimal> profit = itemActProfit.get(itemId);
-                        BigDecimal fee = profit.getOrDefault("aos_lowest_fee", BigDecimal.ZERO);
-                        BigDecimal cost = profit.getOrDefault("aos_item_cost", BigDecimal.ZERO);
-                        BigDecimal price = itemPrice.getOrDefault(itemId, BigDecimal.ZERO);
-                        price = fee
-                                .add(price.multiply(BigDecimal.valueOf(0.15)))
-                                .add(cost.multiply(BigDecimal.valueOf(0.3)));
-                        BigDecimal actPrice = itemActPrice.getOrDefault(itemId, BigDecimal.ZERO);
-                        if (actPrice.compareTo(price)>=0){
-                            result.put(itemId,true);
-                        }
-                    }
+                if (unsaleType.equals("货多销少")  ) {
+                  stand = "常规滞销1";
+                }
+                else if (unsaleType.equals("货少销少")){
+                    stand = "常规滞销2";
                 }
                 //新品销少
                 else if (unsaleType.equals("新品销少")){
-                    //获取物料毛利
-                    BigDecimal itemProfit = BigDecimal.ZERO;
-                    if (itemActProfit.containsKey(itemId)){
-                        itemProfit = itemActProfit.get(itemId).getOrDefault("value",BigDecimal.ZERO);
-                    }
-                    BigDecimal stand = profitStand.get("D");
-                    if (itemProfit.compareTo(stand)>=0){
-                        result.put(itemId,true);
-                    }
+                    stand = "常规滞销3";
                 }
-
+                else {
+                    continue;
+                }
+                if (profitStand.containsKey(stand) && profitStand.get(stand).contains(itemId)){
+                    result.put(itemId,true);
+                }
             }
         }
         //季节品/节日品
@@ -1602,7 +1631,6 @@ public class EventRule {
             if (result.containsKey(itemId)) {
                 continue;
             }
-
             String type = null;
             //判断是否是节日品
             if (FndGlobal.IsNotNull(itemInfoe.get("festival"))){
@@ -1616,22 +1644,34 @@ public class EventRule {
                     type = seasonStage.get(itemInfoe.getString("seasonpro"));
                 }
             }
-
+            // 当季
             if (FndGlobal.IsNotNull(type)){
-                BigDecimal itemProfit = BigDecimal.ZERO;
-                if (itemActProfit.containsKey(itemId)){
-                    itemProfit = itemActProfit.get(itemId).getOrDefault("value",BigDecimal.ZERO);
-                }
-                BigDecimal stand = profitStand.getOrDefault(type,BigDecimal.ZERO);
-                if (itemProfit.compareTo(stand)>=0){
+                if (profitStand.containsKey(type) && profitStand.get(type).contains(itemId)){
                     result.put(itemId,true);
+                }
+            }
+            // 非当季
+            else {
+                String seasonpro = itemInfoe.getString("seasonpro");
+                //春夏品
+                if (FndGlobal.IsNotNull(seasonpro) && seasonpro.equals("SPRING_SUMMER_PRO")){
+                    String stand;
+                    //判断是否 春夏滞销
+                    if (itemUnsaleTyep.containsKey(itemId) && itemUnsaleTyep.get(itemId).equals("SPRING")){
+                        stand = "季节品4";
+                    }
+                    else {
+                        stand = "季节品5";
+                    }
+                    //判断是否满足标准
+                    if (profitStand.containsKey(stand) && profitStand.get(stand).contains(itemId)){
+                        result.put(itemId,true);
+                    }
                 }
             }
         }
 
         //爆品
-        //爆品毛利标准
-        BigDecimal saleOutStand = profitStand.getOrDefault("H", BigDecimal.ZERO);
         for (DynamicObject itemInfoe : itemInfoes) {
             String itemId = itemInfoe.getString("id");
             if (result.containsKey(itemId)) {
@@ -1639,11 +1679,7 @@ public class EventRule {
             }
             //爆品
             if (itemInfoe.getBoolean("aos_is_saleout")){
-                BigDecimal itemProfit = BigDecimal.ZERO;
-                if (itemActProfit.containsKey(itemId)){
-                    itemProfit = itemActProfit.get(itemId).getOrDefault("value",BigDecimal.ZERO);
-                }
-                if (itemProfit.compareTo(saleOutStand)>=0){
+                if (profitStand.containsKey("爆品") && profitStand.get("爆品").contains(itemId)){
                     result.put(itemId,true);
                 }
                 else
@@ -1654,19 +1690,86 @@ public class EventRule {
             }
         }
     }
-    Map<String,BigDecimal> profitStand;
+
+    Map<String,List<String>> profitStand;
     /**
-     * 获取毛利率标准
+     * 获取符合各个毛利率标准的物料
      */
     private void setProfitStand(){
         if (profitStand!=null) {
             return;
         }
+        //计算最惨定价
+        setMinPrice();
         profitStand = new HashMap<>();
-        String select = "aos_type2,aos_pro_"+(orgEntity.getString("number").toLowerCase())+" aos_pro";
+        String select = "aos_type1,aos_use,aos_pro_"+(orgEntity.getString("number").toLowerCase())+" aos_pro";
         DynamicObjectCollection dyc = QueryServiceHelper.query("aos_mkt_act_pro", select, null);
         for (DynamicObject dy : dyc) {
-            profitStand.put(dy.getString("aos_type2"),dy.getBigDecimal("aos_pro"));
+            //项目名称
+            String project = dy.getString("aos_type1");
+            //采用最低定价
+            if (dy.getBoolean("aos_use")) {
+                profitStand.put(project,minPriceItem);
+            }
+            //比较毛利率
+            else {
+                //毛利标准
+                BigDecimal proStand = dy.getBigDecimal("aos_pro");
+                if (proStand == null){
+                    proStand = BigDecimal.ZERO;
+                }
+                List<String> filterItems = new ArrayList<>(itemInfoes.size());
+                for (DynamicObject itemInfoe : itemInfoes) {
+                    String itemId = itemInfoe.getString("id");
+                    BigDecimal itemProfit = BigDecimal.ZERO;
+                    if (itemActProfit.containsKey(itemId)){
+                        itemProfit = itemActProfit.get(itemId).getOrDefault("value",BigDecimal.ZERO);
+                    }
+                    if (itemProfit.compareTo(proStand)>=0){
+                        filterItems.add(itemId);
+                    }
+                }
+                profitStand.put(project,filterItems);
+            }
+        }
+    }
+
+    /**
+     * 计算满足最惨定价的物料
+     */
+    List<String> minPriceItem;
+    private void setMinPrice(){
+        if (minPriceItem!=null) {
+            return;
+        }
+        itemPrice = new HashMap<>(itemInfoes.size());
+        for (DynamicObject itemInfoe : itemInfoes) {
+            String itemId = itemInfoe.getString("id");
+            StringJoiner str = new StringJoiner(" , ");
+            str.add(itemInfoe.getString("number"));
+            if (itemActProfit.containsKey(itemId)){
+                Map<String, BigDecimal> profit = itemActProfit.get(itemId);
+                BigDecimal fee = profit.getOrDefault("aos_lowest_fee", BigDecimal.ZERO);
+                str.add("fee : "+fee);
+                BigDecimal cost = profit.getOrDefault("aos_item_cost", BigDecimal.ZERO);
+                str.add("cost : "+cost);
+                BigDecimal price = itemPrice.getOrDefault(itemId, BigDecimal.ZERO);
+                price = fee
+                        .add(price.multiply(BigDecimal.valueOf(0.15)))
+                        .add(cost.multiply(BigDecimal.valueOf(0.3)));
+                str.add("price : "+price);
+                BigDecimal actPrice = itemActPrice.getOrDefault(itemId, BigDecimal.ZERO);
+                str.add("actprice: "+actPrice);
+                if (actPrice.compareTo(price)>=0){
+                    minPriceItem.add(itemId);
+                }else {
+                    str.add("不满足最惨定价");
+                }
+            }
+            else {
+                str.add("活动毛利为空，最惨价 fales");
+            }
+            fndLog.add(str.toString());
         }
     }
 
@@ -1694,54 +1797,54 @@ public class EventRule {
                 //圣诞节 季初
                 switch (type) {
                     case "CH-1":
-                        seasonStage.put("CHRISTMAS", "E");
+                        seasonStage.put("CHRISTMAS", "季节品1");
                         break;
                     //圣诞 季中
                     case "CH-2":
-                        seasonStage.put("CHRISTMAS", "F");
+                        seasonStage.put("CHRISTMAS", "季节品2");
                         break;
                     //圣诞 季末
                     case "CH-3":
-                        seasonStage.put("CHRISTMAS", "G");
+                        seasonStage.put("CHRISTMAS", "季节品3");
                         break;
                     //万圣节 季初
                     case "HA-E-1":
                     case "HA-U-1":
-                        seasonStage.put("HALLOWEEN", "E");
+                        seasonStage.put("HALLOWEEN", "季节品1");
                         break;
                     //万圣节 季中
                     case "HA-E-2":
                     case "HA-U-2":
-                        seasonStage.put("HALLOWEEN", "F");
+                        seasonStage.put("HALLOWEEN", "季节品2");
                         break;
                     //万圣节 季末
                     case "HA-E-3":
                     case "HA-U-3":
-                        seasonStage.put("HALLOWEEN", "G");
+                        seasonStage.put("HALLOWEEN", "季节品3");
                         break;
                     //春夏品 季初
-                    case "SS-1":
-                        seasonStage.put("SPRING_SUMMER_PRO", "E");
+                    case "ACTSS-1":
+                        seasonStage.put("SPRING_SUMMER_PRO", "季节品1");
                         break;
                     //春夏品 季中
-                    case "SS-2":
-                        seasonStage.put("SPRING_SUMMER_PRO", "F");
+                    case "ACTSS-2":
+                        seasonStage.put("SPRING_SUMMER_PRO", "季节品2");
                         break;
                     //春夏品 季中
-                    case "SS-3":
-                        seasonStage.put("SPRING_SUMMER_PRO", "G");
+                    case "ACTSS-3":
+                        seasonStage.put("SPRING_SUMMER_PRO", "季节品3");
                         break;
                     //秋冬品 季初
-                    case "AW-1":
-                        seasonStage.put("AUTUMN_WINTER_PRO", "E");
+                    case "ACTAW-1":
+                        seasonStage.put("AUTUMN_WINTER_PRO", "季节品1");
                         break;
                     //秋冬品 季中
-                    case "AW-2":
-                        seasonStage.put("AUTUMN_WINTER_PRO", "F");
+                    case "ACTAW-2":
+                        seasonStage.put("AUTUMN_WINTER_PRO", "季节品2");
                         break;
                     //秋冬品 季末
-                    case "AW-3":
-                        seasonStage.put("AUTUMN_WINTER_PRO", "G");
+                    case "ACTAW-3":
+                        seasonStage.put("AUTUMN_WINTER_PRO", "季节品3");
                         break;
                 }
             }
