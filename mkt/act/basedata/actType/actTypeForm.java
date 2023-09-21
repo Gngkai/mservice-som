@@ -16,6 +16,8 @@ import kd.bos.form.field.events.BeforeF7SelectListener;
 import kd.bos.formula.FormulaEngine;
 import kd.bos.list.ListShowParameter;
 import kd.bos.orm.query.QFilter;
+import kd.bos.servicehelper.QueryServiceHelper;
+import kd.fi.bd.util.QFBuilder;
 import sal.act.ActShopProfit.aos_sal_ShopActProfit_form;
 
 import java.util.*;
@@ -29,9 +31,16 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
     @Override
     public void registerListener(EventObject e) {
         super.registerListener(e);
-        BasedataEdit aos_shop = this.getControl("aos_shop");
-        aos_shop.addBeforeF7SelectListener(this);
-        this.addClickListeners(new String[]{"aos_rule","aos_priceformula"});
+        BasedataEdit control = this.getControl("aos_shop");
+        control.addBeforeF7SelectListener(this);
+
+        control = this.getControl("aos_re_shop");
+        control.addBeforeF7SelectListener(this);
+
+        control = this.getControl("aos_re_act");
+        control.addBeforeF7SelectListener(this);
+
+        this.addClickListeners(new String[]{"aos_rule","aos_priceformula","aos_name"});
 
     }
 
@@ -53,6 +62,48 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
             }
             showParameter.getListFilterParameter().setQFilters(filters);
         }
+        else if (F7name.equals("aos_re_shop")){
+            List<QFilter> filters = new ArrayList<>();
+            if (getModel().getValue("aos_org")!=null){
+                DynamicObject org = (DynamicObject) getModel().getValue("aos_org");
+                QFilter filter = new QFilter("aos_org","=",org.getString("id"));
+                filters.add(filter);
+            }
+            int index = this.getModel().getEntryCurrentRowIndex("aos_entryentity3");
+            if (getModel().getValue("aos_re_channel",index)!=null){
+                DynamicObject channel = (DynamicObject) getModel().getValue("aos_re_channel",index);
+                QFilter filter = new QFilter("aos_channel","=",channel.getString("id"));
+                filters.add(filter);
+            }
+            showParameter.getListFilterParameter().setQFilters(filters);
+        }
+        else if (F7name.equals("aos_re_act")){
+            List<QFilter> filters = new ArrayList<>();
+            if (getModel().getValue("aos_org")!=null){
+                DynamicObject org = (DynamicObject) getModel().getValue("aos_org");
+                QFilter filter = new QFilter("aos_org","=",org.getString("id"));
+                filters.add(filter);
+            }
+            int index = this.getModel().getEntryCurrentRowIndex("aos_entryentity3");
+            if (getModel().getValue("aos_re_channel",index)!=null){
+                DynamicObject channel = (DynamicObject) getModel().getValue("aos_re_channel",index);
+                QFilter filter = new QFilter("aos_channel","=",channel.getString("id"));
+                filters.add(filter);
+            }
+            if (getModel().getValue("aos_re_shop",index)!=null){
+                DynamicObject shop = (DynamicObject) getModel().getValue("aos_re_shop",index);
+                QFilter filter = new QFilter("aos_shop","=",shop.getString("id"));
+                filters.add(filter);
+            }
+            DynamicObjectCollection dyc = QueryServiceHelper.query("aos_sal_act_type_p", "aos_acttype", filters.toArray(new QFilter[0]));
+            List<String> ids = new ArrayList<>(dyc.size());
+            for (DynamicObject dy : dyc) {
+                ids.add(dy.getString("aos_acttype"));
+            }
+            filters.clear();
+            filters.add(new QFilter("id",QFilter.in,ids));
+            showParameter.getListFilterParameter().setQFilters(filters);
+        }
     }
 
     @Override
@@ -61,22 +112,25 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
         Control control= (Control) evt.getSource();
         String key= control.getKey();
         if (key.equals("aos_rule")) {
-          showParameter(key);
+          showParameter(key,aos_sal_ShopActProfit_form.Form_key);
         }
         else if (key.equals("aos_priceformula")){
-            showParameter(key);
+            showParameter(key,aos_sal_ShopActProfit_form.Form_key);
         }
-
+        else if (key.equals("aos_name")){
+            showParameter(key,"aos_act_type_cate");
+        }
     }
 
     @Override
     public void closedCallBack(ClosedCallBackEvent event) {
         super.closedCallBack(event);
         String actionId = event.getActionId();
-        Map<String,String> returnData = (Map<String, String>) event.getReturnData();
-        if (returnData==null)
+        Object redata =  event.getReturnData();
+        if (redata==null)
             return;
         if (actionId.equals("aos_rule")) {
+            Map<String,String> returnData = (Map<String, String>) redata;
             String key = returnData.get(aos_sal_ShopActProfit_form.Key_return_k);
             String name = returnData.get(aos_sal_ShopActProfit_form.Key_return_v);
             if (FndGlobal.IsNotNull(key)){
@@ -96,6 +150,7 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
             }
         }
         else if (actionId.equals("aos_priceformula")){
+            Map<String,String> returnData = (Map<String, String>) redata;
             String value = returnData.get(aos_sal_ShopActProfit_form.Key_return_k);
             if (FndGlobal.IsNotNull(value)){
                 try {
@@ -113,13 +168,17 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
             }
 
         }
+        else if (actionId.equals("aos_name")){
+            int index = this.getModel().getEntryCurrentRowIndex("aos_entryentity1");
+            this.getModel().setValue("aos_name",redata.toString(),index);
+        }
     }
 
     /**
      * 弹窗规则编辑框
      * @param type
      */
-    private void showParameter(String type){
+    private void showParameter(String type,String formKey){
         FormShowParameter showParameter=new FormShowParameter();
         //活动规则
         if (type.equals("aos_rule")){
@@ -139,9 +198,18 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
         else if (type.equals("aos_priceformula")){
             showParameter.setCustomParam(aos_sal_ShopActProfit_form.Key_entity,"price");
         }
+        else if (type.equals("aos_name")){
+            int index = this.getModel().getEntryCurrentRowIndex("aos_entryentity1");
+            Object aos_cate = this.getModel().getValue("aos_cate", index);
+            if (aos_cate==null) {
+                return;
+            }
+            String cateId = ((DynamicObject) aos_cate).getString("id");
+            showParameter.setCustomParam("value",cateId);
+        }
 
         //标识
-        showParameter.setFormId(aos_sal_ShopActProfit_form.Form_key);
+        showParameter.setFormId(formKey);
         //类型
         showParameter.getOpenStyle().setShowType(ShowType.Modal);
         //回调函数
