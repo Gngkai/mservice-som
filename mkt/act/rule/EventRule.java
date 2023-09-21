@@ -458,9 +458,7 @@ public class EventRule {
         }
         DynamicObjectCollection dyc = itemDao.listItemObj(selectFields.toString(), filter, null);
         itemInfoes = new ArrayList<>(dyc.size());
-        for (DynamicObject dy : dyc) {
-            itemInfoes.add(dy);
-        }
+        itemInfoes.addAll(dyc);
         //设置毛利率过滤
         Map<String,Boolean> map_actProfit = new HashMap<>(dyc.size());
         getActProfit("actProfit",map_actProfit);
@@ -1607,18 +1605,19 @@ public class EventRule {
                 String unsaleType = itemUnsaleTyep.get(itemId);
                 String stand;
                 //货多销少;货少销少
-                if (unsaleType.equals("货多销少")  ) {
-                  stand = "常规滞销1";
-                }
-                else if (unsaleType.equals("货少销少")){
-                    stand = "常规滞销2";
-                }
-                //新品销少
-                else if (unsaleType.equals("新品销少")){
-                    stand = "常规滞销3";
-                }
-                else {
-                    continue;
+                switch (unsaleType) {
+                    case "货多销少":
+                        stand = "常规滞销1";
+                        break;
+                    case "货少销少":
+                        stand = "常规滞销2";
+                        break;
+                    //新品销少
+                    case "新品销少":
+                        stand = "常规滞销3";
+                        break;
+                    default:
+                        continue;
                 }
                 if (profitStand.containsKey(stand) && profitStand.get(stand).contains(itemId)){
                     result.put(itemId,true);
