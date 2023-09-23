@@ -25,6 +25,7 @@ import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
+import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.fi.bd.util.QFBuilder;
 import mkt.act.rule.allCountries.TrackerVipon;
 import mkt.act.rule.de.DotdDE;
@@ -33,6 +34,8 @@ import mkt.act.rule.de.PocoDE;
 import mkt.act.rule.de.WayfairDE;
 import mkt.act.rule.dotd.GenerateData;
 import mkt.act.rule.es.*;
+import mkt.act.rule.service.ActPlanService;
+import mkt.act.rule.service.impl.ActPlanServiceImpl;
 import mkt.act.rule.uk.*;
 import mkt.act.rule.us.DotdUS;
 import mkt.act.rule.us.EbayDDAndPD;
@@ -253,12 +256,12 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 
 		//execute(ouCode, shop, actType, this.getModel().getDataEntity());
 
-		String noPriceItem = getNoPriceItem();
-		if (noPriceItem.length() > 0) {
-			this.getView().showMessage("以下物料缺失价格：  " + noPriceItem);
-		}
+//		String noPriceItem = getNoPriceItem();
+//		if (noPriceItem.length() > 0) {
+//			this.getView().showMessage("以下物料缺失价格：  " + noPriceItem);
+//		}
 		// 从新批量设置活动数量
-		batchSetActQty();
+		//batchSetActQty();
 	}
 	private void execute(Object actstatus,DynamicObject ou,DynamicObject channel ,DynamicObject shop, DynamicObject actType, DynamicObject actPlanEntity){
 		QFBuilder builder = new QFBuilder();
@@ -271,11 +274,27 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 			getView().showTipNotification("活动库选品规则未维护");
 			return;
 		}
-		//获取活动规则
-		DynamicObject acTypEntity = BusinessDataServiceHelper.loadSingle(type.getString("id"), "aos_sal_act_type_p");
-		new EventRule(acTypEntity,actPlanEntity);
-		actPlanEntity.set("aos_actstatus",actstatus);
 
+		try {
+			SaveServiceHelper.update(actPlanEntity);
+			//获取活动规则
+			DynamicObject acTypEntity = BusinessDataServiceHelper.loadSingle(type.getString("id"), "aos_sal_act_type_p");
+			new EventRule(acTypEntity,actPlanEntity);
+			// 赋值库存信息、活动信息
+			SaveServiceHelper.save(new DynamicObject[]{actPlanEntity});
+			ActPlanService actPlanService = new ActPlanServiceImpl();
+			actPlanEntity = BusinessDataServiceHelper.loadSingle(actPlanEntity.getPkValue(),"aos_act_select_plan");
+			actPlanService.updateActInfo(actPlanEntity);
+			SaveServiceHelper.save(new DynamicObject[]{actPlanEntity});
+
+		}catch (Exception e){
+			getView().showErrorNotification(e.getMessage());
+		}
+		finally {
+			actPlanEntity.set("aos_actstatus",actstatus);
+			SaveServiceHelper.save(new DynamicObject[]{actPlanEntity});
+			getView().updateView();
+		}
 	}
 
 	/**

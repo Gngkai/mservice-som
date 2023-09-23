@@ -81,6 +81,9 @@ public class EventRule {
             }
             throw new KDException(new ErrorCode("活动选品明细导入异常",e.getMessage()));
         }
+        finally {
+
+        }
 
     }
 
@@ -315,11 +318,6 @@ public class EventRule {
                 }
             }
         }
-
-        // 赋值库存信息、活动信息
-        ActPlanService actPlanService = new ActPlanServiceImpl();
-        actPlanEntity = BusinessDataServiceHelper.loadSingle(actPlanEntity.getPkValue(),"aos_act_select_plan");
-        actPlanService.updateActInfo(actPlanEntity);
         fndLog.finnalSave();
     }
 
@@ -1741,6 +1739,7 @@ public class EventRule {
         if (minPriceItem!=null) {
             return;
         }
+        setItemActProfit();
         itemPrice = new HashMap<>(itemInfoes.size());
         for (DynamicObject itemInfoe : itemInfoes) {
             String itemId = itemInfoe.getString("id");
@@ -1855,7 +1854,7 @@ public class EventRule {
      */
     Map<String, Map<String, BigDecimal>> itemActProfit;
     private void setItemActProfit() {
-        if (itemActProfit == null)
+        if (itemActProfit != null)
             return;
         //获取活动价格
         setItemActPrice();
