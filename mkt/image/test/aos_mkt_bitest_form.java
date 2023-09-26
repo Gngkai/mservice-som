@@ -50,18 +50,7 @@ public class aos_mkt_bitest_form extends AbstractFormPlugin {
 	}
 
 	private void aos_test() {
-		try {
-			CompetitorSync.insertCompetitorTmp();
-		} catch (KeyManagementException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+
 	}
 
 	public void error(String var, Object... var2) {
