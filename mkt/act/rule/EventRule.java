@@ -1,5 +1,6 @@
 package mkt.act.rule;
 
+import com.grapecity.documents.excel.S;
 import common.fms.util.FieldUtils;
 import common.fnd.FndGlobal;
 import common.fnd.FndLog;
@@ -457,9 +458,11 @@ public class EventRule {
         Map<String,Boolean> map_actProfit = new HashMap<>(dyc.size());
         getActProfit("actProfit",map_actProfit);
         itemInfoes = new ArrayList<>(dyc.size());
+        List<String> fillItem = new ArrayList<>(dyc.size());
         for (DynamicObject row : dyc) {
             String itemid = row.getString("id");
-            if (map_actProfit.containsKey(itemid) && map_actProfit.get(itemid)){
+            if (map_actProfit.containsKey(itemid) && map_actProfit.get(itemid) && !fillItem.contains(itemid)){
+                fillItem.add(itemid);
                 itemInfoes.add(row);
             }
         }

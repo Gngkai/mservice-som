@@ -293,7 +293,7 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 		finally {
 			actPlanEntity.set("aos_actstatus",actstatus);
 			SaveServiceHelper.save(new DynamicObject[]{actPlanEntity});
-			getView().updateView();
+			getView().invokeOperation("refresh");
 		}
 	}
 
