@@ -288,7 +288,7 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 			SaveServiceHelper.save(new DynamicObject[]{actPlanEntity});
 
 		}catch (Exception e){
-			getView().showErrorNotification(e.getMessage());
+			getView().showMessage(e.getMessage());
 		}
 		finally {
 			actPlanEntity.set("aos_actstatus",actstatus);

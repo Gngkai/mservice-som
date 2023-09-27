@@ -28,8 +28,6 @@ import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.fi.bd.util.QFBuilder;
-import mkt.act.rule.service.ActPlanService;
-import mkt.act.rule.service.impl.ActPlanServiceImpl;
 import mkt.common.MKTCom;
 import sal.act.ActShopProfit.aos_sal_act_from;
 
@@ -61,6 +59,7 @@ public class EventRule {
     //物料对应的品类
     private Map<String,DynamicObject> cateItem;
     public EventRule(DynamicObject typeEntity,DynamicObject dy_main){
+
         try {
             this.typEntity = typeEntity;
             this.actPlanEntity = dy_main;
@@ -80,9 +79,6 @@ public class EventRule {
                 logger.error(sw.toString());
             }
             throw new KDException(new ErrorCode("活动选品明细导入异常",e.getMessage()));
-        }
-        finally {
-
         }
 
     }
@@ -1740,7 +1736,7 @@ public class EventRule {
             return;
         }
         setItemActProfit();
-        itemPrice = new HashMap<>(itemInfoes.size());
+        minPriceItem = new ArrayList<>(itemInfoes.size());
         for (DynamicObject itemInfoe : itemInfoes) {
             String itemId = itemInfoe.getString("id");
             StringJoiner str = new StringJoiner(" , ");
@@ -2000,7 +1996,7 @@ public class EventRule {
         builder.add("aos_date",">=",now.minusDays(Integer.parseInt(day)).toString());
         builder.add("aos_orgid","=",orgEntity.getPkValue());
         builder.add("aos_shopfid","=",actPlanEntity.getDynamicObject("aos_shop").getPkValue());
-        try (AlgoContext context  = Algo.newContext()){
+        try (AlgoContext ignored = Algo.newContext()){
             String algo = "mkt.act.rule.EventRule.setPastPrice";
             DataSet dataSet = QueryServiceHelper.queryDataSet(algo, "aos_mkt_invprz_bak", "aos_itemid,aos_currentprice", builder.toArray(),null);
             DataSet groupDataSet = dataSet.groupBy(new String[]{"aos_itemid"}).min("aos_currentprice").finish();
