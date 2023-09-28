@@ -155,6 +155,7 @@ public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClic
 		switch (aos_status) {
 		case "新建":
 			SubmitForNew(dy_main);
+			DesignSkuList.createEntity(dy_main);
 			break;
 		}
 		FndHistory.Create(dy_main, "提交", aos_status);
