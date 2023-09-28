@@ -48,6 +48,7 @@ import kd.fi.bd.util.QFBuilder;
 import mkt.common.MKTCom;
 import mkt.common.MKTS3PIC;
 import mkt.progress.ProgressUtil;
+import mkt.progress.design.aos_mkt_designreq_bill;
 import mkt.progress.design3d.aos_mkt_3design_bill;
 import mkt.progress.iface.iteminfo;
 import mkt.progress.listing.aos_mkt_listingreq_bill;
@@ -3010,6 +3011,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		aos_subentryentity.set("aos_broitem", aos_broitem);
 		aos_subentryentity.set("aos_orgtext", aos_orgtext);
 
+		aos_mkt_designreq_bill.createDesiginBeforeSave(aos_mkt_designreq);
 		OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_designreq",
 				new DynamicObject[] { aos_mkt_designreq }, OperateOption.create());
 		if (operationrst.isSuccess()) {

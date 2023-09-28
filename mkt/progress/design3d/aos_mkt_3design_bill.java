@@ -336,6 +336,8 @@ public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClic
 		aos_mkt_3design.set("aos_sourcebillno", billno);
 		aos_mkt_3design.set("aos_srcentrykey", "aos_entryentity");
 
+		//是否已经生成3d
+		List<String> skuList = DesignSkuList.getSkuList();
 		DynamicObjectCollection aos_entryentityS = aos_mkt_3design.getDynamicObjectCollection("aos_entryentity");
 		for (int i = 0; i < list3d.size(); i++) {
 			DynamicObject dyn3d_r = list3d.get(i);
@@ -364,6 +366,7 @@ public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClic
 			// 产品信息
 			DynamicObject aos_entryentity = aos_entryentityS.addNew();
 			aos_entryentity.set("aos_itemid", dyn3d_r.get("aos_itemid"));
+			aos_entryentity.set("aos_is_design",skuList.contains(dyn3d_r.getDynamicObject("aos_itemid").getString("id")));
 			aos_entryentity.set("aos_is_saleout",
 					ProgressUtil.Is_saleout(dyn3d_r.getDynamicObject("aos_itemid").getPkValue()));
 			aos_entryentity.set("aos_itemname", dyn3d_d.get("aos_itemname"));
@@ -477,10 +480,12 @@ public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClic
 				aos_broitem = aos_broitem + number + ";";
 		}
 
+		List<String> skuList = DesignSkuList.getSkuList();
 		// 产品信息
 		DynamicObjectCollection aos_entryentityS = aos_mkt_3design.getDynamicObjectCollection("aos_entryentity");
 		DynamicObject aos_entryentity = aos_entryentityS.addNew();
 		aos_entryentity.set("aos_itemid", Item_id);
+		aos_entryentity.set("aos_is_design",skuList.contains(String.valueOf(Item_id)));
 		aos_entryentity.set("aos_is_saleout", ProgressUtil.Is_saleout(Item_id));
 		aos_mkt_3design.set("aos_productno", aos_productno);
 		aos_entryentity.set("aos_itemname", aos_itemname);
