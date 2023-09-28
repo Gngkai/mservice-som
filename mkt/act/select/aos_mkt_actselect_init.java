@@ -413,8 +413,8 @@ public class aos_mkt_actselect_init extends AbstractTask {
 					aos_category1 = category_group[0];
 				if (category_length > 1)
 					aos_category2 = category_group[1];
-				if (aos_category2.equals("圣诞装饰") || aos_category2.equals("其它节日装饰"))
-					continue;
+//				if (aos_category2.equals("圣诞装饰") || aos_category2.equals("其它节日装饰"))
+//					continue;
 				switch (aos_itemstatus) {
 				case "A":
 					aos_itemstatus = "新品首单";

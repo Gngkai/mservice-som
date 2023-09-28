@@ -14,6 +14,7 @@ import kd.bos.bill.AbstractBillPlugIn;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.dataentity.entity.LocaleString;
+import kd.bos.entity.datamodel.events.PropertyChangedArgs;
 import kd.bos.form.ClientProperties;
 import kd.bos.form.FormShowParameter;
 import kd.bos.form.IFormView;
@@ -24,9 +25,11 @@ import kd.bos.form.control.Control;
 import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.events.BeforeDoOperationEventArgs;
 import kd.bos.form.operate.FormOperate;
+import kd.bos.lang.Lang;
 import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
+import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 
@@ -41,11 +44,42 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 		this.addItemClickListeners("aos_change");
 	}
 
+	public void propertyChanged(PropertyChangedArgs e) {
+		String name = e.getProperty().getName();
+		if (name.equals("aos_productno"))
+			AosProductNoChange();
+	}
+
+	/**
+	 * 产品号值改变
+	 */
+	private void AosProductNoChange() {
+		Object aos_productno = this.getModel().getValue("aos_productno");
+		if (FndGlobal.IsNull(aos_productno)) {
+			this.getModel().setValue("aos_picturefield", null);
+		} else {
+			// 图片字段
+			DynamicObject AosItemidObject = BusinessDataServiceHelper.loadSingle("bd_material",
+					new QFilter("aos_productno", QCP.equals, aos_productno).toArray());
+			if (FndGlobal.IsNotNull(AosItemidObject)) {
+				QFilter filter = new QFilter("entryentity.aos_articlenumber", QCP.equals, AosItemidObject.getPkValue())
+						.and("billstatus", QCP.in, new String[] { "C", "D" });
+				DynamicObjectCollection query = QueryServiceHelper.query("aos_newarrangeorders",
+						"entryentity.aos_picture", filter.toArray(), "aos_creattime desc");
+				if (query != null && query.size() > 0) {
+					Object o = query.get(0).get("entryentity.aos_picture");
+					this.getModel().setValue("aos_picturefield", o);
+				}
+			}
+		}
+	}
+
 	public void afterLoadData(EventObject e) {
 		super.afterLoadData(e);
 		IPageCache iPageCache = this.getPageCache();
 		iPageCache.put("button", "1");
 		openInContainer();
+		AosProductNoChange();
 	}
 
 	/** 新建事件 **/
@@ -153,9 +187,25 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 	 * 在容器中打开
 	 */
 	private void openInContainer() {
+		String language = Lang.get().getLocale().getLanguage();
 		for (int i = 1; i <= 10; i++) {
 			Map<String, Object> map = new HashMap<>();
-			map.put(ClientProperties.Text, new LocaleString((String) this.getModel().getValue("aos_textfield" + i)));
+			String text = (String) this.getModel().getValue("aos_textfield" + i);
+			if (language.equals("zh"))
+				map.put(ClientProperties.Text, new LocaleString(text));
+			else {
+				if ("海报模块".equals(text))
+					text = "Full Image";
+				else if ("轮播图模块".equals(text))
+					text = "Carousel";
+				else if ("锚点模块".equals(text))
+					text = "Hotspots";
+				else if ("细节模块".equals(text))
+					text = "Details";
+				else if ("QA模块".equals(text))
+					text = "Q&A";
+				map.put(ClientProperties.Text, new LocaleString(text));
+			}
 			this.getView().updateControlMetadata("aos_button" + i, map);
 		}
 		FormShowParameter parameter = new FormShowParameter();

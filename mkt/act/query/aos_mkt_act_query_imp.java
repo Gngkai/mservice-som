@@ -392,6 +392,9 @@ public class aos_mkt_act_query_imp extends BatchImportPlugin {
 			case "G":
 				aos_item_status = "冻结";
 				break;
+			case "H":
+				aos_item_status = "虚拟上架";
+				break;
 			}
 			Info.put("aos_item_status", aos_item_status);
 			Info.put("org_id", bd_material.get("org_id"));

@@ -953,6 +953,9 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
 				// 代卖、小于安全库存
 				if ("F".equals(aos_contryentry.getString("aos_contryentrystatus")) && OsQty < SafeQty)
 					continue;
+				// 虚拟上架、小于安全库存
+				if ("H".equals(aos_contryentry.getString("aos_contryentrystatus")) && OsQty < SafeQty)
+					continue;
 				aos_orgtext = aos_orgtext + aos_nationalitynumber + ";";
 			}
 
