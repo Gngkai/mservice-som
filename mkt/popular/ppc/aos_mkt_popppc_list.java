@@ -486,9 +486,9 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 		Map<String, String> portfolio = new HashMap<>();
 		HashMap<String, Map<String, Object>> PopOrgInfo = genPop();
 		BigDecimal PopOrgRoist = (BigDecimal) PopOrgInfo.get(aos_orgid + "~" + "ROIST").get("aos_value");// 国别标准ROI
-		
-		FndMsg.debug("PopOrgRoist:"+PopOrgRoist);
-		
+
+		FndMsg.debug("PopOrgRoist:" + PopOrgRoist);
+
 		// 系列ROI
 		HashMap<String, BigDecimal> SkuRpt = new HashMap<>();
 		Calendar calendar = Calendar.getInstance();
@@ -501,12 +501,12 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 		Date date_to = calendar.getTime();
 		calendar.add(Calendar.DAY_OF_MONTH, -14);
 		Date date_from = calendar.getTime();
-		
+
 		SimpleDateFormat writeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);// 日期格式化
 		String date_from_str = writeFormat.format(date_from);
 		String date_to_str = writeFormat.format(date_to);
 		String date_str = writeFormat.format(date);
-		
+
 		QFilter filter_date_from = new QFilter("aos_entryentity.aos_date_l", ">=", date_from_str);
 		QFilter filter_date_to = new QFilter("aos_entryentity.aos_date_l", "<=", date_to_str);
 		QFilter filter_date = new QFilter("aos_date", "=", date_str);
@@ -534,18 +534,25 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 			String aos_productno = aos_entryentity.getString("aos_productno");
 			BigDecimal roi = SkuRpt.get(aos_productno);
 			Date aos_firstindate = aos_entryentity.getDate("aos_firstindate");
+			String aos_category2 = aos_entryentity.getString("aos_category2");
+			String aos_category3 = aos_entryentity.getString("aos_category3");
+			String aos_seasonseting = aos_entryentity.getString("aos_seasonseting");
+
 			if (FndGlobal.IsNotNull(SkuRpt.get(aos_productno)) && roi.compareTo(PopOrgRoist) < 0) {
-				if (aos_entryentity.getBoolean("aos_special")) {
+				if (aos_entryentity.getBoolean("aos_special"))
 					portfolio.put(aos_productno, "aos_special");
-				}
 				if (FndGlobal.IsNull(portfolio.get(aos_productno))
-						&& "Y".equals(aos_entryentity.getString("aos_offline"))) {
+						&& "Y".equals(aos_entryentity.getString("aos_offline")))
 					portfolio.put(aos_productno, "aos_special");
-				}
 				if ((FndGlobal.IsNotNull(aos_firstindate))
-						&& (FndDate.GetBetweenDays(new Date(), aos_firstindate) < 30)) {
+						&& (FndDate.GetBetweenDays(new Date(), aos_firstindate) < 30))
 					portfolio.put(aos_productno, "aos_new");
-				}
+				if ("秋冬产品".equals(aos_seasonseting) || "冬季产品".equals(aos_seasonseting))
+					portfolio.put(aos_productno, "autumn_winter");
+				if ("万圣装饰".equals(aos_category3))
+					portfolio.put(aos_productno, "halloween");
+				if ("圣诞装饰".equals(aos_category2))
+					portfolio.put(aos_productno, "chrismas");
 			}
 		}
 		return portfolio;
@@ -560,7 +567,7 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 		DynamicObject aos_mkt_popular_ppc = BusinessDataServiceHelper.loadSingle(fid, "aos_mkt_popular_ppc");
 		DynamicObjectCollection aos_entryentityS = aos_mkt_popular_ppc.getDynamicObjectCollection("aos_entryentity");
 		for (DynamicObject aos_entryentity : aos_entryentityS) {
-			BigDecimal aos_roi = aos_entryentity.getBigDecimal("aos_roi14days"); //TODO 调整为14日
+			BigDecimal aos_roi = aos_entryentity.getBigDecimal("aos_roi14days"); // TODO 调整为14日
 			String aos_productno = aos_entryentity.getString("aos_productno");
 			Date aos_firstindate = aos_entryentity.getDate("aos_firstindate");
 			BigDecimal aos_rpt_roi = aos_entryentity.getBigDecimal("aos_rpt_roi");
@@ -632,12 +639,18 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 		headRow = CreateColumn(headRow, style, 23, "Placement");
 		headRow = CreateColumn(headRow, style, 24, "Percentage");
 		headRow = CreateColumn(headRow, style, 25, "Product Targeting Expression");
+
 		// 查询当前单据国别
 		DynamicObject dynamicObject = QueryServiceHelper.queryOne("aos_mkt_popular_ppc", "aos_orgid",
 				new QFilter[] { new QFilter("id", QCP.equals, fid) });
 		String aos_orgid = dynamicObject.getString("aos_orgid");
 		// 获取fba数据
 		Map<String, List<String>> fbaMap = getFbaMap(aos_orgid);
+
+		Map<String, String> productIdMap = getProductIdMap(aos_orgid);
+		Map<String, String> groupIdMap = getGroupIdMap(aos_orgid);
+		Map<String, String> itemIdMap = getItemIdMap(aos_orgid);
+
 		// 初始化组数据
 		HashMap<String, Map<String, Map<String, Object>>> Group = init_group(fid);
 		// 循环单子下所有的产品号
@@ -685,6 +698,9 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 			// 3.Campaign Id 如果系列为新增，ID直接等于系列名称
 			if (NewSerialFlag)
 				ProductRow = CreateColumn(ProductRow, style, 3, aos_productno);
+			else
+				ProductRow = CreateColumn(ProductRow, style, 3, productIdMap.get(aos_productno));
+
 			ProductRow = CreateColumn(ProductRow, style, 9, aos_productno);
 			ProductRow = CreateColumn(ProductRow, style, 11, formatter.format(aos_makedate));
 			ProductRow = CreateColumn(ProductRow, style, 13, "AUTO");
@@ -747,6 +763,10 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 				// 4.Ad Group Id 如果广告组为新增，ID直接等于广告组名称
 				if (NewGroupFlag)
 					ProductRow = CreateColumn(ProductRow, style, 4, aos_itemnumer);
+				else
+					ProductRow = CreateColumn(ProductRow, style, 4,
+							groupIdMap.get(aos_productno + "~" + aos_itemnumer));
+
 				ProductRow = CreateColumn(ProductRow, style, 10, aos_itemnumer);
 				ProductRow = CreateColumn(ProductRow, style, 14, GroupStatus);
 				ProductRow = CreateColumn(ProductRow, style, 18, aos_bid);
@@ -775,6 +795,8 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 					ProductRow = CreateColumn(ProductRow, style, 2, OperationGroup);
 					ProductRow = CreateColumn(ProductRow, style, 14, GroupStatus);
 					ProductRow = CreateColumn(ProductRow, style, 16, flag ? fbaList.get(i) : aos_shopsku);
+					ProductRow = CreateColumn(ProductRow, style, 6, itemIdMap.getOrDefault(
+							aos_productno + "~" + aos_itemnumer + "~" + (flag ? fbaList.get(i) : aos_shopsku), ""));
 				}
 
 				if (!NewGroupFlag) {
@@ -822,6 +844,34 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 			}
 		}
 		aos_mkt_popppc_initS.close();
+	}
+
+	private Map<String, String> getItemIdMap(String aos_orgid) {
+		DynamicObjectCollection list = QueryServiceHelper.query("aos_base_popid",
+				"aos_productno,aos_itemnumer,aos_shopsku" + "aos_shopskuid",
+				new QFilter[] { new QFilter("aos_orgid", QCP.equals, aos_orgid) });
+		return list.stream()
+				.collect(
+						Collectors.toMap(
+								obj -> obj.getString("aos_productno") + "~" + obj.getString("aos_itemnumer") + "~"
+										+ obj.getString("aos_shopsku"),
+								obj -> obj.getString("aos_shopskuid"), (k1, k2) -> k1));
+	}
+
+	private Map<String, String> getGroupIdMap(String aos_orgid) {
+		DynamicObjectCollection list = QueryServiceHelper.query("aos_base_popid",
+				"aos_productno,aos_itemnumer," + "aos_groupid",
+				new QFilter[] { new QFilter("aos_orgid", QCP.equals, aos_orgid) });
+		return list.stream()
+				.collect(Collectors.toMap(obj -> obj.getString("aos_productno") + "~" + obj.getString("aos_itemnumer"),
+						obj -> obj.getString("aos_groupid"), (k1, k2) -> k1));
+	}
+
+	private Map<String, String> getProductIdMap(String aos_orgid) {
+		DynamicObjectCollection list = QueryServiceHelper.query("aos_base_popid", "aos_productno,aos_serialid",
+				new QFilter[] { new QFilter("aos_orgid", QCP.equals, aos_orgid) });
+		return list.stream().collect(Collectors.toMap(obj -> obj.getString("aos_productno"),
+				obj -> obj.getString("aos_serialid"), (k1, k2) -> k1));
 	}
 
 	private XSSFRow CreateColumn(XSSFRow headRow, XSSFCellStyle style, int column, Object value) {
