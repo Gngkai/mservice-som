@@ -16,14 +16,12 @@ import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.dataentity.entity.LocaleString;
 import kd.bos.dataentity.metadata.dynamicobject.DynamicObjectType;
+import kd.bos.dataentity.serialization.SerializationUtils;
 import kd.bos.entity.EntityMetadataCache;
 import kd.bos.entity.datamodel.events.PropertyChangedArgs;
 import kd.bos.entity.operate.result.OperationResult;
 import kd.bos.entity.property.EntryProp;
-import kd.bos.form.ClientProperties;
-import kd.bos.form.ConfirmCallBackListener;
-import kd.bos.form.MessageBoxOptions;
-import kd.bos.form.MessageBoxResult;
+import kd.bos.form.*;
 import kd.bos.form.control.EntryGrid;
 import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.control.events.ItemClickListener;
@@ -42,6 +40,7 @@ import mkt.common.MKTCom;
 import mkt.common.MKTS3PIC;
 import mkt.progress.ProgressUtil;
 import mkt.progress.design.aadd.aos_mkt_aadd_bill;
+import mkt.progress.design3d.DesignSkuList;
 import mkt.progress.design3d.aos_mkt_3design_bill;
 import mkt.progress.iface.iteminfo;
 import mkt.progress.iface.parainfo;
@@ -54,6 +53,16 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 	public final static String aos_mkt_designreq = "aos_mkt_designreq";
 	/** 系统管理员 **/
 	public final static String system = Cux_Common_Utl.SYSTEM;
+
+	//3d建模页面缓存标识
+	private final static String KEY_CreateDesign = "CreateDesign";
+
+	@Override
+	public void afterBindData(EventObject e) {
+		super.afterBindData(e);
+		//设置缓存
+		setPageCache();
+	}
 
 	@Override
 	public void hyperLinkClick(HyperLinkClickEvent hyperLinkClickEvent) {
@@ -372,6 +381,7 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 			this.getModel().setValue("aos_pic", null, 0);
 			this.getModel().setValue("aos_sellingpoint", null, 0);
 			this.getModel().setValue("aos_is_saleout", false, 0); // 是否爆品
+			this.getModel().setValue("aos_is_design",false,0);		//生成3d
 		} else {
 			DynamicObject AosItemidObject = (DynamicObject) aos_itemid;
 			Object fid = AosItemidObject.getPkValue();
@@ -450,6 +460,9 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 			this.getModel().setValue("aos_orgtext", aos_orgtext, 0);
 			this.getModel().setValue("aos_sellingpoint", bd_material.get("aos_sellingpoint"), 0);
 			this.getModel().setValue("aos_is_saleout", ProgressUtil.Is_saleout(fid), 0);
+			//设置是否已经3d建模
+			List<String> designItem = (List<String>) SerializationUtils.fromJsonStringToList(getPageCache().get(KEY_CreateDesign), String.class);
+			this.getModel().setValue("aos_is_design",designItem.contains(String.valueOf(fid)),0);
 
 			// 产品类别
 			String category = MKTCom.getItemCateNameZH(fid);
@@ -2125,4 +2138,24 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 		this.getView().setFormTitle(value);
 	}
 
+	/**
+	 * 创建设计需求表后，未保存前的，用于一些赋值
+	 */
+	public static void createDesiginBeforeSave (DynamicObject designEntity){
+		//查找已经生成3d建模的物料
+		List<String> skuList = DesignSkuList.getSkuList();
+		DynamicObjectCollection entityRows = designEntity.getDynamicObjectCollection("aos_entryentity");
+		for (DynamicObject row : entityRows) {
+			String itemid = row.getString("aos_itemid");
+			row.set("aos_is_design",skuList.contains(itemid));
+		}
+	}
+
+	//设置页面缓存
+	private void setPageCache(){
+		IPageCache pageCache = getPageCache();
+		//缓存3d建模物料清单
+		pageCache.put(KEY_CreateDesign, SerializationUtils.toJsonString(DesignSkuList.getSkuList()));
+
+	}
 }
