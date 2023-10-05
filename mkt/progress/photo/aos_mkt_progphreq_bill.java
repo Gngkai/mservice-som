@@ -1709,9 +1709,10 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 
 		OperationServiceHelper.executeOperate("save", aos_mkt_photoreq, new DynamicObject[] { dy_main },
 				OperateOption.create());
-
 		// 发送消息
+		FndMsg.debug("======Start message======");
 		MKTCom.SendGlobalMessage(MessageId, aos_mkt_photoreq, ReqFId + "", AosBillno + "", message);
+
 	}
 
 	/** 开发/采购确认 状态下提交 **/
