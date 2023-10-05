@@ -45,6 +45,7 @@ import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import kd.bos.url.UrlService;
 import kd.fi.bd.util.QFBuilder;
+import mkt.common.GlobalMessage;
 import mkt.common.MKTCom;
 import mkt.common.MKTS3PIC;
 import mkt.progress.ProgressUtil;
@@ -1712,6 +1713,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 
 		// 发送消息
 		MKTCom.SendGlobalMessage(MessageId, aos_mkt_photoreq, ReqFId + "", AosBillno + "", message);
+		GlobalMessage.SendMessage(AosBillno+"-拍照需求单据待处理",MessageId);
 	}
 
 	/** 开发/采购确认 状态下提交 **/
@@ -2043,6 +2045,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 
 		// 发送消息
 		MKTCom.SendGlobalMessage(MessageId, aos_mkt_photoreq, ReqFId + "", AosBillno + "", MessageStr);
+		GlobalMessage.SendMessage(AosBillno+"-拍照需求单据待处理",MessageId);
 	}
 
 	/** 视频拍摄 状态下提交 **/
@@ -2338,6 +2341,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		MessageId = AosDeveloper.getPkValue() + "";
 		// 发送消息
 		MKTCom.SendGlobalMessage(MessageId, aos_mkt_photoreq, ReqFId + "", AosBillno + "", "拍照需求表-开发确认");
+		GlobalMessage.SendMessage(AosBillno+"-拍照需求单据待处理",MessageId);
 	}
 
 	/** 编辑确认 状态下提交 **/

@@ -757,11 +757,11 @@ public class aos_mkt_popppc_init extends AbstractTask {
 //							continue;
 //						}
 
-						if ("圣诞装饰".equals(aos_category2)) {
-							log.add(aos_itemnumer + "圣诞装饰 过季品剔除");
-							InsertData(aos_entryentityS, insert_map, "SEASON", roiMap);
-							continue;
-						}
+//						if ("圣诞装饰".equals(aos_category2)) {
+//							log.add(aos_itemnumer + "圣诞装饰 过季品剔除");
+//							InsertData(aos_entryentityS, insert_map, "SEASON", roiMap);
+//							continue;
+//						}
 
 						// 非节日品剔除预断货 节日品节日2天内剔除 圣诞装饰 这两个中类不做预断货剔除 销量为3日均与7日均的最小值
 						if ((aos_festivalseting.equals("") || aos_festivalseting.equals("null"))
