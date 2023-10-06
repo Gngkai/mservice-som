@@ -1,19 +1,18 @@
 package mkt.progress.design.aadd;
 
-import java.util.ArrayList;
-import java.util.EventObject;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import common.Cux_Common_Utl;
 import common.fnd.FndError;
 import common.fnd.FndGlobal;
 import common.fnd.FndMsg;
 import common.sal.util.SalUtil;
 import kd.bos.bill.AbstractBillPlugIn;
+import kd.bos.context.RequestContext;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.dataentity.entity.LocaleString;
+import kd.bos.dataentity.serialization.SerializationUtils;
 import kd.bos.entity.datamodel.events.PropertyChangedArgs;
 import kd.bos.form.ClientProperties;
 import kd.bos.form.FormShowParameter;
@@ -24,6 +23,7 @@ import kd.bos.form.control.Button;
 import kd.bos.form.control.Control;
 import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.events.BeforeDoOperationEventArgs;
+import kd.bos.form.events.ClosedCallBackEvent;
 import kd.bos.form.operate.FormOperate;
 import kd.bos.lang.Lang;
 import kd.bos.orm.query.QCP;
@@ -32,9 +32,13 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
+import kd.drp.pos.common.util.StringJoin;
+import kd.fi.bd.util.QFBuilder;
 
 public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
+	private static final String KEY_USER = "LAN"; //用户可操控的语言
 
+	@Override
 	public void registerListener(EventObject e) {
 		for (int i = 1; i <= 10; i++) {
 			Button aos_button = this.getControl("aos_button" + i);
@@ -44,36 +48,14 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 		this.addItemClickListeners("aos_change");
 	}
 
+	@Override
 	public void propertyChanged(PropertyChangedArgs e) {
 		String name = e.getProperty().getName();
 		if (name.equals("aos_productno"))
 			AosProductNoChange();
 	}
 
-	/**
-	 * 产品号值改变
-	 */
-	private void AosProductNoChange() {
-		Object aos_productno = this.getModel().getValue("aos_productno");
-		if (FndGlobal.IsNull(aos_productno)) {
-			this.getModel().setValue("aos_picturefield", null);
-		} else {
-			// 图片字段
-			DynamicObject AosItemidObject = BusinessDataServiceHelper.loadSingle("bd_material",
-					new QFilter("aos_productno", QCP.equals, aos_productno).toArray());
-			if (FndGlobal.IsNotNull(AosItemidObject)) {
-				QFilter filter = new QFilter("entryentity.aos_articlenumber", QCP.equals, AosItemidObject.getPkValue())
-						.and("billstatus", QCP.in, new String[] { "C", "D" });
-				DynamicObjectCollection query = QueryServiceHelper.query("aos_newarrangeorders",
-						"entryentity.aos_picture", filter.toArray(), "aos_creattime desc");
-				if (query != null && query.size() > 0) {
-					Object o = query.get(0).get("entryentity.aos_picture");
-					this.getModel().setValue("aos_picturefield", o);
-				}
-			}
-		}
-	}
-
+	@Override
 	public void afterLoadData(EventObject e) {
 		super.afterLoadData(e);
 		IPageCache iPageCache = this.getPageCache();
@@ -83,28 +65,13 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 	}
 
 	/** 新建事件 **/
+	@Override
 	public void afterCreateNewData(EventObject e) {
 		super.afterCreateNewData(e);
 		IPageCache iPageCache = this.getPageCache();
 		iPageCache.put("button", "1");
 		openInContainer();
-	}
-
-	@Override
-	public void itemClick(ItemClickEvent evt) {
-		super.itemClick(evt);
-		String Control = evt.getItemKey();
-		if ("aos_change".equals(Control)) {
-			aos_change();
-		}
-	}
-
-	/**
-	 * 改名
-	 */
-	private void aos_change() {
-		FndMsg.debug("=====into aos_change=====");
-		FndGlobal.OpenForm(this, "aos_aadd_model_show", null);
+		StatusControl();
 	}
 
 	@Override
@@ -120,6 +87,103 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 			this.getView().showErrorNotification(SalUtil.getExceptionStr(ex));
 		}
 
+	}
+
+	@Override
+	public void itemClick(ItemClickEvent evt) {
+		super.itemClick(evt);
+		String control = evt.getItemKey();
+		if ("aos_change".equals(control)) {
+			aos_change();
+		}
+		else if ("aos_copyto".equals(control)){
+			FormShowParameter showParameter = FndGlobal.CraeteForm(this, "aos_mkt_functcopy", "copyTo", null);
+			showParameter.setCaption("A+ Copy To");
+			List<String> users= (List<String>) SerializationUtils.fromJsonStringToList(this.getPageCache().get(KEY_USER), String.class);
+			showParameter.setCustomParam("userLan",users);
+			getView().showForm(showParameter);
+		}
+		else if ("aos_copyfrom".equals(control)){
+			FormShowParameter showParameter = FndGlobal.CraeteForm(this, "aos_mkt_functcopy", "copyFrom", null);
+			showParameter.setCaption("A+ Copy Form");
+			List<String> users= (List<String>) SerializationUtils.fromJsonStringToList(this.getPageCache().get(KEY_USER), String.class);
+			showParameter.setCustomParam("userLan",users);
+			getView().showForm(showParameter);
+		}
+	}
+
+	@Override
+	public void closedCallBack(ClosedCallBackEvent event) {
+		super.closedCallBack(event);
+		String actionId = event.getActionId();
+		System.out.println("actionId = " + actionId);
+		Object data1 = event.getReturnData();
+		System.out.println("data1 = " + data1);
+
+		if (actionId.equals("copyTo")){
+			Object data = event.getReturnData();
+			if (data == null)
+				return;
+
+
+		}
+		else if (actionId.equals("copyFrom")){
+
+		}
+	}
+
+	/**
+	 * copy 单据
+	 * @param source	源单据
+	 * @param target	目标单据
+	 * @param tabs		页签
+	 * @param lans		语言
+	 */
+	private void copyValue(Object source,Object target,List<String> tabs,List<String> lans){
+		//获取源单的相关数据
+		Map<String, List<DynamicObject>> sourceData = findEntiyData(source);
+		//获取目标单据的相关数据
+		Map<String, List<DynamicObject>> targetData = findEntiyData(target);
+
+		for (String tab : tabs) {
+
+		}
+
+	}
+
+	private Map<String,List<DynamicObject>> findEntiyData(Object product){
+		Map<String,List<DynamicObject>> result = new HashMap<>();
+		QFBuilder builder = new QFBuilder();
+		builder.add("aos_productno","=",product);
+		builder.add("aos_button","!=","");
+		builder.add("aos_seq","!=","");
+		StringJoin str = new StringJoin(",");
+		str.add("aos_cate1");
+		str.add("aos_cate2");
+		str.add("aos_cn");
+		str.add("aos_usca");
+		str.add("aos_uk");
+		str.add("aos_de");
+		str.add("aos_fr");
+		str.add("aos_it");
+		str.add("aos_es");
+		str.add("aos_button");
+		str.add("aos_seq");
+		DynamicObject[] dyc = BusinessDataServiceHelper.load("aos_aadd_model_detail", str.toString(), builder.toArray());
+		for (DynamicObject dy : dyc) {
+			String key = dy.getString("aos_button");
+			List<DynamicObject> list = result.computeIfAbsent(key, k -> new ArrayList<>());
+			list.add(dy);
+		}
+		return result;
+	}
+
+	/**
+	 * 改名
+	 */
+	private void aos_change() {
+		FndMsg.debug("=====into aos_change=====");
+		FndGlobal.OpenForm(this, "aos_aadd_model_show", null);
 	}
 
 	public void beforeDoOperation(BeforeDoOperationEventArgs args) {
@@ -217,4 +281,51 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 		String sonPageId = parameter.getPageId();
 		iPageCache.put("sonPageId", sonPageId);
 	}
+
+	/**
+	 * 产品号值改变
+	 */
+	private void AosProductNoChange() {
+		Object aos_productno = this.getModel().getValue("aos_productno");
+		if (FndGlobal.IsNull(aos_productno)) {
+			this.getModel().setValue("aos_picturefield", null);
+		} else {
+			// 图片字段
+			DynamicObject AosItemidObject = BusinessDataServiceHelper.loadSingle("bd_material",
+					new QFilter("aos_productno", QCP.equals, aos_productno).toArray());
+			if (FndGlobal.IsNotNull(AosItemidObject)) {
+				QFilter filter = new QFilter("entryentity.aos_articlenumber", QCP.equals, AosItemidObject.getPkValue())
+						.and("billstatus", QCP.in, new String[] { "C", "D" });
+				DynamicObjectCollection query = QueryServiceHelper.query("aos_newarrangeorders",
+						"entryentity.aos_picture", filter.toArray(), "aos_creattime desc");
+				if (query != null && query.size() > 0) {
+					Object o = query.get(0).get("entryentity.aos_picture");
+					this.getModel().setValue("aos_picturefield", o);
+				}
+			}
+		}
+	}
+
+	/**
+	 * 查询可以copy，翻译的语言
+	 */
+	private void StatusControl() {
+		//根据用户查找相应的人员能够操作的语言
+		QFBuilder builder = new QFBuilder();
+		builder.add("aos_user","=", RequestContext.get().getCurrUserId());
+		DynamicObject dy_userPermiss = QueryServiceHelper.queryOne("aos_mkt_permiss_lan", "aos_row,aos_exchange,aos_lan", builder.toArray());
+		List<String> userCopyLanguage = new ArrayList<>();
+		if (dy_userPermiss!=null){
+			if (!Cux_Common_Utl.IsNull(dy_userPermiss.get("aos_lan"))) {
+				//用户能够copy的语言
+				for (String lan : dy_userPermiss.getString("aos_lan").split(",")) {
+					if (!Cux_Common_Utl.IsNull(lan)) {
+						userCopyLanguage.add(lan);
+					}
+				}
+			}
+		}
+		this.getPageCache().put(KEY_USER,SerializationUtils.toJsonString(userCopyLanguage));
+	}
+
 }

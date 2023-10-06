@@ -2,6 +2,7 @@ package mkt.progress.design.functDiagram;
 
 import common.Cux_Common_Utl;
 import kd.bos.dataentity.entity.DynamicObject;
+import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.dataentity.entity.LocaleString;
 import kd.bos.form.FormShowParameter;
 import kd.bos.form.control.Control;
@@ -12,6 +13,7 @@ import kd.bos.form.plugin.AbstractFormPlugin;
 import kd.bos.form.transfer.TransferNode;
 import kd.bos.form.transfer.TransferTreeNode;
 import kd.bos.servicehelper.QueryServiceHelper;
+import kd.fi.bd.util.QFBuilder;
 
 import java.util.*;
 
@@ -29,50 +31,107 @@ public class functCopyForm extends AbstractFormPlugin {
     }
     @Override
     public void afterCreateNewData(EventObject e) {
+        String entityId = this.getView().getParentView().getEntityId();
         // 显示风格为树形(树形模式)
         TransferContainer trans = this.getControl("aos_tran");
         List<TransferNode> data = new ArrayList<>();
-        //语言类
-        TransferTreeNode languageNode = new TransferTreeNode("language","语言",true);
-        languageNode.setIsOpened(false); // 展开子节点
-        FormShowParameter formShowParameter = this.getView().getFormShowParameter();
-        List<String> userCopyLanguage = new ArrayList<>();
-        if (formShowParameter.getCustomParam("userLan")!=null) {
-             userCopyLanguage =  formShowParameter.getCustomParam("userLan");
+        //功能图文案
+        if (entityId.equals("aos_mkt_functreq")){
+            //语言类
+            TransferTreeNode languageNode = new TransferTreeNode("language","语言",true);
+            languageNode.setIsOpened(false); // 展开子节点
+            FormShowParameter formShowParameter = this.getView().getFormShowParameter();
+            List<String> userCopyLanguage = new ArrayList<>();
+            if (formShowParameter.getCustomParam("userLan")!=null) {
+                userCopyLanguage =  formShowParameter.getCustomParam("userLan");
+            }
+            for (int n = 0; n < userCopyLanguage.size(); n++) {
+                String id =userCopyLanguage.get(n);
+                TransferTreeNode childNode = new TransferTreeNode(
+                        "lan/"+id,        // 节点 ID
+                        userCopyLanguage.get(n),    // text，节点显示内容
+                        false         // disabled，该节点是否允许选中
+                );
+                languageNode.addChild(childNode);
+            }
+            data.add(languageNode);
+
+            //图片类
+            TransferTreeNode imgNode = new TransferTreeNode("img","图片",true);
+            imgNode.setIsOpened(false);
+            for (int i = 1; i < 7; i++) {
+                String id = String.valueOf(i);
+                TransferTreeNode childNode = new TransferTreeNode(
+                        "img/"+id,        // 节点 ID
+                        "图片"+i,    // text，节点显示内容
+                        false         // disabled，该节点是否允许选中
+                );
+                imgNode.addChild(childNode);
+            }
+            data.add(imgNode);
+            trans.setTransferListData(data,null);
         }
-        for (int n = 0; n < userCopyLanguage.size(); n++) {
-            String id =userCopyLanguage.get(n);
-            TransferTreeNode childNode = new TransferTreeNode(
-                    "lan/"+id,        // 节点 ID
-                    userCopyLanguage.get(n),    // text，节点显示内容
-                    false         // disabled，该节点是否允许选中
-            );
-            languageNode.addChild(childNode);
+        //高级A+
+        else if (entityId.equals("aos_aadd_model")){
+            //图片类
+            TransferTreeNode imgNode = new TransferTreeNode("tab","页签",true);
+            imgNode.setIsOpened(false);
+            for (int i = 1; i < 11; i++) {
+                String id = String.valueOf(i);
+                TransferTreeNode childNode = new TransferTreeNode(
+                        "tab/"+id,        // 节点 ID
+                        "页签"+i,    // text，节点显示内容
+                        false         // disabled，该节点是否允许选中
+                );
+                imgNode.addChild(childNode);
+            }
+            data.add(imgNode);
+            trans.setTransferListData(data,null);
+
+            //语言类
+            TransferTreeNode languageNode = new TransferTreeNode("language","语言",true);
+            languageNode.setIsOpened(false); // 展开子节点
+            FormShowParameter formShowParameter = this.getView().getFormShowParameter();
+            List<String> userCopyLanguage = new ArrayList<>();
+            if (formShowParameter.getCustomParam("userLan")!=null) {
+                userCopyLanguage =  formShowParameter.getCustomParam("userLan");
+            }
+            for (int n = 0; n < userCopyLanguage.size(); n++) {
+                String id =userCopyLanguage.get(n);
+                TransferTreeNode childNode = new TransferTreeNode(
+                        "lan/"+id,        // 节点 ID
+                        userCopyLanguage.get(n),    // text，节点显示内容
+                        false         // disabled，该节点是否允许选中
+                );
+                languageNode.addChild(childNode);
+            }
+            data.add(languageNode);
         }
-        data.add(languageNode);
-        //图片类
-        TransferTreeNode imgNode = new TransferTreeNode("img","图片",true);
-        imgNode.setIsOpened(false);
-        for (int i = 1; i < 7; i++) {
-            String id = String.valueOf(i);
-            TransferTreeNode childNode = new TransferTreeNode(
-                    "img/"+id,        // 节点 ID
-                     "图片"+i,    // text，节点显示内容
-                    false         // disabled，该节点是否允许选中
-            );
-            imgNode.addChild(childNode);
-        }
-        data.add(imgNode);
-        trans.setTransferListData(data,null);
     }
+
     private void init(){
         ComboEdit comboEdit = this.getControl("aos_no");
         List<ComboItem> data = new ArrayList<>();
-        for (DynamicObject dy : QueryServiceHelper.query("aos_mkt_functreq", "aos_segment3", null)) {
-            if (!Cux_Common_Utl.IsNull(dy.get("aos_segment3"))){
-                data.add(new ComboItem(new LocaleString(dy.getString("aos_segment3")), dy.getString("aos_segment3")));
+        String entityId = this.getView().getParentView().getEntityId();
+        if (entityId.equals("aos_mkt_functreq")){
+            DynamicObjectCollection  dyc = QueryServiceHelper.query("aos_mkt_functreq", "aos_segment3", null);
+            for (DynamicObject dy : dyc) {
+                if (!Cux_Common_Utl.IsNull(dy.get("aos_segment3"))){
+                    data.add(new ComboItem(new LocaleString(dy.getString("aos_segment3")), dy.getString("aos_segment3")));
+                }
             }
         }
+        //高级A+
+        else if (entityId.equals("aos_aadd_model")){
+            Object aos_productno = getView().getParentView().getModel().getValue("aos_productno");
+            QFBuilder builder = new QFBuilder("aos_productno","!=",aos_productno);
+            DynamicObjectCollection  dyc = QueryServiceHelper.query("aos_aadd_model","aos_productno",builder.toArray());
+            for (DynamicObject dy : dyc) {
+                if (!Cux_Common_Utl.IsNull(dy.get("aos_productno"))){
+                    data.add(new ComboItem(new LocaleString(dy.getString("aos_productno")), dy.getString("aos_productno")));
+                }
+            }
+       }
         comboEdit.setComboItems(data);
     }
 
@@ -81,6 +140,7 @@ public class functCopyForm extends AbstractFormPlugin {
         super.registerListener(e);
         this.addClickListeners("btnok");
     }
+
     @Override
     public void click(EventObject evt) {
         super.click(evt);
