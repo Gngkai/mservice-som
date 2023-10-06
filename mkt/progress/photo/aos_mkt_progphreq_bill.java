@@ -2432,7 +2432,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 				QFilter filter_category2 = new QFilter("aos_category2", "=", AosCategory2);
 				QFilter filter_org = new QFilter("aos_orgid", "=", bd_country.get("id"));
 				QFilter[] filters_category = new QFilter[] { filter_category1, filter_category2, filter_org };
-				String SelectStr = "aos_salehelper.number aos_salehelper";
+				String SelectStr = "aos_salehelper.id aos_salehelper";
 				DynamicObjectCollection aos_mkt_progorguser = QueryServiceHelper.query("aos_mkt_progorguser", SelectStr,
 						filters_category);
 				if (aos_mkt_progorguser != null) {

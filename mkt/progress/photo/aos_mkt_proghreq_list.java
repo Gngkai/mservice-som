@@ -98,8 +98,25 @@ public class aos_mkt_proghreq_list extends AbstractListPlugin {
 		String itemKey = evt.getItemKey();
 		if ("aos_find".equals(itemKey))
 			exactQueryItem();
+
 		else if ("aos_showclose".equals(itemKey))
-			parainfo.showClose(this.getView());// 查询关闭流程
+		{
+			IPageCache iPageCache = this.getView().getPageCache();
+			iPageCache.put("p_close_flag", "true");
+			this.getView().invokeOperation("refresh");// 查询关闭流程
+		}
+		else if ("aos_showopen".equals(itemKey))
+		{
+			IPageCache iPageCache = this.getView().getPageCache();
+			iPageCache.put("p_close_flag", "false");
+			this.getView().invokeOperation("refresh");// 查询未关闭流程
+		}
+		else if ("aos_showall".equals(itemKey))
+		{
+			IPageCache iPageCache = this.getView().getPageCache();
+			iPageCache.put("p_close_flag", "all");
+			this.getView().invokeOperation("refresh");// 查询全部流程
+		}
 		else if ("aos_batchgive".equals(itemKey))
 			aos_open();// 批量转办
 		else if ("aos_submit".equals(itemKey)) // 提交

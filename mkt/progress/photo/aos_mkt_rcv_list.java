@@ -12,10 +12,7 @@ import java.util.stream.Collectors;
 
 import kd.bos.entity.datamodel.ListSelectedRowCollection;
 import kd.bos.entity.operate.result.OperationResult;
-import kd.bos.form.CloseCallBack;
-import kd.bos.form.FormShowParameter;
-import kd.bos.form.IFormView;
-import kd.bos.form.ShowType;
+import kd.bos.form.*;
 import mkt.common.MKTCom;
 import mkt.progress.ProgressUtil;
 import org.apache.poi.ss.usermodel.BorderStyle;
@@ -79,19 +76,72 @@ public class aos_mkt_rcv_list extends AbstractListPlugin {
 			else if (StringUtils.equals("aos_test", evt.getItemKey()))
 				aos_test();
 			else if ("aos_showclose".equals(itemKey))
-				parainfo.showClose(this.getView());// 查询关闭流程
+			{
+				IPageCache iPageCache = this.getView().getPageCache();
+				iPageCache.put("p_close_flag", "true");
+				this.getView().invokeOperation("refresh");// 查询关闭流程
+			}
+			else if ("aos_showopen".equals(itemKey))
+			{
+				IPageCache iPageCache = this.getView().getPageCache();
+				iPageCache.put("p_close_flag", "false");
+				this.getView().invokeOperation("refresh");// 查询未关闭流程
+			}
+			else if ("aos_showall".equals(itemKey))
+			{
+				IPageCache iPageCache = this.getView().getPageCache();
+				iPageCache.put("p_close_flag", "all");
+				this.getView().invokeOperation("refresh");// 查询全部流程
+			}
 			else if ("aos_batchgive".equals(itemKey))
 				aos_open();// 批量转办
 			else if ("aos_querysample".equals(itemKey))
 				querySample();// 查看封样图片
 			else if ("aos_track".equals(itemKey))
 				aos_track();// 批量修改快递单号
+			else if ("aos_close".equals(itemKey))
+				aos_close();// 批量修改快递单号
 		} catch (FndError fndMessage) {
 			this.getView().showTipNotification(fndMessage.getErrorMessage());
 		} catch (Exception ex) {
 			this.getView().showErrorNotification(SalUtil.getExceptionStr(ex));
 		}
 	}
+
+
+	public final static String system = Cux_Common_Utl.SYSTEM;
+	/**
+	 * 批量关闭
+	 */
+	private void aos_close() {
+		List<Object> list = getSelectedRows().stream().map(row -> row.getPrimaryKeyValue()).distinct()
+				.collect(Collectors.toList());
+		Object CurrentUserId = UserServiceHelper.getCurrentUserId();
+		Object CurrentUserName = UserServiceHelper.getUserInfoByID((long) CurrentUserId).get("name");
+		if (!"赵轩".equals(CurrentUserName)) {
+			this.getView().showErrorNotification("无关闭权限,请联系管理员!");
+			return;
+		}
+		for (int i = 0; i < list.size(); i++) {
+			String id = list.get(i).toString();
+			DynamicObject aos_mkt_rcv = BusinessDataServiceHelper.loadSingle(id, "aos_mkt_rcv");
+			aos_mkt_rcv.set("aos_status", "已完成");
+			aos_mkt_rcv.set("aos_user", system);
+			OperationServiceHelper.executeOperate("save", "aos_mkt_rcv", new DynamicObject[] { aos_mkt_rcv },
+					OperateOption.create());
+			FndHistory fndHistory = new FndHistory();
+			fndHistory.SetActionBy(CurrentUserId);
+			fndHistory.SetFormId("aos_mkt_rcv");
+			fndHistory.SetSourceId(id);
+			fndHistory.SetActionCode("手工关闭");// 操作动作
+			fndHistory.SetDesc(CurrentUserName + "手工关闭!"); // 操作备注
+			Cux_Common_Utl.History(fndHistory);// 插入历史记录;
+		}
+
+		this.getView().showSuccessNotification("关闭成功");
+		this.getView().invokeOperation("refresh");// 刷新列表
+	}
+
 
 	private void aos_track() {
 		FndMsg.debug("=====into aos_track=====");

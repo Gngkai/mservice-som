@@ -53,7 +53,7 @@ public class parainfo {
 		// 3.若未点击查看关闭流程(界面缓存参数为空) 则排除已关闭的流程
 		if ("true".equals(iPageCache.get("p_close_flag")))
 			qFilters.add(new QFilter("aos_status", QCP.equals, "已完成").or("aos_status", QCP.equals, "结束"));
-		else
+		else if ("false".equals(iPageCache.get("p_close_flag")))
 			qFilters.add(new QFilter("aos_status", QCP.not_equals, "已完成").and("aos_status", QCP.not_equals, "结束"));
 	}
 
