@@ -118,6 +118,9 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 			showParameter.setCustomParam("userLan",users);
 			getView().showForm(showParameter);
 		}
+		else if ("aos_translate".equals(control)){
+
+		}
 	}
 
 	@Override
