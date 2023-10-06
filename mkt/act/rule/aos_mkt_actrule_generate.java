@@ -23,7 +23,10 @@ import kd.bos.form.control.events.RowClickEventListener;
 import kd.bos.form.events.BeforeClosedEvent;
 import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
+import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
+import kd.bos.servicehelper.operation.SaveServiceHelper;
+import kd.fi.bd.util.QFBuilder;
 import mkt.act.rule.allCountries.TrackerVipon;
 import mkt.act.rule.de.DotdDE;
 import mkt.act.rule.de.LDAnd7DDDE;
@@ -31,6 +34,8 @@ import mkt.act.rule.de.PocoDE;
 import mkt.act.rule.de.WayfairDE;
 import mkt.act.rule.dotd.GenerateData;
 import mkt.act.rule.es.*;
+import mkt.act.rule.service.ActPlanService;
+import mkt.act.rule.service.impl.ActPlanServiceImpl;
 import mkt.act.rule.uk.*;
 import mkt.act.rule.us.DotdUS;
 import mkt.act.rule.us.EbayDDAndPD;
@@ -210,6 +215,16 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 	}
 
 	private void genActPlan() throws Exception {
+		Object actstatus = this.getModel().getValue("aos_actstatus");
+		if (FndGlobal.IsNotNull(actstatus)){
+			if (String.valueOf(actstatus).equals("E")) {
+				this.getView().showTipNotification("明细导入中，请勿重复点击");
+				return;
+			}
+		}
+		this.getModel().setValue("aos_actstatus","E");
+
+
 		// 获取头信息关键字段
 		Date aos_startdate = (Date) this.getModel().getValue("aos_startdate");
 		Date aos_enddate1 = (Date) this.getModel().getValue("aos_enddate1");
@@ -236,14 +251,50 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 		String ouCode = aos_nationality.getString("number");
 		// 店铺
 		String shop = aos_shop.getString("number");
-		execute(ouCode, shop, actType, this.getModel().getDataEntity());
-		this.getView().invokeOperation("refresh");
-		String noPriceItem = getNoPriceItem();
-		if (noPriceItem.length() > 0) {
-			this.getView().showMessage("以下物料缺失价格：  " + noPriceItem);
-		}
+		//230821 gk :活动明细导入根据用户配置规则筛选物料导入
+		execute(actstatus,aos_nationality,aos_channel,aos_shop,aos_acttype,getModel().getDataEntity(true));
+
+		//execute(ouCode, shop, actType, this.getModel().getDataEntity());
+
+//		String noPriceItem = getNoPriceItem();
+//		if (noPriceItem.length() > 0) {
+//			this.getView().showMessage("以下物料缺失价格：  " + noPriceItem);
+//		}
 		// 从新批量设置活动数量
-		batchSetActQty();
+		//batchSetActQty();
+	}
+	private void execute(Object actstatus,DynamicObject ou,DynamicObject channel ,DynamicObject shop, DynamicObject actType, DynamicObject actPlanEntity){
+		QFBuilder builder = new QFBuilder();
+		builder.add("aos_org","=",ou.getPkValue());
+		builder.add("aos_channel","=",channel.getPkValue());
+		builder.add("aos_shop","=",shop.getPkValue());
+		builder.add("aos_acttype","=",actType.getPkValue());
+		DynamicObject type = QueryServiceHelper.queryOne("aos_sal_act_type_p", "id", builder.toArray());
+		if (type==null) {
+			getView().showTipNotification("活动库选品规则未维护");
+			return;
+		}
+
+		try {
+			SaveServiceHelper.update(actPlanEntity);
+			//获取活动规则
+			DynamicObject acTypEntity = BusinessDataServiceHelper.loadSingle(type.getString("id"), "aos_sal_act_type_p");
+			new EventRule(acTypEntity,actPlanEntity);
+			// 赋值库存信息、活动信息
+			SaveServiceHelper.save(new DynamicObject[]{actPlanEntity});
+			ActPlanService actPlanService = new ActPlanServiceImpl();
+			actPlanEntity = BusinessDataServiceHelper.loadSingle(actPlanEntity.getPkValue(),"aos_act_select_plan");
+			actPlanService.updateActInfo(actPlanEntity);
+			SaveServiceHelper.save(new DynamicObject[]{actPlanEntity});
+
+		}catch (Exception e){
+			getView().showMessage(e.getMessage());
+		}
+		finally {
+			actPlanEntity.set("aos_actstatus",actstatus);
+			SaveServiceHelper.save(new DynamicObject[]{actPlanEntity});
+			getView().invokeOperation("refresh");
+		}
 	}
 
 	/**
