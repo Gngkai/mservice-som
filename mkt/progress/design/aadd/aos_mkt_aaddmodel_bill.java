@@ -7,6 +7,7 @@ import common.fnd.FndError;
 import common.fnd.FndGlobal;
 import common.fnd.FndMsg;
 import common.sal.util.SalUtil;
+import common.sal.util.SaveUtils;
 import kd.bos.bill.AbstractBillPlugIn;
 import kd.bos.context.RequestContext;
 import kd.bos.dataentity.entity.DynamicObject;
@@ -35,6 +36,7 @@ import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.drp.pos.common.util.StringJoin;
 import kd.fi.bd.util.QFBuilder;
 
+@SuppressWarnings("unchecked")
 public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 	private static final String KEY_USER = "LAN"; //用户可操控的语言
 
@@ -64,6 +66,12 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 		AosProductNoChange();
 	}
 
+	@Override
+	public void afterBindData(EventObject e) {
+		super.afterBindData(e);
+		StatusControl();
+	}
+
 	/** 新建事件 **/
 	@Override
 	public void afterCreateNewData(EventObject e) {
@@ -71,7 +79,6 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 		IPageCache iPageCache = this.getPageCache();
 		iPageCache.put("button", "1");
 		openInContainer();
-		StatusControl();
 	}
 
 	@Override
@@ -85,6 +92,7 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 			this.getView().showTipNotification(FndError.getErrorMessage());
 		} catch (Exception ex) {
 			this.getView().showErrorNotification(SalUtil.getExceptionStr(ex));
+			ex.printStackTrace();
 		}
 
 	}
@@ -117,38 +125,74 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 		super.closedCallBack(event);
 		String actionId = event.getActionId();
 		System.out.println("actionId = " + actionId);
-		Object data1 = event.getReturnData();
-		System.out.println("data1 = " + data1);
+		Map<String, Object> returnData = (Map<String, Object>) event.getReturnData();
+		System.out.println("returnData = " + returnData);
+		if (returnData == null)
+			return;
+		if (!returnData.containsKey("no")) {
+			return;
+		}
+
+		Map<String,Object> data = (Map<String, Object>) returnData.get("data");
+		if (!data.containsKey("tab")) {
+			return;
+		}
+		if (!data.containsKey("lan")) {
+			return;
+		}
+
+		List<String> tabs = (List<String>) data.get("tab");
+		List<String> lans = (List<String>) data.get("lan");
 
 		if (actionId.equals("copyTo")){
-			Object data = event.getReturnData();
-			if (data == null)
-				return;
-
-
+			Object source = this.getModel().getDataEntity(true).getPkValue();
+			String products = (String) returnData.get("no");
+			QFBuilder builder = new QFBuilder();
+			for (String no : products.split(",")) {
+				if (FndGlobal.IsNull(no))
+					continue;
+				builder.clear();
+				builder.add("aos_productno","=",no);
+				List<Object> list = QueryServiceHelper.queryPrimaryKeys("aos_aadd_model", builder.toArray(), null, 1);
+				copyValue(source,list.get(0),no,tabs,lans);
+			}
+			this.getView().showSuccessNotification("Copy to Success");
 		}
 		else if (actionId.equals("copyFrom")){
-
+			Object source = this.getModel().getDataEntity(true).getPkValue();
+			String products = (String) returnData.get("no");
+			QFBuilder builder = new QFBuilder();
+			for (String no : products.split(",")) {
+				if (FndGlobal.IsNull(no))
+					continue;
+				builder.clear();
+				builder.add("aos_productno","=",no);
+				List<Object> list = QueryServiceHelper.queryPrimaryKeys("aos_aadd_model", builder.toArray(), null, 1);
+				copyValue(list.get(0),source,no,tabs,lans);
+			}
+			IPageCache iPageCache = this.getPageCache();
+			iPageCache.put("button", "1");
+			openInContainer();
+			this.getView().showSuccessNotification("Copy from Success");
 		}
 	}
 
 	/**
 	 * copy 单据
-	 * @param source	源单据 id
-	 * @param target	目标单据 id
+	 * @param sourceid	源单据 id
+	 * @param targetid	目标单据 id
+	 * @param tarGetNo	目标单 产品号
 	 * @param tabs		页签
 	 * @param lans		语言
 	 */
-	private void copyValue(Object source,Object target,List<String> tabs,List<String> lans){
+	private void copyValue(Object sourceid,Object targetid,Object tarGetNo,List<String> tabs,List<String> lans){
 		//获取源单的相关数据
-		Map<String,Map<String,DynamicObject>> sourceData = findEntiyData(source);
+		Map<String,Map<String,DynamicObject>> sourceData = findEntiyData(sourceid);
 		if (sourceData.size()==0) {
 			return;
 		}
 		//获取目标单据的相关数据
-		Map<String,Map<String,DynamicObject>> targetData = findEntiyData(target);
-
-
+		Map<String,Map<String,DynamicObject>> targetData = findEntiyData(targetid);
 
 		//记录需要修改和保存的数据
 		List<DynamicObject> list_save = new ArrayList<>(),list_update = new ArrayList<>();
@@ -161,6 +205,7 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 			for (Map.Entry<String, DynamicObject> entry : sourceData.get(tab).entrySet()) {
 				DynamicObject sourceRowDy = entry.getValue();
 				DynamicObject targetRowDy = null;
+				//目标单据存在则覆盖
 				if (targetData.containsKey(tab)) {
 					Map<String, DynamicObject> map_tar = targetData.get(tab);
 					if (map_tar.containsKey(entry.getKey())){
@@ -168,17 +213,40 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 						list_update.add(targetRowDy);
 					}
 				}
-
+				//目标单据不存在则新增
 				if (targetRowDy==null){
 					targetRowDy = BusinessDataServiceHelper.newDynamicObject("aos_aadd_model_detail");
-					//targetRowDy.
+					list_save.add(targetRowDy);
+					targetRowDy.set("aos_productno",tarGetNo);
+					targetRowDy.set("aos_sourceid",targetid);
+					targetRowDy.set("aos_button",tab);
+					targetRowDy.set("aos_seq",entry.getKey());
 				}
 
+				//大项，小项
+				targetRowDy.set("aos_cate1",sourceRowDy.get("aos_cate1"));
+				targetRowDy.set("aos_cate2",sourceRowDy.get("aos_cate2"));
 
-
+				//设置每个语种
+				for (String lan : lans) {
+					String field;
+					if (lan.equals("中文")){
+						field = "aos_cn";
+					}
+					else if (lan.equals("CA") || lan.equals("US")){
+						field = "aos_usca";
+					}
+					else {
+						field = "aos_"+lan.toLowerCase();
+					}
+					targetRowDy.set(field,sourceRowDy.get(field));
+				}
+				SaveUtils.SaveEntity("aos_aadd_model_detail",list_save,false);
+				SaveUtils.UpdateEntity(list_update,false);
 			}
-
 		}
+		SaveUtils.SaveEntity("aos_aadd_model_detail",list_save,true);
+		SaveUtils.UpdateEntity(list_update,true);
 	}
 
 	private Map<String,Map<String,DynamicObject>> findEntiyData(Object sourceid){
