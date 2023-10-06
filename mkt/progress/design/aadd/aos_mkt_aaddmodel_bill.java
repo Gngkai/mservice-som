@@ -134,16 +134,22 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 
 	/**
 	 * copy 单据
-	 * @param source	源单据
-	 * @param target	目标单据
+	 * @param source	源单据 id
+	 * @param target	目标单据 id
 	 * @param tabs		页签
 	 * @param lans		语言
 	 */
 	private void copyValue(Object source,Object target,List<String> tabs,List<String> lans){
 		//获取源单的相关数据
 		Map<String,Map<String,DynamicObject>> sourceData = findEntiyData(source);
+		if (sourceData.size()==0) {
+			return;
+		}
 		//获取目标单据的相关数据
 		Map<String,Map<String,DynamicObject>> targetData = findEntiyData(target);
+
+
+
 		//记录需要修改和保存的数据
 		List<DynamicObject> list_save = new ArrayList<>(),list_update = new ArrayList<>();
 		//页签维度
@@ -153,18 +159,32 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 			}
 			//行维度
 			for (Map.Entry<String, DynamicObject> entry : sourceData.get(tab).entrySet()) {
+				DynamicObject sourceRowDy = entry.getValue();
+				DynamicObject targetRowDy = null;
+				if (targetData.containsKey(tab)) {
+					Map<String, DynamicObject> map_tar = targetData.get(tab);
+					if (map_tar.containsKey(entry.getKey())){
+						targetRowDy = map_tar.get(entry.getKey());
+						list_update.add(targetRowDy);
+					}
+				}
 
-				//String aos_seq = sourceRowDy.getString("aos_seq");
+				if (targetRowDy==null){
+					targetRowDy = BusinessDataServiceHelper.newDynamicObject("aos_aadd_model_detail");
+					//targetRowDy.
+				}
+
+
 
 			}
 
 		}
 	}
 
-	private Map<String,Map<String,DynamicObject>> findEntiyData(Object product){
+	private Map<String,Map<String,DynamicObject>> findEntiyData(Object sourceid){
 		Map<String,Map<String,DynamicObject>> result = new HashMap<>();
 		QFBuilder builder = new QFBuilder();
-		builder.add("aos_productno","=",product);
+		builder.add("aos_sourceid","=",sourceid);
 		builder.add("aos_button","!=","");
 		builder.add("aos_seq","!=","");
 		StringJoin str = new StringJoin(",");
