@@ -1,6 +1,5 @@
 package mkt.act.rule;
 
-import com.grapecity.documents.excel.S;
 import common.fms.util.FieldUtils;
 import common.fnd.FndGlobal;
 import common.fnd.FndLog;
@@ -1245,7 +1244,7 @@ public class EventRule {
             String itemid = itemInfoe.getString("id");
             //获取物料对应的公式中每个参数对应的值
             for (Map.Entry<String, Map<String, BigDecimal>> entry : parameters.entrySet()) {
-                calParameters.put(entry.getKey(),entry.getValue().getOrDefault(itemid,BigDecimal.ZERO));
+                calParameters.put(entry.getKey(),entry.getValue().getOrDefault(itemid,BigDecimal.ONE));
             }
             BigDecimal price = new BigDecimal(FormulaEngine.execExcelFormula(priceformula, calParameters).toString());
             price = price.setScale(0,BigDecimal.ROUND_DOWN);
