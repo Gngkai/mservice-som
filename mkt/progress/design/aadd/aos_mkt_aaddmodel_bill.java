@@ -141,18 +141,28 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 	 */
 	private void copyValue(Object source,Object target,List<String> tabs,List<String> lans){
 		//获取源单的相关数据
-		Map<String, List<DynamicObject>> sourceData = findEntiyData(source);
+		Map<String,Map<String,DynamicObject>> sourceData = findEntiyData(source);
 		//获取目标单据的相关数据
-		Map<String, List<DynamicObject>> targetData = findEntiyData(target);
-
+		Map<String,Map<String,DynamicObject>> targetData = findEntiyData(target);
+		//记录需要修改和保存的数据
+		List<DynamicObject> list_save = new ArrayList<>(),list_update = new ArrayList<>();
+		//页签维度
 		for (String tab : tabs) {
+			if (!sourceData.containsKey(tab)) {
+				continue;
+			}
+			//行维度
+			for (Map.Entry<String, DynamicObject> entry : sourceData.get(tab).entrySet()) {
+
+				//String aos_seq = sourceRowDy.getString("aos_seq");
+
+			}
 
 		}
-
 	}
 
-	private Map<String,List<DynamicObject>> findEntiyData(Object product){
-		Map<String,List<DynamicObject>> result = new HashMap<>();
+	private Map<String,Map<String,DynamicObject>> findEntiyData(Object product){
+		Map<String,Map<String,DynamicObject>> result = new HashMap<>();
 		QFBuilder builder = new QFBuilder();
 		builder.add("aos_productno","=",product);
 		builder.add("aos_button","!=","");
@@ -172,8 +182,8 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 		DynamicObject[] dyc = BusinessDataServiceHelper.load("aos_aadd_model_detail", str.toString(), builder.toArray());
 		for (DynamicObject dy : dyc) {
 			String key = dy.getString("aos_button");
-			List<DynamicObject> list = result.computeIfAbsent(key, k -> new ArrayList<>());
-			list.add(dy);
+			Map<String, DynamicObject> map = result.computeIfAbsent(key, k -> new HashMap<>());
+			map.put(dy.getString("aos_seq"),dy);
 		}
 		return result;
 	}
