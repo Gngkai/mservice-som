@@ -14,6 +14,7 @@ import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.dataentity.entity.LocaleString;
 import kd.bos.dataentity.serialization.SerializationUtils;
+import kd.bos.entity.datamodel.events.ImportDataEventArgs;
 import kd.bos.entity.datamodel.events.PropertyChangedArgs;
 import kd.bos.form.ClientProperties;
 import kd.bos.form.FormShowParameter;
@@ -40,6 +41,12 @@ import mkt.common.util.translateUtils;
 @SuppressWarnings("unchecked")
 public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 	private static final String KEY_USER = "LAN"; //用户可操控的语言
+
+	@Override
+	public void afterImportData(ImportDataEventArgs e) {
+		super.afterImportData(e);
+		System.out.println("导入");
+	}
 
 	@Override
 	public void registerListener(EventObject e) {
