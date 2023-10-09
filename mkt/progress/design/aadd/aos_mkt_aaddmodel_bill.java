@@ -35,6 +35,7 @@ import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.drp.pos.common.util.StringJoin;
 import kd.fi.bd.util.QFBuilder;
+import mkt.common.util.translateUtils;
 
 @SuppressWarnings("unchecked")
 public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
@@ -119,7 +120,11 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 			getView().showForm(showParameter);
 		}
 		else if ("aos_translate".equals(control)){
-
+			FormShowParameter showParameter = FndGlobal.CraeteForm(this, "aos_mkt_funct_tran", "trans", null);
+			showParameter.setCaption("Translate Form");
+			List<String> users= (List<String>) SerializationUtils.fromJsonStringToList(this.getPageCache().get(KEY_USER), String.class);
+			showParameter.setCustomParam("userLan",users);
+			getView().showForm(showParameter);
 		}
 	}
 
@@ -132,53 +137,106 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 		System.out.println("returnData = " + returnData);
 		if (returnData == null)
 			return;
-		if (!returnData.containsKey("no")) {
-			return;
-		}
-
-		Map<String,Object> data = (Map<String, Object>) returnData.get("data");
-		if (!data.containsKey("tab")) {
-			return;
-		}
-		if (!data.containsKey("lan")) {
-			return;
-		}
-
-		List<String> tabs = (List<String>) data.get("tab");
-		List<String> lans = (List<String>) data.get("lan");
-
-		if (actionId.equals("copyTo")){
-			Object source = this.getModel().getDataEntity(true).getPkValue();
-			String products = (String) returnData.get("no");
-			QFBuilder builder = new QFBuilder();
-			for (String no : products.split(",")) {
-				if (FndGlobal.IsNull(no))
-					continue;
-				builder.clear();
-				builder.add("aos_productno","=",no);
-				List<Object> list = QueryServiceHelper.queryPrimaryKeys("aos_aadd_model", builder.toArray(), null, 1);
-				copyValue(source,list.get(0),no,tabs,lans);
+		if (actionId.equals("copyTo") ||actionId.equals("copyFrom")){
+			if (!returnData.containsKey("no")) {
+				return;
 			}
-			this.getView().showSuccessNotification("Copy to Success");
-		}
-		else if (actionId.equals("copyFrom")){
-			Object source = this.getModel().getDataEntity(true).getPkValue();
-			String products = (String) returnData.get("no");
-			QFBuilder builder = new QFBuilder();
-			for (String no : products.split(",")) {
-				if (FndGlobal.IsNull(no))
-					continue;
-				builder.clear();
-				builder.add("aos_productno","=",no);
-				List<Object> list = QueryServiceHelper.queryPrimaryKeys("aos_aadd_model", builder.toArray(), null, 1);
-				copyValue(list.get(0),source,no,tabs,lans);
+			Map<String,Object> data = (Map<String, Object>) returnData.get("data");
+			if (!data.containsKey("tab")) {
+				return;
 			}
-			IPageCache iPageCache = this.getPageCache();
-			iPageCache.put("button", "1");
+			if (!data.containsKey("lan")) {
+				return;
+			}
+
+			List<String> tabs = (List<String>) data.get("tab");
+			List<String> lans = (List<String>) data.get("lan");
+			if (actionId.equals("copyTo")){
+				Object source = this.getModel().getDataEntity(true).getPkValue();
+				String products = (String) returnData.get("no");
+				QFBuilder builder = new QFBuilder();
+				for (String no : products.split(",")) {
+					if (FndGlobal.IsNull(no))
+						continue;
+					builder.clear();
+					builder.add("aos_productno","=",no);
+					List<Object> list = QueryServiceHelper.queryPrimaryKeys("aos_aadd_model", builder.toArray(), null, 1);
+					saveEntity();
+					copyValue(source,list.get(0),no,tabs,lans);
+				}
+				this.getView().showSuccessNotification("Copy to Success");
+			}
+			else if (actionId.equals("copyFrom")){
+				Object source = this.getModel().getDataEntity(true).getPkValue();
+				String products = (String) returnData.get("no");
+				QFBuilder builder = new QFBuilder();
+				for (String no : products.split(",")) {
+					if (FndGlobal.IsNull(no))
+						continue;
+					builder.clear();
+					builder.add("aos_productno","=",no);
+					List<Object> list = QueryServiceHelper.queryPrimaryKeys("aos_aadd_model", builder.toArray(), null, 1);
+					copyValue(list.get(0),source,no,tabs,lans);
+				}
+				openInContainer();
+				this.getView().showSuccessNotification("Copy from Success");
+			}
+		}
+		else if (actionId.equals("trans")){
+			if (returnData.get("img")==null)
+				return;
+			if (returnData.get("source")==null)
+				return;
+			if (returnData.get("terminal")==null)
+				return;
+			saveEntity();
+			//翻译前的语言
+			String sourceLan = (String) returnData.get("source");
+			String field = judgeLan(sourceLan);
+
+			//翻译后的语言
+			List<String> list_terminal = (List<String>) returnData.get("terminal");
+			List<String> list_table = (List<String>) returnData.get("img");
+			Map<String, Map<String, DynamicObject>> entiyData = findEntiyData(getModel().getDataEntity().getPkValue());
+
+			//语言
+			for (String lan : list_terminal) {
+				//判断对应的字段
+
+				//记录页签下的数据
+				List<DynamicObject> list_row = new ArrayList<>();
+				List<String> list_text = new ArrayList<>();
+				for (String tab : list_table) {
+					//当前页签下的数据
+					Map<String, DynamicObject> tableData = entiyData.get(tab);
+					for (DynamicObject rowData : tableData.values()) {
+						String text = rowData.getString(field);
+						if (FndGlobal.IsNotNull(text)) {
+							list_row.add(rowData);
+							list_text.add(text);
+						}
+					}
+				}
+				List<String> list_transalate = translateUtils.transalate(sourceLan, lan, list_text);
+				//翻译完成进行赋值
+				String transField = judgeLan(lan);
+				for (int i = 0; i < list_row.size(); i++) {
+					DynamicObject dy_row = list_row.get(i);
+					dy_row.set(transField,list_transalate.get(i));
+				}
+			}
+			List<DynamicObject> update = new ArrayList<>();
+			for (Map.Entry<String, Map<String, DynamicObject>> mapEntry : entiyData.entrySet()) {
+				for (Map.Entry<String, DynamicObject> entry : mapEntry.getValue().entrySet()) {
+					update.add(entry.getValue());
+				}
+			}
+			SaveUtils.UpdateEntity(update,true);
 			openInContainer();
-			this.getView().showSuccessNotification("Copy from Success");
+			this.getView().showSuccessNotification("Translate Success");
 		}
 	}
+
 
 	/**
 	 * copy 单据
@@ -232,16 +290,7 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 
 				//设置每个语种
 				for (String lan : lans) {
-					String field;
-					if (lan.equals("中文")){
-						field = "aos_cn";
-					}
-					else if (lan.equals("CA") || lan.equals("US")){
-						field = "aos_usca";
-					}
-					else {
-						field = "aos_"+lan.toLowerCase();
-					}
+					String field = judgeLan(lan);
 					targetRowDy.set(field,sourceRowDy.get(field));
 				}
 				SaveUtils.SaveEntity("aos_aadd_model_detail",list_save,false);
@@ -250,6 +299,20 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 		}
 		SaveUtils.SaveEntity("aos_aadd_model_detail",list_save,true);
 		SaveUtils.UpdateEntity(list_update,true);
+	}
+	
+	private String judgeLan(String lan){
+		String field;
+		if (lan.equals("中文")){
+			field = "aos_cn";
+		}
+		else if (lan.equals("CA") || lan.equals("US") || lan.equals("EN")){
+			field = "aos_usca";
+		}
+		else {
+			field = "aos_"+lan.toLowerCase();
+		}
+		return field;
 	}
 
 	private Map<String,Map<String,DynamicObject>> findEntiyData(Object sourceid){
