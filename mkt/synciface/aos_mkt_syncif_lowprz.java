@@ -1,5 +1,6 @@
 package mkt.synciface;
 
+import common.fnd.FndMsg;
 import kd.bos.context.RequestContext;
 import kd.bos.dataentity.OperateOption;
 import kd.bos.dataentity.entity.DynamicObject;
@@ -15,6 +16,7 @@ import common.sal.impl.ComImpl;
 import common.sal.impl.ComImpl2;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.alibaba.fastjson.JSONArray;
@@ -43,17 +45,18 @@ public class aos_mkt_syncif_lowprz extends AbstractTask {
 		Map<String, String> countryIdMap = queryCountryIdMap();
 		Map<String, String> materialIdMap = queryMaterialIdMap();
 		int length = p_ret_cursor.size();
+		FndMsg.debug("length:"+length);
 		for (Object o : p_ret_cursor) {
-			JSONObject LowPrzRpt = (JSONObject) o;
+			LinkedHashMap LowPrzRpt = (LinkedHashMap) o;
 			DynamicObject aos_base_lowprz = BusinessDataServiceHelper.newDynamicObject("aos_base_lowprz");
 			String aos_itemnum = (String) LowPrzRpt.get("MHSKU");
 			String ou_name = (String) LowPrzRpt.get("OU_NAME");
 			aos_base_lowprz.set("billstatus", "A");
 			aos_base_lowprz.set("aos_orgid", countryIdMap.getOrDefault(ou_name, "0"));
 			aos_base_lowprz.set("aos_itemid", materialIdMap.getOrDefault(aos_itemnum, "0"));
-			aos_base_lowprz.set("aos_min_price", LowPrzRpt.get("min_price"));
-			aos_base_lowprz.set("aos_min_price30", LowPrzRpt.get("min_price30"));
-			aos_base_lowprz.set("aos_min_price365", LowPrzRpt.get("min_price365"));
+			aos_base_lowprz.set("aos_min_price", LowPrzRpt.get("MIN_PRICE"));
+			aos_base_lowprz.set("aos_min_price30", LowPrzRpt.get("MIN_PRICE30"));
+			aos_base_lowprz.set("aos_min_price365", LowPrzRpt.get("MIN_PRICE365"));
 			OperationServiceHelper.executeOperate("save", "aos_base_lowprz",
 					new DynamicObject[]{aos_base_lowprz}, OperateOption.create());
 		}
