@@ -247,7 +247,7 @@ public class aos_mkt_funcreq_init extends AbstractTask {
 	}
 
 	/**判断物料的国别是否应该加入到下单国别 **/
-	private static void addItemOrg (DynamicObject  aos_contryentry,Object item_id,List<String> list_org,List<String> list_allOrg){
+	public static void addItemOrg (DynamicObject  aos_contryentry,Object item_id,List<String> list_org,List<String> list_allOrg){
 		DynamicObject aos_nationality = aos_contryentry.getDynamicObject("aos_nationality");
 		String aos_nationalitynumber = aos_nationality.getString("number");
 		if ("IE".equals(aos_nationalitynumber))

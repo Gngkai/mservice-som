@@ -2,6 +2,7 @@ package mkt.progress.design.aadd;
 
 import java.util.*;
 
+import com.google.common.base.Joiner;
 import common.Cux_Common_Utl;
 import common.fnd.FndError;
 import common.fnd.FndGlobal;
@@ -24,6 +25,7 @@ import kd.bos.form.ShowType;
 import kd.bos.form.control.Button;
 import kd.bos.form.control.Control;
 import kd.bos.form.control.events.ItemClickEvent;
+import kd.bos.form.events.BeforeClosedEvent;
 import kd.bos.form.events.BeforeDoOperationEventArgs;
 import kd.bos.form.events.ClosedCallBackEvent;
 import kd.bos.form.operate.FormOperate;
@@ -37,16 +39,11 @@ import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.drp.pos.common.util.StringJoin;
 import kd.fi.bd.util.QFBuilder;
 import mkt.common.util.translateUtils;
+import mkt.progress.design.aos_mkt_funcreq_init;
 
 @SuppressWarnings("unchecked")
 public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 	private static final String KEY_USER = "LAN"; //用户可操控的语言
-
-	@Override
-	public void afterImportData(ImportDataEventArgs e) {
-		super.afterImportData(e);
-		System.out.println("导入");
-	}
 
 	@Override
 	public void registerListener(EventObject e) {
@@ -80,7 +77,6 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 		StatusControl();
 	}
 
-	/** 新建事件 **/
 	@Override
 	public void afterCreateNewData(EventObject e) {
 		super.afterCreateNewData(e);
@@ -244,6 +240,64 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 		}
 	}
 
+	@Override
+	public void beforeDoOperation(BeforeDoOperationEventArgs args) {
+		FormOperate formOperate = (FormOperate) args.getSource();
+		String Operatation = formOperate.getOperateKey();
+		if ("save".equals(Operatation)) {
+			setProductItem(this.getModel().getDataEntity(true));
+			saveEntity();
+		}
+	}
+
+	@Override
+	public void afterImportData(ImportDataEventArgs e) {
+		super.afterImportData(e);
+		DynamicObject entity = this.getModel().getDataEntity(true);
+		setProductItem(entity);
+	}
+
+	@Override
+	public void beforeClosed(BeforeClosedEvent e) {
+		super.beforeClosed(e);
+		DynamicObject dataEntity = this.getModel().getDataEntity(true);
+		Set<String> fields= new HashSet<>();
+		fields.add("aos_picturefield");
+		SalUtil.skipVerifyFieldChanged(dataEntity,dataEntity.getDynamicObjectType(),fields);
+	}
+
+	/**
+	 * 设置兄弟货号
+	 * @param dy_main 单据
+	 */
+	private Boolean setProductItem(DynamicObject dy_main){
+		String aos_productno = dy_main.getString("aos_productno");
+		if (FndGlobal.IsNull(aos_productno)) {
+			return false;
+		}
+		DynamicObjectCollection productEntity = dy_main.getDynamicObjectCollection("aos_entryentity2");
+		if (productEntity.size()>0) {
+			return false;
+		}
+		QFilter filter_productno = new QFilter("aos_productno", "=", aos_productno);// 未导入标记
+		QFilter[] filters = new QFilter[] { filter_productno };
+		DynamicObjectCollection bd_materialSameS = QueryServiceHelper.query("bd_material", "id", filters);
+		List<String> list_orgtext_total = new ArrayList<>();
+		for (DynamicObject bd_materialSame : bd_materialSameS) {
+			Object item_id = bd_materialSame.get("id");
+			List<String> list_orgtext = new ArrayList<>();
+			DynamicObject material = BusinessDataServiceHelper.loadSingle(item_id, "bd_material");
+			DynamicObjectCollection aos_contryentryS = material.getDynamicObjectCollection("aos_contryentry");
+			// 获取所有国家品牌 字符串拼接 终止
+			for (DynamicObject aos_contryentry : aos_contryentryS) {
+				aos_mkt_funcreq_init.addItemOrg(aos_contryentry,item_id,list_orgtext,list_orgtext_total);
+			}
+			DynamicObject aos_entryentity2 = productEntity.addNew();
+			aos_entryentity2.set("aos_itemid",material);
+			aos_entryentity2.set("aos_orgdetail", Joiner.on(";").join(list_orgtext));
+		}
+		return true;
+	}
 
 	/**
 	 * copy 单据
@@ -355,14 +409,6 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 	private void aos_change() {
 		FndMsg.debug("=====into aos_change=====");
 		FndGlobal.OpenForm(this, "aos_aadd_model_show", null);
-	}
-
-	public void beforeDoOperation(BeforeDoOperationEventArgs args) {
-		FormOperate formOperate = (FormOperate) args.getSource();
-		String Operatation = formOperate.getOperateKey();
-		if ("save".equals(Operatation)) {
-			saveEntity();
-		}
 	}
 
 	/**
@@ -498,5 +544,4 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 		}
 		this.getPageCache().put(KEY_USER,SerializationUtils.toJsonString(userCopyLanguage));
 	}
-
 }
