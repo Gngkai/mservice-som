@@ -650,6 +650,7 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 		Map<String, String> productIdMap = getProductIdMap(aos_orgid);
 		Map<String, String> groupIdMap = getGroupIdMap(aos_orgid);
 		Map<String, String> itemIdMap = getItemIdMap(aos_orgid);
+		Map<String, String> targetIdMap = getTargetIdMap(aos_orgid);
 		Map<String, String> portfolio = initSerialRoi(fid, aos_orgid);// 特殊广告
 		Map<String, String> portid = initportid(fid, aos_orgid);// 特殊广告
 		BigDecimal exRateWellSt = aos_mkt_popppc_init.getExRateLowSt(p_ou_code, "优");
@@ -830,6 +831,11 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 					bid = aos_bid.multiply(BigDecimal.valueOf(1.3)).setScale(2, BigDecimal.ROUND_HALF_UP);
 					CreateColumn(ProductRow, style, 18, bid);
 					CreateColumn(ProductRow, style, 24, "close-match");
+					CreateColumn(ProductRow, style, 8, targetIdMap.getOrDefault(
+							aos_productno + "~" + aos_itemnumer + "~" + aos_shopsku + "~"
+							+"close-match" , ""));
+
+
 					// 组第四行
 					row = sheet.getLastRowNum() + 1;
 					ProductRow = sheet.createRow(row);
@@ -842,6 +848,9 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 					bid = aos_bid.multiply(BigDecimal.valueOf(0.7)).setScale(2, BigDecimal.ROUND_HALF_UP);
 					CreateColumn(ProductRow, style, 18, aos_bid);
 					CreateColumn(ProductRow, style, 24, "loose-match");
+					CreateColumn(ProductRow, style, 8, targetIdMap.getOrDefault(
+							aos_productno + "~" + aos_itemnumer + "~" + aos_shopsku + "~"
+									+"loose-match" , ""));
 					// 组第五行
 					row = sheet.getLastRowNum() + 1;
 					ProductRow = sheet.createRow(row);
@@ -853,6 +862,9 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 					CreateColumn(ProductRow, style, 14, GroupStatus);
 					CreateColumn(ProductRow, style, 18, aos_bid);
 					CreateColumn(ProductRow, style, 24, "complements");
+					CreateColumn(ProductRow, style, 8, targetIdMap.getOrDefault(
+							aos_productno + "~" + aos_itemnumer + "~" + aos_shopsku + "~"
+									+"complements" , ""));
 					// 组第六行
 					row = sheet.getLastRowNum() + 1;
 					ProductRow = sheet.createRow(row);
@@ -864,6 +876,9 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 					CreateColumn(ProductRow, style, 14, GroupStatus);
 					CreateColumn(ProductRow, style, 18, aos_bid);
 					CreateColumn(ProductRow, style, 24, "substitutes");
+					CreateColumn(ProductRow, style, 8, targetIdMap.getOrDefault(
+							aos_productno + "~" + aos_itemnumer + "~" + aos_shopsku + "~"
+									+"substitutes" , ""));
 				}
 				// 对于置顶位置出价
 				ProductRow = sheet.getRow(TopOfSearch);
@@ -871,6 +886,18 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 			}
 		}
 		aos_mkt_popppc_initS.close();
+	}
+
+	private Map<String, String> getTargetIdMap(String aos_orgid) {
+		DynamicObjectCollection list = QueryServiceHelper.query("aos_base_popid",
+				"aos_productno,aos_itemnumer,aos_shopsku,aos_target,aos_targetid",
+				new QFilter[] { new QFilter("aos_orgid", QCP.equals, aos_orgid) });
+		return list.stream()
+				.collect(
+						Collectors.toMap(
+								obj -> obj.getString("aos_productno") + "~" + obj.getString("aos_itemnumer") + "~"
+										+ obj.getString("aos_shopsku")+"~"+obj.getString("aos_target"),
+								obj -> obj.getString("aos_targetid"), (k1, k2) -> k1));
 	}
 
 	private Map<String, String> getItemIdMap(String aos_orgid) {
