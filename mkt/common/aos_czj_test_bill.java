@@ -3,11 +3,13 @@ package mkt.common;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.DecimalFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import common.fnd.FndGlobal;
+import common.fnd.FndLog;
 import common.sal.util.SalUtil;
 import common.sal.util.SaveUtils;
 import kd.bos.bill.AbstractBillPlugIn;
@@ -49,7 +51,7 @@ public class aos_czj_test_bill extends AbstractBillPlugIn implements ItemClickLi
 		if (Control.equals("aos_test")){
 			log.info("迁移开始： {}"+ LocalDateTime.now().toString());
 			try {
-				syncItemKeyword();
+				find();
 			}catch (Exception e){
 				StringWriter sw = new StringWriter();
 				e.printStackTrace(new PrintWriter(sw));
@@ -58,6 +60,58 @@ public class aos_czj_test_bill extends AbstractBillPlugIn implements ItemClickLi
 			log.info("迁移结束： {}"+ LocalDateTime.now().toString());
 		}
 	}
+
+	public  void find() {
+
+		DynamicObject orgEntity = this.getModel().getDataEntity(true).getDynamicObject("aos_orgid");
+		QFBuilder builder = new QFBuilder();
+		builder.clear();
+		builder.add("aos_org","=",orgEntity.getPkValue());
+		builder.add("aos_assessment.number","=","Y");
+		DynamicObjectCollection dyc = QueryServiceHelper.query("aos_sal_act_type_p", "aos_acttype", builder.toArray());
+		List<String> listActTypes = new ArrayList<>(dyc.size());
+		for (DynamicObject dy : dyc) {
+			listActTypes.add(dy.getString("aos_acttype"));
+		}
+		LocalDate now = LocalDate.now();
+
+		builder.clear();
+		builder.add("aos_nationality","=",orgEntity.getPkValue());
+		List<String> channels = Arrays.asList("AMAZON", "EBAY");
+		builder.add("aos_channel.number",QFilter.not_in,channels);
+		String shop = orgEntity.getString("number")+"-Wayfair";
+		builder.add("aos_shop.number","!=",shop);
+		//大型活动
+		List<String> actType = Arrays.asList("B", "C");
+		builder.add("aos_act_type",QFilter.not_in,actType);
+		//活动为平台活动
+		builder.add("aos_acttype",QFilter.in,listActTypes);
+		builder.add("aos_sal_actplanentity.aos_itemnum","!=","");
+		//活动时间
+		builder.add("aos_sal_actplanentity.aos_enddate",">=",now.withDayOfMonth(1).toString());
+		builder.add("aos_sal_actplanentity.aos_enddate","<",now.withDayOfMonth(1).plusMonths(1).toString());
+		log.info("查询活动条件： {} ",builder);
+
+		dyc = QueryServiceHelper.query("aos_act_select_plan",
+				"billno,aos_sal_actplanentity.aos_itemnum aos_itemnum,aos_sal_actplanentity.aos_itemnum.number number", builder.toArray());
+		log.info("查询结果长度：  {}",dyc.size());
+
+		FndLog fndLog = FndLog.init("活动插叙测试", LocalDate.now().toString());
+
+		Map<String,Integer> itemActNumber = new HashMap<>(dyc.size());
+		for (DynamicObject dy : dyc) {
+			String item = dy.getString("aos_itemnum");
+			int actFreq = itemActNumber.getOrDefault(item, 0)+1;
+			fndLog.add("单号： "+dy.getString("billno")+"   物料：  "+dy.getString("number")+"  次数： "+actFreq);
+			if (actFreq>2){
+
+			}
+			else {
+				itemActNumber.put(item,actFreq);
+			}
+		}
+	}
+
 	/** 同步敏感词库 **/
 	private void aos_test() {
 		Log log = LogFactory.getLog("mkt.common.aos_czj_test_bill");

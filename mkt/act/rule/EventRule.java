@@ -396,6 +396,8 @@ public class EventRule {
         //获取多次活动的SKU
         Set<String> ruleItem = getRuleItem();
 
+        logger.info("单号： {} 多次活动sku：{} ",actPlanEntity.getString("billno"),ruleItem.size());
+
         cateItem = new HashMap<>();
         StringJoiner str = new StringJoiner(",");
         str.add("material");
@@ -456,6 +458,8 @@ public class EventRule {
             }
         }
         DynamicObjectCollection dyc = itemDao.listItemObj(selectFields.toString(), filter, null);
+        logger.info("单号： {}  查询物料长度：{} ",actPlanEntity.getString("billno"),dyc.size());
+
         itemInfoes = new ArrayList<>(dyc.size());
         itemInfoes.addAll(dyc);
         //设置毛利率过滤
@@ -470,6 +474,7 @@ public class EventRule {
                 itemInfoes.add(row);
             }
         }
+        logger.info("单号： {}  毛利率计算后物料长度：{} ",actPlanEntity.getString("billno"),itemInfoes.size());
 
         //设置物料品类
         builder.clear();
@@ -554,6 +559,9 @@ public class EventRule {
         //活动为平台活动
         builder.add("aos_acttype",QFilter.in,listActTypes);
         builder.add("aos_sal_actplanentity.aos_itemnum","!=","");
+        //活动时间
+        builder.add("aos_sal_actplanentity.aos_enddate",">=",now.withDayOfMonth(1).toString());
+        builder.add("aos_sal_actplanentity.aos_enddate","<",now.withDayOfMonth(1).plusMonths(1).toString());
 
         dyc = QueryServiceHelper.query("aos_act_select_plan",
                 "aos_sal_actplanentity.aos_itemnum aos_itemnum,aos_sal_actplanentity.aos_itemnum.number number", builder.toArray());
@@ -562,13 +570,11 @@ public class EventRule {
         for (DynamicObject dy : dyc) {
             String item = dy.getString("aos_itemnum");
             int actFreq = itemActNumber.getOrDefault(item, 0)+1;
-            if (actFreq>2){
+            if (actFreq==3){
                 fndLog.add(dy.getString("number")+"  多次活动剔除");
-
+                result.add(item);
             }
-            else {
-                itemActNumber.put(item,actFreq);
-            }
+            itemActNumber.put(item,actFreq);
         }
         return result;
     }
