@@ -930,7 +930,7 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 			} else {
 				aos_mkt_addtrack = BusinessDataServiceHelper.newDynamicObject("aos_mkt_addtrack");
 				aos_mkt_addtrack.set("aos_" + ou, true);
-				aos_mkt_addtrack.set("aos_itemid", ou);
+				aos_mkt_addtrack.set("aos_itemid", aos_itemid);
 			}
 			OperationServiceHelper.executeOperate("save", "aos_mkt_addtrack", new DynamicObject[] { aos_mkt_addtrack },
 					OperateOption.create());
@@ -940,9 +940,21 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 		} else if ("SM_04".equals(type)) {
 			aosMktAadd.set("aos_user", aosMktProgUser.get("aos_designassit"));
 			aosMktAadd.set("aos_status", "设计制作");
+			// 将对应A+需求表对应国别勾选
+			DynamicObject aos_mkt_addtrack = BusinessDataServiceHelper.loadSingleFromCache("aos_mkt_addtrack",
+					new QFilter("aos_itemid", QCP.equals, aos_itemid.getPkValue()).toArray());
+			if (FndGlobal.IsNotNull(aos_mkt_addtrack)) {
+				aos_mkt_addtrack.set("aos_" + ou, true);
+			} else {
+				aos_mkt_addtrack = BusinessDataServiceHelper.newDynamicObject("aos_mkt_addtrack");
+				aos_mkt_addtrack.set("aos_" + ou, true);
+				aos_mkt_addtrack.set("aos_itemid", aos_itemid);
+			}
+			OperationServiceHelper.executeOperate("save", "aos_mkt_addtrack", new DynamicObject[] { aos_mkt_addtrack },
+					OperateOption.create());
 		} else if ("SM_02".equals(type)) {
 			aosMktAadd.set("aos_user", aosMktProgOrgUser.get("aos_oueditor"));
-			aosMktAadd.set("aos_status", "国别编辑");
+			aosMktAadd.set("aos_status", "文案确认");
 		}
 
 		DynamicObjectCollection aos_entryentityS = aosMktAadd.getDynamicObjectCollection("aos_entryentity");
