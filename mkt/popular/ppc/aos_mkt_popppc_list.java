@@ -573,15 +573,15 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 			BigDecimal aos_rpt_roi = aos_entryentity.getBigDecimal("aos_rpt_roi");
 
 			if (aos_rpt_roi.compareTo(exRateWellSt) > 0 && aos_roi.compareTo(WORRY) > 0) {
-				comp.put(aos_productno, "Dynamic bidding(up and down)");
+				comp.put(aos_productno, "Dynamic bids - up and down");
 			} else if (("A".equals(aos_entryentity.getString("aos_contryentrystatus"))
 					|| ((FndGlobal.IsNotNull(aos_firstindate))
 							&& (FndDate.GetBetweenDays(new Date(), aos_firstindate) < 30)))
-					&& !"Dynamic bidding(up and down)".equals(comp.get(aos_productno))) {
-				comp.put(aos_productno, "Fixed bids");
-			} else if (!"Fixed bids".equals(comp.get(aos_productno))
-					&& !"Dynamic bidding(up and down)".equals(comp.get(aos_productno))) {
-				comp.put(aos_productno, "Dynamic bidding (down only)");
+					&& !"Dynamic bids - up and down".equals(comp.get(aos_productno))) {
+				comp.put(aos_productno, "Fixed bid");
+			} else if (!"Fixed bid".equals(comp.get(aos_productno))
+					&& !"Dynamic bids - up and down".equals(comp.get(aos_productno))) {
+				comp.put(aos_productno, "Dynamic bids - down only");
 			}
 		}
 
@@ -614,14 +614,14 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 		// 创建标题
 		XSSFRow headRow = sheet.createRow(0);
 		CreateColumn(headRow, style, 0, "Product");
-		CreateColumn(headRow, style, 1, "Enity");
+		CreateColumn(headRow, style, 1, "Entity");
 		CreateColumn(headRow, style, 2, "Operation");
-		CreateColumn(headRow, style, 3, "Campaign Id");
-		CreateColumn(headRow, style, 4, "Ad Group Id");
-		CreateColumn(headRow, style, 5, "Portfolio Id");
-		CreateColumn(headRow, style, 6, "Ad Id (Read only)");
-		CreateColumn(headRow, style, 7, "Keyword Id (Read only)");
-		CreateColumn(headRow, style, 8, "Product Targeting Id (Read only)");
+		CreateColumn(headRow, style, 3, "Campaign ID");
+		CreateColumn(headRow, style, 4, "Ad Group ID");
+		CreateColumn(headRow, style, 5, "Portfolio ID");
+		CreateColumn(headRow, style, 6, "Ad ID");
+		CreateColumn(headRow, style, 7, "Keyword ID");
+		CreateColumn(headRow, style, 8, "Product Targeting ID");
 		CreateColumn(headRow, style, 9, "Campaign Name");
 		CreateColumn(headRow, style, 10, "Ad Group Name");
 		CreateColumn(headRow, style, 11, "Start Date");
@@ -698,7 +698,7 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 			if (NewSerialFlag)
 				campaignId = aos_productno;
 			else
-				campaignId = productIdMap.get(aos_productno);
+				campaignId = productIdMap.getOrDefault(aos_productno,aos_productno);
 
 			// 每个系列下 创建三行数据
 			// 系列第一行
@@ -711,7 +711,6 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 			if (FndGlobal.IsNotNull(portfolio.get(aos_productno)))
 				CreateColumn(ProductRow, style, 5, portid.get(portfolio.get(aos_productno)));
 			CreateColumn(ProductRow, style, 9, aos_productno);
-			CreateColumn(ProductRow, style, 11, formatter.format(aos_makedate));
 			CreateColumn(ProductRow, style, 13, "AUTO");
 			CreateColumn(ProductRow, style, 14, SerialStatus);
 			CreateColumn(ProductRow, style, 15, aos_budget);
@@ -769,7 +768,7 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 				if (NewGroupFlag)
 					adGroupId = aos_itemnumer;
 				else
-					adGroupId = groupIdMap.get(aos_productno + "~" + aos_itemnumer);
+					adGroupId = groupIdMap.getOrDefault(aos_productno + "~" + aos_itemnumer,aos_itemnumer);
 
 				// 每个组要创建六行数据
 				// 组第一行
