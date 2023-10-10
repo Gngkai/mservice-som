@@ -1,6 +1,5 @@
 package mkt.act.rule;
 
-import common.fms.util.FieldUtils;
 import common.fnd.FndGlobal;
 import common.fnd.FndLog;
 import common.sal.sys.basedata.dao.ItemCategoryDao;
@@ -13,6 +12,7 @@ import common.sal.sys.sync.service.AvailableDaysService;
 import common.sal.sys.sync.service.ItemCacheService;
 import common.sal.sys.sync.service.impl.AvailableDaysServiceImpl;
 import common.sal.sys.sync.service.impl.ItemCacheServiceImpl;
+import common.sal.util.SalUtil;
 import kd.bos.algo.Algo;
 import kd.bos.algo.AlgoContext;
 import kd.bos.algo.DataSet;
@@ -667,7 +667,7 @@ public class EventRule {
     private Map<String,Boolean> cachedData (String rule,String dataType,DynamicObject row){
         Map<String,Boolean> result = new HashMap<>(itemInfoes.size());
         //获取下拉列表
-        rowRuleName = FieldUtils.getComboMap("aos_sal_act_type_p", "aos_project");
+        rowRuleName = SalUtil.getComboMap("aos_sal_act_type_p", "aos_project");
         switch (dataType){
             case "overseasStock":
                 //海外库存
@@ -840,7 +840,7 @@ public class EventRule {
         }
         itemStatus = new HashMap<>(itemInfoes.size());
         //获取下拉列表
-        Map<String, String> countryStatus = FieldUtils.getComboMap("bd_material", "aos_contryentrystatus");
+        Map<String, String> countryStatus = SalUtil.getComboMap("bd_material", "aos_contryentrystatus");
 
         for (DynamicObject infoe : itemInfoes) {
             String itemid = infoe.getString("id");
@@ -1360,7 +1360,7 @@ public class EventRule {
             return;
         }
         //获取下拉列表
-        Map<String, String> typeValue = FieldUtils.getComboMap("aos_base_stitem", "aos_type");
+        Map<String, String> typeValue = SalUtil.getComboMap("aos_base_stitem", "aos_type");
         QFBuilder builder = new QFBuilder();
         builder.add("aos_orgid","=",orgEntity.getPkValue());
         builder.add("aos_itemid","!=","");
@@ -1974,6 +1974,8 @@ public class EventRule {
      */
     private Map<String,BigDecimal> setDiscount(){
         BigDecimal discount = actPlanEntity.getBigDecimal("aos_disstrength");
+        if (discount ==null)
+            discount = BigDecimal.ONE;
         Map<String,BigDecimal> result = new HashMap<>(itemInfoes.size());
         for (DynamicObject infoe : itemInfoes) {
             result.put(infoe.getString("id"),discount);
