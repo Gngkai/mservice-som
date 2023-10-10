@@ -1,6 +1,5 @@
 package mkt.act.rule;
 
-import common.fms.util.FieldUtils;
 import common.fnd.FndGlobal;
 import common.fnd.FndLog;
 import common.sal.sys.basedata.dao.ItemCategoryDao;
@@ -59,7 +58,6 @@ public class EventRule {
     //物料对应的品类
     private Map<String,DynamicObject> cateItem;
     public EventRule(DynamicObject typeEntity,DynamicObject dy_main){
-
         try {
             this.typEntity = typeEntity;
             this.actPlanEntity = dy_main;
@@ -137,7 +135,10 @@ public class EventRule {
      */
     public void implementFormula(){
         String ruleValue = typEntity.getString("aos_rule_v");
-        String[] parameterKey = FormulaEngine.extractVariables(ruleValue);
+        String[] parameterKey = new String[0];
+        if (FndGlobal.IsNotNull(ruleValue)){
+          parameterKey = FormulaEngine.extractVariables(ruleValue);
+        }
         Map<String,Object> parameters = new HashMap<>(parameterKey.length);
         //选品数
         int selectQty = 100;
@@ -162,6 +163,8 @@ public class EventRule {
         for (DynamicObject itemInfoe : itemInfoes) {
             String itemId = itemInfoe.getString("id");
             //获取物料品类
+            if (!cateItem.containsKey(itemId))
+                continue;
             String cate = cateItem.get(itemId).getString("gnumber").split(",")[0];
             if (!alreadyFilledCate.containsKey(cate)){
                 continue;
@@ -430,7 +433,9 @@ public class EventRule {
         selectFields.add("aos_contryentry.aos_festivalseting.number festival");
         selectFields.add("aos_contryentry.aos_seasonseting.aos_seasonal_pro.number seasonpro");
         QFilter filter = new QFilter("aos_contryentry.aos_nationality","=",orgEntity.getPkValue());
-        filter.and(new QFilter("id",QFilter.in,cateItem.keySet()));
+        if (cateItem.size()>0)
+            filter.and(new QFilter("id",QFilter.in,cateItem.keySet()));
+        filter.and(new QFilter("id",QFilter.not_in,ruleItem));
         if (itemids!=null && itemids.size()>0){
           filter.and(new QFilter("id",QFilter.in,itemids));
         }
@@ -464,6 +469,15 @@ public class EventRule {
                 fillItem.add(itemid);
                 itemInfoes.add(row);
             }
+        }
+
+        //设置物料品类
+        builder.clear();
+        builder.add("material",QFilter.in,fillItem);
+        DynamicObjectCollection cateResults = categoryDao.queryData(str.toString(), builder);
+        cateItem.clear();
+        for (DynamicObject result : cateResults) {
+            cateItem.put(result.getString("material"),result);
         }
     }
 
@@ -667,7 +681,7 @@ public class EventRule {
     private Map<String,Boolean> cachedData (String rule,String dataType,DynamicObject row){
         Map<String,Boolean> result = new HashMap<>(itemInfoes.size());
         //获取下拉列表
-        rowRuleName = FieldUtils.getComboMap("aos_sal_act_type_p", "aos_project");
+        rowRuleName = MKTCom.getComboMap("aos_sal_act_type_p", "aos_project");
         switch (dataType){
             case "overseasStock":
                 //海外库存
@@ -840,7 +854,7 @@ public class EventRule {
         }
         itemStatus = new HashMap<>(itemInfoes.size());
         //获取下拉列表
-        Map<String, String> countryStatus = FieldUtils.getComboMap("bd_material", "aos_contryentrystatus");
+        Map<String, String> countryStatus = MKTCom.getComboMap("bd_material", "aos_contryentrystatus");
 
         for (DynamicObject infoe : itemInfoes) {
             String itemid = infoe.getString("id");
@@ -1360,7 +1374,7 @@ public class EventRule {
             return;
         }
         //获取下拉列表
-        Map<String, String> typeValue = FieldUtils.getComboMap("aos_base_stitem", "aos_type");
+        Map<String, String> typeValue = MKTCom.getComboMap("aos_base_stitem", "aos_type");
         QFBuilder builder = new QFBuilder();
         builder.add("aos_orgid","=",orgEntity.getPkValue());
         builder.add("aos_itemid","!=","");
@@ -1974,6 +1988,8 @@ public class EventRule {
      */
     private Map<String,BigDecimal> setDiscount(){
         BigDecimal discount = actPlanEntity.getBigDecimal("aos_disstrength");
+        if (discount ==null)
+            discount = BigDecimal.ONE;
         Map<String,BigDecimal> result = new HashMap<>(itemInfoes.size());
         for (DynamicObject infoe : itemInfoes) {
             result.put(infoe.getString("id"),discount);
