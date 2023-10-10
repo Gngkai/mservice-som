@@ -276,6 +276,7 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 		}
 
 		try {
+			actPlanEntity.set("aos_actstatus","E");
 			SaveServiceHelper.update(actPlanEntity);
 			//获取活动规则
 			DynamicObject acTypEntity = BusinessDataServiceHelper.loadSingle(type.getString("id"), "aos_sal_act_type_p");
