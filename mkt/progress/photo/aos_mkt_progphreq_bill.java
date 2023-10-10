@@ -3118,6 +3118,9 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		aos_mkt_rcv.set("aos_requiredate", new Date());
 		aos_mkt_rcv.set("aos_orignbill", aos_billno);
 		aos_mkt_rcv.set("aos_sourceid", ReqFId);
+		aos_mkt_rcv.set("aos_is_saleout", dy_main.get("aos_is_saleout"));
+
+
 		/*
 		 * aos_mkt_rcv.set("aos_returnreason",
 		 * dy_main.getDynamicObjectCollection("aos_entryentity3").get(0).get(
