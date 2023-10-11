@@ -55,6 +55,8 @@ public class parainfo {
 			qFilters.add(new QFilter("aos_status", QCP.equals, "已完成").or("aos_status", QCP.equals, "结束"));
 		else if ("false".equals(iPageCache.get("p_close_flag")))
 			qFilters.add(new QFilter("aos_status", QCP.not_equals, "已完成").and("aos_status", QCP.not_equals, "结束"));
+		else if ("all".equals(iPageCache.get("p_close_flag")))
+			;
 		else
 			qFilters.add(new QFilter("aos_status", QCP.not_equals, "已完成").and("aos_status", QCP.not_equals, "结束"));
 	}
