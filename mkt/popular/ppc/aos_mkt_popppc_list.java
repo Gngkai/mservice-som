@@ -410,7 +410,7 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 					CreateColumn(ProductRow, style, 1, "Product Targeting");
 					CreateColumn(ProductRow, style, 3, aos_productno);
 					CreateColumn(ProductRow, style, 9, aos_itemnumer);
-					bid = aos_bid.multiply(BigDecimal.valueOf(1)).setScale(2, BigDecimal.ROUND_HALF_UP);
+					bid = aos_bid.multiply(BigDecimal.valueOf(0.7)).setScale(2, BigDecimal.ROUND_HALF_UP);
 					CreateColumn(ProductRow, style, 10, bid);
 					CreateColumn(ProductRow, style, 11, "loose-match");
 					CreateColumn(ProductRow, style, 12, "loose-match");
@@ -438,7 +438,7 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 					CreateColumn(ProductRow, style, 1, "Product Targeting");
 					CreateColumn(ProductRow, style, 3, aos_productno);
 					CreateColumn(ProductRow, style, 9, aos_itemnumer);
-					bid = aos_bid.multiply(BigDecimal.valueOf(0.7)).setScale(2, BigDecimal.ROUND_HALF_UP);
+					bid = aos_bid.multiply(BigDecimal.valueOf(1)).setScale(2, BigDecimal.ROUND_HALF_UP);
 					CreateColumn(ProductRow, style, 10, bid);
 					CreateColumn(ProductRow, style, 11, "substitutes");
 					CreateColumn(ProductRow, style, 12, "substitutes");
@@ -700,6 +700,11 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 			else
 				campaignId = productIdMap.getOrDefault(aos_productno,aos_productno);
 
+			if (aos_productno.equals(campaignId))
+				Operation = "create";
+			else
+				Operation = "update";
+
 			// 每个系列下 创建三行数据
 			// 系列第一行
 			int row = sheet.getLastRowNum() + 1;
@@ -722,7 +727,7 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 			CreateColumn(ProductRow, style, 1, "Bidding Adjustment");
 			CreateColumn(ProductRow, style, 2, Operation);
 			CreateColumn(ProductRow, style, 3, campaignId);
-			CreateColumn(ProductRow, style, 21, "Dynamic bids - down only");
+			CreateColumn(ProductRow, style, 21,  comp.get(aos_productno));
 			CreateColumn(ProductRow, style, 22, "placementProductPage");
 			CreateColumn(ProductRow, style, 23, "0.00");
 			// 系列第三行
@@ -733,7 +738,7 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 			CreateColumn(ProductRow, style, 1, "Bidding Adjustment");
 			CreateColumn(ProductRow, style, 2, Operation);
 			CreateColumn(ProductRow, style, 3, campaignId);
-			CreateColumn(ProductRow, style, 21, "Dynamic bids - down only");
+			CreateColumn(ProductRow, style, 21,  comp.get(aos_productno));
 			CreateColumn(ProductRow, style, 22, "placementTop");
 			// 循环得到组
 			Map<String, Map<String, Object>> GroupD = Group.get(aos_productno);
@@ -769,6 +774,13 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 					adGroupId = aos_itemnumer;
 				else
 					adGroupId = groupIdMap.getOrDefault(aos_productno + "~" + aos_itemnumer,aos_itemnumer);
+
+
+				if (aos_itemnumer.equals(adGroupId))
+					OperationGroup = "create";
+				else
+					OperationGroup = "update";
+
 
 				// 每个组要创建六行数据
 				// 组第一行
@@ -807,32 +819,47 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 					ProductRow = sheet.createRow(row);
 					CreateColumn(ProductRow, style, 0, "Sponsored Products");
 					CreateColumn(ProductRow, style, 1, "Product Ad");
-					CreateColumn(ProductRow, style, 2, OperationGroup);
 					CreateColumn(ProductRow, style, 3, campaignId);
 					CreateColumn(ProductRow, style, 4, adGroupId);
 					CreateColumn(ProductRow, style, 14, GroupStatus);
-					CreateColumn(ProductRow, style, 16, flag ? fbaList.get(i) : aos_shopsku);
-					CreateColumn(ProductRow, style, 6, itemIdMap.getOrDefault(
-							aos_productno + "~" + aos_itemnumer + "~" + (flag ? fbaList.get(i) : aos_shopsku), ""));
+					String fbaShopSku = (flag ? fbaList.get(i) : aos_shopsku)+"";
+					CreateColumn(ProductRow, style, 16, fbaShopSku);
+					String adId = itemIdMap.getOrDefault(
+							aos_productno + "~" + aos_itemnumer + "~" + fbaShopSku, fbaShopSku);
+					if ("".equals(adId))
+						adId = fbaShopSku;
+					if ((adId).equals(fbaShopSku))
+						OperationGroup = "create";
+					else
+						OperationGroup = "update";
+
+					CreateColumn(ProductRow, style, 2, OperationGroup);
+					CreateColumn(ProductRow, style, 6, adId);
 				}
 
-				if (!NewGroupFlag) {
 					// 组第三行
 					BigDecimal bid = BigDecimal.ZERO;
 					row = sheet.getLastRowNum() + 1;
 					ProductRow = sheet.createRow(row);
 					CreateColumn(ProductRow, style, 0, "Sponsored Products");
 					CreateColumn(ProductRow, style, 1, "Product Targeting");
-					CreateColumn(ProductRow, style, 2, OperationGroup);
 					CreateColumn(ProductRow, style, 3, campaignId);
 					CreateColumn(ProductRow, style, 4, adGroupId);
 					CreateColumn(ProductRow, style, 14, GroupStatus);
 					bid = aos_bid.multiply(BigDecimal.valueOf(1.3)).setScale(2, BigDecimal.ROUND_HALF_UP);
 					CreateColumn(ProductRow, style, 18, bid);
 					CreateColumn(ProductRow, style, 24, "close-match");
-					CreateColumn(ProductRow, style, 8, targetIdMap.getOrDefault(
-							aos_productno + "~" + aos_itemnumer + "~" + aos_shopsku + "~"
-							+"close-match" , ""));
+
+					String targetId = targetIdMap.getOrDefault(
+							aos_productno + "~" + aos_itemnumer  + "~"
+									+"close-match" , "");
+					if ("".equals(targetId))
+						OperationGroup = "create";
+					else
+						OperationGroup = "update";
+
+					CreateColumn(ProductRow, style, 2, OperationGroup);
+					CreateColumn(ProductRow, style, 8, targetId);
 
 
 					// 组第四行
@@ -840,45 +867,67 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 					ProductRow = sheet.createRow(row);
 					CreateColumn(ProductRow, style, 0, "Sponsored Products");
 					CreateColumn(ProductRow, style, 1, "Product Targeting");
-					CreateColumn(ProductRow, style, 2, OperationGroup);
 					CreateColumn(ProductRow, style, 3, campaignId);
 					CreateColumn(ProductRow, style, 4, adGroupId);
 					CreateColumn(ProductRow, style, 14, GroupStatus);
 					bid = aos_bid.multiply(BigDecimal.valueOf(0.7)).setScale(2, BigDecimal.ROUND_HALF_UP);
-					CreateColumn(ProductRow, style, 18, aos_bid);
+					CreateColumn(ProductRow, style, 18, bid);
 					CreateColumn(ProductRow, style, 24, "loose-match");
-					CreateColumn(ProductRow, style, 8, targetIdMap.getOrDefault(
-							aos_productno + "~" + aos_itemnumer + "~" + aos_shopsku + "~"
-									+"loose-match" , ""));
+
+					 targetId = targetIdMap.getOrDefault(
+							aos_productno + "~" + aos_itemnumer  + "~"
+									+"loose-match" , "");
+					if ("".equals(targetId))
+						OperationGroup = "create";
+					else
+						OperationGroup = "update";
+
+					CreateColumn(ProductRow, style, 2, OperationGroup);
+					CreateColumn(ProductRow, style, 8, targetId);
 					// 组第五行
 					row = sheet.getLastRowNum() + 1;
 					ProductRow = sheet.createRow(row);
 					CreateColumn(ProductRow, style, 0, "Sponsored Products");
 					CreateColumn(ProductRow, style, 1, "Product Targeting");
-					CreateColumn(ProductRow, style, 2, OperationGroup);
 					CreateColumn(ProductRow, style, 3, campaignId);
 					CreateColumn(ProductRow, style, 4, adGroupId);
 					CreateColumn(ProductRow, style, 14, GroupStatus);
 					CreateColumn(ProductRow, style, 18, aos_bid);
 					CreateColumn(ProductRow, style, 24, "complements");
-					CreateColumn(ProductRow, style, 8, targetIdMap.getOrDefault(
-							aos_productno + "~" + aos_itemnumer + "~" + aos_shopsku + "~"
-									+"complements" , ""));
+
+					targetId = targetIdMap.getOrDefault(
+							aos_productno + "~" + aos_itemnumer  + "~"
+									+"complements" , "");
+					if ("".equals(targetId))
+						OperationGroup = "create";
+					else
+						OperationGroup = "update";
+
+					CreateColumn(ProductRow, style, 2, OperationGroup);
+					CreateColumn(ProductRow, style, 8, targetId);
+
 					// 组第六行
 					row = sheet.getLastRowNum() + 1;
 					ProductRow = sheet.createRow(row);
 					CreateColumn(ProductRow, style, 0, "Sponsored Products");
 					CreateColumn(ProductRow, style, 1, "Product Targeting");
-					CreateColumn(ProductRow, style, 2, OperationGroup);
 					CreateColumn(ProductRow, style, 3, campaignId);
 					CreateColumn(ProductRow, style, 4, adGroupId);
 					CreateColumn(ProductRow, style, 14, GroupStatus);
 					CreateColumn(ProductRow, style, 18, aos_bid);
 					CreateColumn(ProductRow, style, 24, "substitutes");
-					CreateColumn(ProductRow, style, 8, targetIdMap.getOrDefault(
-							aos_productno + "~" + aos_itemnumer + "~" + aos_shopsku + "~"
-									+"substitutes" , ""));
-				}
+
+					targetId = targetIdMap.getOrDefault(
+							aos_productno + "~" + aos_itemnumer  + "~"
+									+"substitutes" , "");
+					if ("".equals(targetId))
+						OperationGroup = "create";
+					else
+						OperationGroup = "update";
+
+					CreateColumn(ProductRow, style, 2, OperationGroup);
+					CreateColumn(ProductRow, style, 8, targetId);
+
 				// 对于置顶位置出价
 				ProductRow = sheet.getRow(TopOfSearch);
 				CreateColumn(ProductRow, style, 23, aos_topprice);
@@ -889,13 +938,13 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 
 	private Map<String, String> getTargetIdMap(String aos_orgid) {
 		DynamicObjectCollection list = QueryServiceHelper.query("aos_base_popid",
-				"aos_productno,aos_itemnumer,aos_shopsku,aos_target,aos_targetid",
+				"aos_productno,aos_itemnumer,aos_target,aos_targetid",
 				new QFilter[] { new QFilter("aos_orgid", QCP.equals, aos_orgid) });
 		return list.stream()
 				.collect(
 						Collectors.toMap(
 								obj -> obj.getString("aos_productno") + "~" + obj.getString("aos_itemnumer") + "~"
-										+ obj.getString("aos_shopsku")+"~"+obj.getString("aos_target"),
+										+obj.getString("aos_target"),
 								obj -> obj.getString("aos_targetid"), (k1, k2) -> k1));
 	}
 
