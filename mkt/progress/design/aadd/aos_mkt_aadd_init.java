@@ -5,6 +5,7 @@ import java.util.Calendar;
 import java.util.Map;
 
 import common.fnd.FndGlobal;
+import common.fnd.FndMsg;
 import kd.bos.context.RequestContext;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
@@ -23,7 +24,8 @@ public class aos_mkt_aadd_init extends AbstractTask {
 		do_operate();
 	}
 
-	private void do_operate() {
+	public static void do_operate() {
+		FndMsg.debug("11111");
 		// 获取当前日期
 		Calendar date = Calendar.getInstance();
 		date.set(Calendar.HOUR_OF_DAY, 0);
@@ -34,11 +36,12 @@ public class aos_mkt_aadd_init extends AbstractTask {
 		date.add(Calendar.DAY_OF_MONTH, -1);
 		String Yester = DF.format(date.getTime());
 		DynamicObjectCollection bd_materialS = QueryServiceHelper.query("bd_material",
-				"itemid,aos_contryentry.aos_nationality.number orgnumber",
+				"id itemid,aos_contryentry.aos_nationality.number orgnumber",
 				new QFilter("aos_contryentry.aos_firstshipment", QCP.like, Yester + "%").toArray());
 
 		for (DynamicObject bd_material : bd_materialS) {
 			Object itemid = bd_material.get("itemid");
+			FndMsg.debug("itemid:" + itemid);
 			String orgnumber = bd_material.getString("orgnumber");
 			DynamicObject aos_mkt_addtrack = BusinessDataServiceHelper.loadSingleFromCache("aos_mkt_addtrack",
 					new QFilter("aos_itemid", QCP.equals, itemid).and("aos_" + orgnumber, QCP.equals, false).toArray());
@@ -46,7 +49,6 @@ public class aos_mkt_aadd_init extends AbstractTask {
 
 				DynamicObject aos_itemid = aos_mkt_addtrack.getDynamicObject("aos_itemid");
 				String aos_productno = aos_itemid.getString("aos_productno");
-				
 		    	
 		    	if ("US,CA,UK".contains(orgnumber)) {
 					// 判断同产品号是否有英语国别制作完成

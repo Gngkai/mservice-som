@@ -18,8 +18,10 @@ import common.fnd.AosomLog;
 import common.fnd.FndMsg;
 import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.plugin.AbstractFormPlugin;
+import mkt.progress.design.aadd.aos_mkt_aadd_init;
 import mkt.synciface.aos_mkt_dayprice_bak;
 import mkt.synciface.aos_mkt_syc_shipmentdate;
+import mkt.synciface.aos_mkt_syncif_lowprz;
 import sal.sche.aos_sal_sche_summary.SalPushSche;
 import sal.synciface.competitor.CompetitorSync;
 
@@ -50,7 +52,7 @@ public class aos_mkt_bitest_form extends AbstractFormPlugin {
 	}
 
 	private void aos_test() {
-
+		aos_mkt_aadd_init.do_operate();
 	}
 
 	public void error(String var, Object... var2) {

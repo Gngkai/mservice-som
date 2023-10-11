@@ -305,6 +305,23 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 		this.getModel().setValue("aos_user", aos_user);
 		this.getModel().setValue("aos_status", "设计制作");
 		this.getModel().setValue("aos_auto", "MANUAL");// 人为提交
+
+		Object aosItemId = this.getModel().getValue("aos_itemid", 0);
+		Object aos_org = this.getModel().getValue("aos_org");
+		if ("DE,FR,IT,ES".contains(aos_org.toString())) {
+			DynamicObject aos_mkt_addtrack = BusinessDataServiceHelper.loadSingleFromCache("aos_mkt_addtrack",
+					new QFilter("aos_itemid", QCP.equals, ((DynamicObject) aosItemId).getPkValue()).toArray());
+			if (FndGlobal.IsNotNull(aos_mkt_addtrack)) {
+				aos_mkt_addtrack.set("aos_" + aos_org, true);
+			} else {
+				aos_mkt_addtrack = BusinessDataServiceHelper.newDynamicObject("aos_mkt_addtrack");
+				aos_mkt_addtrack.set("aos_" + aos_org, true);
+				aos_mkt_addtrack.set("aos_itemid", aosItemId);
+			}
+			OperationServiceHelper.executeOperate("save", "aos_mkt_addtrack", new DynamicObject[] { aos_mkt_addtrack },
+					OperateOption.create());
+		}
+
 		// 发送消息
 		String messageId = aos_user.toString();
 		String ReqFId = this.getModel().getDataEntity().getPkValue().toString();
@@ -862,6 +879,10 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 				aosMktAadd.set("aos_user", aos_user);
 				aosMktAadd.set("aos_oueditor", aos_user);
 			} else if ("NORMAL".equals(type)) {
+
+
+
+
 				aosMktAadd.set("aos_status", "设计制作");
 				aosMktAadd.set("aos_user", sourceBill.get("aos_design"));
 			}
