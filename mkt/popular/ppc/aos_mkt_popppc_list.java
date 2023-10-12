@@ -807,11 +807,21 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 					ProductRow = sheet.createRow(row);
 					CreateColumn(ProductRow, style, 0, "Sponsored Products");
 					CreateColumn(ProductRow, style, 1, "Product Ad");
-					CreateColumn(ProductRow, style, 2, OperationGroup);
 					CreateColumn(ProductRow, style, 3, campaignId);
 					CreateColumn(ProductRow, style, 4, adGroupId);
 					CreateColumn(ProductRow, style, 14, GroupStatus);
 					CreateColumn(ProductRow, style, 16, aos_itemnumer);
+
+					String adId = itemIdMap.getOrDefault(
+							aos_productno + "~" + aos_itemnumer + "~" + aos_itemnumer, aos_itemnumer);
+					if ("".equals(adId))
+						adId = aos_itemnumer;
+					if ((adId).equals(aos_itemnumer))
+						OperationGroup = "create";
+					else
+						OperationGroup = "update";
+					CreateColumn(ProductRow, style, 2, OperationGroup);
+					CreateColumn(ProductRow, style, 6, adId);
 				}
 
 				for (int i = 0; i < size; i++) {

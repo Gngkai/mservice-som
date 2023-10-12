@@ -29,7 +29,7 @@ public class aos_mkt_syncif_rank extends AbstractTask {
 		int length = p_ret_cursor.size();
 		if (length > 0) {
 			for (int i = 0; i < length; i++) {
-				JSONObject RankJson = (JSONObject) p_ret_cursor.get(i);
+				JSONObject RankJson =  p_ret_cursor.getJSONObject(i);
 				Object aos_orgid = aos_sal_import_pub.get_import_id(RankJson.get("ou_name"), "bd_country");
 				Object aos_itemid = aos_sal_import_pub.get_import_id(RankJson.get("sku"), "bd_material");
 				DynamicObject aos_base_rank = BusinessDataServiceHelper.newDynamicObject("aos_base_rank");

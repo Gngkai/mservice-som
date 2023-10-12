@@ -6,10 +6,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 
-
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import kd.bos.exception.ErrorCode;
 import common.fnd.FndDate;
 import common.fnd.FndWebHook;
@@ -92,11 +91,8 @@ public class aos_mkt_syncif_sku extends AbstractTask {
 	}
 
 	public static void do_operate(Map<String, Object> param) {
-//		JSONObject obj = ComImpl2.GetCursorEsb(param, "CUXSKU_MMS", "CUX_MMS_BASIC");
-//		JSONArray p_ret_cursor = obj.getJSONArray("p_real_model");
-		
-
-		JSONArray p_ret_cursor = ComImpl.GetCursorMms(param, "CUXSKU_MMS");
+		JSONObject obj = ComImpl2.GetCursorEsb(param, "CUXSKU_MMS", "CUX_MMS_BASIC");
+	JSONArray p_ret_cursor = obj.getJSONArray("p_real_model");
 		
 		int length = p_ret_cursor.size();
 		Object p_ou_code = param.get("ou_name");
@@ -118,7 +114,7 @@ public class aos_mkt_syncif_sku extends AbstractTask {
 			int d = 0;
 			for (int i = 0; i < length; i++) {
 				d++;
-				JSONObject SkuPopRpt = (JSONObject) p_ret_cursor.get(i);
+				JSONObject SkuPopRpt =  p_ret_cursor.getJSONObject(i);
 				String aos_date_l_str = SkuPopRpt.get("aos_date").toString();// 日期
 				Date aos_date_l = aos_mkt_syncif_connect.parse_date(aos_date_l_str);
 				Object aos_cam_name = SkuPopRpt.get("aos_cam_name");// 系列名称
