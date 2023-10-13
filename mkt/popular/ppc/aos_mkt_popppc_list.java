@@ -714,7 +714,7 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 			CreateColumn(ProductRow, style, 2, Operation);
 			CreateColumn(ProductRow, style, 3, campaignId);
 			if (FndGlobal.IsNotNull(portfolio.get(aos_productno)))
-				CreateColumn(ProductRow, style, 5, portid.get(portfolio.get(aos_productno)));
+				CreateColumn(ProductRow, style, 5, portid.getOrDefault(portfolio.get(aos_productno),""));
 			CreateColumn(ProductRow, style, 9, aos_productno);
 			CreateColumn(ProductRow, style, 13, "AUTO");
 			CreateColumn(ProductRow, style, 14, SerialStatus);
