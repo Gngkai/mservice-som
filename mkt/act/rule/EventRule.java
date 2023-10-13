@@ -1812,30 +1812,27 @@ public class EventRule {
             if (startDate.before(now) && now.before(endDate)){
                 //圣诞节 季初
                 switch (type) {
-                    case "CH-1":
+                    case "ACCH-1":
                         seasonStage.put("CHRISTMAS", "季节品1");
                         break;
                     //圣诞 季中
-                    case "CH-2":
+                    case "ACCH-2":
                         seasonStage.put("CHRISTMAS", "季节品2");
                         break;
                     //圣诞 季末
-                    case "CH-3":
+                    case "ACCH-3":
                         seasonStage.put("CHRISTMAS", "季节品3");
                         break;
                     //万圣节 季初
-                    case "HA-E-1":
-                    case "HA-U-1":
+                    case "ACHA-1":
                         seasonStage.put("HALLOWEEN", "季节品1");
                         break;
                     //万圣节 季中
-                    case "HA-E-2":
-                    case "HA-U-2":
+                    case "ACHA-2":
                         seasonStage.put("HALLOWEEN", "季节品2");
                         break;
                     //万圣节 季末
-                    case "HA-E-3":
-                    case "HA-U-3":
+                    case "ACHA-3":
                         seasonStage.put("HALLOWEEN", "季节品3");
                         break;
                     //春夏品 季初
