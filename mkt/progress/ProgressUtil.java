@@ -19,6 +19,7 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.fi.bd.util.QFBuilder;
 import mkt.common.MKTCom;
+import mkt.progress.design.aadd.aos_mkt_aadd_bill;
 import mkt.progress.design.aos_mkt_designreq_bill;
 import mkt.progress.design3d.aos_mkt_3design_bill;
 import mkt.progress.iface.iteminfo;
@@ -114,6 +115,8 @@ public class ProgressUtil {
 						new aos_mkt_rcv_bill().aos_submit(dy_main, "B");
 					else if (billFormId.equals("aos_mkt_photoreq"))
 						new aos_mkt_progphreq_bill().aos_submit(dy_main, "B");
+					else if (billFormId.equals("aos_mkt_aadd"))
+						new aos_mkt_aadd_bill().aosSubmit(dy_main, "B");
 				}
 				// 没有权限
 				else {
