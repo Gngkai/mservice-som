@@ -109,6 +109,9 @@ public class aos_mkt_actselect_init extends AbstractTask {
 		int month = date.get(Calendar.MONTH) + 1;// 当前月
 		int monthOri = date.get(Calendar.MONTH);
 		int day = date.get(Calendar.DAY_OF_MONTH);// 当前日
+
+		int week = date.get(Calendar.DAY_OF_WEEK); //当前周
+
 		Object p_ou_code = params.get("p_ou_code");
 		// 获取当前国别下所有活动物料已提报次数
 		Map<String, Integer> alreadyActivityTimes = getAlreadyActivityTimes(p_ou_code);
@@ -301,33 +304,33 @@ public class aos_mkt_actselect_init extends AbstractTask {
 							|| aos_seasonpro.equals("SUMMER");
 
 					// 针对爆品 季节 节日 常规 进行筛选 不满足条件的直接跳过
-					Boolean issaleout = false;
-					if (saleout) {
-						// 爆品中的常规品
-						if (aos_seasonpro.equals("REGULAR") || aos_seasonpro.equals("SPRING-SUMMER-CONVENTIONAL")) {
-							if (availableDays <= 90)
-								issaleout = false;
-						}
-						// 爆品中的季节品
-						if (seasonProduct) {
-							// 判断季节品累计完成率是否满足条件
-							SeasonRate = MKTCom.Get_SeasonRate(org_id, item_id, aos_seasonpro, item_overseaqty, month);
-							if (SeasonRate == 0) {
-								MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "季节品累计完成率为空");
-								issaleout = false;
-							}
-							if (!MKTCom.Is_SeasonRate(aos_seasonpro, month, SeasonRate)) {
-								MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "季节品累计完成率不满足条件");
-								issaleout = false;
-							}
-						}
-						issaleout = true;
-						aos_itemtype = "G";
-						aos_typedetail = "爆品";
-					}
+//					Boolean issaleout = false;
+//					if (saleout) {
+//						// 爆品中的常规品
+//						if (aos_seasonpro.equals("REGULAR") || aos_seasonpro.equals("SPRING-SUMMER-CONVENTIONAL")) {
+//							if (availableDays <= 90)
+//								issaleout = false;
+//						}
+//						// 爆品中的季节品
+//						if (seasonProduct) {
+//							// 判断季节品累计完成率是否满足条件
+//							SeasonRate = MKTCom.Get_SeasonRate(org_id, item_id, aos_seasonpro, item_overseaqty, month);
+//							if (SeasonRate == 0) {
+//								MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "季节品累计完成率为空");
+//								issaleout = false;
+//							}
+//							if (!MKTCom.Is_SeasonRate(aos_seasonpro, month, SeasonRate)) {
+//								MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "季节品累计完成率不满足条件");
+//								issaleout = false;
+//							}
+//						}
+//						issaleout = true;
+//						aos_itemtype = "G";
+//						aos_typedetail = "爆品";
+//					}
 
 					// 非爆品
-					if (!issaleout) {
+//					if (!issaleout) {
 						// 预断货
 						boolean preSaleOut = MKTCom.Is_PreSaleOut(org_id, item_id, (int) item_intransqty, aos_shp_day,
 								aos_freight_day, aos_clear_day, availableDays);
@@ -376,15 +379,15 @@ public class aos_mkt_actselect_init extends AbstractTask {
 							}
 							aos_itemtype = "D";
 
-							if ("低周转".equals(aos_typedetail)) {
+							if ("低周转".equals(aos_typedetail) & week == Calendar.TUESDAY) {
 								if ("US".equals(aos_orgnumber) || "UK".equals(aos_orgnumber)) {
-									if (R > 3) {
+									if (R > 3 & R <= 6) {
 										aos_typedetail = "低周转(日均>标准)";
 									} else {
 										aos_typedetail = "低周转(日均<=标准)";
 									}
 								} else {
-									if (R > 1.5) {
+									if (R > 1.5 & R <= 3) {
 										aos_typedetail = "低周转(日均>标准)";
 									} else {
 										aos_typedetail = "低周转(日均<=标准)";
@@ -398,7 +401,7 @@ public class aos_mkt_actselect_init extends AbstractTask {
 							continue;
 						}
 					}
-				}
+//				}
 
 				// 获取数据
 				String aos_sku = bd_material.getString("number");
