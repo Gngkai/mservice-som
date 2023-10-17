@@ -24,6 +24,7 @@ import kd.bos.form.IPageCache;
 import kd.bos.form.ShowType;
 import kd.bos.form.control.Button;
 import kd.bos.form.control.Control;
+import kd.bos.form.control.Image;
 import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.events.BeforeClosedEvent;
 import kd.bos.form.events.BeforeDoOperationEventArgs;
@@ -40,10 +41,11 @@ import kd.drp.pos.common.util.StringJoin;
 import kd.fi.bd.util.QFBuilder;
 import mkt.common.util.translateUtils;
 import mkt.progress.design.aos_mkt_funcreq_init;
+import sal.sche.aos_sal_sche_pub.aos_sal_sche_pvt;
 
 @SuppressWarnings("unchecked")
 public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
-	private static final String KEY_USER = "LAN"; //用户可操控的语言
+	public static final String KEY_USER = "LAN"; //用户可操控的语言
 	private static List<String> list_lans;
 	static {
 		list_lans = Arrays.asList("CN", "中文", "US","CA","UK","EN","DE","FR","IT","ES");
@@ -79,6 +81,14 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 	public void afterBindData(EventObject e) {
 		super.afterBindData(e);
 		StatusControl();
+		List<QFilter> materialFilter = SalUtil.get_MaterialFilter();
+		QFilter filter = new QFilter("aos_productno","=",this.getModel().getValue("aos_productno"));
+		materialFilter.add(filter);
+		DynamicObject dy = QueryServiceHelper.queryOne("bd_material", "number", materialFilter.toArray(new QFilter[0]));
+		if (dy!=null){
+			Image image = this.getView().getControl("aos_imageap");
+			image.setUrl(aos_sal_sche_pvt.get_img_url(dy.getString("number")));
+		}
 	}
 
 	@Override
@@ -94,6 +104,7 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 		String source = ((Control) evt.getSource()).getKey();
 		try {
 			if (source.contains("aos_button")) {
+				saveEntity();
 				aos_button(source);// 提交
 			}
 		} catch (FndError FndError) {
@@ -139,9 +150,7 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 	public void closedCallBack(ClosedCallBackEvent event) {
 		super.closedCallBack(event);
 		String actionId = event.getActionId();
-		System.out.println("actionId = " + actionId);
 		Map<String, Object> returnData = (Map<String, Object>) event.getReturnData();
-		System.out.println("returnData = " + returnData);
 		if (returnData == null)
 			return;
 		if (actionId.equals("copyTo") ||actionId.equals("copyFrom")){
@@ -375,7 +384,7 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 		SaveUtils.UpdateEntity(list_update,true);
 	}
 	
-	private String judgeLan(String lan){
+	public static String judgeLan(String lan){
 		String field;
 		if (list_lans.contains(lan)){
 			if (lan.equals("中文")){
