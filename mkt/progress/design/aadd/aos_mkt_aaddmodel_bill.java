@@ -44,6 +44,10 @@ import mkt.progress.design.aos_mkt_funcreq_init;
 @SuppressWarnings("unchecked")
 public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 	private static final String KEY_USER = "LAN"; //用户可操控的语言
+	private static List<String> list_lans;
+	static {
+		list_lans = Arrays.asList("CN", "中文", "US","CA","UK","EN","DE","FR","IT","ES");
+	}
 
 	@Override
 	public void registerListener(EventObject e) {
@@ -196,6 +200,10 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 			//翻译前的语言
 			String sourceLan = (String) returnData.get("source");
 			String field = judgeLan(sourceLan);
+			if (FndGlobal.IsNull(field)){
+				this.getView().showErrorNotification("翻译源语言不存在");
+				return;
+			}
 
 			//翻译后的语言
 			List<String> list_terminal = (List<String>) returnData.get("terminal");
@@ -205,7 +213,10 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 			//语言
 			for (String lan : list_terminal) {
 				//判断对应的字段
-
+				//翻译完成进行赋值
+				String transField = judgeLan(lan);
+				if (FndGlobal.IsNull(transField))
+					continue;
 				//记录页签下的数据
 				List<DynamicObject> list_row = new ArrayList<>();
 				List<String> list_text = new ArrayList<>();
@@ -221,8 +232,7 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 					}
 				}
 				List<String> list_transalate = translateUtils.transalate(sourceLan, lan, list_text);
-				//翻译完成进行赋值
-				String transField = judgeLan(lan);
+
 				for (int i = 0; i < list_row.size(); i++) {
 					DynamicObject dy_row = list_row.get(i);
 					dy_row.set(transField,list_transalate.get(i));
@@ -352,6 +362,9 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 				//设置每个语种
 				for (String lan : lans) {
 					String field = judgeLan(lan);
+					if (FndGlobal.IsNull(field)) {
+						continue;
+					}
 					targetRowDy.set(field,sourceRowDy.get(field));
 				}
 				SaveUtils.SaveEntity("aos_aadd_model_detail",list_save,false);
@@ -364,16 +377,21 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 	
 	private String judgeLan(String lan){
 		String field;
-		if (lan.equals("中文")){
-			field = "aos_cn";
-		}
-		else if (lan.equals("CA") || lan.equals("US") || lan.equals("EN")){
-			field = "aos_usca";
+		if (list_lans.contains(lan)){
+			if (lan.equals("中文")){
+				field = "aos_cn";
+			}
+			else if (lan.equals("CA") || lan.equals("US") || lan.equals("EN")){
+				field = "aos_usca";
+			}
+			else {
+				field = "aos_"+lan.toLowerCase();
+			}
+			return field;
 		}
 		else {
-			field = "aos_"+lan.toLowerCase();
+			return null;
 		}
-		return field;
 	}
 
 	private Map<String,Map<String,DynamicObject>> findEntiyData(Object sourceid){
