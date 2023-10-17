@@ -64,5 +64,15 @@ public class functTranslateForm extends AbstractFormPlugin {
             data.add(new ComboItem(new LocaleString(lan),lan));
         }
         comboEdit.setComboItems(data);
+
+        String entityId = getView().getParentView().getEntityId();
+        if (entityId.equals("aos_aadd_model")){
+            comboEdit = this.getControl("aos_table");
+            data = new ArrayList<>(10);
+            for (int i = 1; i < 11; i++) {
+                data.add(new ComboItem(new LocaleString("页签"+i),String.valueOf(i)));
+            }
+            comboEdit.setComboItems(data);
+        }
     }
 }

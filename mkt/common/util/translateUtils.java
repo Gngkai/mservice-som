@@ -98,7 +98,7 @@ public class translateUtils {
             throw new KDException(new ErrorCode("translateUtils","不支持翻译该源语言 "+sourceLan));
         }
         if (!map_transLan.containsKey(targetLan)){
-            throw new KDException(new ErrorCode("translateUtils","不支持翻译该木匾语言 "+targetLan));
+            throw new KDException(new ErrorCode("translateUtils","不支持翻译该语言 "+targetLan));
         }
         try {
             return translator.translateText(texts, map_tranSource.get(sourceLan), map_transLan.get(targetLan)).stream()
