@@ -1,10 +1,5 @@
 package mkt.image.test;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,22 +13,17 @@ import common.fnd.AosomLog;
 import common.fnd.FndMsg;
 import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.plugin.AbstractFormPlugin;
-import mkt.progress.design.aadd.aos_mkt_aadd_init;
 import mkt.synciface.*;
-import sal.sche.aos_sal_sche_summary.SalPushSche;
-import sal.synciface.competitor.CompetitorSync;
-import sal.synciface.inv.*;
-import sal.synciface.order.aos_sal_syncif_orderpro;
-import sal.synciface.shp.aos_sal_syncif_ostatus;
 
 public class aos_mkt_bitest_form extends AbstractFormPlugin {
 
-	private static AosomLog logger = AosomLog.init("aos_mkt_bitest_form");
+	/*private static AosomLog logger = AosomLog.init("aos_mkt_bitest_form");
+
 	static {
 		logger.setService("aos.mms");
 		logger.setDomain("mms.act");
 		logger.setFile("aos_mkt_bitest_form");
-	}
+	}*/
 
 	public void registerListener(EventObject e) {
 		super.registerListener(e);
@@ -54,6 +44,11 @@ public class aos_mkt_bitest_form extends AbstractFormPlugin {
 
 	private void aos_test() {
 		aos_mkt_syncif_sku.executerun();
+	}
+
+	public static Object aos_junit(Object obj) {
+		FndMsg.debug("obj:"+obj);
+		return obj;
 	}
 
 	public void error(String var, Object... var2) {
