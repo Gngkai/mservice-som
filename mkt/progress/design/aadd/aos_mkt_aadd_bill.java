@@ -629,12 +629,14 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
      */
     private void statusControl() throws FndError {
         // 数据层
-        Object aosStatus = this.getModel().getValue("aos_status");
         Object aosUser = this.getModel().getValue("aos_user");
+        Object aosStatus = this.getModel().getValue("aos_status");
         Object currentUserId = UserServiceHelper.getCurrentUserId();
         Object CurrentUserId = UserServiceHelper.getCurrentUserId();
         Object CurrentUserName = UserServiceHelper.getUserInfoByID((long) CurrentUserId).get("name");
-        // 权限控制
+        if (aosUser instanceof DynamicObject) aosUser = ((DynamicObject) aosUser).getPkValue();
+        else if (aosUser instanceof Long) aosUser = (Long) aosUser;
+            // 权限控制
         if (!aosUser.toString().equals(currentUserId.toString()) && !"程震杰".equals(CurrentUserName.toString()) && !"刘中怀".equals(CurrentUserName.toString()) && !"赵轩".equals(CurrentUserName.toString())) {
             this.getView().setEnable(false, "titlepanel");// 标题面板
             this.getView().setEnable(false, "aos_contentpanelflex");// 主界面面板
