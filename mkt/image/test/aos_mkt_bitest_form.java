@@ -30,7 +30,6 @@ public class aos_mkt_bitest_form extends AbstractFormPlugin {
 		// 给工具栏加监听事件
 		this.addItemClickListeners("aos_toolbarap");
 		this.addItemClickListeners("aos_test"); // 提交
-
 	}
 
 	public void itemClick(ItemClickEvent evt) {
@@ -50,6 +49,20 @@ public class aos_mkt_bitest_form extends AbstractFormPlugin {
 		FndMsg.debug("obj:"+obj);
 		return obj;
 	}
+
+	private long n = 0;
+
+	public long add(long x) {
+		n = n + x;
+		return n;
+	}
+
+	public long sub(long x) {
+		n = n - x;
+		return n;
+	}
+
+
 
 	public void error(String var, Object... var2) {
 		String aString = MessageFormat.format(var, var2);
