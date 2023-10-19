@@ -1,6 +1,7 @@
 package mkt.progress.design;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import common.Cux_Common_Utl;
 import common.fnd.FndError;
@@ -294,7 +295,8 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 		// 当前节点操作人不为当前用户 全锁
 		if (!AosUser.getPkValue().toString().equals(CurrentUserId.toString())
 				&& !"龚凯".equals(CurrentUserName.toString()) && !"刘中怀".equals(CurrentUserName.toString())
-				&& !"程震杰".equals(CurrentUserName.toString()) && !"陈聪".equals(CurrentUserName.toString())) {
+				&& !"程震杰".equals(CurrentUserName.toString()) && !"陈聪".equals(CurrentUserName.toString())
+				&& !"邹地".equals(CurrentUserName.toString())) {
 			this.getView().setEnable(false, "contentpanelflex");// 主界面面板
 			this.getView().setVisible(false, "bar_save");
 			this.getView().setVisible(false, "aos_submit");
@@ -382,6 +384,8 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 			this.getModel().setValue("aos_sellingpoint", null, 0);
 			this.getModel().setValue("aos_is_saleout", false, 0); // 是否爆品
 			this.getModel().setValue("aos_is_design",false,0);		//生成3d
+			this.getModel().setValue("aos_productstyle_new",null,0);
+			this.getModel().setValue("aos_shootscenes",null,0);
 		} else {
 			DynamicObject AosItemidObject = (DynamicObject) aos_itemid;
 			Object fid = AosItemidObject.getPkValue();
@@ -460,6 +464,20 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 			this.getModel().setValue("aos_orgtext", aos_orgtext, 0);
 			this.getModel().setValue("aos_sellingpoint", bd_material.get("aos_sellingpoint"), 0);
 			this.getModel().setValue("aos_is_saleout", ProgressUtil.Is_saleout(fid), 0);
+			StringJoiner productStyle = new StringJoiner(";");
+			DynamicObjectCollection item = bd_material.getDynamicObjectCollection("aos_productstyle_new");
+			if(item.size() != 0){
+				List<Object> id = item.stream().map(e -> e.getDynamicObject("fbasedataid").getPkValue()).collect(Collectors.toList());
+				for(Object a : id) {
+					DynamicObject dysty = QueryServiceHelper.queryOne("aos_product_style","id,name",
+							new QFilter("id", QCP.equals,a).toArray());
+					String styname = dysty.getString("name");
+					productStyle.add(styname);
+				}
+				this.getModel().setValue("aos_productstyle_new", productStyle.toString(), 0);
+			}
+			this.getModel().setValue("aos_shootscenes", bd_material.getString("aos_shootscenes"), 0);
+
 			//设置是否已经3d建模
 			List<String> designItem = (List<String>) SerializationUtils.fromJsonStringToList(getPageCache().get(KEY_CreateDesign), String.class);
 			this.getModel().setValue("aos_is_design",designItem.contains(String.valueOf(fid)),0);

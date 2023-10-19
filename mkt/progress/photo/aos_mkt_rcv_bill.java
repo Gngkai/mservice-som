@@ -560,6 +560,8 @@ public class aos_mkt_rcv_bill extends AbstractBillPlugIn implements ItemClickLis
 				aos_entryentity5.set("aos_object1", aos_entryentity5Ori.get("aos_object1"));
 				aos_entryentity5.set("aos_scene2", aos_entryentity5Ori.get("aos_scene2"));
 				aos_entryentity5.set("aos_object2", aos_entryentity5Ori.get("aos_object2"));
+				aos_entryentity5.set("aos_productstyle_new", aos_entryentity5Ori.get("aos_productstyle_new"));
+				aos_entryentity5.set("aos_shootscenes", aos_entryentity5Ori.get("aos_shootscenes"));
 			}
 			// 照片需求单据体(新2)
 			DynamicObjectCollection aos_entryentity6S = AosMktPhotoReq.getDynamicObjectCollection("aos_entryentity6");
