@@ -730,7 +730,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
 				aos_mkt_slogan.set("aos_sourceid", ReqFId);
 				if (aos_osconfirm) {
 					DynamicObject aos_mkt_progorguser = QueryServiceHelper.queryOne("aos_mkt_progorguser",
-							"aos_oseditor",
+							"aos_oseditor,aos_oueditor",
 							new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2)
 									.and("aos_orgid.number", "=", org).toArray());
 					if (FndGlobal.IsNull(aos_mkt_progorguser)
@@ -739,11 +739,13 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
 						throw fndError;
 					}
 					long aos_oseditor = aos_mkt_progorguser.getLong("aos_oseditor");
+					long aos_oueditor = aos_mkt_progorguser.getLong("aos_oueditor");
 					messageId = aos_oseditor;
 					aos_mkt_slogan.set("aos_oseditor", aos_oseditor);
 					aos_mkt_slogan.set("aos_user", aos_oseditor);
 					aos_mkt_slogan.set("aos_status", "海外翻译");
 					aos_mkt_slogan.set("aos_osdate", new Date());
+					aos_mkt_slogan.set("aos_oueditor", aos_oueditor);
 				} else {
 					DynamicObject aos_mkt_progorguser = QueryServiceHelper.queryOne("aos_mkt_progorguser",
 							"aos_oueditor",
