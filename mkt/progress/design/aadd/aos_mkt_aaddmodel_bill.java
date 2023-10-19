@@ -449,7 +449,7 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 		DynamicObjectCollection aos_entryentityS = mainView.getModel().getEntryEntity("aos_entryentity");
 		List<DynamicObject> aosBillDeatilS = new ArrayList<>();
 		DeleteServiceHelper.delete("aos_aadd_model_detail",
-				new QFilter("aos_sourceid", QCP.equals, fid).and("aos_button", QCP.equals, button).toArray());
+				new QFilter("aos_sourceid", QCP.equals, fid.toString()).and("aos_button", QCP.equals, button).toArray());
 
 		int i = 1;
 		for (DynamicObject aos_entryentity : aos_entryentityS) {
