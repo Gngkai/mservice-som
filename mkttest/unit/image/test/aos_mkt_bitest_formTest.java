@@ -1,4 +1,4 @@
-package mktTest.unit.image.test;
+package mkttest.unit.image.test;
 
 import mkt.image.test.aos_mkt_bitest_form;
 import org.junit.jupiter.api.AfterEach;
