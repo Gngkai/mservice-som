@@ -1,0 +1,19 @@
+archivesBaseName = 'aos-mkt'
+
+def timestamp = new Date().format('yyyyMMddHHmmss')
+version = project.version + '-' + timestamp
+
+def outputdir= 'out'
+
+dependencies {
+    implementation 'com.aosom.gpaas.common:com-sal:1.0-SNAPSHOT'
+    implementation 'com.aosom.gpaas.common:com-scm:1.0-SNAPSHOT'
+    implementation 'com.aosom.gpaas.common:com-fms:1.0-SNAPSHOT'
+}
+
+// jarWithDeps
+task copyDepsToOut(dependsOn: 'jar', type: Copy) {
+    def conf = configurations.runtimeClasspath
+    from conf.allDependencies.findAll{ it.name.startsWith('com-sal')}.collect { conf.files(it) }
+    into outputdir
+}
