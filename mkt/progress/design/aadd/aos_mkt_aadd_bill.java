@@ -787,17 +787,54 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
         FndMsg.debug("count =" + count);
         FndMsg.debug("type =" + type);
 
+
         DynamicObject sourceBill = BusinessDataServiceHelper.loadSingle(reqFId, "aos_mkt_aadd");
+       String category = MKTCom.getItemCateNameZH(itemId);
+        String[] category_group = category.split(",");
+        String AosCategory1 = null;// 大类
+        String AosCategory2 = null;// 中类
+        int category_length = category_group.length;
+        if (category_length > 0) AosCategory1 = category_group[0];
+        if (category_length > 1) AosCategory2 = category_group[1];
+
         DynamicObject aosMktAadd = BusinessDataServiceHelper.newDynamicObject("aos_mkt_aadd");
         aosMktAadd.set("aos_requireby", sourceBill.get("aos_requireby"));
         aosMktAadd.set("aos_organization1", sourceBill.get("aos_organization1"));
         aosMktAadd.set("aos_requiredate", sourceBill.get("aos_requiredate"));
         aosMktAadd.set("aos_type", "同款");
         aosMktAadd.set("aos_org", ou);
-        aosMktAadd.set("aos_design", sourceBill.get("aos_design"));
-        aosMktAadd.set("aos_osconfirm", sourceBill.get("aos_osconfirm"));
-        aosMktAadd.set("aos_oueditor", sourceBill.get("aos_oueditor"));
-        aosMktAadd.set("aos_sale", sourceBill.get("aos_sale"));
+
+        DynamicObject aosMktProgOrgUser = QueryServiceHelper.queryOne("aos_mkt_progorguser",
+                "aos_oueditor,aos_02hq,aos_salehelper,aos_oseditor",
+                new QFilter("aos_orgid.number", QCP.equals, ou).
+                        and("aos_category1", QCP.equals, AosCategory1)
+                        .and("aos_category2", QCP.equals, AosCategory2).toArray());
+        if (FndGlobal.IsNull(aosMktProgOrgUser) || FndGlobal.IsNull(aosMktProgOrgUser.get("aos_oueditor"))) {
+            fndError.add(ou + "~" + AosCategory1 + "~" + AosCategory2 + ",国别编辑不存在!");
+            throw fndError;
+        }
+        // 带出组长
+        if (FndGlobal.IsNull(aosMktProgOrgUser) || FndGlobal.IsNull(aosMktProgOrgUser.get("aos_02hq"))) {
+            fndError.add(ou + "~" + AosCategory1 + "~" + AosCategory2 + ",组长不存在!");
+            throw fndError;
+        }
+        // 带出销售助理
+        if (FndGlobal.IsNull(aosMktProgOrgUser) || FndGlobal.IsNull(aosMktProgOrgUser.get("aos_salehelper"))) {
+            fndError.add(ou + "~" + AosCategory1 + "~" + AosCategory2 + ",销售助理不存在!");
+            throw fndError;
+        }
+
+        // 带出海外编辑
+        if (FndGlobal.IsNull(aosMktProgOrgUser) || FndGlobal.IsNull(aosMktProgOrgUser.get("aos_oseditor"))) {
+            fndError.add(ou + "~" + AosCategory1 + "~" + AosCategory2 + ",海外编辑不存在!");
+            throw fndError;
+        }
+
+        aosMktAadd.set("aos_osconfirm", aosMktProgOrgUser.get("aos_oseditor"));
+        aosMktAadd.set("aos_oueditor", aosMktProgOrgUser.get("aos_oueditor"));
+        aosMktAadd.set("aos_monitor", aosMktProgOrgUser.get("aos_02hq"));
+        aosMktAadd.set("aos_sale", aosMktProgOrgUser.get("aos_salehelper"));
+
         aosMktAadd.set("aos_sourceid", sourceBill.get("id"));
         aosMktAadd.set("aos_sourcebillno", sourceBill.get("aos_billno"));
 
@@ -813,41 +850,14 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
         aos_entryentity.set("aos_trans", sourceEntry.get("aos_trans"));
         aos_entryentity.set("aos_url", sourceEntry.get("aos_url"));
 
-        String category = MKTCom.getItemCateNameZH(itemId);
-        String[] category_group = category.split(",");
-        String AosCategory1 = null;// 大类
-        String AosCategory2 = null;// 中类
-        int category_length = category_group.length;
-        if (category_length > 0) AosCategory1 = category_group[0];
-        if (category_length > 1) AosCategory2 = category_group[1];
-
-        DynamicObject aosMktProgOrgUser = QueryServiceHelper.queryOne("aos_mkt_progorguser", "aos_02hq", new QFilter("aos_orgid.number", QCP.equals, ou).and("aos_category1", QCP.equals, AosCategory1).and("aos_category2", QCP.equals, AosCategory2).toArray());
-        if (FndGlobal.IsNull(aosMktProgOrgUser) || FndGlobal.IsNull(aosMktProgOrgUser.get("aos_02hq"))) {
-            fndError.add(ou + "~" + AosCategory1 + "~" + AosCategory2 + ",组长不存在!");
-            DeleteServiceHelper.delete("aos_mkt_aadd", new QFilter("aos_sourceid", "=", sourceBill.get("id")).toArray());
-            throw fndError;
-        }
-        aosMktAadd.set("aos_monitor", aosMktProgOrgUser.get("aos_02hq"));
-
         if (count == 0) {
             if ("MIN".equals(type)) {
                 aosMktAadd.set("aos_min", true);// 小语种同步主单
                 aosMktAadd.set("aos_status", "海外确认");
-                // 小语种国别的品类编辑
-
-                // 根据国别+大类+小类 从营销国别品类人员表中取国别
-                aosMktProgOrgUser = QueryServiceHelper.queryOne("aos_mkt_progorguser", "aos_oueditor,aos_oseditor", new QFilter("aos_orgid.number", QCP.equals, ou).and("aos_category1", QCP.equals, AosCategory1).and("aos_category2", QCP.equals, AosCategory2).toArray());
-                if (FndGlobal.IsNull(aosMktProgOrgUser) || FndGlobal.IsNull(aosMktProgOrgUser.get("aos_oueditor"))) {
-                    fndError.add(ou + "~" + AosCategory1 + "~" + AosCategory2 + ",国别编辑不存在!");
-                    DeleteServiceHelper.delete("aos_mkt_aadd", new QFilter("aos_sourceid", "=", sourceBill.get("id")).toArray());
-                    throw fndError;
-                }
                 Object aos_user = aosMktProgOrgUser.get("aos_oueditor");
                 aosMktAadd.set("aos_user", aosMktProgOrgUser.get("aos_oseditor"));
                 aosMktAadd.set("aos_oueditor", aos_user);
             } else if ("NORMAL".equals(type)) {
-
-
                 aosMktAadd.set("aos_status", "设计制作");
                 aosMktAadd.set("aos_user", sourceBill.get("aos_design"));
             }
