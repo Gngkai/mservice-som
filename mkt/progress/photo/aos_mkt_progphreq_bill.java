@@ -136,6 +136,10 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			this.getModel().setValue(aos_shipdate, null);
 			this.getModel().setValue(aos_urgent, null);
 			this.getModel().setValue("aos_is_saleout", false); // 爆品
+			this.getModel().setValue("aos_vedioflag", false); // 是否拍视频
+
+
+
 			// 清空图片
 			Image image = this.getControl("aos_image");
 			image.setUrl(null);
@@ -770,6 +774,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			this.getModel().setValue(aos_shipdate, null);
 			this.getModel().setValue(aos_urgent, null);
 			this.getModel().setValue("aos_is_saleout", false); // 爆品
+			this.getModel().setValue("aos_vedioflag", false); // 是否拍视频
 			// 清空图片
 			Image image = this.getControl("aos_image");
 			image.setUrl(null);
@@ -901,8 +906,8 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			this.getModel().setValue(aos_category1, AosCategory1);
 			this.getModel().setValue(aos_category2, AosCategory2);
 			this.getModel().setValue(aos_category3, AosCategory3);
-			this.getModel().setValue(aos_vedioflag,
-					JudgeTakeVideo(AosCategory1, AosCategory2, AosCategory3, bd_material.getString("name")));
+//			this.getModel().setValue(aos_vedioflag,
+//					JudgeTakeVideo(AosCategory1, AosCategory2, AosCategory3, bd_material.getString("name")));
 
 			// 根据大类中类获取对应营销人员
 			if (AosCategory1 != null & AosCategory2 != null && !AosCategory1.equals("") && !AosCategory2.equals("")) {
@@ -992,10 +997,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			// 增加爆品字段
 			Boolean aos_is_saleout = Is_saleout(fid);
 			this.getModel().setValue("aos_is_saleout", aos_is_saleout);
-
-			if (aos_is_saleout) {
-				this.getModel().setValue("aos_vedioflag", true);
-			}
+			this.getModel().setValue("aos_vedioflag", aos_is_saleout);
 
 			// 摄影标准库字段
 			this.getModel().deleteEntryData("aos_entryentity5");
