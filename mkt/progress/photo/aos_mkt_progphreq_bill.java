@@ -3049,6 +3049,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		aos_subentryentity.set("aos_url", MKTS3PIC.GetItemPicture(item_number));
 		aos_subentryentity.set("aos_broitem", aos_broitem);
 		aos_subentryentity.set("aos_orgtext", aos_orgtext);
+
 		StringJoiner productStyle = new StringJoiner(";");
 		DynamicObjectCollection item = bd_material.getDynamicObjectCollection("aos_productstyle_new");
 		if(item.size() != 0){
