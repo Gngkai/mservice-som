@@ -258,6 +258,20 @@ public class aos_mkt_sync_createDesignreq extends AbstractTask {
         dy_subRow.set("aos_broitem", aos_broitem);
         dy_subRow.set("aos_orgtext", aos_orgtext);
         dy_subRow.set("aos_sellingpoint", bd_material.get("aos_sellingpoint"));
+        StringJoiner productStyle = new StringJoiner(";");
+        DynamicObjectCollection item = bd_material.getDynamicObjectCollection("aos_productstyle_new");
+        if(item.size() != 0){
+            List<Object> id = item.stream().map(e -> e.getDynamicObject("fbasedataid").getPkValue()).collect(Collectors.toList());
+            for(Object a : id) {
+                DynamicObject dysty = QueryServiceHelper.queryOne("aos_product_style","id,name",
+                        new QFilter("id", QCP.equals,a).toArray());
+                String styname = dysty.getString("name");
+                productStyle.add(styname);
+            }
+            dy_subRow.set("aos_productstyle_new", productStyle.toString());
+        }
+        dy_subRow.set("aos_shootscenes", bd_material.getString("aos_shootscenes"));
+
         OperationResult result = SaveServiceHelper.saveOperate("aos_mkt_designreq", new DynamicObject[]{dy_designReq}, OperateOption.create());
         List<Object> successPkIds = result.getSuccessPkIds();
         if (successPkIds.size()>0){
