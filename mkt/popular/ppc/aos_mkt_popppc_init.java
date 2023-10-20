@@ -255,7 +255,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
 					StringComUtils.setValue(aosEntryentityLast, dyn);
 				}
 				SaveServiceHelper.saveOperate("aos_mkt_popular_ppc", new DynamicObject[] { aos_mkt_popular_ppc },
-						OperateOption.create());
+  						OperateOption.create());
 				return;
 			}
 			// 获取春夏品 秋冬品开始结束日期 营销日期参数表

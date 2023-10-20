@@ -275,6 +275,12 @@ public class aos_mkt_rcv_bill extends AbstractBillPlugIn implements ItemClickLis
 			ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "新建状态下拍照地点必填!");
 		}
 
+		// 新建节点，当拍照地点=外包拍照时，样品接收地址必填；确保不会只有外包拍摄地址而无外包简称
+        if ("新建".equals(aos_status) && "外包拍照".equals(aos_phstate) && Cux_Common_Utl.IsNull(aos_address)) {
+			ErrorCount++;
+			ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "新建状态下拍照地点=外包拍照时，样品接收地址必填!");
+		}
+
 		// ==== 2022/11/24 拍照地方=工厂简拍/工厂自拍时，样品接收地址/样品处理方式不需必填
 
 		if (!(Boolean) aos_photoflag && Cux_Common_Utl.IsNull(aos_reason)) {

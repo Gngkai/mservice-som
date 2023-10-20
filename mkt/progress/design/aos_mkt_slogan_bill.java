@@ -445,6 +445,23 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
         Object messageId;
         Object ReqFId = this.getModel().getDataEntity().getPkValue();
         Object billno = this.getModel().getValue("billno");
+        Object aos_designer = this.getModel().getValue("aos_designer");
+        String aos_category1 = (String) this.getModel().getValue("aos_category1");// 大类
+        String aos_category2 = (String) this.getModel().getValue("aos_category2");// 中类
+
+        if (FndGlobal.IsNull(aos_designer)) {
+            DynamicObject aos_mkt_proguser = QueryServiceHelper.queryOne("aos_mkt_proguser", "aos_designer",
+                    new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2)
+                            .toArray());
+            if (FndGlobal.IsNull(aos_mkt_proguser) || FndGlobal.IsNull(aos_mkt_proguser.get("aos_designer"))) {
+                fndError.add("品类设计师不存在!");
+                throw fndError;
+            }
+            aos_designer = aos_mkt_proguser.getLong("aos_designer");// 品类设计师
+            messageId = aos_designer;
+        } else {
+            messageId = ((DynamicObject) aos_designer).getPkValue();
+        }
 
         // 校验对应小语种slogan与品名是否填写
         DynamicObjectCollection aos_entryentityS = this.getModel().getEntryEntity("aos_entryentity");
@@ -458,16 +475,11 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
                 }
             }
         }
-
-        Object aos_oueditor = this.getModel().getValue("aos_oueditor");
-        if (FndGlobal.IsNull(aos_oueditor))
-            this.getModel().setValue("aos_user", SYSTEM);
-        else
-            this.getModel().setValue("aos_user", this.getModel().getValue("aos_oueditor"));
-        this.getModel().setValue("aos_status", "翻译");
+        // 直接流转给设计
+        this.getModel().setValue("aos_user", aos_designer);
+        this.getModel().setValue("aos_status", "设计");
         this.getModel().setValue("aos_osubmit", "人为提交");
-//		MKTCom.SendGlobalMessage(messageId + "", "aos_mkt_slogan", ReqFId + "", billno + "", "Slogan-翻译");
-    }
+		}
 
     private void SubmitDesign() {
         Object aos_type = this.getModel().getValue("aos_type");
