@@ -136,8 +136,6 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			this.getModel().setValue(aos_shipdate, null);
 			this.getModel().setValue(aos_urgent, null);
 			this.getModel().setValue("aos_is_saleout", false); // 爆品
-			this.getModel().setValue("aos_productstyle_new",null);
-			this.getModel().setValue("aos_shootscenes",null);
 			// 清空图片
 			Image image = this.getControl("aos_image");
 			image.setUrl(null);
@@ -286,21 +284,6 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			}
 
 			// 布景标准库字段
-			StringJoiner productStyle = new StringJoiner(";");
-			DynamicObjectCollection item = bd_material.getDynamicObjectCollection("aos_productstyle_new");
-			if(item.size() != 0){
-				List<Object> id = item.stream().map(e -> e.getDynamicObject("fbasedataid").getPkValue()).collect(Collectors.toList());
-				for(Object a : id) {
-					DynamicObject dysty = QueryServiceHelper.queryOne("aos_product_style","id,name",
-							new QFilter("id", QCP.equals,a).toArray());
-					String styname = dysty.getString("name");
-					productStyle.add(styname);
-				}
-				this.getModel().setValue("aos_productstyle_new", productStyle.toString(), 0);
-			}
-			this.getModel().setValue("aos_shootscenes", bd_material.getString("aos_shootscenes"), 0);
-
-
 			DynamicObject aosMktViewStd = QueryServiceHelper.queryOne("aos_mkt_viewstd",
 					"aos_scene1,aos_object1,aos_scene2,aos_object2,aos_itemnamecn,aos_descpic",
 					new QFilter("aos_category1_name", QCP.equals, AosCategory1)
@@ -787,8 +770,6 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			this.getModel().setValue(aos_shipdate, null);
 			this.getModel().setValue(aos_urgent, null);
 			this.getModel().setValue("aos_is_saleout", false); // 爆品
-			this.getModel().setValue("aos_productstyle_new",null);
-			this.getModel().setValue("aos_shootscenes",null);
 			// 清空图片
 			Image image = this.getControl("aos_image");
 			image.setUrl(null);
@@ -1033,20 +1014,6 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			}
 
 			// 布景标准库字段
-			StringJoiner productStyle = new StringJoiner(";");
-			DynamicObjectCollection item = bd_material.getDynamicObjectCollection("aos_productstyle_new");
-			if(item.size() != 0){
-				List<Object> id = item.stream().map(e -> e.getDynamicObject("fbasedataid").getPkValue()).collect(Collectors.toList());
-				for(Object a : id) {
-					DynamicObject dysty = QueryServiceHelper.queryOne("aos_product_style","id,name",
-							new QFilter("id", QCP.equals,a).toArray());
-					String styname = dysty.getString("name");
-					productStyle.add(styname);
-				}
-				this.getModel().setValue("aos_productstyle_new", productStyle.toString(), 0);
-			}
-			this.getModel().setValue("aos_shootscenes", bd_material.getString("aos_shootscenes"), 0);
-
 			DynamicObject aosMktViewStd = QueryServiceHelper.queryOne("aos_mkt_viewstd",
 					"aos_scene1,aos_object1,aos_scene2,aos_object2,aos_itemnamecn,aos_descpic",
 					new QFilter("aos_category1_name", QCP.equals, AosCategory1)
@@ -2622,8 +2589,6 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			aos_entryentity5.set("aos_object1", aos_entryentity5Ori.get("aos_object1"));
 			aos_entryentity5.set("aos_scene2", aos_entryentity5Ori.get("aos_scene2"));
 			aos_entryentity5.set("aos_object2", aos_entryentity5Ori.get("aos_object2"));
-			aos_entryentity5.set("aos_productstyle_new", aos_entryentity5Ori.get("aos_productstyle_new"));
-			aos_entryentity5.set("aos_shootscenes", aos_entryentity5Ori.get("aos_shootscenes"));
 		}
 		// 照片需求单据体(新2)
 		DynamicObjectCollection aos_entryentity6S = AosMktPhotoReq.getDynamicObjectCollection("aos_entryentity6");
@@ -3167,6 +3132,9 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		aos_mkt_rcv.set("aos_requiredate", new Date());
 		aos_mkt_rcv.set("aos_orignbill", aos_billno);
 		aos_mkt_rcv.set("aos_sourceid", ReqFId);
+		aos_mkt_rcv.set("aos_is_saleout", dy_main.get("aos_is_saleout"));
+
+
 		/*
 		 * aos_mkt_rcv.set("aos_returnreason",
 		 * dy_main.getDynamicObjectCollection("aos_entryentity3").get(0).get(

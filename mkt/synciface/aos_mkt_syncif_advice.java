@@ -29,8 +29,7 @@ public class aos_mkt_syncif_advice extends AbstractTask {
 		
 		JSONObject obj = ComImpl2.GetCursorEsb(param, "CUXADVICE_MMS","CUX_MMS_BASIC");
 		JSONArray p_ret_cursor = obj.getJSONArray("p_real_model");
-		
-		
+
 		int length = p_ret_cursor.size();
 		Calendar Today = Calendar.getInstance();
 		Today.set(Calendar.HOUR_OF_DAY, 0);
@@ -43,7 +42,7 @@ public class aos_mkt_syncif_advice extends AbstractTask {
 			aos_base_advrpt.set("billstatus", "A");
 			aos_base_advrpt.set("aos_date", Today.getTime());
 			for (int i = 0; i < length; i++) {
-				JSONObject AdPopRpt = (JSONObject) p_ret_cursor.get(i);
+				JSONObject AdPopRpt =  p_ret_cursor.getJSONObject(i);
 				Object aos_ou_name = AdPopRpt.get("aos_ou_name");
 				Object aos_ad_name = AdPopRpt.get("aos_ad_name");
 				Object aos_bid_rangeend = AdPopRpt.get("aos_bid_rangeend");

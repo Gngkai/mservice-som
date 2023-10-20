@@ -1,0 +1,60 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+group = 'de.cd'
+version = '1.0'
+tasks.withType(JavaCompile) {
+	options.encoding = 'UTF-8'
+}
+
+def cus= 'DEPENDON_JARS_PATH/cus'
+def trd= 'DEPENDON_JARS_PATH/trd'
+def bos= 'DEPENDON_JARS_PATH/bos'
+def biz= 'DEPENDON_JARS_PATH/biz'
+def outputdir='OUTPUTDIR'
+
+String date = new Date().format('yyyy-MM-dd HH:mm:ss SSSSSS')
+jar{
+  manifest {
+     attributes 'Builddate': date
+     attributes 'Release': 'CICD'
+  }
+}
+
+dependencies {
+	compile fileTree(dir: cus, include: '*.jar')
+	compile fileTree(dir: trd, include: '*.jar')
+	compile fileTree(dir: bos, include: '*.jar')
+	compile fileTree(dir: biz, include: '*.jar')
+}
+
+task sourcesJar(type: Jar, dependsOn: build) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task copytolib(type: Copy,dependsOn: build){
+	group 'build'
+	description 'copy to lib'
+	from 'build/libs'
+	into outputdir
+
+	exclude '*source*.jar'
+}
+
+sourceSets {
+    main {
+         java {
+             srcDir 'java'
+         }
+    }
+}
+
+task copyJarTodir(type: Copy){
+	group 'build'
+	description  'copyJarTodir'
+	from 'build/libs'
+	into cus
+	exclude '**/*.class'
+}
+test.ignoreFailures true

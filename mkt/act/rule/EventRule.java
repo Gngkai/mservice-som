@@ -1,6 +1,5 @@
 package mkt.act.rule;
 
-import common.fms.util.FieldUtils;
 import common.fnd.FndGlobal;
 import common.fnd.FndLog;
 import common.sal.sys.basedata.dao.ItemCategoryDao;
@@ -59,7 +58,6 @@ public class EventRule {
     //物料对应的品类
     private Map<String,DynamicObject> cateItem;
     public EventRule(DynamicObject typeEntity,DynamicObject dy_main){
-
         try {
             this.typEntity = typeEntity;
             this.actPlanEntity = dy_main;
@@ -137,7 +135,10 @@ public class EventRule {
      */
     public void implementFormula(){
         String ruleValue = typEntity.getString("aos_rule_v");
-        String[] parameterKey = FormulaEngine.extractVariables(ruleValue);
+        String[] parameterKey = new String[0];
+        if (FndGlobal.IsNotNull(ruleValue)){
+          parameterKey = FormulaEngine.extractVariables(ruleValue);
+        }
         Map<String,Object> parameters = new HashMap<>(parameterKey.length);
         //选品数
         int selectQty = 100;
@@ -162,6 +163,8 @@ public class EventRule {
         for (DynamicObject itemInfoe : itemInfoes) {
             String itemId = itemInfoe.getString("id");
             //获取物料品类
+            if (!cateItem.containsKey(itemId))
+                continue;
             String cate = cateItem.get(itemId).getString("gnumber").split(",")[0];
             if (!alreadyFilledCate.containsKey(cate)){
                 continue;
@@ -393,6 +396,8 @@ public class EventRule {
         //获取多次活动的SKU
         Set<String> ruleItem = getRuleItem();
 
+        logger.info("单号： {} 多次活动sku：{} ",actPlanEntity.getString("billno"),ruleItem.size());
+
         cateItem = new HashMap<>();
         StringJoiner str = new StringJoiner(",");
         str.add("material");
@@ -430,7 +435,9 @@ public class EventRule {
         selectFields.add("aos_contryentry.aos_festivalseting.number festival");
         selectFields.add("aos_contryentry.aos_seasonseting.aos_seasonal_pro.number seasonpro");
         QFilter filter = new QFilter("aos_contryentry.aos_nationality","=",orgEntity.getPkValue());
-        filter.and(new QFilter("id",QFilter.in,cateItem.keySet()));
+        if (cateItem.size()>0)
+            filter.and(new QFilter("id",QFilter.in,cateItem.keySet()));
+        filter.and(new QFilter("id",QFilter.not_in,ruleItem));
         if (itemids!=null && itemids.size()>0){
           filter.and(new QFilter("id",QFilter.in,itemids));
         }
@@ -451,6 +458,8 @@ public class EventRule {
             }
         }
         DynamicObjectCollection dyc = itemDao.listItemObj(selectFields.toString(), filter, null);
+        logger.info("单号： {}  查询物料长度：{} ",actPlanEntity.getString("billno"),dyc.size());
+
         itemInfoes = new ArrayList<>(dyc.size());
         itemInfoes.addAll(dyc);
         //设置毛利率过滤
@@ -464,6 +473,16 @@ public class EventRule {
                 fillItem.add(itemid);
                 itemInfoes.add(row);
             }
+        }
+        logger.info("单号： {}  毛利率计算后物料长度：{} ",actPlanEntity.getString("billno"),itemInfoes.size());
+
+        //设置物料品类
+        builder.clear();
+        builder.add("material",QFilter.in,fillItem);
+        DynamicObjectCollection cateResults = categoryDao.queryData(str.toString(), builder);
+        cateItem.clear();
+        for (DynamicObject result : cateResults) {
+            cateItem.put(result.getString("material"),result);
         }
     }
 
@@ -540,6 +559,9 @@ public class EventRule {
         //活动为平台活动
         builder.add("aos_acttype",QFilter.in,listActTypes);
         builder.add("aos_sal_actplanentity.aos_itemnum","!=","");
+        //活动时间
+        builder.add("aos_sal_actplanentity.aos_enddate",">=",now.withDayOfMonth(1).toString());
+        builder.add("aos_sal_actplanentity.aos_enddate","<",now.withDayOfMonth(1).plusMonths(1).toString());
 
         dyc = QueryServiceHelper.query("aos_act_select_plan",
                 "aos_sal_actplanentity.aos_itemnum aos_itemnum,aos_sal_actplanentity.aos_itemnum.number number", builder.toArray());
@@ -548,13 +570,11 @@ public class EventRule {
         for (DynamicObject dy : dyc) {
             String item = dy.getString("aos_itemnum");
             int actFreq = itemActNumber.getOrDefault(item, 0)+1;
-            if (actFreq>2){
+            if (actFreq==3){
                 fndLog.add(dy.getString("number")+"  多次活动剔除");
-
+                result.add(item);
             }
-            else {
-                itemActNumber.put(item,actFreq);
-            }
+            itemActNumber.put(item,actFreq);
         }
         return result;
     }
@@ -667,7 +687,7 @@ public class EventRule {
     private Map<String,Boolean> cachedData (String rule,String dataType,DynamicObject row){
         Map<String,Boolean> result = new HashMap<>(itemInfoes.size());
         //获取下拉列表
-        rowRuleName = FieldUtils.getComboMap("aos_sal_act_type_p", "aos_project");
+        rowRuleName = MKTCom.getComboMap("aos_sal_act_type_p", "aos_project");
         switch (dataType){
             case "overseasStock":
                 //海外库存
@@ -840,7 +860,7 @@ public class EventRule {
         }
         itemStatus = new HashMap<>(itemInfoes.size());
         //获取下拉列表
-        Map<String, String> countryStatus = FieldUtils.getComboMap("bd_material", "aos_contryentrystatus");
+        Map<String, String> countryStatus = MKTCom.getComboMap("bd_material", "aos_contryentrystatus");
 
         for (DynamicObject infoe : itemInfoes) {
             String itemid = infoe.getString("id");
@@ -1360,7 +1380,7 @@ public class EventRule {
             return;
         }
         //获取下拉列表
-        Map<String, String> typeValue = FieldUtils.getComboMap("aos_base_stitem", "aos_type");
+        Map<String, String> typeValue = MKTCom.getComboMap("aos_base_stitem", "aos_type");
         QFBuilder builder = new QFBuilder();
         builder.add("aos_orgid","=",orgEntity.getPkValue());
         builder.add("aos_itemid","!=","");
@@ -1792,30 +1812,27 @@ public class EventRule {
             if (startDate.before(now) && now.before(endDate)){
                 //圣诞节 季初
                 switch (type) {
-                    case "CH-1":
+                    case "ACCH-1":
                         seasonStage.put("CHRISTMAS", "季节品1");
                         break;
                     //圣诞 季中
-                    case "CH-2":
+                    case "ACCH-2":
                         seasonStage.put("CHRISTMAS", "季节品2");
                         break;
                     //圣诞 季末
-                    case "CH-3":
+                    case "ACCH-3":
                         seasonStage.put("CHRISTMAS", "季节品3");
                         break;
                     //万圣节 季初
-                    case "HA-E-1":
-                    case "HA-U-1":
+                    case "ACHA-1":
                         seasonStage.put("HALLOWEEN", "季节品1");
                         break;
                     //万圣节 季中
-                    case "HA-E-2":
-                    case "HA-U-2":
+                    case "ACHA-2":
                         seasonStage.put("HALLOWEEN", "季节品2");
                         break;
                     //万圣节 季末
-                    case "HA-E-3":
-                    case "HA-U-3":
+                    case "ACHA-3":
                         seasonStage.put("HALLOWEEN", "季节品3");
                         break;
                     //春夏品 季初
@@ -1974,6 +1991,8 @@ public class EventRule {
      */
     private Map<String,BigDecimal> setDiscount(){
         BigDecimal discount = actPlanEntity.getBigDecimal("aos_disstrength");
+        if (discount ==null)
+            discount = BigDecimal.ONE;
         Map<String,BigDecimal> result = new HashMap<>(itemInfoes.size());
         for (DynamicObject infoe : itemInfoes) {
             result.put(infoe.getString("id"),discount);

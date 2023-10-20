@@ -1,10 +1,17 @@
 package mkt.progress.design.aadd;
 
+import java.util.ArrayList;
 import java.util.EventObject;
+import java.util.HashMap;
+import java.util.List;
 
+import common.fnd.FndGlobal;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
+import kd.bos.dataentity.serialization.SerializationUtils;
+import kd.bos.form.ClientProperties;
 import kd.bos.form.IFormView;
+import kd.bos.form.control.EntryGrid;
 import kd.bos.form.plugin.AbstractFormPlugin;
 import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
@@ -15,6 +22,11 @@ public class aos_mkt_aaddmodel_form extends AbstractFormPlugin {
 	public void afterCreateNewData(EventObject e) {
 		super.afterCreateNewData(e);
 		InitData();
+	}
+
+	@Override
+	public void afterBindData(EventObject e) {
+		super.afterBindData(e);
 	}
 
 	private void InitData() {
@@ -40,6 +52,16 @@ public class aos_mkt_aaddmodel_form extends AbstractFormPlugin {
 			this.getModel().setValue("aos_es", aos_aadd_model_detail.get("aos_es"), i);
 			this.getModel().setValue("aos_seq", aos_aadd_model_detail.get("aos_seq"), i);
 			i++;
+		}
+
+		//控制语言
+		String lan = parentView.getPageCache().get(aos_mkt_aaddmodel_bill.KEY_USER);
+		List<String> users= (List<String>) SerializationUtils.fromJsonStringToList(lan,String.class);
+		for (String userLan : users) {
+			String field = aos_mkt_aaddmodel_bill.judgeLan(userLan);
+			if (FndGlobal.IsNotNull(field)) {
+				this.getModel().setValue(field+"_h",true);
+			}
 		}
 	}
 

@@ -5,12 +5,16 @@ import kd.bos.algo.JoinDataSet;
 import kd.bos.algo.Row;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
+import kd.bos.entity.MainEntityType;
+import kd.bos.entity.ValueMapItem;
+import kd.bos.entity.property.ComboProp;
 import kd.bos.notification.IconType;
 import kd.bos.notification.NotificationBody;
 import kd.bos.notification.NotificationFormInfo;
 import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
+import kd.bos.servicehelper.MetadataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.notification.NotificationServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
@@ -602,5 +606,23 @@ public class MKTCom {
 			}
 		}
 		return "";
+	}
+	/**
+	 *
+	 * @param billName 单据标识
+	 * @param comboName 下拉框标识
+	 * @return K 下拉值 V下拉标题
+	 */
+	public static Map<String, String> getComboMap(String billName, String comboName){
+		MainEntityType type = MetadataServiceHelper.getDataEntityType(billName);    //界面标识
+		ComboProp combo = (ComboProp) type.findProperty(comboName);    //下拉框标识
+		List<ValueMapItem> items = combo.getComboItems();
+		Map<String, String> result = new HashMap<>();
+		for (int i=0;i<items.size();i++){
+			String title = items.get(i).getName().getLocaleValue();
+			String value = items.get(i).getValue();
+			result.put(value, title);
+		}
+		return result;
 	}
 }
