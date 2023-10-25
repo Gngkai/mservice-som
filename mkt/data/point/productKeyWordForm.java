@@ -111,6 +111,9 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         else if (itemKey.equals("aos_open")){
             openView();
         }
+        else if (itemKey.equals("aos_copy")){
+
+        }
     }
 
     @Override
