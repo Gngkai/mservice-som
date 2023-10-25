@@ -4,7 +4,9 @@ import java.util.EventObject;
 import common.fnd.FndMsg;
 import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.plugin.AbstractFormPlugin;
+import kd.bos.dataentity.entity.DynamicObjectCollection;
 import mkt.synciface.*;
+import sal.synciface.imp.aos_sal_import_invprice;
 
 public class aos_mkt_bitest_form extends AbstractFormPlugin {
 
@@ -33,7 +35,8 @@ public class aos_mkt_bitest_form extends AbstractFormPlugin {
 	}
 
 	private void aos_test() {
-		aos_mkt_syncif_sku.executerun();
+		aos_sal_import_invprice.do_operate(null);
+//		AosMktSyncSaleOut.do_operate();
 	}
 
 	public static Object aos_junit(Object obj) {
