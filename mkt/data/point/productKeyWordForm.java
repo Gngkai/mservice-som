@@ -22,6 +22,7 @@ import kd.bos.entity.datamodel.events.BeforeImportDataEventArgs;
 import kd.bos.entity.datamodel.events.ImportDataEventArgs;
 import kd.bos.entity.datamodel.events.PropertyChangedArgs;
 import kd.bos.entity.operate.result.OperationResult;
+import kd.bos.form.FormShowParameter;
 import kd.bos.form.ShowType;
 import kd.bos.form.StyleCss;
 import kd.bos.form.control.Control;
@@ -110,6 +111,14 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         }
         else if (itemKey.equals("aos_open")){
             openView();
+        }
+        else if (itemKey.equals("aos_copy")){
+            DynamicObject aos_orgid = (DynamicObject) this.getModel().getValue("aos_orgid");
+            if (aos_orgid == null)
+                return;
+            FormShowParameter showParameter = FndGlobal.CraeteForm(this, "aos_mkt_point_from", "copyTo", null);
+            showParameter.setCustomParam("org",aos_orgid.getString("id"));
+            getView().showForm(showParameter);
         }
     }
 
@@ -345,6 +354,62 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         if (actionId.equals("aos_mkt_point_sw")){
             this.getView().updateView("aos_entryentity");
             getView().updateView("aos_linentity");
+        }
+        else if (actionId.equals("copyTo")){
+            Object redata = event.getReturnData();
+            if (redata == null)
+                return;
+            DynamicObjectCollection data = (DynamicObjectCollection) redata;
+            if (data.size()==0) {
+                return;
+            }
+
+            DynamicObjectCollection aos_ent = this.getModel().getDataEntity(true).getDynamicObjectCollection("aos_linentity");
+            EntryGrid entryGrid = this.getControl("aos_linentity");
+            List<String> list_control = entryGrid.getItems().stream().map(control -> control.getKey()).collect(Collectors.toList());
+            List<String> list_allFields = aos_sal_sche_pvt.getDynamicObjectType(aos_ent.getDynamicObjectType());
+            List<String> list_fields = new ArrayList<>(list_control.size());
+            for (String key : list_control) {
+                if (list_allFields.contains(key))
+                    list_fields.add(key);
+            }
+
+            if (aos_ent.size()==0) {
+                return;
+            }
+            DynamicObject dy_org = (DynamicObject) this.getModel().getValue("aos_orgid");
+            QFBuilder builder = new QFBuilder();
+            for (DynamicObject row : data) {
+                builder.add("aos_orgid","=",dy_org.getPkValue());
+                builder.add("id","!=",this.getModel().getDataEntity().getPkValue());
+                builder.add("aos_itemnamecn","=",row.getString("aos_item"));
+                String cate = row.getString("aos_cate");
+                String[] split = cate.split(",");
+                if (split.length>0){
+                    builder.add("aos_category1","=",split[0]);
+                }
+                if (split.length>1){
+                    builder.add("aos_category2","=",split[1]);
+                }
+                if (split.length>2){
+                    builder.add("aos_category3","=",split[2]);
+                }
+                DynamicObjectCollection dyc = QueryServiceHelper.query("aos_mkt_point", "id", builder.toArray());
+                for (DynamicObject dy_fid : dyc) {
+                    DynamicObject dy_target = BusinessDataServiceHelper.loadSingle(dy_fid.getString("id"), "aos_mkt_point");
+                    DynamicObjectCollection targetLine = dy_target.getDynamicObjectCollection("aos_linentity");
+                    targetLine.removeIf(dy->true);
+                    for (DynamicObject theRow : aos_ent) {
+                        DynamicObject addRow = targetLine.addNew();
+                        for (String field : list_fields) {
+                            addRow.set(field,theRow.get(field));
+                        }
+                    }
+                    SaveServiceHelper.save(new DynamicObject[]{dy_target});
+                }
+                builder.clear();
+            }
+            getView().showSuccessNotification("Copy To Success");
         }
     }
 
