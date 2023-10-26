@@ -1995,8 +1995,10 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 				aos_emstatus = "出运" + days + "天";
 			}
 			aos_mkt_pslist.set("aos_emstatus", aos_emstatus);
+			aos_mkt_pslist.set("aos_status", "已完成");
+			aos_mkt_pslist.set("aos_startdate", new Date());
+			aos_mkt_pslist.set("aos_enddate", new Date());
 
-			aos_mkt_pslist.set(aos_status, "新建");
 			OperationResult operationrstps = OperationServiceHelper.executeOperate("save", "aos_mkt_pslist",
 					new DynamicObject[] { aos_mkt_pslist }, OperateOption.create());
 			if (operationrstps.getValidateResult().getValidateErrors().size() != 0) {

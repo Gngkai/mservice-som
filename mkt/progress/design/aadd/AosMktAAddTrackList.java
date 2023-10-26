@@ -19,24 +19,31 @@ public class AosMktAAddTrackList extends AbstractListPlugin {
         String itemId = aos_mkt_addtrack.getString(0);
         if ("aos_us".equals(FieldName)) {
             String url = "https://www.amazon.com/dp/" + InvData.getInvAsin("US", itemId);
+            FndMsg.debug("url:" + url);
             this.getView().openUrl(url);
         } else if ("aos_ca".equals(FieldName)) {
             String url = "https://www.amazon.ca/dp/" + InvData.getInvAsin("CA", itemId);
+            FndMsg.debug("url:" + url);
             this.getView().openUrl(url);
         } else if ("aos_uk".equals(FieldName)) {
             String url = "https://www.amazon.co.uk/dp/" + InvData.getInvAsin("UK", itemId);
+            FndMsg.debug("url:" + url);
             this.getView().openUrl(url);
         } else if ("aos_de".equals(FieldName)) {
             String url = "https://www.amazon.de/dp/" + InvData.getInvAsin("DE", itemId);
+            FndMsg.debug("url:" + url);
             this.getView().openUrl(url);
         } else if ("aos_fr".equals(FieldName)) {
             String url = "https://www.amazon.fr/dp/" + InvData.getInvAsin("FR", itemId);
+            FndMsg.debug("url:" + url);
             this.getView().openUrl(url);
         } else if ("aos_it".equals(FieldName)) {
             String url = "https://www.amazon.it/dp/" + InvData.getInvAsin("IT", itemId);
+            FndMsg.debug("url:" + url);
             this.getView().openUrl(url);
         } else if ("aos_es".equals(FieldName)) {
             String url = "https://www.amazon.es/dp/" + InvData.getInvAsin("ES", itemId);
+            FndMsg.debug("url:" + url);
             this.getView().openUrl(url);
         }
     }

@@ -94,8 +94,10 @@ public class aos_mkt_point_bill extends AbstractBillPlugIn implements RowClickEv
 		String aos_category = aos_category1 + "," + aos_category2;
 		// 产品中类改变自动带出编辑
 		DynamicObject dynamicObject = getEditorInfo(aos_category);
-		if (dynamicObject != null) {
-			this.getModel().setValue("aos_user", dynamicObject.getString("aos_editor"));
+		DynamicObject editor = getEditorInfo2(aos_category1,aos_category2);
+
+		if (dynamicObject != null && editor != null) {
+			this.getModel().setValue("aos_user", editor.getString("aos_edmanar"));
 			this.getModel().setValue("aos_groupid", dynamicObject.getString("aos_group_edit"));
 			this.getModel().setValue("aos_confirmor", dynamicObject.getString("aos_edit_leader"));
 		} else {
@@ -103,6 +105,20 @@ public class aos_mkt_point_bill extends AbstractBillPlugIn implements RowClickEv
 			this.getModel().setValue("aos_groupid", null);
 			this.getModel().setValue("aos_confirmor", null);
 		}
+	}
+
+	/**
+	 * 根据大类中类获取编辑助理信息
+	 * @param aos_category1
+	 * @param aos_category2
+	 * @return
+	 */
+	private DynamicObject getEditorInfo2(String aos_category1, String aos_category2) {
+		return QueryServiceHelper.queryOne("aos_mkt_proguser",
+				"aos_edmanar", new QFilter[]{
+				new QFilter("aos_category1", QCP.equals, aos_category1)
+						.and(new QFilter("aos_category2", QCP.equals, aos_category2))
+		});
 	}
 
 	/**
