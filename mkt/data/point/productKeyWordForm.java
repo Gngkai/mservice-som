@@ -407,6 +407,7 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
                     }
                     SaveServiceHelper.save(new DynamicObject[]{dy_target});
                 }
+                builder.clear();
             }
             getView().showSuccessNotification("Copy To Success");
         }
