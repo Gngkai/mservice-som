@@ -1,6 +1,5 @@
 package mkt.data.point;
 
-import common.Cux_Common_Utl;
 import common.sal.sys.basedata.dao.ItemCategoryDao;
 import common.sal.sys.basedata.dao.ItemDao;
 import common.sal.sys.basedata.dao.impl.ItemCategoryDaoImpl;
@@ -11,12 +10,7 @@ import kd.bos.entity.datamodel.*;
 import kd.bos.form.FormShowParameter;
 import kd.bos.form.control.Control;
 import kd.bos.form.control.EntryGrid;
-import kd.bos.form.control.TransferContainer;
-import kd.bos.form.events.SetFilterEvent;
-import kd.bos.form.events.SetFilterListener;
 import kd.bos.form.plugin.AbstractFormPlugin;
-import kd.bos.list.BillList;
-import kd.bos.orm.query.QFilter;
 
 import java.util.*;
 
@@ -54,8 +48,8 @@ public class productKeyCateForm extends AbstractFormPlugin {
                 }
 
                 ItemCategoryDao categoryDao = new ItemCategoryDaoImpl();
-                Map<String, DynamicObject> dyc_cate = categoryDao.getItemCategoryByItemId("group,group.number gnumber", ids);
-
+                Map<String, DynamicObject> dyc_cate = categoryDao.getItemCategoryByItemId("material.name mname,group,group.number gnumber", ids);
+                List<String> list_repeatValue = new ArrayList<>(dyc_cate.size());
 
                 TableValueSetter setter=new TableValueSetter();
                 setter.addField("aos_item");
@@ -63,7 +57,13 @@ public class productKeyCateForm extends AbstractFormPlugin {
                 for (Map.Entry<String, DynamicObject> entry : dyc_cate.entrySet()) {
                     if (entry.getValue().getString("gnumber").equals("waitgroup"))
                        continue;
-                   setter.addRow(entry.getKey(),entry.getValue().getString("group"));
+                    DynamicObject dy_value = entry.getValue();
+                    String value = dy_value.getString("mname")+"/"+dy_value.getString("group");
+                    if (list_repeatValue.contains(value))
+                        continue;
+                    list_repeatValue.add(value);
+
+                   setter.addRow(dy_value.getString("mname"),dy_value.getString("group"));
                 }
 
                 AbstractFormDataModel model= (AbstractFormDataModel) this.getModel();
