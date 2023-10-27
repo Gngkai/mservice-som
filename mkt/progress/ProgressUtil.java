@@ -17,7 +17,7 @@ import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
-import kd.fi.bd.util.QFBuilder;
+import common.sal.util.QFBuilder;
 import mkt.common.MKTCom;
 import mkt.progress.design.aadd.aos_mkt_aadd_bill;
 import mkt.progress.design.aos_mkt_designreq_bill;

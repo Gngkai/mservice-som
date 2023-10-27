@@ -36,7 +36,7 @@ import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
-import kd.fi.bd.util.QFBuilder;
+import common.sal.util.QFBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import sal.synciface.imp.aos_sal_import_pub;

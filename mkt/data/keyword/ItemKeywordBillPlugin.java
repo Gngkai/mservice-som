@@ -21,7 +21,7 @@ import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
-import kd.fi.bd.util.QFBuilder;
+import common.sal.util.QFBuilder;
 import org.apache.commons.lang3.StringUtils;
 import sal.dis.util.DisUtil;
 

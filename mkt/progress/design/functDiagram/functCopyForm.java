@@ -13,7 +13,7 @@ import kd.bos.form.plugin.AbstractFormPlugin;
 import kd.bos.form.transfer.TransferNode;
 import kd.bos.form.transfer.TransferTreeNode;
 import kd.bos.servicehelper.QueryServiceHelper;
-import kd.fi.bd.util.QFBuilder;
+import common.sal.util.QFBuilder;
 
 import java.util.*;
 

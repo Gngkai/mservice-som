@@ -17,7 +17,7 @@ import kd.bos.formula.FormulaEngine;
 import kd.bos.list.ListShowParameter;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.QueryServiceHelper;
-import kd.fi.bd.util.QFBuilder;
+import common.sal.util.QFBuilder;
 import sal.act.ActShopProfit.aos_sal_ShopActProfit_form;
 
 import java.util.*;

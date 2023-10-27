@@ -8,7 +8,7 @@ import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.dataentity.metadata.dynamicobject.DynamicObjectType;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
-import kd.fi.bd.util.QFBuilder;
+import common.sal.util.QFBuilder;
 
 import java.util.ArrayList;
 import java.util.List;

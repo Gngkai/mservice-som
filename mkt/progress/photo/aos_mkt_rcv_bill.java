@@ -32,7 +32,7 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
-import kd.fi.bd.util.QFBuilder;
+import common.sal.util.QFBuilder;
 import mkt.common.MKTCom;
 import mkt.progress.ProgressUtil;
 import mkt.progress.design3d.aos_mkt_3design_bill;

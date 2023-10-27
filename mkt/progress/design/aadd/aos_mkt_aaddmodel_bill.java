@@ -38,7 +38,7 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.drp.pos.common.util.StringJoin;
-import kd.fi.bd.util.QFBuilder;
+import common.sal.util.QFBuilder;
 import mkt.common.util.translateUtils;
 import mkt.progress.design.aos_mkt_funcreq_init;
 import sal.sche.aos_sal_sche_pub.aos_sal_sche_pvt;

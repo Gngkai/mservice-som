@@ -11,7 +11,7 @@ import kd.bos.orm.query.QFilter;
 import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
-import kd.fi.bd.util.QFBuilder;
+import common.sal.util.QFBuilder;
 import mkt.common.MKTCom;
 
 import java.util.ArrayList;

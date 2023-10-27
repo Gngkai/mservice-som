@@ -10,7 +10,7 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import kd.epm.eb.formplugin.AbstractListPlugin;
-import kd.fi.bd.util.QFBuilder;
+import common.sal.util.QFBuilder;
 import java.util.*;
 //
 public class aos_report_test extends AbstractListPlugin {

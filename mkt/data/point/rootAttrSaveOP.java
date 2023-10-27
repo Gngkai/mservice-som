@@ -7,7 +7,7 @@ import kd.bos.entity.plugin.AddValidatorsEventArgs;
 import kd.bos.entity.plugin.PreparePropertysEventArgs;
 import kd.bos.entity.validate.AbstractValidator;
 import kd.bos.servicehelper.QueryServiceHelper;
-import kd.fi.bd.util.QFBuilder;
+import common.sal.util.QFBuilder;
 
 import java.util.Arrays;
 import java.util.List;

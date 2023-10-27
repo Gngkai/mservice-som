@@ -44,7 +44,7 @@ import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import kd.bos.url.UrlService;
-import kd.fi.bd.util.QFBuilder;
+import common.sal.util.QFBuilder;
 import mkt.common.GlobalMessage;
 import mkt.common.MKTCom;
 import mkt.common.MKTS3PIC;

@@ -23,7 +23,7 @@ import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
-import kd.fi.bd.util.QFBuilder;
+import common.sal.util.QFBuilder;
 import mkt.common.MKTCom;
 import org.apache.commons.lang3.time.DateUtils;
 
