@@ -37,7 +37,7 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
-import kd.drp.pos.common.util.StringJoin;
+import java.util.*;
 import common.sal.util.QFBuilder;
 import mkt.common.util.translateUtils;
 import mkt.progress.design.aos_mkt_funcreq_init;
@@ -409,7 +409,7 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 		builder.add("aos_sourceid","=",sourceid);
 		builder.add("aos_button","!=","");
 		builder.add("aos_seq","!=","");
-		StringJoin str = new StringJoin(",");
+		StringJoiner str = new StringJoiner(",");
 		str.add("aos_cate1");
 		str.add("aos_cate2");
 		str.add("aos_cn");
