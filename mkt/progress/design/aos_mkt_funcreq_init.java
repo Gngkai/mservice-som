@@ -22,7 +22,7 @@ import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.DBServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
-import kd.fi.bd.util.QFBuilder;
+import common.sal.util.QFBuilder;
 import mkt.progress.design.functDiagram.functDiagramForm;
 import mkt.progress.iface.iteminfo;
 

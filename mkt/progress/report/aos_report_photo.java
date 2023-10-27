@@ -7,7 +7,7 @@ import kd.bos.form.events.AfterDoOperationEventArgs;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.epm.eb.formplugin.AbstractListPlugin;
-import kd.fi.bd.util.QFBuilder;
+import common.sal.util.QFBuilder;
 import java.util.*;
 
 /**

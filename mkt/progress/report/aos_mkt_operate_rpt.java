@@ -9,7 +9,7 @@ import kd.bos.form.events.AfterDoOperationEventArgs;
 import kd.bos.form.plugin.AbstractFormPlugin;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.QueryServiceHelper;
-import kd.fi.bd.util.QFBuilder;
+import common.sal.util.QFBuilder;
 
 import java.time.LocalDate;
 import java.time.ZoneId;

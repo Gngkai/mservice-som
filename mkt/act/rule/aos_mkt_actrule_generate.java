@@ -26,7 +26,7 @@ import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
-import kd.fi.bd.util.QFBuilder;
+import common.sal.util.QFBuilder;
 import mkt.act.rule.allCountries.TrackerVipon;
 import mkt.act.rule.de.DotdDE;
 import mkt.act.rule.de.LDAnd7DDDE;

@@ -11,7 +11,7 @@ import kd.bos.exception.KDException;
 import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
-import kd.fi.bd.util.QFBuilder;
+import common.sal.util.QFBuilder;
 import mkt.progress.design.aos_mkt_designreq_bill;
 
 import java.time.LocalDate;

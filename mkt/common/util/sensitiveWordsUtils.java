@@ -11,7 +11,7 @@ import kd.bos.dataentity.entity.ILocaleString;
 import kd.bos.exception.ErrorCode;
 import kd.bos.exception.KDException;
 import kd.bos.servicehelper.QueryServiceHelper;
-import kd.fi.bd.util.QFBuilder;
+import common.sal.util.QFBuilder;
 
 import java.util.*;
 
