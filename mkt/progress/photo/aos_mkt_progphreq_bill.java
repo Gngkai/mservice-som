@@ -3123,7 +3123,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		aos_mkt_rcv.set("aos_itemid", AosItemId);
 		aos_mkt_rcv.set("aos_itemname", dy_main.get("aos_itemname"));
 		aos_mkt_rcv.set("aos_boxqty", bd_material.get("aos_boxrate"));
-		aos_mkt_rcv.set("aos_photoflag", true);
+		aos_mkt_rcv.set("aos_photoflag", dy_main.get(aos_photoflag));
 		aos_mkt_rcv.set("aos_phstate", aos_phstate);
 		aos_mkt_rcv.set("aos_photo", dy_main.get(aos_photoflag));
 		aos_mkt_rcv.set("aos_vedio", dy_main.get(aos_vedioflag));
