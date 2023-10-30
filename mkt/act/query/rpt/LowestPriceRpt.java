@@ -20,6 +20,7 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.EventObject;
@@ -156,18 +157,42 @@ public class LowestPriceRpt extends AbstractFormPlugin implements BeforeF7Select
 					.on("aos_shopid", "aos_shopid").select(fieldList.toArray(new String[0])).finish();
 			// 最低定价
 			QFilter qFilter3 = new QFilter("aos_date", QCP.large_equals, startDate);
-			qFilter3.and(new QFilter("aos_date", QCP.less_equals, endDate)).and("aos_entryentity.aos_orgid", QCP.equals, aos_orgid);
-			String selectFields3 = "aos_entryentity.aos_orgid aos_orgid, " + "aos_entryentity.aos_itemid aos_itemid,"
-					+ "aos_entryentity.aos_currentprice aos_lwstpricing";
-			DataSet dataSet3 = queryLowestPricing(selectFields3, qFilter3, new String[]{"aos_orgid", "aos_itemid"});
+			qFilter3.and(new QFilter("aos_date", QCP.less_equals, endDate));
+			qFilter3.and(new QFilter("aos_shopfid","=",aos_shopid));
+			String selectFields3 = "aos_itemid,aos_currentprice aos_lwstpricing";
+			DataSet dataSet3 = queryLowestPricing(selectFields3, qFilter3, new String[]{"aos_itemid"});
 			fieldList.add("aos_lwstpricing");
-			dataSet = dataSet.join(dataSet3, JoinType.LEFT).on("aos_orgid", "aos_orgid").on("aos_itemid", "aos_itemid")
+			dataSet = dataSet.join(dataSet3, JoinType.LEFT).on("aos_itemid", "aos_itemid")
 					.select(fieldList.toArray(new String[0])).finish();
 
 			//当年最低定价，365天最低定价，过去30天最低定价
 			QFBuilder builder = new QFBuilder();
+			builder.add("aos_orgid","=",aos_orgid);
+			builder.add("aos_itemid","!=","");
+			String algoKey = Thread.currentThread().getName();
+			DataSet dataPrice = QueryServiceHelper.queryDataSet(algoKey, "aos_base_lowprz",
+					"aos_itemid,aos_min_price,aos_min_price30,aos_min_price365", builder.toArray(), null);
+			fieldList.add("aos_min_price");
+			fieldList.add("aos_min_price30");
+			fieldList.add("aos_min_price365");
+			dataSet = dataSet.join(dataPrice,JoinType.LEFT).on("aos_itemid", "aos_itemid").select(fieldList.toArray(new String[0])).finish();
+			dataPrice.close();
 
-
+			//过去30天最低成交价
+			builder.clear();
+			LocalDate date_now = LocalDate.now();
+			builder.add("aos_local_date", QCP.large_equals, date_now.minusDays(30).toString());
+			builder.add("aos_org", QCP.equals, aos_orgid);
+			builder.add("aos_platformfid", QCP.equals, aos_platformid);
+			builder.add("aos_shopfid", QCP.equals, aos_shopid);
+			for (QFilter filter : SalUtil.getOrderFilter()) {
+				builder.add(filter);
+			}
+			dataPrice = QueryServiceHelper.queryDataSet(algoKey, BILL_ORDER_LINE, "aos_item_fid,aos_trans_price aos_lwsttransprice_d", builder.toArray(), null)
+					.groupBy(new String[]{"aos_item_fid"})
+					.min("aos_lwsttransprice_d").finish();
+			fieldList.add("aos_lwsttransprice_d");
+			dataSet = dataSet.join(dataPrice,JoinType.LEFT).on("aos_itemid","aos_item_fid").select(fieldList.toArray(new String[0])).finish();
 
 
 			TableValueSetter tableValueSetter = handleDataToSetter(dataSet, fieldList);
@@ -199,7 +224,7 @@ public class LowestPriceRpt extends AbstractFormPlugin implements BeforeF7Select
 
 	private DataSet queryLowestPricing(String selectFields, QFilter qFilter, String[] groupByField) {
 		String algoKey = this.getClass().getName() + "queryLowestPricing";
-		DataSet dataSet = QueryServiceHelper.queryDataSet(algoKey, BILL_LOWEST_PRICING, selectFields, qFilter.toArray(),
+		DataSet dataSet = QueryServiceHelper.queryDataSet(algoKey, "aos_mkt_invprz_bak", selectFields, qFilter.toArray(),
 				null);
 		return dataSet.groupBy(groupByField).min("aos_lwstpricing").finish();
 	}
