@@ -331,6 +331,7 @@ public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClic
 		aos_mkt_3design.set("aos_designer", AosDesignerId);
 		aos_mkt_3design.set("aos_type", aos_type3d);
 		aos_mkt_3design.set("aos_source", "设计需求表");
+		aos_mkt_3design.set("aos_source1", dy_mian.getString("aos_source"));
 
 		// BOTP
 		aos_mkt_3design.set("aos_sourcebilltype", "aos_mkt_designreq");
@@ -450,6 +451,7 @@ public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClic
 			//出运日期和质检完成日期都为空
 			if (existQuainscome && existShipdate){
 				aos_mkt_3design.set("aos_status","大货样封样");
+				aos_mkt_3design.set("aos_user",system);
 			}
 		}
 
