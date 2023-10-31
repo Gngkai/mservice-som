@@ -133,6 +133,12 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
      * 提交按钮逻辑
      */
     public void aosSubmit(DynamicObject dy_main, String type) throws FndError {
+        // 手工提交时先保存数据
+        if (type.equals("A")) {
+            this.getView().invokeOperation("save");
+            this.getView().invokeOperation("refresh");
+            statusControl();// 提交完成后做新的界面状态控制
+        }
         FndMsg.debug("=====Into aosSubmit=====");
         String aos_status = dy_main.getString("aos_status");// 根据状态判断当前流程节点
         switch (aos_status) {
@@ -416,6 +422,14 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
             fndError.add("至少填写一行SKU数据!");
             throw fndError;
         }
+        String aos_productno = aos_entryentityS.get(0).getDynamicObject("aos_itemid").getString("aos_productno");
+        DynamicObject aos_mkt_aadd = QueryServiceHelper.queryOne("aos_mkt_aadd","aos_entryentity.aos_itemid",
+                new QFilter("aos_entryentity.aos_itemid.aos_productno", QCP.equals, aos_productno)
+                        .and("id",QCP.not_equals,dy_main.getPkValue().toString()).toArray());
+        if (FndGlobal.IsNotNull(aos_mkt_aadd)) {
+            throw new FndError(aos_productno+"产品号已有高级A+，不允许重复生成！");
+        }
+
         Object itemId = aos_entryentityS.get(0).getDynamicObject("aos_itemid").getPkValue();// 物料ID
         String category = MKTCom.getItemCateNameZH(itemId);
         String[] category_group = category.split(",");
@@ -600,6 +614,7 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
         Object aos_type = this.getModel().getValue("aos_type");
         Object aos_org = this.getModel().getValue("aos_org");
         Object aos_status = this.getModel().getValue("aos_status");
+        Object fid = this.getModel().getDataEntity().getPkValue();
         // 对于新建节点
         if ("新建".equals(aos_status)) {
             if (FndGlobal.IsNull(aos_type)) {
@@ -616,6 +631,17 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
                 fndError.add("至少填写一行SKU数据!");
                 throw fndError;
             }
+
+            String aos_productno = ((DynamicObject)aosItemId).getString("aos_productno");
+            // 判断产品号是否已存在
+            DynamicObject aos_mkt_aadd = QueryServiceHelper.queryOne("aos_mkt_aadd","aos_entryentity.aos_itemid",
+                    new QFilter("aos_entryentity.aos_itemid.aos_productno", QCP.equals, aos_productno)
+                            .and("id",QCP.not_equals,fid).toArray());
+            if (FndGlobal.IsNotNull(aos_mkt_aadd)) {
+                fndError.add(aos_productno+"产品号已有高级A+，不允许重复生成！");
+                throw fndError;
+            }
+
         }
         if (fndError.getCount() > 0) {
             throw fndError;
@@ -646,6 +672,8 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
         // 状态控制
         EntryGrid entryGrid = this.getControl("aos_entryentity");
         entryGrid.setColumnProperty("aos_contrast", ClientProperties.Lock, true);
+        entryGrid.setColumnProperty("aos_desc", ClientProperties.Lock, true);
+
         if ("新建".equals(aosStatus)) {
             this.getView().setEnable(false, "aos_osconfirm");// 是否海外确认
             entryGrid.setColumnProperty("aos_aadd", ClientProperties.Lock, true);
@@ -687,6 +715,7 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
             this.getView().setEnable(true, 0, "aos_same");// 同款
             this.getView().setEnable(true, 0, "aos_trans");// 翻译
             this.getView().setEnable(false, 0, "aos_itemid");// 货号
+            this.getView().setEnable(true, 0, "aos_desc");// 备注
         } else if ("新品对比模块录入".equals(aosStatus)) {
             this.getView().setVisible(false, "bar_save");// 保存
             this.getView().setEnable(false, "aos_osconfirm");// 是否海外确认
