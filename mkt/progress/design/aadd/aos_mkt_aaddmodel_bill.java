@@ -31,13 +31,15 @@ import kd.bos.form.events.BeforeDoOperationEventArgs;
 import kd.bos.form.events.ClosedCallBackEvent;
 import kd.bos.form.operate.FormOperate;
 import kd.bos.lang.Lang;
+import kd.bos.logging.Log;
+import kd.bos.logging.LogFactory;
 import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
-import java.util.*;
+
 import common.sal.util.QFBuilder;
 import mkt.common.util.translateUtils;
 import mkt.progress.design.aos_mkt_funcreq_init;
@@ -46,9 +48,11 @@ import sal.sche.aos_sal_sche_pub.aos_sal_sche_pvt;
 @SuppressWarnings("unchecked")
 public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 	public static final String KEY_USER = "LAN"; //用户可操控的语言
-	private static List<String> list_lans;
+	private final static List<String> list_lans;
+	private static Log log;
 	static {
 		list_lans = Arrays.asList("CN", "中文", "US","CA","UK","EN","DE","FR","IT","ES");
+		log = LogFactory.getLog("mkt.progress.design.aadd.aos_mkt_aaddmodel_bill");
 	}
 
 	@Override
@@ -182,17 +186,18 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 				}
 				this.getView().showSuccessNotification("Copy to Success");
 			}
-			else if (actionId.equals("copyFrom")){
+			else {
 				Object source = this.getModel().getDataEntity(true).getPkValue();
 				String products = (String) returnData.get("no");
 				QFBuilder builder = new QFBuilder();
+				Object productno = this.getModel().getValue("aos_productno");
 				for (String no : products.split(",")) {
 					if (FndGlobal.IsNull(no))
 						continue;
 					builder.clear();
 					builder.add("aos_productno","=",no);
 					List<Object> list = QueryServiceHelper.queryPrimaryKeys("aos_aadd_model", builder.toArray(), null, 1);
-					copyValue(list.get(0),source,no,tabs,lans);
+					copyValue(list.get(0),source,productno,tabs,lans);
 				}
 				openInContainer();
 				this.getView().showSuccessNotification("Copy from Success");
@@ -217,7 +222,7 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 			//翻译后的语言
 			List<String> list_terminal = (List<String>) returnData.get("terminal");
 			List<String> list_table = (List<String>) returnData.get("img");
-			Map<String, Map<String, DynamicObject>> entiyData = findEntiyData(getModel().getDataEntity().getPkValue());
+			Map<String, Map<String, DynamicObject>> entiyData = findEntiyData(getModel().getDataEntity().getPkValue().toString());
 
 			//语言
 			for (String lan : list_terminal) {
@@ -289,14 +294,14 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 	 * 设置兄弟货号
 	 * @param dy_main 单据
 	 */
-	private Boolean setProductItem(DynamicObject dy_main){
+	public void setProductItem(DynamicObject dy_main){
 		String aos_productno = dy_main.getString("aos_productno");
 		if (FndGlobal.IsNull(aos_productno)) {
-			return false;
+			return;
 		}
 		DynamicObjectCollection productEntity = dy_main.getDynamicObjectCollection("aos_entryentity2");
 		if (productEntity.size()>0) {
-			return false;
+			return;
 		}
 		QFilter filter_productno = new QFilter("aos_productno", "=", aos_productno);// 未导入标记
 		QFilter[] filters = new QFilter[] { filter_productno };
@@ -315,7 +320,6 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 			aos_entryentity2.set("aos_itemid",material);
 			aos_entryentity2.set("aos_orgdetail", Joiner.on(";").join(list_orgtext));
 		}
-		return true;
 	}
 
 	/**
@@ -327,13 +331,14 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 	 * @param lans		语言
 	 */
 	private void copyValue(Object sourceid,Object targetid,Object tarGetNo,List<String> tabs,List<String> lans){
+
 		//获取源单的相关数据
-		Map<String,Map<String,DynamicObject>> sourceData = findEntiyData(sourceid);
+		Map<String,Map<String,DynamicObject>> sourceData = findEntiyData(sourceid.toString());
 		if (sourceData.size()==0) {
 			return;
 		}
 		//获取目标单据的相关数据
-		Map<String,Map<String,DynamicObject>> targetData = findEntiyData(targetid);
+		Map<String,Map<String,DynamicObject>> targetData = findEntiyData(targetid.toString());
 
 		//记录需要修改和保存的数据
 		List<DynamicObject> list_save = new ArrayList<>(),list_update = new ArrayList<>();
@@ -363,7 +368,7 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 					targetRowDy.set("aos_button",tab);
 					targetRowDy.set("aos_seq",entry.getKey());
 				}
-
+				targetRowDy.set("aos_copyid",sourceid+"/"+tab+"/"+entry.getKey());
 				//大项，小项
 				targetRowDy.set("aos_cate1",sourceRowDy.get("aos_cate1"));
 				targetRowDy.set("aos_cate2",sourceRowDy.get("aos_cate2"));
@@ -403,12 +408,13 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 		}
 	}
 
-	private Map<String,Map<String,DynamicObject>> findEntiyData(Object sourceid){
+	public static Map<String,Map<String,DynamicObject>> findEntiyData(String sourceid){
 		Map<String,Map<String,DynamicObject>> result = new HashMap<>();
-		QFBuilder builder = new QFBuilder();
-		builder.add("aos_sourceid","=",sourceid);
-		builder.add("aos_button","!=","");
-		builder.add("aos_seq","!=","");
+		List<QFilter> list = new ArrayList<>();
+		list.add(new QFilter("aos_sourceid","=",sourceid));
+		list.add(new QFilter("aos_button","!=",""));
+		list.add(new QFilter("aos_seq","!=",""));
+
 		StringJoiner str = new StringJoiner(",");
 		str.add("aos_cate1");
 		str.add("aos_cate2");
@@ -421,7 +427,8 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 		str.add("aos_es");
 		str.add("aos_button");
 		str.add("aos_seq");
-		DynamicObject[] dyc = BusinessDataServiceHelper.load("aos_aadd_model_detail", str.toString(), builder.toArray());
+		str.add("aos_copyid");
+		DynamicObject[] dyc = BusinessDataServiceHelper.load("aos_aadd_model_detail", str.toString(), list.toArray(new QFilter[0]));
 		for (DynamicObject dy : dyc) {
 			String key = dy.getString("aos_button");
 			Map<String, DynamicObject> map = result.computeIfAbsent(key, k -> new HashMap<>());
