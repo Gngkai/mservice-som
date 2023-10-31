@@ -99,6 +99,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		} catch (FndError fndError) {
 			fndError.show(getView());
 		} catch (Exception ex) {
+			ex.printStackTrace();
 			FndError.showex(getView(), ex, FndWebHook.urlMms);
 		}
 	}
@@ -165,7 +166,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 					return -1;
 			}).collect(Collectors.toList());
 
-			this.getModel().deleteEntryData("aos_entryentity4");
+//			this.getModel().deleteEntryData("aos_entryentity4");
 			int i = 1;
 			// 获取所有国家品牌 字符串拼接 终止
 			for (DynamicObject aos_contryentry : list_country) {
@@ -192,7 +193,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 				else
 					Str = "-" + aos_nationalitynumber;
 
-				this.getModel().batchCreateNewEntryRow("aos_entryentity4", 1);
+//				this.getModel().batchCreateNewEntryRow("aos_entryentity4", 1);
 				this.getModel().setValue("aos_orgshort", aos_nationalitynumber, i - 1);
 				this.getModel().setValue("aos_brand", value, i - 1);
 
@@ -2314,6 +2315,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 
 	/** 视频剪辑 状态下提交 直接到 开发确认：视频 **/
 	private void SubmitForCut() throws FndError {
+		this.getView().invokeOperation("save");
 		// 异常参数
 		String ErrorMessage = "";
 		// 数据层
@@ -2321,6 +2323,14 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		if (AosDeveloper == null) {
 			throw new FndError("开发不能为空");
 		}
+
+		DynamicObjectCollection aos_entryentity4S = this.getModel().getEntryEntity("aos_entryentity4");
+		for  (DynamicObject aos_entryentity4 : aos_entryentity4S) {
+			String aos_vediocate = aos_entryentity4.getString("aos_vediocate");
+			if (FndGlobal.IsNull(aos_vediocate))
+				throw new FndError("视频类型不能为空!");
+		}
+
 		Object AosSourceid = this.getModel().getValue(aos_sourceid);
 		Object AosBillno = this.getModel().getValue(billno);
 		Object ReqFId = this.getModel().getDataEntity().getPkValue(); // 当前界面主键
@@ -2655,6 +2665,11 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			aos_entryentity4.set("aos_brand", aos_entryentityOri4.get("aos_brand"));
 			aos_entryentity4.set("aos_s3address1", aos_entryentityOri4.get("aos_s3address1"));
 			aos_entryentity4.set("aos_s3address2", aos_entryentityOri4.get("aos_s3address2"));
+
+
+			aos_entryentity4.set("aos_vediocate", aos_entryentityOri4.get("aos_vediocate"));
+			aos_entryentity4.set("aos_vediosku", aos_entryentityOri4.get("aos_vediosku"));
+
 		}
 
 		OperationServiceHelper.executeOperate("save", "aos_mkt_photoreq", new DynamicObject[] { AosMktPhotoReq },
