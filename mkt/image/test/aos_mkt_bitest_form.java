@@ -7,6 +7,7 @@ import kd.bos.form.plugin.AbstractFormPlugin;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import mkt.synciface.*;
 import sal.synciface.imp.aos_sal_import_invprice;
+import sal.synciface.newcost.somCostSync;
 
 public class aos_mkt_bitest_form extends AbstractFormPlugin {
 
@@ -35,8 +36,7 @@ public class aos_mkt_bitest_form extends AbstractFormPlugin {
 	}
 
 	private void aos_test() {
-		aos_sal_import_invprice.do_operate(null);
-//		AosMktSyncSaleOut.do_operate();
+		somCostSync.sync();
 	}
 
 	public static Object aos_junit(Object obj) {
