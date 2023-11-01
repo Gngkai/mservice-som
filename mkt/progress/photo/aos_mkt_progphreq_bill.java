@@ -1356,6 +1356,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			this.getView().setEnable(true, "aos_flexpanelap141");
 
 		} else if ("视频剪辑".equals(AosStatus)) {
+			this.getView().setEnable(true, "aos_flexpanelap20");
 			map.put(ClientProperties.Text, new LocaleString("提交"));
 			this.getView().updateControlMetadata("aos_submit", map);
 		} else if ("实景拍摄".equals(AosStatus)) {
