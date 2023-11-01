@@ -166,7 +166,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 					return -1;
 			}).collect(Collectors.toList());
 
-//			this.getModel().deleteEntryData("aos_entryentity4");
+			this.getModel().deleteEntryData("aos_entryentity4");
 			int i = 1;
 			// 获取所有国家品牌 字符串拼接 终止
 			for (DynamicObject aos_contryentry : list_country) {
@@ -193,7 +193,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 				else
 					Str = "-" + aos_nationalitynumber;
 
-//				this.getModel().batchCreateNewEntryRow("aos_entryentity4", 1);
+				this.getModel().batchCreateNewEntryRow("aos_entryentity4", 1);
 				this.getModel().setValue("aos_orgshort", aos_nationalitynumber, i - 1);
 				this.getModel().setValue("aos_brand", value, i - 1);
 
@@ -2324,12 +2324,11 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			throw new FndError("开发不能为空");
 		}
 
-		DynamicObjectCollection aos_entryentity4S = this.getModel().getEntryEntity("aos_entryentity4");
-		for  (DynamicObject aos_entryentity4 : aos_entryentity4S) {
-			String aos_vediocate = aos_entryentity4.getString("aos_vediocate");
+
+		Object aos_vediocate = this.getModel().getValue("aos_vediocate");
 			if (FndGlobal.IsNull(aos_vediocate))
 				throw new FndError("视频类型不能为空!");
-		}
+
 
 		Object AosSourceid = this.getModel().getValue(aos_sourceid);
 		Object AosBillno = this.getModel().getValue(billno);
@@ -2667,8 +2666,8 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			aos_entryentity4.set("aos_s3address2", aos_entryentityOri4.get("aos_s3address2"));
 
 
-			aos_entryentity4.set("aos_vediocate", aos_entryentityOri4.get("aos_vediocate"));
-			aos_entryentity4.set("aos_vediosku", aos_entryentityOri4.get("aos_vediosku"));
+//			aos_entryentity4.set("aos_vediocate", aos_entryentityOri4.get("aos_vediocate"));
+//			aos_entryentity4.set("aos_vediosku", aos_entryentityOri4.get("aos_vediosku"));
 
 		}
 
