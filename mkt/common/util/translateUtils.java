@@ -3,10 +3,13 @@ package mkt.common.util;
 import com.deepl.api.DeepLException;
 import com.deepl.api.Translator;
 import common.Cux_Common_Utl;
+import common.fnd.FndGlobal;
 import kd.bos.exception.ErrorCode;
 import kd.bos.exception.KDException;
 
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 /**
@@ -16,11 +19,12 @@ import java.util.stream.Collectors;
  */
 public class translateUtils {
     private static Translator translator ;
+    private static String key;
     private static Map<String,String> map_tranSource;   //源语言
     private static Map<String,String> map_transLan;     //目标语言
+    private static Lock lock;
     static {
-        String  authKey = "7d2a206b-8182-c99a-a314-76874dd27d89:fx";
-        translator = new Translator(authKey);
+        lock = new ReentrantLock();
         map_tranSource = new HashMap<>();
         map_tranSource.put("中文","ZH");
         map_tranSource.put("EN","EN");
@@ -51,6 +55,15 @@ public class translateUtils {
         map_transLan.put("CN","ZH");
         map_transLan.put("ZH","ZH");
     }
+    public static void setTranslator(){
+        lock.lock();
+        String  authKey =  Cux_Common_Utl.GeneratePara("MMS_transKey");
+        if (FndGlobal.IsNull(key) || !key.equals(authKey)){
+            key = authKey;
+            translator = new Translator(authKey);
+        }
+        lock.unlock();
+    }
 
     /**
      *
@@ -60,6 +73,7 @@ public class translateUtils {
      * @return  翻译
      */
     public static String  transalate(String sourceLan,String targetLan,String text){
+        setTranslator();
         if (Cux_Common_Utl.IsNull(text))
             throw new KDException(new ErrorCode("translateUtils","翻译内容不能为空"));
         if (!map_tranSource.containsKey(sourceLan)) {
@@ -86,6 +100,7 @@ public class translateUtils {
      * @return  翻译
      */
     public static List<String>  transalate(String sourceLan, String targetLan, List<String> texts){
+        setTranslator();
         if (texts == null)
             throw new KDException(new ErrorCode("translateUtils","翻译内容不能为空"));
         if (texts.size()==0)
