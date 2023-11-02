@@ -288,6 +288,7 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 		Set<String> fields= new HashSet<>();
 		fields.add("aos_picturefield");
 		SalUtil.skipVerifyFieldChanged(dataEntity,dataEntity.getDynamicObjectType(),fields);
+		this.getView().invokeOperation("save");
 	}
 
 	/**
@@ -457,14 +458,12 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 		List<DynamicObject> aosBillDeatilS = new ArrayList<>();
 		DeleteServiceHelper.delete("aos_aadd_model_detail",
 				new QFilter("aos_sourceid", QCP.equals, fid.toString()).and("aos_button", QCP.equals, button).toArray());
-
+		FndMsg.debug("aos_entryentityS.size():"+aos_entryentityS.size());
+		if (aos_entryentityS.size()>0) {
 		int i = 1;
 		for (DynamicObject aos_entryentity : aos_entryentityS) {
 			aos_entryentity.set("aos_seq", i);
 			i++;
-		}
-
-		for (DynamicObject aos_entryentity : aos_entryentityS) {
 			DynamicObject aos_aadd_model_detail = BusinessDataServiceHelper.newDynamicObject("aos_aadd_model_detail");
 			aos_aadd_model_detail.set("aos_cate1", aos_entryentity.get("aos_cate1"));
 			aos_aadd_model_detail.set("aos_cate2", aos_entryentity.get("aos_cate2"));
@@ -481,6 +480,12 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 			aosBillDeatilS.add(aos_aadd_model_detail);
 		}
 		SaveServiceHelper.save(aosBillDeatilS.toArray(new DynamicObject[0]));
+		}
+		else {
+			this.getModel().setValue("aos_textfield"+button,"");
+//			this.getView().invokeOperation("save");
+//			this.getView().invokeOperation("refresh");
+		}
 	}
 
 	private void aos_button(String source) {
