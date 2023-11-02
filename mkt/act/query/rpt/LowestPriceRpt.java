@@ -2,11 +2,9 @@ package mkt.act.query.rpt;
 
 import common.fnd.FndGlobal;
 import common.sal.permission.PermissionUtil;
+import common.sal.util.QFBuilder;
 import common.sal.util.SalUtil;
-import kd.bos.algo.DataSet;
-import kd.bos.algo.JoinDataSet;
-import kd.bos.algo.JoinType;
-import kd.bos.algo.Row;
+import kd.bos.algo.*;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.entity.datamodel.AbstractFormDataModel;
 import kd.bos.entity.datamodel.TableValueSetter;
@@ -22,6 +20,7 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.EventObject;
@@ -89,274 +88,121 @@ public class LowestPriceRpt extends AbstractFormPlugin implements BeforeF7Select
 	}
 
 	private void inquire2() {
-		String startDate = getStartDate();
-		String endDate = getEndDate();
-		String aos_orgid = getOrgId();
-		String aos_platformid = getPlatFormId();
-		String aos_shopid = getShopId();
-		if ("".equals(startDate) || "".equals(endDate) || FndGlobal.IsNull(aos_orgid)
-				|| FndGlobal.IsNull(aos_platformid) || FndGlobal.IsNull(aos_shopid)) {
-			this.getView().showTipNotification("参数必填");
-			return;
-		}
-		// 界面赋值字段
-		List<String> fieldList = new ArrayList<>();
-		fieldList.add("aos_orgid");
-		fieldList.add("aos_itemid");
-		fieldList.add("aos_brandid");
-		fieldList.add("aos_asin");
-		fieldList.add("aos_reviewnum");
-		fieldList.add("aos_stars");
-		// 物料查询
-		QFilter qFilter = new QFilter("aos_contryentry.aos_nationality", QCP.is_notnull, null);
-		qFilter.and(new QFilter("aos_protype", QCP.equals, "N"));// 正常产品
-		qFilter.and(new QFilter("aos_type", QCP.equals, "A"));// 类别为“产品”
-		qFilter.and(new QFilter("aos_iscomb", QCP.equals, "0"));// 不为组合产品
-		qFilter.and(new QFilter("aos_contryentry.aos_nationality", QCP.equals, aos_orgid));
-		String selectFields = "id aos_itemid, aos_contryentry.aos_nationality aos_orgid, aos_contryentry.aos_contrybrand aos_brandid";
-		DataSet dataSet = queryItem(selectFields, qFilter);
-		// 店铺 平台
-		DataSet dataSetShop = QueryServiceHelper.queryDataSet("LowestPriceRpt.shop", "aos_sal_shop",
-				"aos_org,id aos_shopid,aos_channel aos_platformid", new QFilter("id", QCP.equals, aos_shopid).toArray(),
-				null);
-		dataSet = dataSet.join(dataSetShop, JoinType.LEFT).on("aos_orgid", "aos_org")
-				.select(new String[] { "aos_orgid", "aos_itemid", "aos_brandid", "aos_shopid", "aos_platformid" })
-				.finish();
-		fieldList.add("aos_shopid");
-		fieldList.add("aos_platformid");
-		// 客户评论信息
-		String selectFields4 = "aos_orgid, aos_itemid, aos_asin,aos_review aos_reviewnum, aos_stars";
-		QFilter qFilter4 = new QFilter("aos_orgid", QCP.equals, aos_orgid);
-		DataSet dataSet4 = queryReview(selectFields4, qFilter4);
-		dataSet = dataSet.join(dataSet4, JoinType.LEFT).on("aos_orgid", "aos_orgid").on("aos_itemid", "aos_itemid")
-				.select(fieldList.toArray(new String[0])).finish();
-		// 最低成交价过滤条件
-		QFilter qFilter1 = new QFilter("aos_local_date", QCP.large_equals, startDate);
-		qFilter1.and(new QFilter("aos_local_date", QCP.less_equals, endDate));
-		qFilter1.and(new QFilter("aos_org", QCP.equals, aos_orgid));
-		qFilter1.and(new QFilter("aos_platformfid", QCP.equals, aos_platformid));
-		qFilter1.and(new QFilter("aos_shopfid", QCP.equals, aos_shopid));
-		String selectFields1 = "aos_org aos_orgid, " + "aos_item_fid aos_itemid," + "aos_platformfid aos_platformid, "
-				+ "aos_shopfid aos_shopid," + "aos_trans_price aos_lwsttransprice";
-		String[] groupByField = { "aos_orgid", "aos_itemid", "aos_shopid", "aos_platformid" };
-		DataSet dataSet1 = queryLowestTransPrice(selectFields1, qFilter1, groupByField);
-		fieldList.add("aos_lwsttransprice");
-		dataSet = dataSet.join(dataSet1, JoinType.LEFT).on("aos_orgid", "aos_orgid").on("aos_itemid", "aos_itemid")
-				.on("aos_shopid", "aos_shopid").select(fieldList.toArray(new String[0])).finish();
-		// 活动次数
-		QFilter qFilter2 = new QFilter("aos_sal_actplanentity.aos_l_startdate", QCP.less_equals, endDate);
-		qFilter2.and(new QFilter("aos_sal_actplanentity.aos_enddate", QCP.large_equals, startDate));
-		qFilter2.and(new QFilter("aos_nationality", QCP.equals, aos_orgid));
-		qFilter2.and(new QFilter("aos_channel", QCP.equals, aos_platformid));
-		qFilter2.and(new QFilter("aos_shop", QCP.equals, aos_shopid));
-		String selectFields2 = "aos_nationality aos_orgid, " + "aos_channel aos_platformid, " + "aos_shop aos_shopid, "
-				+ "aos_sal_actplanentity.aos_itemnum aos_itemid," + "1 as aos_acttimes";
-		DataSet dataSet2 = queryActivityTimes(selectFields2, qFilter2, groupByField);
-		fieldList.add("aos_acttimes");
-		dataSet = dataSet.join(dataSet2, JoinType.LEFT).on("aos_orgid", "aos_orgid").on("aos_itemid", "aos_itemid")
-				.on("aos_shopid", "aos_shopid").select(fieldList.toArray(new String[0])).finish();
-		// 最低定价
-		QFilter qFilter3 = new QFilter("aos_date", QCP.large_equals, startDate);
-		qFilter3.and(new QFilter("aos_date", QCP.less_equals, endDate)).and("aos_entryentity.aos_orgid", QCP.equals, aos_orgid);
-		String selectFields3 = "aos_entryentity.aos_orgid aos_orgid, " + "aos_entryentity.aos_itemid aos_itemid,"
-				+ "aos_entryentity.aos_currentprice aos_lwstpricing";
-		DataSet dataSet3 = queryLowestPricing(selectFields3, qFilter3, new String[] { "aos_orgid", "aos_itemid" });
-		fieldList.add("aos_lwstpricing");
-		dataSet = dataSet.join(dataSet3, JoinType.LEFT).on("aos_orgid", "aos_orgid").on("aos_itemid", "aos_itemid")
-				.select(fieldList.toArray(new String[0])).finish();
-
-		TableValueSetter tableValueSetter = handleDataToSetter(dataSet, fieldList);
-		setEntryEntity(tableValueSetter);
-		dataSet.close();
-		dataSetShop.close();
-		dataSet4.close();
-		dataSet1.close();
-		dataSet2.close();
-		dataSet3.close();
-	}
-
-	private void inquire() {
-		String startDate = getStartDate();
-		String endDate = getEndDate();
-		if ("".equals(startDate) || "".equals(endDate)) {
-			this.getView().showTipNotification("日期范围必填");
-			return;
-		}
-		String aos_orgid = getOrgId();
-		String aos_platformid = getPlatFormId();
-		String aos_shopid = getShopId();
-
-		int queryType = getQueryType(aos_orgid, aos_platformid, aos_shopid);
-
-		// 界面赋值字段
-		List<String> fieldList = new ArrayList<>();
-		fieldList.add("aos_orgid");
-		fieldList.add("aos_itemid");
-		fieldList.add("aos_brandid");
-		fieldList.add("aos_asin");
-		fieldList.add("aos_reviewnum");
-		fieldList.add("aos_stars");
-
-		// 物料查询字段等
-		String selectFields = "id aos_itemid, aos_contryentry.aos_nationality aos_orgid, aos_contryentry.aos_contrybrand aos_brandid";
-		QFilter qFilter = new QFilter("aos_contryentry.aos_nationality", QCP.is_notnull, null);
-		qFilter.and(new QFilter("aos_protype", QCP.equals, "N"));// 正常产品
-		qFilter.and(new QFilter("aos_type", QCP.equals, "A"));// 类别为“产品”
-		qFilter.and(new QFilter("aos_iscomb", QCP.equals, "0"));// 不为组合产品
-
-		// 客户评论信息查询字段等
-		String selectFields4 = "aos_orgid, aos_itemid, aos_asin,aos_review aos_reviewnum, aos_stars";
-		QFilter qFilter4 = new QFilter("aos_orgid", QCP.is_notnull, null);
-		if (queryType == 2) {
+		try (AlgoContext ignore = Algo.newContext()) {
+			String startDate = getStartDate();
+			String endDate = getEndDate();
+			String aos_orgid = getOrgId();
+			String aos_platformid = getPlatFormId();
+			String aos_shopid = getShopId();
+			if ("".equals(startDate) || "".equals(endDate) || FndGlobal.IsNull(aos_orgid)
+					|| FndGlobal.IsNull(aos_platformid) || FndGlobal.IsNull(aos_shopid)) {
+				this.getView().showTipNotification("参数必填");
+				return;
+			}
+			// 界面赋值字段
+			List<String> fieldList = new ArrayList<>();
+			fieldList.add("aos_orgid");
+			fieldList.add("aos_itemid");
+			fieldList.add("aos_brandid");
+			fieldList.add("aos_asin");
+			fieldList.add("aos_reviewnum");
+			fieldList.add("aos_stars");
+			// 物料查询
+			QFilter qFilter = new QFilter("aos_contryentry.aos_nationality", QCP.is_notnull, null);
+			qFilter.and(new QFilter("aos_protype", QCP.equals, "N"));// 正常产品
+			qFilter.and(new QFilter("aos_type", QCP.equals, "A"));// 类别为“产品”
+			qFilter.and(new QFilter("aos_iscomb", QCP.equals, "0"));// 不为组合产品
 			qFilter.and(new QFilter("aos_contryentry.aos_nationality", QCP.equals, aos_orgid));
-			qFilter4.and(new QFilter("aos_orgid", QCP.equals, aos_orgid));
-		}
-
-		DataSet dataSet = queryItem(selectFields, qFilter);
-		DataSet dataSetShop = QueryServiceHelper.queryDataSet(this.getClass().getName() + ".shop", "aos_sal_shop",
-				"aos_org,id shopid", null, null);
-		dataSet = dataSet.join(dataSetShop, JoinType.LEFT).on("aos_orgid", "aos_org")
-				.select(new String[] { "aos_orgid", "aos_itemid", "aos_brandid", "shopid" }).finish();
-		fieldList.add("shopid");
-
-		DataSet dataSet4 = queryReview(selectFields4, qFilter4);
-		dataSet = dataSet.join(dataSet4, JoinType.LEFT).on("aos_orgid", "aos_orgid").on("aos_itemid", "aos_itemid")
-				.select(fieldList.toArray(new String[0])).finish();
-
-		// 分组字段
-		String[] groupByField = { "aos_orgid", "aos_itemid", "aos_shopid" };
-
-		// 最低成交价过滤条件
-		QFilter qFilter1 = new QFilter("aos_local_date", QCP.large_equals, startDate);
-		qFilter1.and(new QFilter("aos_local_date", QCP.less_equals, endDate));
-		// 最低成交价查询字段
-		String selectFields1 = "aos_org aos_orgid, " + "aos_item_fid aos_itemid,"
-				+ "aos_trans_price aos_lwsttransprice,aos_shopfid aos_shopid";
-
-		// 活动次数过滤条件
-		QFilter qFilter2 = new QFilter("aos_sal_actplanentity.aos_l_startdate", QCP.less_equals, endDate);
-		qFilter2.and(new QFilter("aos_sal_actplanentity.aos_enddate", QCP.large_equals, startDate));
-		// 活动次数查询字段
-		String selectFields2 = "aos_nationality aos_orgid, " + "aos_sal_actplanentity.aos_itemnum aos_itemid,"
-				+ "1 as aos_acttimes";
-
-		// 最低定价过滤条件
-		QFilter qFilter3 = new QFilter("aos_date", QCP.large_equals, startDate);
-		qFilter3.and(new QFilter("aos_date", QCP.less_equals, endDate));
-		String selectFields3 = "aos_entryentity.aos_orgid aos_orgid, " + "aos_entryentity.aos_itemid aos_itemid,"
-				+ "aos_entryentity.aos_currentprice aos_lwstpricing";
-
-		// 如果只到国别维度 活动次数不取亚马逊 eBay活动
-		String[] platformArr = { "AMAZON", "EBAY" };
-		if (1 == queryType) {
-			qFilter2.and(new QFilter("aos_channel.number", QCP.not_in, platformArr));
-		}
-		// 只填了国别
-		else if (2 == queryType) {
-			qFilter1.and(new QFilter("aos_org", QCP.equals, aos_orgid));
-
-			//
-			qFilter2.and(new QFilter("aos_nationality", QCP.equals, aos_orgid));
-			qFilter2.and(new QFilter("aos_channel.number", QCP.not_in, platformArr));
-
-			qFilter3.and(new QFilter("aos_entryentity.aos_orgid", QCP.equals, aos_orgid));
-		}
-		// 只填了国别和渠道
-		else if (3 == queryType) {
-			// 最低成交价
-			qFilter1.and(new QFilter("aos_org", QCP.equals, aos_orgid));
-			qFilter1.and(new QFilter("aos_platformfid", QCP.equals, aos_platformid));
-			selectFields1 = "aos_org aos_orgid, " + "aos_item_fid aos_itemid," + "aos_platformfid aos_platformid, "
-					+ "aos_trans_price aos_lwsttransprice,aos_shopfid aos_shopid";
-
-			// 活动次数
-			qFilter2.and(new QFilter("aos_nationality", QCP.equals, aos_orgid));
-			qFilter2.and(new QFilter("aos_channel", QCP.equals, aos_platformid));
-			selectFields2 = "aos_nationality aos_orgid, " + "aos_channel aos_platformid, "
-					+ "aos_sal_actplanentity.aos_itemnum aos_itemid," + "1 as aos_acttimes";
-
+			String selectFields = "id aos_itemid, aos_contryentry.aos_nationality aos_orgid, aos_contryentry.aos_contrybrand aos_brandid";
+			DataSet dataSet = queryItem(selectFields, qFilter);
+			// 店铺 平台
+			DataSet dataSetShop = QueryServiceHelper.queryDataSet("LowestPriceRpt.shop", "aos_sal_shop",
+					"aos_org,id aos_shopid,aos_channel aos_platformid", new QFilter("id", QCP.equals, aos_shopid).toArray(),
+					null);
+			dataSet = dataSet.join(dataSetShop, JoinType.LEFT).on("aos_orgid", "aos_org")
+					.select(new String[]{"aos_orgid", "aos_itemid", "aos_brandid", "aos_shopid", "aos_platformid"})
+					.finish();
+			fieldList.add("aos_shopid");
 			fieldList.add("aos_platformid");
-			groupByField = new String[] { "aos_orgid", "aos_platformid", "aos_itemid", "aos_shopid" };
-		} else if (4 == queryType) {
-			// 最低成交价
+			// 客户评论信息
+			String selectFields4 = "aos_orgid, aos_itemid, aos_asin,aos_review aos_reviewnum, aos_stars";
+			QFilter qFilter4 = new QFilter("aos_orgid", QCP.equals, aos_orgid);
+			DataSet dataSet4 = queryReview(selectFields4, qFilter4);
+			dataSet = dataSet.join(dataSet4, JoinType.LEFT).on("aos_orgid", "aos_orgid").on("aos_itemid", "aos_itemid")
+					.select(fieldList.toArray(new String[0])).finish();
+			// 最低成交价过滤条件
+			QFilter qFilter1 = new QFilter("aos_local_date", QCP.large_equals, startDate);
+			qFilter1.and(new QFilter("aos_local_date", QCP.less_equals, endDate));
 			qFilter1.and(new QFilter("aos_org", QCP.equals, aos_orgid));
 			qFilter1.and(new QFilter("aos_platformfid", QCP.equals, aos_platformid));
 			qFilter1.and(new QFilter("aos_shopfid", QCP.equals, aos_shopid));
-			selectFields1 = "aos_org aos_orgid, " + "aos_item_fid aos_itemid," + "aos_platformfid aos_platformid, "
+			String selectFields1 = "aos_org aos_orgid, " + "aos_item_fid aos_itemid," + "aos_platformfid aos_platformid, "
 					+ "aos_shopfid aos_shopid," + "aos_trans_price aos_lwsttransprice";
-
+			String[] groupByField = {"aos_orgid", "aos_itemid", "aos_shopid", "aos_platformid"};
+			DataSet dataSet1 = queryLowestTransPrice(selectFields1, qFilter1, groupByField);
+			fieldList.add("aos_lwsttransprice");
+			dataSet = dataSet.join(dataSet1, JoinType.LEFT).on("aos_orgid", "aos_orgid").on("aos_itemid", "aos_itemid")
+					.on("aos_shopid", "aos_shopid").select(fieldList.toArray(new String[0])).finish();
 			// 活动次数
+			QFilter qFilter2 = new QFilter("aos_sal_actplanentity.aos_l_startdate", QCP.less_equals, endDate);
+			qFilter2.and(new QFilter("aos_sal_actplanentity.aos_enddate", QCP.large_equals, startDate));
 			qFilter2.and(new QFilter("aos_nationality", QCP.equals, aos_orgid));
 			qFilter2.and(new QFilter("aos_channel", QCP.equals, aos_platformid));
 			qFilter2.and(new QFilter("aos_shop", QCP.equals, aos_shopid));
-			selectFields2 = "aos_nationality aos_orgid, " + "aos_channel aos_platformid, " + "aos_shop aos_shopid, "
+			String selectFields2 = "aos_nationality aos_orgid, " + "aos_channel aos_platformid, " + "aos_shop aos_shopid, "
 					+ "aos_sal_actplanentity.aos_itemnum aos_itemid," + "1 as aos_acttimes";
+			DataSet dataSet2 = queryActivityTimes(selectFields2, qFilter2, groupByField);
+			fieldList.add("aos_acttimes");
+			dataSet = dataSet.join(dataSet2, JoinType.LEFT).on("aos_orgid", "aos_orgid").on("aos_itemid", "aos_itemid")
+					.on("aos_shopid", "aos_shopid").select(fieldList.toArray(new String[0])).finish();
+			// 最低定价
+			QFilter qFilter3 = new QFilter("aos_date", QCP.large_equals, startDate);
+			qFilter3.and(new QFilter("aos_date", QCP.less_equals, endDate));
+			qFilter3.and(new QFilter("aos_shopfid","=",aos_shopid));
+			String selectFields3 = "aos_itemid,aos_currentprice aos_lwstpricing";
+			DataSet dataSet3 = queryLowestPricing(selectFields3, qFilter3, new String[]{"aos_itemid"});
+			fieldList.add("aos_lwstpricing");
+			dataSet = dataSet.join(dataSet3, JoinType.LEFT).on("aos_itemid", "aos_itemid")
+					.select(fieldList.toArray(new String[0])).finish();
 
-			fieldList.add("aos_platformid");
-			fieldList.add("aos_shopid");
+			//当年最低定价，365天最低定价，过去30天最低定价
+			QFBuilder builder = new QFBuilder();
+			builder.add("aos_orgid","=",aos_orgid);
+			builder.add("aos_itemid","!=","");
+			String algoKey = Thread.currentThread().getName();
+			DataSet dataPrice = QueryServiceHelper.queryDataSet(algoKey, "aos_base_lowprz",
+					"aos_itemid,aos_min_price,aos_min_price30,aos_min_price365", builder.toArray(), null);
+			fieldList.add("aos_min_price");
+			fieldList.add("aos_min_price30");
+			fieldList.add("aos_min_price365");
+			dataSet = dataSet.join(dataPrice,JoinType.LEFT).on("aos_itemid", "aos_itemid").select(fieldList.toArray(new String[0])).finish();
+			dataPrice.close();
 
-			groupByField = new String[] { "aos_orgid", "aos_platformid", "aos_shopid", "aos_itemid" };
-		}
+			//过去30天最低成交价
+			builder.clear();
+			LocalDate date_now = LocalDate.now();
+			builder.add("aos_local_date", QCP.large_equals, date_now.minusDays(30).toString());
+			builder.add("aos_org", QCP.equals, aos_orgid);
+			builder.add("aos_platformfid", QCP.equals, aos_platformid);
+			builder.add("aos_shopfid", QCP.equals, aos_shopid);
+			for (QFilter filter : SalUtil.getOrderFilter()) {
+				builder.add(filter);
+			}
+			dataPrice = QueryServiceHelper.queryDataSet(algoKey, BILL_ORDER_LINE, "aos_item_fid,aos_trans_price aos_lwsttransprice_d", builder.toArray(), null)
+					.groupBy(new String[]{"aos_item_fid"})
+					.min("aos_lwsttransprice_d").finish();
+			fieldList.add("aos_lwsttransprice_d");
+			dataSet = dataSet.join(dataPrice,JoinType.LEFT).on("aos_itemid","aos_item_fid").select(fieldList.toArray(new String[0])).finish();
 
-		DataSet dataSet1 = queryLowestTransPrice(selectFields1, qFilter1, groupByField);
-		DataSet dataSet2 = queryActivityTimes(selectFields2, qFilter2, groupByField);
-		DataSet dataSet3 = queryLowestPricing(selectFields3, qFilter3, new String[] { "aos_orgid", "aos_itemid" });
-		fieldList.add("aos_lwsttransprice");
-		dataSet = dataSet.join(dataSet1, JoinType.LEFT).on("aos_orgid", "aos_orgid").on("aos_itemid", "aos_itemid")
-				.on("shopid", "aos_shopid").select(fieldList.toArray(new String[0])).finish();
 
-		fieldList.add("aos_acttimes");
-		dataSet = joinDataSet(dataSet, dataSet2, queryType, fieldList);
-
-		fieldList.add("aos_lwstpricing");
-		dataSet = dataSet.join(dataSet3, JoinType.LEFT).on("aos_orgid", "aos_orgid").on("aos_itemid", "aos_itemid")
-				.select(fieldList.toArray(new String[0])).finish();
-
-		if (3 == queryType) {
-			dataSet = dataSet.where("aos_platformid = " + aos_platformid);
-		} else if (4 == queryType) {
-			dataSet = dataSet.where("aos_platformid = " + aos_platformid);
-			dataSet = dataSet.where("shopid = " + aos_shopid);
-		}
-		TableValueSetter tableValueSetter = handleDataToSetter(dataSet, fieldList);
-		setEntryEntity(tableValueSetter);
-		dataSet1.close();
-		dataSet2.close();
-		dataSet3.close();
-	}
-
-	private DataSet joinDataSet(DataSet dataSet1, DataSet dataSet2, int queryType, List<String> fieldList) {
-		JoinDataSet joinDataSet = dataSet1.join(dataSet2, JoinType.LEFT);
-		if (1 == queryType || 2 == queryType) {
-			joinDataSet = joinDataSet.on("aos_orgid", "aos_orgid").on("aos_itemid", "aos_itemid")
-					.on("shopid", "aos_shopid").select(fieldList.toArray(new String[0]));
-		} else if (3 == queryType) {
-			joinDataSet = joinDataSet.on("aos_orgid", "aos_orgid").on("aos_platformid", "aos_platformid")
-					.on("shopid", "aos_shopid").on("aos_itemid", "aos_itemid").select(fieldList.toArray(new String[0]));
-		} else {
-			joinDataSet = joinDataSet.on("aos_orgid", "aos_orgid").on("aos_platformid", "aos_platformid")
-					.on("shopid", "aos_shopid").on("aos_shopid", "aos_shopid").on("aos_itemid", "aos_itemid")
-					.select(fieldList.toArray(new String[0]));
-		}
-		return joinDataSet.finish();
-	}
-
-	private int getQueryType(String aos_orgid, String aos_platformid, String aos_shopid) {
-		// 任何查询字段都没填
-		if ("".equals(aos_orgid) && "".equals(aos_platformid) && "".equals(aos_shopid)) {
-			return 1;
-		}
-		// 只填了国别
-		else if (!"".equals(aos_orgid) && "".equals(aos_platformid) && "".equals(aos_shopid)) {
-			return 2;
-		}
-		// 只填了国别和渠道
-		else if (!"".equals(aos_orgid) && !"".equals(aos_platformid) && "".equals(aos_shopid)) {
-			return 3;
-		}
-		// 国别渠道店铺都填
-		else {
-			return 4;
+			TableValueSetter tableValueSetter = handleDataToSetter(dataSet, fieldList);
+			setEntryEntity(tableValueSetter);
+			dataSet.close();
+			dataSetShop.close();
+			dataSet4.close();
+			dataSet1.close();
+			dataSet2.close();
+			dataSet3.close();
 		}
 	}
 
@@ -378,7 +224,7 @@ public class LowestPriceRpt extends AbstractFormPlugin implements BeforeF7Select
 
 	private DataSet queryLowestPricing(String selectFields, QFilter qFilter, String[] groupByField) {
 		String algoKey = this.getClass().getName() + "queryLowestPricing";
-		DataSet dataSet = QueryServiceHelper.queryDataSet(algoKey, BILL_LOWEST_PRICING, selectFields, qFilter.toArray(),
+		DataSet dataSet = QueryServiceHelper.queryDataSet(algoKey, "aos_mkt_invprz_bak", selectFields, qFilter.toArray(),
 				null);
 		return dataSet.groupBy(groupByField).min("aos_lwstpricing").finish();
 	}
