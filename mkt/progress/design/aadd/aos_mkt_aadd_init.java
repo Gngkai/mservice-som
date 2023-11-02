@@ -43,13 +43,13 @@ public class aos_mkt_aadd_init extends AbstractTask {
 			Object itemid = bd_material.get("itemid");
 			FndMsg.debug("itemid:" + itemid);
 			String orgnumber = bd_material.getString("orgnumber");
+
+			// 1.若进度表目标国别下没有√，则按照原逻辑判断
 			DynamicObject aos_mkt_addtrack = BusinessDataServiceHelper.loadSingleFromCache("aos_mkt_addtrack",
 					new QFilter("aos_itemid", QCP.equals, itemid).and("aos_" + orgnumber, QCP.equals, false).toArray());
 		    if (FndGlobal.IsNotNull(aos_mkt_addtrack)) {
-
 				DynamicObject aos_itemid = aos_mkt_addtrack.getDynamicObject("aos_itemid");
 				String aos_productno = aos_itemid.getString("aos_productno");
-		    	
 		    	if ("US,CA,UK".contains(orgnumber)) {
 					// 判断同产品号是否有英语国别制作完成
 					Boolean exists3 = QueryServiceHelper.exists("aos_mkt_addtrack",
@@ -78,8 +78,15 @@ public class aos_mkt_aadd_init extends AbstractTask {
 					}
 				}
 		    }
-		
-		
+
+			// 2.若进度表目标国别下有√，则生成新的国别新品的流程，流程直接到新品对比模块录入
+			DynamicObject aosMktAddTrack = BusinessDataServiceHelper.loadSingleFromCache("aos_mkt_addtrack",
+					new QFilter("aos_itemid", QCP.equals, itemid).and("aos_" + orgnumber, QCP.equals, true).toArray());
+			if (FndGlobal.IsNotNull(aos_mkt_addtrack)) {
+				// 新的国别新品的流程，流程直接到新品对比模块录入
+				DynamicObject aos_itemid = aos_mkt_addtrack.getDynamicObject("aos_itemid");
+				aos_mkt_aadd_bill.generateAddFromDesign(aos_itemid, orgnumber, "EN_05");
+			}
 		}
 
 	}

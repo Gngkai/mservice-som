@@ -36,7 +36,6 @@ import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
-import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
@@ -197,8 +196,19 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
         String ReqFId = dy_main.getPkValue().toString();
         String aosBillNo = dy_main.getString("aos_billno");
         Object aos_user = dy_main.get("aos_sale");
-        dy_main.set("aos_status", "销售上线");
-        dy_main.set("aos_user", aos_user);
+
+        DynamicObjectCollection aos_entryentityS = dy_main.getDynamicObjectCollection("aos_entryentity");
+        DynamicObject aosItemId = aos_entryentityS.get(0).getDynamicObject("aos_itemid");
+        String aos_org = dy_main.getString("aos_org");// 国别
+
+        Boolean itemExist = queryItemExist(aosItemId,aos_org);
+        if (!itemExist) {
+            dy_main.set("aos_user", system);
+            dy_main.set("aos_status", "已完成");
+        } else {
+            dy_main.set("aos_status", "销售上线");
+            dy_main.set("aos_user", aos_user);
+        }
         // 发送消息
         String messageId = aos_user.toString();
         MKTCom.SendGlobalMessage(messageId, "aos_mkt_aadd", ReqFId, aosBillNo, "高级A+需求单-销售上线");
@@ -286,10 +296,17 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
             OperationServiceHelper.executeOperate("save", "aos_mkt_addtrack", new DynamicObject[]{aos_mkt_addtrack}, OperateOption.create());
         }
 
-
+        Boolean itemExist = queryItemExist((DynamicObject)aosItemId,aos_org.toString());
         Object aos_user = dy_main.get("aos_monitor");
-        dy_main.set("aos_status", "新品对比模块录入");
-        dy_main.set("aos_user", aos_user);
+        if (!itemExist){
+            dy_main.set("aos_user", system);
+            dy_main.set("aos_status", "已完成");
+        }
+        else {
+            dy_main.set("aos_status", "新品对比模块录入");
+            dy_main.set("aos_user", aos_user);
+        }
+
         // 发送消息
         String messageId = aos_user.toString();
         MKTCom.SendGlobalMessage(messageId, "aos_mkt_aadd", ReqFId, aosBillNo, "高级A+需求单-新品对比模块录入");
@@ -862,7 +879,7 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
         aosMktAadd.set("aos_osconfirm", aosMktProgOrgUser.get("aos_oseditor"));
         aosMktAadd.set("aos_oueditor", aosMktProgOrgUser.get("aos_oueditor"));
         aosMktAadd.set("aos_monitor", aosMktProgOrgUser.get("aos_02hq"));
-        aosMktAadd.set("aos_sale", aosMktProgOrgUser.get("aos_salehelper"));
+        aosMktAadd.set("aos_design", sourceBill.get("aos_design"));
 
         aosMktAadd.set("aos_sourceid", sourceBill.get("id"));
         aosMktAadd.set("aos_sourcebillno", sourceBill.get("aos_billno"));
@@ -936,8 +953,16 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
         aosMktAadd.set("aos_monitor", aosMktProgOrgUser.get("aos_02hq"));
         aosMktAadd.set("aos_sale", aosMktProgOrgUser.get("aos_salehelper"));
         if ("EN_05".equals(type)) {
+            // 判断国别物料是否存在
+            Boolean itemExist = queryItemExist(aos_itemid,ou);
+            if (!itemExist){
+                aosMktAadd.set("aos_user", system);
+                aosMktAadd.set("aos_status", "已完成");
+            }
+            else {
             aosMktAadd.set("aos_user", aosMktProgOrgUser.get("aos_02hq"));
             aosMktAadd.set("aos_status", "新品对比模块录入");
+            }
             // 将对应A+需求表对应国别勾选
             DynamicObject aos_mkt_addtrack = BusinessDataServiceHelper.loadSingleFromCache("aos_mkt_addtrack", new QFilter("aos_itemid", QCP.equals, aos_itemid.getPkValue()).toArray());
             if (FndGlobal.IsNotNull(aos_mkt_addtrack)) {
@@ -974,6 +999,15 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
         aos_entryentity.set("aos_itemid", aos_itemid);
 
         OperationServiceHelper.executeOperate("save", "aos_mkt_aadd", new DynamicObject[]{aosMktAadd}, OperateOption.create());
+    }
+
+    private static Boolean queryItemExist(DynamicObject aosItemid, String ou) {
+        DynamicObject bd_material =QueryServiceHelper.queryOne("bd_material",
+                "id",
+                new QFilter("id", QCP.equals, aosItemid.getPkValue().toString())
+                        .and("aos_contryentry.aos_nationality.number",QCP.equals,ou)
+                        .toArray());
+        return FndGlobal.IsNotNull(bd_material);
     }
 
 }
