@@ -36,6 +36,7 @@ import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import common.sal.util.QFBuilder;
 import mkt.common.util.sensitiveWordsUtils;
+import mkt.common.util.translateUtils;
 
 import java.util.*;
 import java.util.List;
@@ -48,8 +49,7 @@ import java.util.stream.Collectors;
  */
 @SuppressWarnings({"unchecked","rawtypes"})
 public class functDiagramForm extends AbstractBillPlugIn implements HyperLinkClickListener {
-    public static String  authKey = "7d2a206b-8182-c99a-a314-76874dd27d89:fx";
-    Translator translator = new Translator(authKey);
+
     public static  List<String> list_language;
     public static  Map<String,String> map_transLan;    //语言对应的翻译标识
     private static final String KEY_DELETE = "DELETE";  //删除行pid
@@ -790,7 +790,8 @@ public class functDiagramForm extends AbstractBillPlugIn implements HyperLinkCli
         if (list_value.size()==0)
             return;
         for (String lan : list_lans) {
-            List<TextResult> textResults = translator.translateText(list_value, sourceLan, map_transLan.get(lan));
+            List<String> textResults = translateUtils.transalate(sourceLan, lan, list_value);
+
             //翻译结果的下标
             int resultIndex = 0;
             for (String entityIndex : img) {
@@ -799,11 +800,11 @@ public class functDiagramForm extends AbstractBillPlugIn implements HyperLinkCli
                 for (int i = 0; i < list_otehrLan.size(); i++) {
                     DynamicObject dy = list_otehrLan.get(i);
                     if (list_valueIndex.contains(entityIndex+"-"+i+"-1")){
-                        dy.set("aos_value" + entityIndex,textResults.get(resultIndex).getText());
+                        dy.set("aos_value" + entityIndex,textResults.get(resultIndex));
                         resultIndex++;
                     }
                     if (list_valueIndex.contains(entityIndex+"-"+i+"-2")){
-                        dy.set("aos_content" + entityIndex,textResults.get(resultIndex).getText());
+                        dy.set("aos_content" + entityIndex,textResults.get(resultIndex));
                         resultIndex++;
                     }
                   }
