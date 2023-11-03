@@ -382,7 +382,9 @@ public class aos_mkt_point_bill extends AbstractBillPlugIn implements RowClickEv
 			Object aos_category1 = sourceData.get("aos_category1");
 			Object aos_category2 = sourceData.get("aos_category2");
 			DynamicObject dynamicObject = getEditorInfo(obj2String(aos_category1) + "," + obj2String(aos_category2));
-			this.getModel().setValue("aos_user", dynamicObject.getString("aos_editor"));
+			DynamicObject dynamicObject2 = getEditorInfo2(obj2String(aos_category1) , obj2String(aos_category2));
+
+			this.getModel().setValue("aos_user", dynamicObject2.getString("aos_edmanar"));
 			this.getModel().setValue("aos_groupid", dynamicObject.getString("aos_group_edit"));
 			this.getModel().setValue("aos_confirmor", dynamicObject.getString("aos_edit_leader"));
 			setCate(this.getModel().getDataEntity(true));
