@@ -326,7 +326,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
         dy_main.set("aos_ecdate", new Date());
 
         // 如果是US 获取抄送人员
-        FndMsg.debug("Org:" + "US".equals(((DynamicObject)aos_orgid).getString("number")));
+//        FndMsg.debug("Org:" + "US".equals(((DynamicObject)aos_orgid).getString("number")));
 
         if (FndGlobal.IsNotNull(aos_orgid) &&
 				"US".equals(((DynamicObject)aos_orgid).getString("number"))) {
