@@ -260,6 +260,7 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
                 // 2.海外文字确认为是 海外功能图确认不为是
                 ListingStatus = "海外编辑确认";
                 dy_main.set("aos_status", ListingStatus);
+                dy_main.set("aos_ecdate", new Date());
                 return;// 不调整节点操作人 直接退出
             } else if (!"是".equals(aos_osconfirmlov) && "是".equals(aos_funconfirm)) {
                 // 3.海外功能图确认=是，海外文字确认=否时，流程走到海外编辑确认功能图节点
