@@ -25,6 +25,7 @@ import kd.bos.entity.operate.result.OperationResult;
 import kd.bos.form.ClientProperties;
 import kd.bos.form.FormShowParameter;
 import kd.bos.form.ShowType;
+import kd.bos.form.control.Control;
 import kd.bos.form.control.EntryGrid;
 import kd.bos.form.control.Image;
 import kd.bos.form.control.events.ItemClickEvent;
@@ -34,6 +35,7 @@ import kd.bos.form.events.BeforeClosedEvent;
 import kd.bos.form.events.BeforeDoOperationEventArgs;
 import kd.bos.form.events.HyperLinkClickEvent;
 import kd.bos.form.events.HyperLinkClickListener;
+import kd.bos.form.field.ComboEdit;
 import kd.bos.form.operate.FormOperate;
 import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
@@ -43,7 +45,6 @@ import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
-import kd.bos.url.UrlService;
 import common.sal.util.QFBuilder;
 import mkt.common.GlobalMessage;
 import mkt.common.MKTCom;
@@ -66,7 +67,6 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		this.addItemClickListeners("aos_submit"); // 提交
 		this.addItemClickListeners("aos_confirm"); // 确认
 		this.addItemClickListeners("aos_back"); // 退回
-
 		EntryGrid entryGrid = this.getControl("aos_entryentity5");
 		entryGrid.addHyperClickListener(this);
 	}
@@ -358,14 +358,16 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 
 	public void propertyChanged(PropertyChangedArgs e) {
 		String name = e.getProperty().getName();
-		if (name.equals("aos_itemid"))
+		if (name.equals("aos_itemid")) {
 			AosItemChange();
+		}
 		else if (name.equals("aos_phstate"))
-			PhstateChange();
+			PhstateChange(e);
 		else if (name.equals("aos_vediotype"))
 			VedioTypeChange();
-		else if (name.equals("aos_ponumber"))
+		else if (name.equals("aos_ponumber")) {
 			poNumberChanged();
+		}
 	}
 
 	/**
@@ -436,6 +438,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			if ("save".equals(Operatation)) {
 				NewControl(this.getModel().getDataEntity(true));
 				SyncPhotoList(); // 拍照任务清单同步
+				phstateis();
 			}
 		} catch (FndError fndError) {
 			fndError.show(getView());
@@ -502,11 +505,90 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		}
 	}
 
-	private void PhstateChange() {
+	private void PhstateChange(PropertyChangedArgs e) {
 		Object aos_phstate = this.getModel().getValue("aos_phstate");
+		String oldname = (String) e.getChangeSet()[0].getOldValue();
+		Object state = this.getModel().getValue("aos_status");
+		Boolean issys = (Boolean) this.getModel().getValue("aos_sys");
 		if ("工厂简拍".equals(aos_phstate)) {
 			this.getModel().setValue("aos_3dflag", true);
 			this.getModel().setValue("aos_3d_reason", true);
+		}
+	}
+
+
+	private void phstateis() throws FndError {
+		Object state = this.getModel().getValue("aos_status");
+		Boolean issys = (Boolean) this.getModel().getValue("aos_sys");
+		DynamicObject item = (DynamicObject) this.getModel().getValue("aos_itemid");
+		String ponumber = (String) this.getModel().getValue("aos_ponumber");
+		String phsta = (String) this.getModel().getValue("aos_phstate");
+
+		if (FndGlobal.IsNotNull(item)) {
+			if (issys) {
+				if(("新建".equals(state) || "开发/采购确认".equals(state))){
+					DynamicObjectCollection sealSample = QueryServiceHelper.query("aos_sealsample", "aos_model",
+							new QFilter("aos_item", QCP.equals, item.getPkValue())
+									.and("aos_contractnowb", QCP.equals, ponumber).toArray());
+					if(!QueryServiceHelper.exists("aos_mkt_not3ditem",
+							new QFilter("aos_item",QCP.equals,item.getPkValue()).toArray())){
+						if (sealSample.size() > 0) {
+							for (DynamicObject dy : sealSample) {
+								if ("是".equals(dy.get("aos_model")) && !"工厂简拍".equals(phsta)) {
+									throw new FndError("该产品可3D建模，不需实物拍摄！");
+								}
+							}
+						} else {
+							Map<String, String> category = get_sku_category(String.valueOf(item.getPkValue()));
+							String category1 = category.get("aos_category_stat1");
+							String category2 = category.get("aos_category_stat2");
+							String category3 = category.get("aos_category_stat3");
+							if (QueryServiceHelper.exists("aos_mkt_3dselect",
+									new QFilter("aos_category1", QCP.equals, category1)
+											.and("aos_category2", QCP.equals, category2)
+											.and("aos_category3", QCP.equals, category3)
+											.and("aos_name", QCP.equals, item.getString("name")).toArray())
+									&& !"工厂简拍".equals(phsta)) {
+								throw new FndError("该产品可3D建模，不需实物拍摄！");
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	public static Map<String,String>get_sku_category(String sku){
+		QFilter qFilter_sku=new QFilter("material","=",sku);
+		QFilter qFilter_jb=new QFilter("standard.number","=","JBFLBZ");
+		DynamicObject dy_group= QueryServiceHelper.queryOne("bd_materialgroupdetail","group.name as name,group.number as number",new QFilter[]{qFilter_sku,qFilter_jb});
+		return   get_category(dy_group.get("number").toString(),dy_group.get("name").toString());
+	}
+	/**
+	 *获取大、中、小产品类别
+	 * @param group_3_number    小类编码
+	 * @param group_3_name  小类名称
+	 * @return
+	 */
+	public static Map<String, String> get_category(String group_3_number,  String group_3_name){
+		try {
+			Map<String,String>category=new HashMap<>();
+			String[]number= org.apache.commons.lang.StringUtils.split(group_3_number,",");
+			String[]name= org.apache.commons.lang.StringUtils.split(group_3_name,",");
+			category.put("aos_category_code1",number[0]);
+			category.put("aos_category_stat1",name[0]);
+			if (number.length>2&&name.length>1){
+				category.put("aos_category_code2",number[1]);
+				category.put("aos_category_stat2",name[1]);
+			}
+			if (number.length>2&&name.length>1) {
+				category.put("aos_category_code3", number[2]);
+				category.put("aos_category_stat3", name[2]);
+			}
+			return category;
+		}catch (Exception e){
+			e.printStackTrace();
+			return null;
 		}
 	}
 
