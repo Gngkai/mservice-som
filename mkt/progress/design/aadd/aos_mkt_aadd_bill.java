@@ -943,7 +943,7 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
             fndError.add(AosCategory1 + "~" + AosCategory2 + ",初级品类不存在!");
             throw fndError;
         }
-        DynamicObject aosMktProgOrgUser = QueryServiceHelper.queryOne("aos_mkt_progorguser", "aos_oueditor,aos_02hq,aos_salehelper", new QFilter("aos_orgid.number", QCP.equals, ou).and("aos_category1", QCP.equals, AosCategory1).and("aos_category2", QCP.equals, AosCategory2).toArray());
+        DynamicObject aosMktProgOrgUser = QueryServiceHelper.queryOne("aos_mkt_progorguser", "aos_oueditor,aos_02hq,aos_salehelper,aos_oseditor", new QFilter("aos_orgid.number", QCP.equals, ou).and("aos_category1", QCP.equals, AosCategory1).and("aos_category2", QCP.equals, AosCategory2).toArray());
         if (FndGlobal.IsNull(aosMktProgOrgUser) || FndGlobal.IsNull(aosMktProgOrgUser.get("aos_oueditor"))) {
             fndError.add(ou + "~" + AosCategory1 + "~" + AosCategory2 + ",国别编辑不存在!");
             throw fndError;
@@ -990,8 +990,11 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
             }
             OperationServiceHelper.executeOperate("save", "aos_mkt_addtrack", new DynamicObject[]{aos_mkt_addtrack}, OperateOption.create());
         } else if ("SM_02".equals(type)) {
-            aosMktAadd.set("aos_user", aosMktProgOrgUser.get("aos_oueditor"));
-            aosMktAadd.set("aos_status", "文案确认");
+//            aosMktAadd.set("aos_user", aosMktProgOrgUser.get("aos_oueditor"));
+//            aosMktAadd.set("aos_status", "文案确认");
+            aosMktAadd.set("aos_oseditor", aosMktProgOrgUser.get("aos_oseditor"));
+            aosMktAadd.set("aos_user", aosMktProgOrgUser.get("aos_oseditor"));
+            aosMktAadd.set("aos_status", "海外确认");
         }
 
         DynamicObjectCollection aos_entryentityS = aosMktAadd.getDynamicObjectCollection("aos_entryentity");
