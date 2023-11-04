@@ -24,8 +24,10 @@ import kd.bos.form.events.ClosedCallBackEvent;
 import kd.bos.form.events.SetFilterEvent;
 import kd.bos.list.IListView;
 import kd.bos.list.plugin.AbstractListPlugin;
+import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
+import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.MKTCom;
@@ -84,13 +86,19 @@ public class aos_mkt_aadd_list extends AbstractListPlugin {
 				.collect(Collectors.toList());
 		Object CurrentUserId = UserServiceHelper.getCurrentUserId();
 		Object CurrentUserName = UserServiceHelper.getUserInfoByID((long) CurrentUserId).get("name");
+
+		QFilter filter = new QFilter("aos_user.id", QCP.equals, CurrentUserId);
+		QFilter filter2 = new QFilter("aos_give", QCP.equals, true);// 判断是否有转办权限
+		boolean exists = QueryServiceHelper.exists("aos_mkt_userights", new QFilter[] { filter, filter2 });
+
+
 		for (int i = 0; i < list.size(); i++) {
 			String id = list.get(i).toString();
 			DynamicObject aos_mkt_photoreq = BusinessDataServiceHelper.loadSingle(id, "aos_mkt_aadd");
 			String aos_userold = aos_mkt_photoreq.getDynamicObject("aos_user").getPkValue().toString();
 			String billno = aos_mkt_photoreq.getString("billno");
 
-			if (!(CurrentUserId + "").equals(aos_userold)) {
+			if (!(CurrentUserId + "").equals(aos_userold) && !exists) {
 				this.getView().showTipNotification(billno + "只允许转办自己的单据!");
 				return;
 			}
