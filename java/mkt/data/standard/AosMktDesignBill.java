@@ -93,9 +93,9 @@ public class AosMktDesignBill extends AbstractBillPlugIn implements ItemClickLis
 
         if ("Yes".equals(resultValue) && "audit".equals(callBackId)) {
             // 如果为是 更新相同品类的摄影 摄像 布景标准库 的进度为待优化
-            DynamicObject photoObj = BusinessDataServiceHelper.loadSingle("aos_mkt_photostd", "billstatus", qFilters);
-            DynamicObject videoObj = BusinessDataServiceHelper.loadSingle("aos_mkt_videostd", "billstatus", qFilters);
-            DynamicObject viewObj = BusinessDataServiceHelper.loadSingle("aos_mkt_viewstd", "billstatus", qFilters);
+            DynamicObject photoObj = BusinessDataServiceHelper.loadSingle("aos_mkt_photostd", "billstatus,aos_status", qFilters);
+            DynamicObject videoObj = BusinessDataServiceHelper.loadSingle("aos_mkt_videostd", "billstatus,aos_status", qFilters);
+            DynamicObject viewObj = BusinessDataServiceHelper.loadSingle("aos_mkt_viewstd", "billstatus,aos_status", qFilters);
             if (photoObj != null) {
                 photoObj.set("billstatus", "D");
                 photoObj.set("aos_status", "待优化");
