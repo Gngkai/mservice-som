@@ -79,11 +79,13 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
 		if ("aos_impkeyword".equals(itemKey)) {
 			// 如果为引用关键词库
 			importItemKeyword();
+			statusControl();
 		}
 
 		if ("aos_copyto".equals(itemKey)) {
 			// 如果为引用关键词库
 			DisUtil.popForm(this, "aos_mkt_itemselect", "items_select", null);
+			statusControl();
 		}
 	}
 
@@ -139,6 +141,7 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
 		String operateKey = operate.getOperateKey();
 		if (operateKey.equals("save")) {
 			beforeSave();
+			statusControl();
 		}
 	}
 
