@@ -351,6 +351,9 @@ public class aos_mkt_standard_bill extends AbstractBillPlugIn implements ItemCli
             DynamicObject photoObj = BusinessDataServiceHelper.loadSingle("aos_mkt_designstd", "billstatus", qFilters);
             if (photoObj != null) {
                 photoObj.set("billstatus", "D");
+
+                photoObj.set("aos_status", "待优化");
+
                 SaveServiceHelper.save(new DynamicObject[]{photoObj});
             }
         }

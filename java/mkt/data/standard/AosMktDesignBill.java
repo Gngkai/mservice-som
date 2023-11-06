@@ -98,14 +98,17 @@ public class AosMktDesignBill extends AbstractBillPlugIn implements ItemClickLis
             DynamicObject viewObj = BusinessDataServiceHelper.loadSingle("aos_mkt_viewstd", "billstatus", qFilters);
             if (photoObj != null) {
                 photoObj.set("billstatus", "D");
+                photoObj.set("aos_status", "待优化");
                 SaveServiceHelper.save(new DynamicObject[]{photoObj});
             }
             if (videoObj != null) {
                 videoObj.set("billstatus", "D");
+                videoObj.set("aos_status", "待优化");
                 SaveServiceHelper.save(new DynamicObject[]{videoObj});
             }
             if (viewObj != null) {
                 viewObj.set("billstatus", "D");
+                viewObj.set("aos_status", "待优化");
                 SaveServiceHelper.save(new DynamicObject[]{viewObj});
             }
         }
@@ -152,7 +155,7 @@ public class AosMktDesignBill extends AbstractBillPlugIn implements ItemClickLis
         if ("save".equals(Operatation)) {
             FndMsg.debug("=====save Operation=====");
             // 校验
-            DynamicObject aosMktStandard = QueryServiceHelper.queryOne("aos_mkt_standard", "id",
+            DynamicObject aosMktStandard = QueryServiceHelper.queryOne("aos_mkt_designstd", "id",
                     new QFilter("aos_category1_name", QCP.equals, this.getModel().getValue("aos_category1_name"))
                             .and("aos_category2_name", QCP.equals, this.getModel().getValue("aos_category2_name"))
                             .and("aos_category3_name", QCP.equals, this.getModel().getValue("aos_category3_name"))
