@@ -1,4 +1,4 @@
-archivesBaseName = 'aos-mkt'
+archivesBaseName = 'aos-mms'
 
 def timestamp = new Date().format('yyyyMMddHHmmss')
 version = project.version + '-' + timestamp
@@ -9,6 +9,7 @@ dependencies {
     implementation 'com.aosom.gpaas.common:com-sal:1.0-SNAPSHOT'
     implementation 'com.aosom.gpaas.common:com-scm:1.0-SNAPSHOT'
     implementation 'com.aosom.gpaas.common:com-fms:1.0-SNAPSHOT'
+    implementation project(':som')
 }
 
 // jarWithDeps
