@@ -857,7 +857,7 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 					CreateColumn(ProductRow, style, 4, adGroupId);
 					CreateColumn(ProductRow, style, 14, GroupStatus);
 					bid = aos_bid.multiply(BigDecimal.valueOf(1.3)).setScale(2, BigDecimal.ROUND_HALF_UP);
-					CreateColumn(ProductRow, style, 18, bid);
+					CreateColumn(ProductRow, style, 18, aos_bid);
 					CreateColumn(ProductRow, style, 24, "close-match");
 
 					String targetId = targetIdMap.getOrDefault(
@@ -881,7 +881,7 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 					CreateColumn(ProductRow, style, 4, adGroupId);
 					CreateColumn(ProductRow, style, 14, GroupStatus);
 					bid = aos_bid.multiply(BigDecimal.valueOf(0.7)).setScale(2, BigDecimal.ROUND_HALF_UP);
-					CreateColumn(ProductRow, style, 18, bid);
+					CreateColumn(ProductRow, style, 18, aos_bid);
 					CreateColumn(ProductRow, style, 24, "loose-match");
 
 					 targetId = targetIdMap.getOrDefault(

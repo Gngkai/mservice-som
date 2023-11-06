@@ -206,26 +206,32 @@ public class aos_mkt_progphreq_sync extends AbstractTask {
 				dyn.set("aos_init", true);
 
 				DynamicObjectCollection aos_entryentityS = dyn.getDynamicObjectCollection("aos_entryentity");
+				aos_entryentityS.clear();
 				DynamicObject aos_entryentity = aos_entryentityS.addNew();
 				aos_entryentity.set("aos_applyby", "申请人");
 				aos_entryentity.set("aos_picdesc", "见开发采购需求");
 				aos_entryentity = aos_entryentityS.addNew();
 				aos_entryentity.set("aos_applyby", "开发/采购");
+				aos_entryentity.set("aos_picdesc", "见开发采购需求");
 
 				DynamicObjectCollection aos_entryentity1S = dyn.getDynamicObjectCollection("aos_entryentity1");
+				aos_entryentity1S.clear();
 				DynamicObject aos_entryentity1 = aos_entryentity1S.addNew();
 				aos_entryentity1.set("aos_applyby2", "申请人");
 				aos_entryentity1.set("aos_veddesc", "见开发采购需求");
 				aos_entryentity1 = aos_entryentity1S.addNew();
 				aos_entryentity1.set("aos_applyby2", "开发/采购");
+				aos_entryentity1.set("aos_veddesc", "见开发采购需求");
 
 				DynamicObjectCollection aos_entryentity2S = dyn.getDynamicObjectCollection("aos_entryentity2");
+				aos_entryentity2S.clear();
 				DynamicObject aos_entryentity2 = aos_entryentity2S.addNew();
 				aos_entryentity2.set("aos_phtype", "白底");
 				aos_entryentity2 = aos_entryentity2S.addNew();
 				aos_entryentity2.set("aos_phtype", "实景");
 
 				DynamicObjectCollection aos_entryentity3S = dyn.getDynamicObjectCollection("aos_entryentity3");
+				aos_entryentity3S.clear();
 				DynamicObject aos_entryentity3 = aos_entryentity3S.addNew();
 				aos_entryentity3.set("aos_returnby", "摄影师");
 				aos_entryentity3 = aos_entryentity3S.addNew();
