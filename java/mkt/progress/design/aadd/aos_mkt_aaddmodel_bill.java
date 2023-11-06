@@ -81,6 +81,22 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 		AosProductNoChange();
 	}
 
+	private void cleanButton() {
+		Object fid = this.getModel().getDataEntity().getPkValue();
+		for (int i = 1; i <= 10; i++) {
+			DynamicObjectCollection aos_aadd_model_detailS = QueryServiceHelper.query("aos_aadd_model_detail",
+					"aos_cate1,aos_cate2," + "aos_cn,aos_usca,aos_uk,aos_de,aos_fr,aos_it,aos_es,aos_seq",
+					new QFilter("aos_sourceid", QCP.equals, fid.toString()).and("aos_button", QCP.equals, i)
+							.toArray(),null);
+			if (FndGlobal.IsNull(aos_aadd_model_detailS) ||aos_aadd_model_detailS.size() == 0){
+				this.getModel().setValue("aos_textfield"+i,"");
+				Map<String, Object> map = new HashMap<>();
+				map.put(ClientProperties.Text, new LocaleString(""));
+				this.getView().updateControlMetadata("aos_button" + i, map);
+			}
+		}
+	}
+
 	@Override
 	public void afterBindData(EventObject e) {
 		super.afterBindData(e);
@@ -271,6 +287,7 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 		if ("save".equals(Operatation)) {
 			setProductItem(this.getModel().getDataEntity(true));
 			saveEntity();
+			cleanButton();
 		}
 	}
 
