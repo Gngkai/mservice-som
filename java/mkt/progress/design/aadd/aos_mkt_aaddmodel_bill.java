@@ -498,11 +498,6 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn {
 		}
 		SaveServiceHelper.save(aosBillDeatilS.toArray(new DynamicObject[0]));
 		}
-		else {
-			this.getModel().setValue("aos_textfield"+button,"");
-//			this.getView().invokeOperation("save");
-//			this.getView().invokeOperation("refresh");
-		}
 	}
 
 	private void aos_button(String source) {

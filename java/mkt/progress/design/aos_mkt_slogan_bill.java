@@ -697,6 +697,19 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
         Object messageId;
         Object aos_designer = this.getModel().getValue("aos_designer");
 
+        if (FndGlobal.IsNull(aos_designer)) {
+            DynamicObject aos_mkt_proguser = QueryServiceHelper.queryOne("aos_mkt_proguser", "aos_designer",
+                    new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2)
+                            .toArray());
+            if (FndGlobal.IsNull(aos_mkt_proguser) || FndGlobal.IsNull(aos_mkt_proguser.get("aos_designer"))) {
+                fndError.add("品类设计师不存在!");
+                throw fndError;
+            }
+            aos_designer = aos_mkt_proguser.getLong("aos_designer");// 品类设计师
+            this.getModel().setValue("aos_designer", aos_designer);
+        }
+
+
         if ("EN".equals(aos_lang)) {
             this.getModel().setValue("aos_oueditor", UserServiceHelper.getCurrentUserId());
         } else if (!"CN".equals(aos_lang)) {
