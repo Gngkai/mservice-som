@@ -784,6 +784,8 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
             int onQty = get_on_hand_qty(Long.valueOf(org_id.toString()), Long.valueOf(aosItemId.toString()));
             OsQty += onQty;
             int SafeQty = iteminfo.GetSafeQty(org_id);
+            String aos_contryentrystatus = aos_contryentry.getString("aos_contryentrystatus");
+            if ("F".equals(aos_contryentrystatus) || "H".equals(aos_contryentrystatus) ) continue;
             if ("C".equals(aos_contryentry.getString("aos_contryentrystatus")) && OsQty < SafeQty) continue;
             ouSet.add(aos_nationalitynumber);
         }
@@ -1012,6 +1014,8 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
                 "id",
                 new QFilter("id", QCP.equals, aosItemid.getPkValue().toString())
                         .and("aos_contryentry.aos_nationality.number",QCP.equals,ou)
+                        .and("aos_contryentry.aos_contryentrystatus",QCP.not_equals,"F")
+                        .and("aos_contryentry.aos_contryentrystatus",QCP.not_equals,"H")
                         .toArray());
         return FndGlobal.IsNotNull(bd_material);
     }
