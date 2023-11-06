@@ -75,6 +75,7 @@ public class AosMktDesignBill extends AbstractBillPlugIn implements ItemClickLis
 
     @Override
     public void confirmCallBack(MessageBoxClosedEvent messageBoxClosedEvent) {
+        FndMsg.debug("=====confirmCallBack=====");
         // 回调标识
         String callBackId = messageBoxClosedEvent.getCallBackId();
         // 确认结果
@@ -90,23 +91,30 @@ public class AosMktDesignBill extends AbstractBillPlugIn implements ItemClickLis
                 new QFilter("aos_category3_name", QCP.equals, aos_category3_name),
                 new QFilter("aos_itemnamecn", QCP.equals, aos_itemnamecn),
         };
+        FndMsg.debug("resultValue:" + resultValue);
+        FndMsg.debug("callBackId:" + callBackId);
 
         if ("Yes".equals(resultValue) && "audit".equals(callBackId)) {
+            FndMsg.debug("======== into if ========");
+
             // 如果为是 更新相同品类的摄影 摄像 布景标准库 的进度为待优化
             DynamicObject photoObj = BusinessDataServiceHelper.loadSingle("aos_mkt_photostd", "billstatus,aos_status", qFilters);
             DynamicObject videoObj = BusinessDataServiceHelper.loadSingle("aos_mkt_videostd", "billstatus,aos_status", qFilters);
             DynamicObject viewObj = BusinessDataServiceHelper.loadSingle("aos_mkt_viewstd", "billstatus,aos_status", qFilters);
             if (photoObj != null) {
+                FndMsg.debug("更新拍照需求表");
                 photoObj.set("billstatus", "D");
                 photoObj.set("aos_status", "待优化");
                 SaveServiceHelper.save(new DynamicObject[]{photoObj});
             }
             if (videoObj != null) {
+                FndMsg.debug("更新摄像需求表");
                 videoObj.set("billstatus", "D");
                 videoObj.set("aos_status", "待优化");
                 SaveServiceHelper.save(new DynamicObject[]{videoObj});
             }
             if (viewObj != null) {
+                FndMsg.debug("更新布景需求表");
                 viewObj.set("billstatus", "D");
                 viewObj.set("aos_status", "待优化");
                 SaveServiceHelper.save(new DynamicObject[]{viewObj});
