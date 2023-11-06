@@ -85,11 +85,14 @@ public class AosMktDesignBill extends AbstractBillPlugIn implements ItemClickLis
         String aos_category2_name = this.getModel().getValue("aos_category2_name").toString();
         String aos_category3_name = this.getModel().getValue("aos_category3_name").toString();
         String aos_itemnamecn = this.getModel().getValue("aos_itemnamecn").toString();
+        String aos_detail = this.getModel().getValue("aos_detail").toString();
+
         QFilter[] qFilters = new QFilter[]{
                 new QFilter("aos_category1_name", QCP.equals, aos_category1_name),
                 new QFilter("aos_category2_name", QCP.equals, aos_category2_name),
                 new QFilter("aos_category3_name", QCP.equals, aos_category3_name),
                 new QFilter("aos_itemnamecn", QCP.equals, aos_itemnamecn),
+                new QFilter("aos_detail", QCP.equals, aos_detail),
         };
         FndMsg.debug("resultValue:" + resultValue);
         FndMsg.debug("callBackId:" + callBackId);
