@@ -25,6 +25,7 @@ public class ProgressGiveBill extends AbstractBillPlugIn {
 						this.getView().showErrorNotification("人员信息不存在!");
 						throw new Exception();
 					}
+					this.getModel().setValue("aos_userfield",bos_user.get("id"));
 				}
 			}
 		} catch (Exception ex) {
