@@ -362,7 +362,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			AosItemChange();
 		}
 		else if (name.equals("aos_phstate"))
-			PhstateChange(e);
+			PhstateChange();
 		else if (name.equals("aos_vediotype"))
 			VedioTypeChange();
 		else if (name.equals("aos_ponumber")) {
@@ -505,11 +505,8 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		}
 	}
 
-	private void PhstateChange(PropertyChangedArgs e) {
+	private void PhstateChange() {
 		Object aos_phstate = this.getModel().getValue("aos_phstate");
-		String oldname = (String) e.getChangeSet()[0].getOldValue();
-		Object state = this.getModel().getValue("aos_status");
-		Boolean issys = (Boolean) this.getModel().getValue("aos_sys");
 		if ("工厂简拍".equals(aos_phstate)) {
 			this.getModel().setValue("aos_3dflag", true);
 			this.getModel().setValue("aos_3d_reason", true);
