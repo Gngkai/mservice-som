@@ -21,6 +21,7 @@ import common.sal.util.QFBuilder;
 import mkt.common.MKTCom;
 import mkt.progress.design.aadd.aos_mkt_aadd_bill;
 import mkt.progress.design.aos_mkt_designreq_bill;
+import mkt.progress.design.aos_mkt_slogan_bill;
 import mkt.progress.design3d.aos_mkt_3design_bill;
 import mkt.progress.iface.iteminfo;
 import mkt.progress.listing.aos_mkt_listingmin_bill;
@@ -117,6 +118,8 @@ public class ProgressUtil {
 						new aos_mkt_progphreq_bill().aos_submit(dy_main, "B");
 					else if (billFormId.equals("aos_mkt_aadd"))
 						new aos_mkt_aadd_bill().aosSubmit(dy_main, "B");
+					else if (billFormId.equals("aos_mkt_slogan"))
+						new aos_mkt_slogan_bill().aos_submit(dy_main, "B");
 				}
 				// 没有权限
 				else {
