@@ -8,8 +8,6 @@ import common.sal.sys.basedata.dao.impl.ItemCategoryDaoImpl;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.dataentity.entity.ILocaleString;
-import kd.bos.exception.ErrorCode;
-import kd.bos.exception.KDException;
 import kd.bos.servicehelper.QueryServiceHelper;
 import common.sal.util.QFBuilder;
 
@@ -162,21 +160,80 @@ public class sensitiveWordsUtils {
             return result;
         JSONArray contentArrays = SplitString(text);
         if (language.equals("EN")) {
-            result = calibrate(sensitiveWords.getJSONArray("UK"), contentArrays);
-            if (result.getBoolean("state"))
-                return result;
+            JSONObject  ukResult = calibrate(sensitiveWords.getJSONArray("UK"), contentArrays);
+            JSONObject  caResult = calibrate(sensitiveWords.getJSONArray("CA"), contentArrays);
+            JSONObject  usResult = calibrate(sensitiveWords.getJSONArray("US"), contentArrays);
 
-            result = calibrate(sensitiveWords.getJSONArray("CA"), contentArrays);
-            if (result.getBoolean("state"))
-                return result;
+            //记录已经校验出来的敏感词
+            List<String> fillWords = new ArrayList<>();
+            if (ukResult.getBoolean("state")) {
+                result.put("state",true);
+                JSONArray dataRows = ukResult.getJSONArray("data");
+                for (int i = 0; i < dataRows.size(); i++) {
+                    JSONObject row = dataRows.getJSONObject(i);
+                    String words = row.getString("words");
+                    fillWords.add(words);
+                    row.put("lan","UK");
+                }
+                result.put("data",dataRows);
+            }
 
-            result = calibrate(sensitiveWords.getJSONArray("US"), contentArrays);
-            return result;
+            if (caResult.getBoolean("state")) {
+                result.put("state",true);
+                JSONArray dataRows = caResult.getJSONArray("data");
+                JSONArray resultRows = result.getJSONArray("data");
+                for (int i = 0; i < dataRows.size(); i++) {
+                    JSONObject row = dataRows.getJSONObject(i);
+                    String words = row.getString("words");
+                    if (fillWords.contains(words)){
+                        for (int indedx = 0; indedx < resultRows.size(); indedx++) {
+                            JSONObject resultRow = resultRows.getJSONObject(indedx);
+                            if (resultRow.getString("words").equals(words)) {
+                                String lan = resultRow.getString("lan");
+                                resultRow.put("lan",lan+"/CA");
+                            }
+                        }
+                    }else {
+                        row.put("lan","CA");
+                        resultRows.add(row);
+                    }
+                }
+            }
+
+            if (usResult.getBoolean("state")) {
+                result.put("state",true);
+                JSONArray dataRows = usResult.getJSONArray("data");
+                JSONArray resultRows = result.getJSONArray("data");
+                for (int i = 0; i < dataRows.size(); i++) {
+                    JSONObject row = dataRows.getJSONObject(i);
+                    String words = row.getString("words");
+                    if (fillWords.contains(words)){
+                        for (int indedx = 0; indedx < resultRows.size(); indedx++) {
+                            JSONObject resultRow = resultRows.getJSONObject(indedx);
+                            if (resultRow.getString("words").equals(words)) {
+                                String lan = resultRow.getString("lan");
+                                resultRow.put("lan",lan+"/US");
+                            }
+                        }
+                    }else {
+                        row.put("lan","US");
+                        resultRows.add(row);
+                    }
+                }
+            }
+
         }
         else {
-            return calibrate(sensitiveWords.getJSONArray(language), contentArrays);
+            result = calibrate(sensitiveWords.getJSONArray(language), contentArrays);
+            if (result.getBoolean("state")) {
+                JSONArray dataRows = result.getJSONArray("data");
+                for (int i = 0; i < dataRows.size(); i++) {
+                    JSONObject row = dataRows.getJSONObject(i);
+                    row.put("lan",language);
+                }
+            }
         }
-
+        return result;
     }
     /**
      * 敏感词字符校验方法
@@ -216,7 +273,7 @@ public class sensitiveWordsUtils {
                     //校验敏感词字符
                     String sensitiveChar = sensitiveCharArray.getString(senCharIndex);
                     //不相等则认为不异常
-                    if (!contentChar.equals(sensitiveChar)){
+                    if (!contentChar.equalsIgnoreCase(sensitiveChar)){
                         abnormal = false;
                         break;
                     }
@@ -234,12 +291,14 @@ public class sensitiveWordsUtils {
                         result.put("state",abnormal);
                     JSONArray words = result.getJSONArray("data");
                     if (wordsInfo.containsKey(sensitiveBuilder.toString())) {
-                        words.add(wordsInfo.getJSONObject(sensitiveBuilder.toString()));
+                        JSONObject clone = wordsInfo.getJSONObject(sensitiveBuilder.toString()).clone();
+                        words.add(clone);
                     }
                     else {
                         setWordsInfo();
                         if (wordsInfo.containsKey(sensitiveBuilder.toString())) {
-                            words.add(wordsInfo.getJSONObject(sensitiveBuilder.toString()));
+                            JSONObject clone = wordsInfo.getJSONObject(sensitiveBuilder.toString()).clone();
+                            words.add(clone);
                         }
                     }
                 }
@@ -275,7 +334,7 @@ public class sensitiveWordsUtils {
                 //校验敏感词字符
                 String sensitiveChar = sensitiveCharArray.getString(senCharIndex);
                 //不相等则认为不异常
-                if (!contentChar.equals(sensitiveChar)){
+                if (!contentChar.equalsIgnoreCase(sensitiveChar)){
                     abnormal = false;
                     break;
                 }

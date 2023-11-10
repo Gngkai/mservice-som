@@ -1,6 +1,9 @@
 package mkt.progress.design.functDiagram;
 
 import common.Cux_Common_Utl;
+import common.fnd.FndGlobal;
+import kd.bos.dataentity.entity.DynamicObject;
+import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.dataentity.entity.LocaleString;
 import kd.bos.form.FormShowParameter;
 import kd.bos.form.control.Control;
@@ -66,13 +69,27 @@ public class functTranslateForm extends AbstractFormPlugin {
         comboEdit.setComboItems(data);
 
         String entityId = getView().getParentView().getEntityId();
+        //高级A+模块 设置模块信息
         if (entityId.equals("aos_aadd_model")){
             comboEdit = this.getControl("aos_table");
-            data = new ArrayList<>(10);
-            for (int i = 1; i < 11; i++) {
-                data.add(new ComboItem(new LocaleString("页签"+i),String.valueOf(i)));
+            DynamicObjectCollection tabEntityRows = this.getView().getParentView().getModel().getDataEntity(true).getDynamicObjectCollection("aos_ent_tab");
+            data = new ArrayList<>(tabEntityRows.size());
+            for (int i = 0; i < tabEntityRows.size(); i++) {
+                DynamicObject row = tabEntityRows.get(i);
+                LocaleString locale = new LocaleString();
+                String tabName =  row.getString("aos_tab");
+                if (FndGlobal.IsNotNull(tabName)){
+                    tabName = tabName+" ( 页签 "+ (i+1) +" )";
+                }
+                else {
+                    tabName = "页签 "+ (i+1) +"";
+                }
+                locale.setLocaleValue_zh_CN(tabName);
+                data.add(new ComboItem(locale,String.valueOf(i)));
+
             }
             comboEdit.setComboItems(data);
         }
+
     }
 }
