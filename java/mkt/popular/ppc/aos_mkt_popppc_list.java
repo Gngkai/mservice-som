@@ -499,7 +499,7 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 		Date date = calendar.getTime();
 		calendar.add(Calendar.DAY_OF_MONTH, -2);
 		Date date_to = calendar.getTime();
-		calendar.add(Calendar.DAY_OF_MONTH, -14);
+		calendar.add(Calendar.DAY_OF_MONTH, -7);
 		Date date_from = calendar.getTime();
 
 		SimpleDateFormat writeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);// 日期格式化
