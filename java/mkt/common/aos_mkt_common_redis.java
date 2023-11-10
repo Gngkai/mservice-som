@@ -6,6 +6,7 @@ import kd.bos.cache.CacheFactory;
 import kd.bos.cache.DistributeSessionlessCache;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
+import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.QueryServiceHelper;
 import org.apache.commons.lang3.SerializationUtils;
@@ -690,7 +691,9 @@ public class aos_mkt_common_redis {
 		QFilter filter_date_to = new QFilter("aos_entryentity.aos_date_l", "<", date_to_str);
 		QFilter filter_date = new QFilter("aos_date", "=", aos_date_str);
 		QFilter filter_match = new QFilter("aos_entryentity.aos_cam_name", "like", "%-AUTO%");
-		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_date, filter_match };
+		QFilter filter_equal =
+				new QFilter("aos_entryentity.aos_ad_name", QCP.equals, "aos_entryentity.aos_shopsku");
+		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_date, filter_match, filter_equal};
 		String SelectColumn = "aos_orgid," + "aos_entryentity.aos_ad_sku aos_itemid,"
 				+ "aos_entryentity.aos_spend aos_spend," + "aos_entryentity.aos_impressions aos_impressions";
 		DataSet aos_base_skupoprptS = QueryServiceHelper.queryDataSet("aos_mkt_common_redis" + "." + "init_skurpt3avg",
