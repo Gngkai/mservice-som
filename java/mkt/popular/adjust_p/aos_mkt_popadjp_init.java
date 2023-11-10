@@ -235,6 +235,12 @@ public class aos_mkt_popadjp_init extends AbstractTask {
 				if (aos_avgexp.compareTo(BigDecimal.ZERO) != 0)
 					aos_exprate = aos_clicks.divide(aos_avgexp, 6, BigDecimal.ROUND_HALF_UP);
 
+
+				BigDecimal aos_cpc = BigDecimal.ZERO;
+				if (aos_clicks.compareTo(BigDecimal.ZERO) != 0)
+					aos_cpc = aos_groupcost.divide(aos_clicks, 6, BigDecimal.ROUND_HALF_UP);
+
+
 				int aos_avadays = aos_mkt_popular_ppc.getInt("aos_avadays");
 				BigDecimal aos_bid = aos_mkt_popular_ppc.getBigDecimal("aos_bid");
 				String aos_basestitem = aos_mkt_popular_ppc.getString("aos_basestitem");
@@ -384,6 +390,17 @@ public class aos_mkt_popadjp_init extends AbstractTask {
 					aos_detailentry.set("aos_sys", "降出价");
 				}
 
+				// CPC
+				aos_detailentry.set("aos_cpc", aos_cpc);
+
+				// 调整比例
+				BigDecimal aos_bidsuggest = aos_detailentry.getBigDecimal("aos_bidsuggest");// 建议价
+				BigDecimal aos_adjprice = aos_detailentry.getBigDecimal("aos_adjprice");// 手动调整
+				BigDecimal aos_ratio = BigDecimal.ZERO;
+				if (aos_bidsuggest.compareTo(BigDecimal.ZERO) !=0) {
+					aos_ratio = aos_adjprice.divide(aos_bidsuggest, 2, BigDecimal.ROUND_HALF_UP);
+				}
+				aos_detailentry.set("aos_ratio", aos_ratio);
 			}
 
 			for (DynamicObject aos_detailentry : aos_detailentryS) {

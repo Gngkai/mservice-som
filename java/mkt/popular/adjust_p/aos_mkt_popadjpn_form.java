@@ -254,7 +254,9 @@ public class aos_mkt_popadjpn_form extends AbstractFormPlugin implements ItemCli
 				+ "aos_detailentry.aos_rank aos_rank," + "aos_detailentry.aos_overseaqty aos_overseaqty,"
 						+ "aos_detailentry.aos_is_saleout aos_is_saleout,"
 						+ "aos_detailentry.aos_seasonattr aos_seasonattr,"
-						+ "aos_detailentry.aos_sys aos_sys";
+						+ "aos_detailentry.aos_sys aos_sys," +
+				"aos_detailentry.aos_cpc aos_cpc," +
+				"aos_detailentry.aos_ratio aos_ratio";
 		DynamicObjectCollection aos_mkt_popadjustp_dataS = QueryServiceHelper.query("aos_mkt_popadjustp_data",
 				SelectField, filters, "aos_detailentry.aos_productno");
 		int size = aos_mkt_popadjustp_dataS.size();
@@ -294,6 +296,9 @@ public class aos_mkt_popadjpn_form extends AbstractFormPlugin implements ItemCli
 			this.getModel().setValue("aos_is_saleout", aos_mkt_popadjustp_data.get("aos_is_saleout"), i);
 			this.getModel().setValue("aos_seasonattr", aos_mkt_popadjustp_data.get("aos_seasonattr"), i);
 			this.getModel().setValue("aos_sys", aos_mkt_popadjustp_data.get("aos_sys"), i);
+
+			this.getModel().setValue("aos_cpc", aos_mkt_popadjustp_data.get("aos_cpc"), i);
+			this.getModel().setValue("aos_ratio", aos_mkt_popadjustp_data.get("aos_ratio"), i);
 			
 			
 			BigDecimal aos_lastprice = aos_mkt_popadjustp_data.getBigDecimal("aos_lastprice");
@@ -322,10 +327,19 @@ public class aos_mkt_popadjpn_form extends AbstractFormPlugin implements ItemCli
 				BigDecimal aos_lastprice = (BigDecimal) this.getModel().getValue("aos_lastprice", rowIndex);
 				BigDecimal aos_adjprice = (BigDecimal) this.getModel().getValue("aos_adjprice", rowIndex);
 
+				BigDecimal aos_bidsuggest = (BigDecimal) this.getModel().getValue("aos_bidsuggest", rowIndex);
+
+
+
 				if (aos_lastprice.compareTo(BigDecimal.ZERO) != 0) {
 					this.getModel().setValue("aos_rate", aos_adjprice.divide(aos_lastprice, 2, BigDecimal.ROUND_HALF_UP)
 							.subtract(BigDecimal.valueOf(1)), rowIndex);
 				}
+				if (aos_bidsuggest.compareTo(BigDecimal.ZERO) != 0) {
+					this.getModel().setValue("aos_ratio", aos_adjprice.divide(aos_bidsuggest, 2, BigDecimal.ROUND_HALF_UP));
+				}
+
+
 
 			}
 		}
