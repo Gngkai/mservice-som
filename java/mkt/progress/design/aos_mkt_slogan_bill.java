@@ -830,6 +830,9 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
                 aos_mkt_slogan.set("aos_main", false);
                 aos_mkt_slogan.set("aos_sourcebillno", billno);
                 aos_mkt_slogan.set("aos_sourceid", ReqFId);
+
+                aos_mkt_slogan.set("aos_designer", aos_designer);
+
                 if (aos_osconfirm) {
                     DynamicObject aos_mkt_progorguser = QueryServiceHelper.queryOne("aos_mkt_progorguser",
                             "aos_oseditor,aos_oueditor",
