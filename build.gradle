@@ -1,20 +1,101 @@
-archivesBaseName = 'aos-mms'
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'maven-publish'
 
-def timestamp = new Date().format('yyyyMMddHHmmss')
-version = project.version + '-' + timestamp
+sourceCompatibility = 1.8
+group = 'kd.bos.service'
+version = '1.0'
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
 
-def outputdir= 'out'
+def trd = COSMIC_LIBS_BASE_DIR + 'trd'
+def bos = COSMIC_LIBS_BASE_DIR + 'bos'
+def biz = COSMIC_LIBS_BASE_DIR + 'biz'
+def cus = COSMIC_LIBS_BASE_DIR + 'cus'
+def outputdir = 'out'
+
+String date = new Date().format('yyyy-MM-dd HH:mm:ss SSSSSS')
+
 
 dependencies {
+    implementation fileTree(dir: bos, includes: ['*.jar', '\\*\\*.jar'])
+    implementation fileTree(dir: trd, includes: ['*.jar', '\\*\\*.jar'])
+    implementation fileTree(dir: biz, includes: ['*.jar', '\\*\\*.jar'])
+    implementation fileTree(dir: cus, includes: ['\\jar\\*.jar'])
     implementation 'com.aosom.gpaas.common:com-sal:1.0-SNAPSHOT'
     implementation 'com.aosom.gpaas.common:com-scm:1.0-SNAPSHOT'
     implementation 'com.aosom.gpaas.common:com-fms:1.0-SNAPSHOT'
-    implementation project(':som')
 }
 
-// jarWithDeps
-task copyDepsToOut(dependsOn: 'jar', type: Copy) {
-    def conf = configurations.runtimeClasspath
-    from conf.allDependencies.findAll{ it.name.startsWith('com-sal')}.collect { conf.files(it) }
+
+sourceSets {
+    main {
+        java {
+            srcDir 'java'
+        }
+    }
+}
+jar {
+    manifest {
+        attributes 'Builddate': date
+        attributes 'Release': 'CICD'
+    }
+    include('common/fms/**')
+    include('fms/**')
+    include('sys/fms/**')
+
+    archiveName("aos-fms.jar")
+}
+
+task sourcesJar(type: Jar, dependsOn: build) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task copytolib(type: Copy, dependsOn: build) {
+    group 'build'
+    description 'copy to lib'
+    from 'build/libs'
     into outputdir
+
+    exclude '*source*.jar'
+}
+
+
+task copyJarTodir(type: Copy) {
+    from 'build/libs'
+    into '/home/local/bos'
+    exclude '**/*.class'
+}
+
+
+test.ignoreFailures true
+
+gradle.projectsEvaluated {
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+
+    repositories {
+        mavenLocal()
+        maven {
+            name 'aosom-it'
+            def releasesRepoUrl = 'http://it-nexus.aosom.com/repository/maven-releases'
+            def snapshotsRepoUrl = 'http://it-nexus.aosom.com/repository/maven-snapshots'
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+            credentials {
+                username mavenUser
+                password mavenPassword
+            }
+        }
+    }
 }
