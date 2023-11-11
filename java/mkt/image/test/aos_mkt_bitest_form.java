@@ -15,6 +15,7 @@ import mkt.data.standard.AosMktDesignInit;
 import mkt.data.standard.AosMktPhotoInit;
 import mkt.data.standard.AosMktStdInit;
 import mkt.data.standard.AosMktViewInit;
+import mkt.progress.design.aadd.aos_mkt_aadd_init;
 import mkt.synciface.*;
 import org.apache.commons.lang3.SerializationUtils;
 import sal.synciface.imp.aos_sal_import_invprice;
@@ -47,7 +48,7 @@ public class aos_mkt_bitest_form extends AbstractFormPlugin {
 	}
 
 	private void aos_test() {
-		AosMktViewInit.run();
+		aos_mkt_aadd_init.do_operate();
 	}
 
 
