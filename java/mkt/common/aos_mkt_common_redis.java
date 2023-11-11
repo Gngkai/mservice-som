@@ -1,5 +1,6 @@
 package mkt.common;
 
+import common.fnd.FndGlobal;
 import kd.bos.algo.DataSet;
 import kd.bos.algo.Row;
 import kd.bos.cache.CacheFactory;
@@ -673,6 +674,7 @@ public class aos_mkt_common_redis {
 
 	private static void init_skurpt3avg() {
 		HashMap<String, Map<String, Object>> SkuRpt3Avg = new HashMap<>();
+		HashMap<String, Integer> qtyMap = new HashMap<>();
 		Calendar calendar = Calendar.getInstance();
 		calendar.set(Calendar.HOUR_OF_DAY, 0);
 		calendar.set(Calendar.MINUTE, 0);
@@ -691,9 +693,24 @@ public class aos_mkt_common_redis {
 		QFilter filter_date_to = new QFilter("aos_entryentity.aos_date_l", "<", date_to_str);
 		QFilter filter_date = new QFilter("aos_date", "=", aos_date_str);
 		QFilter filter_match = new QFilter("aos_entryentity.aos_cam_name", "like", "%-AUTO%");
-		QFilter filter_equal =
-				new QFilter("aos_entryentity.aos_ad_name", QCP.equals, "aos_entryentity.aos_shopsku");
-		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_date, filter_match, filter_equal};
+		QFilter[] filters = new QFilter[] { filter_date_from, filter_date_to, filter_date, filter_match};
+
+		DataSet skuRptSetS =QueryServiceHelper.queryDataSet("aos_mkt_common_redis.qty",
+				"aos_base_skupoprpt","aos_orgid,aos_entryentity.aos_ad_sku aos_itemid," +
+						"aos_entryentity.aos_shopsku aos_shopsku",filters,null);
+		skuRptSetS = skuRptSetS.distinct();
+		while (skuRptSetS.hasNext()) {
+			Row skuRptSet = skuRptSetS.next();
+			String key = skuRptSet.getString("aos_orgid")+"~"+skuRptSet.getString("aos_itemid") ;
+			if (FndGlobal.IsNull(qtyMap.get(key)))
+				qtyMap.put(key,1);
+			else
+				qtyMap.put(key,qtyMap.get(key)+1);
+		}
+		skuRptSetS.close();
+
+//		QFilter filter_equal =
+//				new QFilter("aos_entryentity.aos_ad_name", QCP.equals, "aos_entryentity.aos_shopsku");
 		String SelectColumn = "aos_orgid," + "aos_entryentity.aos_ad_sku aos_itemid,"
 				+ "aos_entryentity.aos_spend aos_spend," + "aos_entryentity.aos_impressions aos_impressions";
 		DataSet aos_base_skupoprptS = QueryServiceHelper.queryDataSet("aos_mkt_common_redis" + "." + "init_skurpt3avg",
@@ -703,9 +720,12 @@ public class aos_mkt_common_redis {
 		while (aos_base_skupoprptS.hasNext()) {
 			Row aos_base_skupoprpt = aos_base_skupoprptS.next();
 			Map<String, Object> Info = new HashMap<>();
+			String key = aos_base_skupoprpt.getLong("aos_orgid") + "~" + aos_base_skupoprpt.getLong("aos_itemid");
 			Info.put("aos_spend", aos_base_skupoprpt.get("aos_spend"));
-			Info.put("aos_impressions", aos_base_skupoprpt.get("aos_impressions"));
-			SkuRpt3Avg.put(aos_base_skupoprpt.getLong("aos_orgid") + "~" + aos_base_skupoprpt.getLong("aos_itemid"),
+			BigDecimal aos_impressions = aos_base_skupoprpt.getBigDecimal("aos_impressions")
+					.multiply(BigDecimal.valueOf(qtyMap.getOrDefault(key,1)));
+			Info.put("aos_impressions", aos_impressions);
+			SkuRpt3Avg.put(key,
 					Info);
 		}
 		aos_base_skupoprptS.close();
