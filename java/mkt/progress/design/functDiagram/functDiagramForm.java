@@ -3,8 +3,6 @@ package mkt.progress.design.functDiagram;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.deepl.api.DeepLException;
-import com.deepl.api.TextResult;
-import com.deepl.api.Translator;
 import common.Cux_Common_Utl;
 import common.fnd.FndGlobal;
 import common.fnd.FndHistory;
@@ -976,6 +974,7 @@ public class functDiagramForm extends AbstractBillPlugIn implements HyperLinkCli
                 DynamicObject subEntityRow = subEntityRows.addNew();
                 subEntityRow.set("aos_type"+lanIndex,fieldType);
                 subEntityRow.set("aos_wordtype"+lanIndex,words.getString("type"));
+                subEntityRow.set("aos_sublan"+lanIndex,words.getString("lan"));
                 subEntityRow.set("aos_word"+lanIndex,words.getString("words"));
                 subEntityRow.set("aos_subword"+lanIndex,words.getString("replace"));
                 subEntityRow.set("aos_replace"+lanIndex,"replace");
@@ -1056,6 +1055,7 @@ public class functDiagramForm extends AbstractBillPlugIn implements HyperLinkCli
             DynamicObject newSubRow = newSubEntity.addNew();
             newSubRow.set("aos_type"+newImage,sourceSubRow.get("aos_type"+sourceImage));
             newSubRow.set("aos_wordtype"+newImage,sourceSubRow.get("aos_wordtype"+sourceImage));
+            newSubRow.set("aos_sublan"+newImage,sourceSubRow.get("aos_sublan"+sourceImage));
             newSubRow.set("aos_word"+newImage,sourceSubRow.get("aos_word"+sourceImage));
             newSubRow.set("aos_subword"+newImage,sourceSubRow.get("aos_subword"+sourceImage));
             newSubRow.set("aos_replace"+newImage,sourceSubRow.get("aos_replace"+sourceImage));

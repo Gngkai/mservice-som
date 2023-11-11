@@ -1,6 +1,7 @@
 package mkt.progress.design.functDiagram;
 
 import common.Cux_Common_Utl;
+import common.fnd.FndGlobal;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.dataentity.entity.LocaleString;
@@ -76,15 +77,26 @@ public class functCopyForm extends AbstractFormPlugin {
             //图片类
             TransferTreeNode imgNode = new TransferTreeNode("tab","页签",true);
             imgNode.setIsOpened(false);
-            for (int i = 1; i < 11; i++) {
+            DynamicObjectCollection tabEntRows = this.getView().getParentView().getModel().getDataEntity(true).getDynamicObjectCollection("aos_ent_tab");
+            for (int i = 0; i < tabEntRows.size(); i++) {
+                DynamicObject dy = tabEntRows.get(i);
+                String text;
+                if (FndGlobal.IsNotNull(dy.get("aos_tab"))){
+                    text = dy.getString("aos_tab")+" ( 页签"+(i+1)+" )";
+                }
+                else {
+                    text ="页签"+(i+1);
+                }
+
                 String id = String.valueOf(i);
                 TransferTreeNode childNode = new TransferTreeNode(
                         "tab/"+id,        // 节点 ID
-                        "页签"+i,    // text，节点显示内容
+                        text,    // text，节点显示内容
                         false         // disabled，该节点是否允许选中
                 );
                 imgNode.addChild(childNode);
             }
+
             data.add(imgNode);
             trans.setTransferListData(data,null);
 
@@ -131,6 +143,7 @@ public class functCopyForm extends AbstractFormPlugin {
                     data.add(new ComboItem(new LocaleString(dy.getString("aos_productno")), dy.getString("aos_productno")));
                 }
             }
+
        }
         comboEdit.setComboItems(data);
     }
