@@ -198,7 +198,10 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
         Object aos_user = dy_main.get("aos_sale");
 
         DynamicObjectCollection aos_entryentityS = dy_main.getDynamicObjectCollection("aos_entryentity");
-        DynamicObject aosItemId = aos_entryentityS.get(0).getDynamicObject("aos_itemid");
+        DynamicObject aosItemId = null;
+        for (DynamicObject aos_entryentity:aos_entryentityS) {
+             aosItemId = aos_entryentity.getDynamicObject("aos_itemid");
+        }
         String aos_org = dy_main.getString("aos_org");// 国别
 
         Boolean itemExist = queryItemExist(aosItemId,aos_org);
@@ -1010,6 +1013,7 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
     }
 
     private static Boolean queryItemExist(DynamicObject aosItemid, String ou) {
+        try {
         DynamicObject bd_material =QueryServiceHelper.queryOne("bd_material",
                 "id",
                 new QFilter("id", QCP.equals, aosItemid.getPkValue().toString())
@@ -1018,6 +1022,11 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
                         .and("aos_contryentry.aos_contryentrystatus",QCP.not_equals,"H")
                         .toArray());
         return FndGlobal.IsNotNull(bd_material);
+
+        }
+        catch (Exception ex) {
+           return false;
+        }
     }
 
 }
