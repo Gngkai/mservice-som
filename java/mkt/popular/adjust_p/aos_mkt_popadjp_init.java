@@ -236,6 +236,8 @@ public class aos_mkt_popadjp_init extends AbstractTask {
 					aos_exprate = aos_clicks.divide(aos_avgexp, 6, BigDecimal.ROUND_HALF_UP);
 
 
+
+
 				BigDecimal aos_cpc = BigDecimal.ZERO;
 				if (aos_clicks.compareTo(BigDecimal.ZERO) != 0)
 					aos_cpc = aos_groupcost.divide(aos_clicks, 6, BigDecimal.ROUND_HALF_UP);
@@ -355,9 +357,15 @@ public class aos_mkt_popadjp_init extends AbstractTask {
 				}
 				aos_detailentry.set("aos_bidsuggest", aos_bid_suggest);// 建议价
 
+				aos_detailentry.set("aos_avgexp", Impress3Avg);
+
+
+
 				if (SkuRpt3AvgMap != null)
 					Impress3Avg = (BigDecimal) SkuRpt3AvgMap.get("aos_impressions");
-				aos_detailentry.set("aos_avgexp", Impress3Avg);
+				if (Impress3Avg.compareTo(BigDecimal.ZERO) != 0)
+					aos_exprate = aos_clicks.divide(Impress3Avg, 6, BigDecimal.ROUND_HALF_UP);
+
 
 				aos_detailentry.set("aos_exprate", aos_exprate);
 				aos_detailentry.set("aos_groupcost", aos_groupcost);
