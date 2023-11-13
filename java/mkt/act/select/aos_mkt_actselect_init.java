@@ -1,5 +1,6 @@
 package mkt.act.select;
 
+import common.CommonDataSom;
 import common.Cux_Common_Utl;
 import common.fnd.AosomLog;
 import common.fnd.FndDate;
@@ -27,7 +28,6 @@ import mkt.common.AosMktGenerate;
 import mkt.common.MKTCom;
 import mkt.common.aos_mkt_common_redis;
 import org.apache.commons.lang3.SerializationUtils;
-import sal.quote.CommData;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
@@ -59,7 +59,7 @@ public class aos_mkt_actselect_init extends AbstractTask {
 
 	private static void executerun() {
 		// 初始化数据
-		CommData.init();
+		CommonDataSom.init();
 		aos_mkt_common_redis.init_redis("act");
 		// 调用线程池
 //		long is_oversea_flag = aos_sal_sche_pub.get_lookup_values("AOS_YES_NO", "Y");
