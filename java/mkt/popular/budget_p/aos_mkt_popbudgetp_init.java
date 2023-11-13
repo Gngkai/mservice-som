@@ -37,6 +37,25 @@ import kd.bos.threads.ThreadPools;
 import mkt.common.aos_mkt_common_redis;
 
 public class aos_mkt_popbudgetp_init extends AbstractTask {
+	public static Object get_import_id2(Object code, String bill) {
+		try {
+
+			Object id;
+			QFilter filter = new QFilter("name", "=", code);
+			QFilter[] filters = new QFilter[] { filter };
+			String selectFields = "id";
+			DynamicObject DynamicObject = QueryServiceHelper.queryOne(bill, selectFields, filters);
+			if (DynamicObject == null) {
+				id = null;
+			} else {
+				id = DynamicObject.getLong("id");
+			}
+			return id;
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
 	private static final DistributeSessionlessCache cache = CacheFactory.getCommonCacheFactory()
 			.getDistributeSessionlessCache("mkt_redis");
 	private static Log logger = LogFactory.getLog(aos_mkt_popbudgetp_init.class);
@@ -209,7 +228,7 @@ public class aos_mkt_popbudgetp_init extends AbstractTask {
 			Object aos_salemanual = aos_mkt_popular_ppc.get("aos_salemanual"); 
 			
 			BigDecimal aos_budget = aos_mkt_popular_ppc.getBigDecimal("aos_budget");
-			Object aos_seasonsetingid = FndGlobal.get_import_id2(aos_seasonseting, "aos_scm_seasonatt");
+			Object aos_seasonsetingid = get_import_id2(aos_seasonseting, "aos_scm_seasonatt");
 			BigDecimal Roi7Days_Serial = BigDecimal.ZERO;// 7天ROI 系列维度
 			Map<String, Object> SkuRptMap_Serial = SkuRpt_Serial.get(p_org_id + "~" + aos_productno);// Sku报告
 			Map<String, Object> PpcYesterSerialMap = PpcYesterSerial.get(p_org_id + "~" + aos_productno);// 默认昨日数据

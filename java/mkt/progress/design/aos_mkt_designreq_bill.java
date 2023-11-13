@@ -1460,7 +1460,7 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 			throw fndMessage;
 		}
 		long aos_oueditor = 0;
-		Object orgid = aos_sal_import_pub.get_import_id(LastOrgNumber, "bd_country");
+		Object orgid = FndGlobal.get_import_id(LastOrgNumber, "bd_country");
 		if (AosCategory1 != null & AosCategory2 != null && !AosCategory1.equals("") && !AosCategory2.equals("")) {
 			DynamicObject aos_mkt_progorguser = ProgressUtil.minListtFindEditorByType(orgid, AosCategory1, AosCategory2,
 					"功能图翻译");
@@ -1776,7 +1776,7 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 
 		// 循环每个分组后的国家 创建一个头
 		for (String ou : Oumap.keySet()) {
-			Object org_id = aos_sal_import_pub.get_import_id(ou, "bd_country");
+			Object org_id = FndGlobal.get_import_id(ou, "bd_country");
 			if (Cux_Common_Utl.IsNull(org_id))
 				continue;
 			DynamicObject aos_mkt_designcmp = BusinessDataServiceHelper.newDynamicObject("aos_mkt_designcmp");
@@ -2032,7 +2032,7 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 
 		// 循环每个分组后的国家 创建一个头
 		for (String ou : Oumap.keySet()) {
-			Object org_id = aos_sal_import_pub.get_import_id(ou, "bd_country");
+			Object org_id = FndGlobal.get_import_id(ou, "bd_country");
 			DynamicObject aos_mkt_listing_sal = BusinessDataServiceHelper.newDynamicObject("aos_mkt_listing_sal");
 			aos_mkt_listing_sal.set("aos_requireby", aos_designer);
 			aos_mkt_listing_sal.set("aos_designer", aos_designer);

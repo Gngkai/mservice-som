@@ -14,12 +14,32 @@ import kd.bos.dataentity.OperateOption;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.exception.KDException;
+import kd.bos.orm.query.QFilter;
 import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
+import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 
 public class aos_mkt_syncif_flow extends AbstractTask {
 
+	public static Object get_shop_id(Object shop_name, Object org_id) {
+		try {
+			Object id = 0;
+			QFilter filter_name = new QFilter("name", "=", shop_name);
+			QFilter filter_org = new QFilter("aos_org", "=", org_id);
+			QFilter[] filters = new QFilter[] { filter_name,filter_org };
+			String selectFields = "id";
+			DynamicObject DynamicObject = QueryServiceHelper.queryOne("aos_sal_shop", selectFields, filters);
+			if (DynamicObject == null) {
+				id = 0;
+			} else {
+				id = DynamicObject.getLong("id");
+			}
+			return id;
+		} catch (Exception e) {
+			return 0;
+		}
+	}
 	@Override
 	public void execute(RequestContext ctx, Map<String, Object> param) throws KDException {
 		// 流量转化率报告每天下午四点更新数据
@@ -60,7 +80,7 @@ public class aos_mkt_syncif_flow extends AbstractTask {
 				Object p_org_id = FndGlobal.get_import_id(aos_ou_name, "bd_country");
 				Object item_id = FndGlobal.get_import_id(aos_sku, "bd_material");// 货号id
 				Object platform_id = FndGlobal.get_import_id(aos_sales_channel, "aos_sal_channel");
-				Object shop_id = FndGlobal.get_shop_id(aos_stores, p_org_id);
+				Object shop_id = get_shop_id(aos_stores, p_org_id);
 				DynamicObject aos_entryentity = aos_entryentityS.addNew();
 				aos_entryentity.set("aos_orgid", p_org_id);
 				aos_entryentity.set("aos_itemid", item_id);

@@ -601,7 +601,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
                     continue;
 
                 // 如果头上国别为空 则国别为法国
-                org_id = aos_sal_import_pub.get_import_id("FR", "bd_country");
+                org_id = FndGlobal.get_import_id("FR", "bd_country");
 
                 QFilter filter_org = new QFilter("aos_orgid.id", "=", org_id);
                 QFilter filter_sourceid = new QFilter("aos_sourceid", "=", ReqFId);
@@ -810,7 +810,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
                     continue;
                 if (aos_orgid == null)
                     // 如果头上国别为空 则国别为下单国别
-                    org_id = aos_sal_import_pub.get_import_id(org, "bd_country");
+                    org_id = FndGlobal.get_import_id(org, "bd_country");
                 else if (aos_orgid != null && !(((DynamicObject) aos_orgid).getString("number")).equals(org))
                     // 如果头上国别不为空 则只生成该国别数据
                     continue;

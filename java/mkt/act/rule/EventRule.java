@@ -1885,7 +1885,7 @@ public class EventRule {
         }
         String shopId = actPlanEntity.getDynamicObject("aos_shop").getString("id");
         try {
-            itemActProfit = CommonDataSomAct.get_formula(orgEntity.getString("id"), shopId, map_itemPrice, "/");
+            itemActProfit = CommonDataSomAct.get_formula2(orgEntity.getString("id"), shopId, map_itemPrice, "/");
         }catch (Exception e){
             e.printStackTrace();
             throw new KDException(new ErrorCode("计算毛利率异常",e.getMessage()));
