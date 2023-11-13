@@ -45,7 +45,6 @@ import mkt.common.GlobalMessage;
 import mkt.common.MKTCom;
 import mkt.progress.ProgressUtil;
 import mkt.progress.parameter.errorListing.ErrorListEntity;
-import sal.synciface.imp.aos_sal_import_pub;
 
 public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemClickListener, HyperLinkClickListener {
 
@@ -456,7 +455,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
 
         // 循环每个分组后的国家 创建一个头
         for (String ou : Oumap.keySet()) {
-            Object org_id = aos_sal_import_pub.get_import_id(ou, "bd_country");
+            Object org_id = FndGlobal.get_import_id(ou, "bd_country");
             DynamicObject aos_mkt_listing_sal = BusinessDataServiceHelper.newDynamicObject("aos_mkt_listing_sal");
             aos_mkt_listing_sal.set("aos_requireby", UserServiceHelper.getCurrentUserId());
             aos_mkt_listing_sal.set("aos_designer", aos_designer);

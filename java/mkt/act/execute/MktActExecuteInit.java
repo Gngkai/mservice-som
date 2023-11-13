@@ -4,6 +4,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
 
+import common.CommonDataSom;
 import common.Cux_Common_Utl;
 import common.fnd.FndMsg;
 import kd.bos.context.RequestContext;
@@ -17,7 +18,6 @@ import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
-import sal.quote.CommData;
 
 /**
  * 抓客执行表初始化
@@ -78,11 +78,11 @@ public class MktActExecuteInit extends AbstractTask {
 		for (DynamicObject aosActSelectPlan : aosActSelectPlanS) {
 			String item_id = aosActSelectPlan.getString("aos_itemnum");
 			// 类别
-			String itemCategoryId = CommData.getItemCategoryId(item_id);
+			String itemCategoryId = CommonDataSom.getItemCategoryId(item_id);
 			if (itemCategoryId == null || "".equals(itemCategoryId))
 				continue;
 			// 小类获取组别
-			String salOrg = CommData.getSalOrgV2(org_id + "", itemCategoryId);
+			String salOrg = CommonDataSom.getSalOrgV2(org_id + "", itemCategoryId);
 			if (salOrg == null || "".equals(salOrg))
 				continue;
 			// 循环非当前销售组别

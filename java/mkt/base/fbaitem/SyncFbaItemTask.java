@@ -3,6 +3,7 @@ package mkt.base.fbaitem;
 import kd.bos.context.RequestContext;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
+import kd.bos.dataentity.metadata.dynamicobject.DynamicObjectType;
 import kd.bos.exception.KDException;
 import kd.bos.logging.Log;
 import kd.bos.logging.LogFactory;
@@ -12,7 +13,6 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.threads.ThreadPools;
-import sal.sche.aos_sal_sche_pub.aos_sal_sche_pvt;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -33,12 +33,29 @@ public class SyncFbaItemTask extends AbstractTask {
     public void execute(RequestContext requestContext, Map<String, Object> map) throws KDException {
         ThreadPools.executeOnce("FBA每日物料同步",new SyncRunnable());
     }
+
+    public static Logger get_logger(String name) {
+        Logger logger = Logger.getLogger(name);
+        return logger;
+    }
+
+    /**
+     * 读取字段标识
+     *
+     * @param objectType
+     * @return
+     */
+    public static List<String> getDynamicObjectType(DynamicObjectType objectType) {
+        return objectType.getProperties().stream().filter(pro -> !pro.getPropertyType().getName().equals("long"))
+                .map(property -> property.getName()).filter(name -> !name.equals("id"))
+                .filter(name -> !name.equals("seq")).collect(Collectors.toList());
+    }
     static class SyncRunnable implements Runnable{
         Log log;    //服务器
         Logger utillog; //本地
         SyncRunnable(){
            log = LogFactory.getLog("SyncFbaItemTask");
-           utillog = aos_sal_sche_pvt.get_logger("SyncFbaItemTask");
+           utillog = get_logger("SyncFbaItemTask");
         }
         @Override
         public void run() {
@@ -61,7 +78,7 @@ public class SyncFbaItemTask extends AbstractTask {
             selectFields.add("aos_item_code.number number");
             selectFields.add("aos_shopsku");
             DynamicObjectCollection dyc_invPrice = QueryServiceHelper.query("aos_sync_invprice", selectFields.toString(), null);
-            List<String> list_fields = aos_sal_sche_pvt.getDynamicObjectType(dyc_invPrice.getDynamicObjectType());
+            List<String> list_fields = getDynamicObjectType(dyc_invPrice.getDynamicObjectType());
             list_fields = list_fields.stream().filter(field->!field.equals("number")).collect(Collectors.toList());
             List<DynamicObject> list_save = new ArrayList<>(5000);
             for (DynamicObject dy : dyc_invPrice) {

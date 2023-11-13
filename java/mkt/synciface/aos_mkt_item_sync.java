@@ -146,8 +146,8 @@ public class aos_mkt_item_sync extends AbstractTask {
 	/**
 	 * 获取图片翻译情况
 	 * 
+	 * @param org
 	 * @param fid
-	 * @param string
 	 * @return
 	 */
 	private static Object getPic(String org, Object fid) {

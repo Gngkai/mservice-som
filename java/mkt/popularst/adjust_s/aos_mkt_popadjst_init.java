@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import common.fnd.FndGlobal;
 import org.apache.commons.lang3.time.DateUtils;
 
 import common.Cux_Common_Utl;
@@ -35,8 +36,6 @@ import kd.bos.threads.ThreadPools;
 import mkt.common.AosMktGenerate;
 import mkt.common.MKTCom;
 import mkt.popularst.adjusts_p.aos_mkt_popadjpst_init;
-import sal.sche.aos_sal_sche_pub.aos_sal_sche_pub;
-import sal.synciface.imp.aos_sal_import_pub;
 
 public class aos_mkt_popadjst_init extends AbstractTask {
 
@@ -72,8 +71,7 @@ public class aos_mkt_popadjst_init extends AbstractTask {
 		DeleteServiceHelper.delete("aos_mkt_pop_adjstdt", filters_adj);// 删除出价调整销售数据表
 		cache.put(p_ou_code + "_GroupSizeCountST", 0 + "", 3600);// 放置国别组缓存
 		// 循环销售可用海外公司
-		long is_oversea_flag = aos_sal_sche_pub.get_lookup_values("AOS_YES_NO", "Y");
-		QFilter oversea_flag = new QFilter("aos_is_oversea_ou", "=", is_oversea_flag);
+		QFilter oversea_flag = new QFilter("aos_is_oversea_ou.number", "=", "Y");
 		QFilter oversea_flag2 = new QFilter("aos_isomvalid", "=", true);
 		QFilter qf_ou = new QFilter("number", "=", p_ou_code);// 海外公司
 		QFilter[] filters_ou = new QFilter[] { oversea_flag, oversea_flag2, qf_ou };
@@ -123,7 +121,7 @@ public class aos_mkt_popadjst_init extends AbstractTask {
 		// 获取传入参数
 		String p_ou_code = (String) params.get("p_ou_code");
 		long p_group_id = (long) params.get("p_group_id");
-		Object p_org_id = aos_sal_import_pub.get_import_id(p_ou_code, "bd_country");
+		Object p_org_id = FndGlobal.get_import_id(p_ou_code, "bd_country");
 		Calendar today = Calendar.getInstance();
 		today.set(Calendar.HOUR_OF_DAY, 0);
 		today.set(Calendar.MINUTE, 0);

@@ -17,8 +17,6 @@ import kd.bos.formula.FormulaEngine;
 import kd.bos.list.ListShowParameter;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.QueryServiceHelper;
-import common.sal.util.QFBuilder;
-import sal.act.ActShopProfit.aos_sal_ShopActProfit_form;
 
 import java.util.*;
 
@@ -28,6 +26,12 @@ import java.util.*;
  * @action 活动库界面插件
  */
 public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectListener {
+
+    public  static final String Form_key="aos_sal_shop_actprofit";  //界面标识
+    public  static final String Key_return_k="re_v";    //回传公式标识
+    public  static final String Key_return_v="re_k";    //回传公式名称
+
+    public  static final String Key_entity="operate";   //父界面传值标识
     @Override
     public void registerListener(EventObject e) {
         super.registerListener(e);
@@ -112,10 +116,10 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
         Control control= (Control) evt.getSource();
         String key= control.getKey();
         if (key.equals("aos_rule")) {
-          showParameter(key,aos_sal_ShopActProfit_form.Form_key);
+          showParameter(key,Form_key);
         }
         else if (key.equals("aos_priceformula")){
-            showParameter(key,aos_sal_ShopActProfit_form.Form_key);
+            showParameter(key,Form_key);
         }
         else if (key.equals("aos_name")){
             showParameter(key,"aos_act_type_cate");
@@ -131,8 +135,8 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
             return;
         if (actionId.equals("aos_rule")) {
             Map<String,String> returnData = (Map<String, String>) redata;
-            String key = returnData.get(aos_sal_ShopActProfit_form.Key_return_k);
-            String name = returnData.get(aos_sal_ShopActProfit_form.Key_return_v);
+            String key = returnData.get(Key_return_k);
+            String name = returnData.get(Key_return_v);
             if (FndGlobal.IsNotNull(key)){
                 try {
                     parseFormula(key);
@@ -151,11 +155,11 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
         }
         else if (actionId.equals("aos_priceformula")){
             Map<String,String> returnData = (Map<String, String>) redata;
-            String value = returnData.get(aos_sal_ShopActProfit_form.Key_return_k);
+            String value = returnData.get(Key_return_k);
             if (FndGlobal.IsNotNull(value)){
                 try {
                     FormulaEngine.parseFormula(value);
-                    getModel().setValue("aos_priceformula",returnData.get(aos_sal_ShopActProfit_form.Key_return_v));
+                    getModel().setValue("aos_priceformula",returnData.get(Key_return_v));
                     getModel().setValue("aos_priceformula_v",value);
                 }
                 catch (Exception e){
@@ -191,12 +195,12 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
                 String seq = dy.getString("seq");
                 values.add(seq);
             }
-            showParameter.setCustomParam(aos_sal_ShopActProfit_form.Key_entity,"rule");
+            showParameter.setCustomParam(Key_entity,"rule");
             showParameter.setCustomParam("value",values);
         }
         //活动价
         else if (type.equals("aos_priceformula")){
-            showParameter.setCustomParam(aos_sal_ShopActProfit_form.Key_entity,"price");
+            showParameter.setCustomParam(Key_entity,"price");
         }
         else if (type.equals("aos_name")){
             int index = this.getModel().getEntryCurrentRowIndex("aos_entryentity1");

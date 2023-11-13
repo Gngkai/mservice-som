@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import common.CommonDataSom;
 import kd.bos.dataentity.OperateOption;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.utils.StringUtils;
@@ -17,7 +18,6 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.aos_mkt_common_redis;
-import sal.quote.CommData;
 
 public class aos_mkt_popadjp_list extends AbstractListPlugin {
 
@@ -49,7 +49,7 @@ public class aos_mkt_popadjp_list extends AbstractListPlugin {
 	}
 	private void aos_init() {
 		// TODO PPC数据源初始化
-		CommData.init();
+		CommonDataSom.init();
 		aos_mkt_common_redis.init_redis("ppc");
 		Map<String, Object> params = new HashMap<>();
 		params.put("p_ou_code", "UK");

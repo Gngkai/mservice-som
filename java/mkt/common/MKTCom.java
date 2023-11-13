@@ -1,5 +1,6 @@
 package mkt.common;
 
+import common.CommonDataSomQuo;
 import kd.bos.algo.DataSet;
 import kd.bos.algo.JoinDataSet;
 import kd.bos.algo.Row;
@@ -19,9 +20,6 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.notification.NotificationServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import org.apache.commons.lang3.StringUtils;
-import sal.quote.CommData;
-import sal.quote.QuoteComm;
-import sal.sche.aos_sal_sche_pub.aos_sal_sche_pvt;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
@@ -206,21 +204,21 @@ public class MKTCom {
 		float cumulativeCompletionRate = 0;
 		String orgid_str = Long.toString(org_id);
 		String itemid_str = Long.toString(item_id);
-		int seasonTotalForecastSales = QuoteComm.calSeasonForecastNum(orgid_str, itemid_str, aos_seasonpro);// 季节总预测销量
-		int earlySeasonToMakeDayForecastNum = QuoteComm.calEarlySeasonToMakeDayForecastNum(orgid_str, itemid_str,
+		int seasonTotalForecastSales = CommonDataSomQuo.calSeasonForecastNum(orgid_str, itemid_str, aos_seasonpro);// 季节总预测销量
+		int earlySeasonToMakeDayForecastNum = CommonDataSomQuo.calEarlySeasonToMakeDayForecastNum(orgid_str, itemid_str,
 				aos_seasonpro);// Σ季初至制表日预测量
 		if (seasonTotalForecastSales == 0 || earlySeasonToMakeDayForecastNum == 0)
 			return cumulativeCompletionRate;
 		float seasonalRequirementsProgress = (float) earlySeasonToMakeDayForecastNum / seasonTotalForecastSales;// 季节要求进度
-		int transit_num = QuoteComm.getTransitNum(orgid_str, itemid_str);// 在途数量
-		int actualSales = QuoteComm.calSeasonalProductsActualSales(orgid_str, itemid_str, aos_seasonpro);// 实际销量
+		int transit_num = CommonDataSomQuo.getTransitNum(orgid_str, itemid_str);// 在途数量
+		int actualSales = CommonDataSomQuo.calSeasonalProductsActualSales(orgid_str, itemid_str, aos_seasonpro);// 实际销量
 		int seasonalTotalSupplyQty = actualSales + transit_num + (int) item_overseaqty; // 季节总供应量
 		if ((StringUtils.equals(aos_seasonpro, "SPRING_SUMMER_PRO") && month <= Calendar.JUNE)
 				|| (StringUtils.equals(aos_seasonpro, "AUTUMN_WINTER_PRO") && month >= Calendar.AUGUST)) {
 			// a. 春夏品： 销售开始时间为1月1日，6月1日以后国内在制+国内在库的数量不计算入总供应
 			// b. 秋冬品： 销售开始时间为8月1日，1月1日以后国内在制+国内在库的数量不计算入总供应
-			int in_process_qty = aos_sal_sche_pvt.get_in_process_qty(org_id, item_id);// 国内在制
-			int domestic_qty = aos_sal_sche_pvt.get_domestic_qty(org_id, item_id);// 国内在库
+			int in_process_qty = CommonDataSomQuo.get_in_process_qty(org_id, item_id);// 国内在制
+			int domestic_qty = CommonDataSomQuo.get_domestic_qty(org_id, item_id);// 国内在库
 			seasonalTotalSupplyQty = seasonalTotalSupplyQty + in_process_qty + domestic_qty;
 		}
 		if (seasonalTotalSupplyQty == 0)
@@ -294,7 +292,7 @@ public class MKTCom {
 		int intoTheWarehouseDays = 0;
 		try {
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-			Map<String, String> estimatedStorageDateAndTransitNum = QuoteComm.calEstimatedStorageDate(orgid_str,
+			Map<String, String> estimatedStorageDateAndTransitNum = CommonDataSomQuo.calEstimatedStorageDate(orgid_str,
 					itemid_str);
 			if (estimatedStorageDateAndTransitNum != null) {
 				String est_storage_date = estimatedStorageDateAndTransitNum.get("est_storage_date");// 预计入库日期
@@ -337,9 +335,9 @@ public class MKTCom {
 		Boolean RegularUn = false;
 		String orgid_str = Long.toString(org_id_l);
 		// 获取对比参数
-		float zeroSalesHalfMonthSalesStandard = CommData.getOrgStandard(orgid_str, "零销量品(半月销量=)");// 零销量排半月销量 国别标准
-		float lowSalesHalfMonthSalesStandard = CommData.getOrgStandard(orgid_str, "低销量品(半月销量<)");// 低销量 半月销量 国别标准
-		float lowTurnaroundAvailableDaysInStockStandard = CommData.getOrgStandard(orgid_str, "低周转品(库存可售天数≥)");// 低销量库存可售天数
+		float zeroSalesHalfMonthSalesStandard = CommonDataSomQuo.getOrgStandard(orgid_str, "零销量品(半月销量=)");// 零销量排半月销量 国别标准
+		float lowSalesHalfMonthSalesStandard = CommonDataSomQuo.getOrgStandard(orgid_str, "低销量品(半月销量<)");// 低销量 半月销量 国别标准
+		float lowTurnaroundAvailableDaysInStockStandard = CommonDataSomQuo.getOrgStandard(orgid_str, "低周转品(库存可售天数≥)");// 低销量库存可售天数
 		if (halfMonthTotalSales == zeroSalesHalfMonthSalesStandard)
 			RegularUn = false;// "零销量品"
 		else if (halfMonthTotalSales > zeroSalesHalfMonthSalesStandard
@@ -363,7 +361,6 @@ public class MKTCom {
 	 * @param aos_orgnumber
 	 * @param availableDays 可售天数
 	 * @param R             7天日均
-	 * @param saleout       是否爆品 true为爆品
 	 * @return
 	 */
 	public static String Get_RegularUn(String aos_orgnumber, int availableDays, float R) {
@@ -423,11 +420,11 @@ public class MKTCom {
 		if (R == 0)
 			return 999;
 		// 非平台可用量
-		int nonPlatQty = CommData.getNonPlatQty(org_id, itemid);
+		int nonPlatQty = CommonDataSomQuo.getNonPlatQty(org_id, itemid);
 		Map<Integer, Float> coefficientMap = null;
 		if (coefficientMap == null) {
 			// 如果产品月度系数还为空 则取常规产品月度系数
-			coefficientMap = CommData.getCategoryC(org_id, category_id);
+			coefficientMap = CommonDataSomQuo.getCategoryC(org_id, category_id);
 		}
 		if (coefficientMap == null) {
 			// 如果产品月度系数还为空 则每个月的系数设为1

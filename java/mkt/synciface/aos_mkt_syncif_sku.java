@@ -9,10 +9,10 @@ import java.util.Map;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import common.fnd.FndGlobal;
 import kd.bos.exception.ErrorCode;
 import common.fnd.FndDate;
 import common.fnd.FndWebHook;
-import common.sal.impl.ComImpl;
 import common.sal.impl.ComImpl2;
 import common.sal.util.SalUtil;
 import kd.bos.context.RequestContext;
@@ -27,8 +27,6 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.threads.ThreadPools;
-import sal.sche.aos_sal_sche_pub.aos_sal_sche_pub;
-import sal.synciface.imp.aos_sal_import_pub;
 
 public class aos_mkt_syncif_sku extends AbstractTask {
 	@Override
@@ -40,8 +38,7 @@ public class aos_mkt_syncif_sku extends AbstractTask {
 		QFilter qf_time = null;
 		Calendar Today = Calendar.getInstance();
 		int hour = Today.get(Calendar.HOUR_OF_DAY);
-		long is_oversea_flag = aos_sal_sche_pub.get_lookup_values("AOS_YES_NO", "Y");
-		QFilter oversea_flag = new QFilter("aos_is_oversea_ou", QCP.equals, is_oversea_flag);// 海外公司
+		QFilter oversea_flag = new QFilter("aos_is_oversea_ou.number", QCP.equals, "Y");// 海外公司
 		QFilter oversea_flag2 = new QFilter("aos_isomvalid", "=", true);
 		DynamicObject dynamicObject = QueryServiceHelper.queryOne("aos_mkt_base_orgvalue", "aos_value",
 				new QFilter[] { new QFilter("aos_type", QCP.equals, "TIME") });
@@ -49,9 +46,9 @@ public class aos_mkt_syncif_sku extends AbstractTask {
 		if (dynamicObject != null)
 			time = dynamicObject.getBigDecimal("aos_value").intValue();
 		if (hour < time)
-			qf_time = new QFilter("aos_is_north_america", QCP.not_equals, is_oversea_flag);
+			qf_time = new QFilter("aos_is_north_america.number", QCP.not_equals, "Y");
 		else
-			qf_time = new QFilter("aos_is_north_america", QCP.equals, is_oversea_flag);
+			qf_time = new QFilter("aos_is_north_america.number", QCP.equals, "Y");
 		QFilter[] filters_ou = new QFilter[] { oversea_flag, oversea_flag2, qf_time };
 		DynamicObjectCollection bd_country = QueryServiceHelper.query("bd_country", "id,number", filters_ou);
 		LocalDate end = LocalDate.now().minusDays(1);
@@ -96,7 +93,7 @@ public class aos_mkt_syncif_sku extends AbstractTask {
 		
 		int length = p_ret_cursor.size();
 		Object p_ou_code = param.get("ou_name");
-		Object p_org_id = aos_sal_import_pub.get_import_id(p_ou_code, "bd_country");
+		Object p_org_id = FndGlobal.get_import_id(p_ou_code, "bd_country");
 		Calendar Today = Calendar.getInstance();
 		Today.set(Calendar.HOUR_OF_DAY, 0);
 		Today.set(Calendar.MINUTE, 0);
@@ -122,7 +119,7 @@ public class aos_mkt_syncif_sku extends AbstractTask {
 				if (!aos_cam_name.toString().toUpperCase().contains("TEST")) {
 					Object aos_ad_name = SkuPopRpt.get("aos_ad_name");// 广告组名称
 					Object aos_shopsku = SkuPopRpt.get("aos_ad_sku");// 店铺货号
-					Object item_id = aos_sal_import_pub.get_import_id(aos_ad_name, "bd_material");// 货号id
+					Object item_id = FndGlobal.get_import_id(aos_ad_name, "bd_material");// 货号id
 					Object aos_ad_asin = SkuPopRpt.get("aos_ad_asin");// 广告ASIN
 					Object aos_impressions = SkuPopRpt.get("aos_impressions");// 曝光量
 					Object aos_clicks = SkuPopRpt.get("aos_clicks");// 点击量

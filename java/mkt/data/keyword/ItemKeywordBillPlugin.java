@@ -1,5 +1,6 @@
 package mkt.data.keyword;
 
+import common.CommonDataSomDis;
 import common.fnd.FndGlobal;
 import common.fnd.FndMsg;
 import common.sal.util.SalUtil;
@@ -23,7 +24,6 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import common.sal.util.QFBuilder;
 import org.apache.commons.lang3.StringUtils;
-import sal.dis.util.DisUtil;
 
 import java.util.*;
 
@@ -84,7 +84,7 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
 
 		if ("aos_copyto".equals(itemKey)) {
 			// 如果为引用关键词库
-			DisUtil.popForm(this, "aos_mkt_itemselect", "items_select", null);
+			CommonDataSomDis.popForm(this, "aos_mkt_itemselect", "items_select", null);
 			statusControl();
 		}
 	}

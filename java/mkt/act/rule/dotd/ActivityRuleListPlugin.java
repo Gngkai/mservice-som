@@ -1,5 +1,6 @@
 package mkt.act.rule.dotd;
 
+import common.CommonDataSomDis;
 import common.sal.permission.PermissionUtil;
 import kd.bos.entity.datamodel.ListSelectedRow;
 import kd.bos.form.events.BeforeDoOperationEventArgs;
@@ -8,7 +9,6 @@ import kd.bos.form.operate.FormOperate;
 import kd.bos.list.plugin.AbstractListPlugin;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.user.UserServiceHelper;
-import sal.dis.util.DisUtil;
 
 import java.util.List;
 
@@ -31,13 +31,13 @@ public class ActivityRuleListPlugin extends AbstractListPlugin {
         String operateKey = formOperate.getOperateKey();
         if ("aos_claim".equals(operateKey)) {
             // 认领
-            DisUtil.claim(this, list, "aos_mkt_activityrule", "aos_makeby");
+            CommonDataSomDis.claim(this, list, "aos_mkt_activityrule", "aos_makeby");
             this.reload();
         }
 
         if ("aos_unclaim".equals(operateKey)) {
             // 取消认领
-            DisUtil.unClaim(this, list, "aos_mkt_activityrule", "aos_makeby");
+            CommonDataSomDis.unClaim(this, list, "aos_mkt_activityrule", "aos_makeby");
             this.reload();
         }
     }

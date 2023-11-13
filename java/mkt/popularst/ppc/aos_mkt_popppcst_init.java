@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import common.CommonDataSom;
 import common.StringComUtils;
 import common.fnd.FndDate;
 import common.fnd.FndGlobal;
@@ -43,8 +44,6 @@ import mkt.popularst.add_s.aos_mkt_popadds_init;
 import mkt.popularst.adjust_s.aos_mkt_pop_stadd_init;
 import mkt.popularst.adjust_s.aos_mkt_popadjst_init;
 import mkt.popularst.week.aos_mkt_popweek_init;
-import sal.quote.CommData;
-import sal.synciface.imp.aos_sal_import_pub;
 
 // 营销ST推广生成核心
 
@@ -78,7 +77,7 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 		Boolean CopyFlag = aos_mkt_pop_common.GetCopyFlag("PPC_ST", week);
 		// 若今日需要执行则初始化通用计算数据
 		if (CopyFlag)
-			CommData.init();
+			CommonDataSom.init();
 		// 当前整点
 		int p_hour = Today.get(Calendar.HOUR_OF_DAY);
 		// 根据当前整点判断执行的是欧洲与美加
@@ -116,7 +115,7 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 		Object p_ou_code = params.get("p_ou_code");
 		fndmsg.print("====" + p_ou_code + "====");
 		// 国别id
-		Object p_org_id = aos_sal_import_pub.get_import_id(p_ou_code, "bd_country");
+		Object p_org_id = FndGlobal.get_import_id(p_ou_code, "bd_country");
 		// 删除该国别今日已生成的数据
 		Calendar date = Calendar.getInstance();
 		date.set(Calendar.HOUR_OF_DAY, 0);
@@ -315,13 +314,13 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 			}
 			int aos_avadays = (int) ItemAvaDays.get(aos_itemnumer);
 			// 产品类别
-			String itemCategoryId = CommData.getItemCategoryId(item_id + "");
+			String itemCategoryId = CommonDataSom.getItemCategoryId(item_id + "");
 			if (itemCategoryId == null || "".equals(itemCategoryId)) {
 //				log.add(aos_itemnumer + "产品类别不存在自动剔除");
 				continue;
 			}
 			// 销售组别
-			String salOrg = CommData.getSalOrgV2(p_org_id + "", itemCategoryId);
+			String salOrg = CommonDataSom.getSalOrgV2(p_org_id + "", itemCategoryId);
 			if (salOrg == null || "".equals(salOrg)) {
 //				log.add(aos_itemnumer + "组别不存在自动剔除");
 				continue;
@@ -334,7 +333,7 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 			}
 
 			// 大中小类
-			String itemCategoryName = CommData.getItemCategoryName(String.valueOf(item_id));
+			String itemCategoryName = CommonDataSom.getItemCategoryName(String.valueOf(item_id));
 			String aos_category1 = "";
 			String aos_category2 = "";
 			String aos_category3 = "";

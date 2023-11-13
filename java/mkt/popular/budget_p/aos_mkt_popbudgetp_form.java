@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.EventObject;
+
+import common.fnd.FndGlobal;
 import kd.bos.algo.DataSet;
 import kd.bos.algo.Row;
 import kd.bos.dataentity.OperateOption;
@@ -25,7 +27,6 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
-import sal.synciface.imp.aos_sal_import_pub;
 
 public class aos_mkt_popbudgetp_form extends AbstractFormPlugin implements ItemClickListener, RowClickEventListener {
 
@@ -103,8 +104,8 @@ public class aos_mkt_popbudgetp_form extends AbstractFormPlugin implements ItemC
 
 		// 对于合计单据体
 		this.getModel().deleteEntryData("aos_entryentity");
-		Object aos_poptype = aos_sal_import_pub.get_import_id("SP", "aos_mkt_base_poptype");
-		Object aos_channelid = aos_sal_import_pub.get_import_id("AMAZON", "aos_sal_channel");
+		Object aos_poptype = FndGlobal.get_import_id("SP", "aos_mkt_base_poptype");
+		Object aos_channelid = FndGlobal.get_import_id("AMAZON", "aos_sal_channel");
 		this.getModel().batchCreateNewEntryRow("aos_entryentity", 1);
 		this.getModel().setValue("aos_poptype", aos_poptype, 0);
 		this.getModel().setValue("aos_channelid", aos_channelid, 0);
@@ -274,8 +275,8 @@ public class aos_mkt_popbudgetp_form extends AbstractFormPlugin implements ItemC
 
 		// 对于合计单据体
 		this.getModel().deleteEntryData("aos_entryentity");
-		Object aos_poptype = aos_sal_import_pub.get_import_id("SP", "aos_mkt_base_poptype");
-		Object aos_channelid = aos_sal_import_pub.get_import_id("AMAZON", "aos_sal_channel");
+		Object aos_poptype = FndGlobal.get_import_id("SP", "aos_mkt_base_poptype");
+		Object aos_channelid = FndGlobal.get_import_id("AMAZON", "aos_sal_channel");
 		this.getModel().batchCreateNewEntryRow("aos_entryentity", 1);
 		this.getModel().setValue("aos_poptype", aos_poptype, 0);
 		this.getModel().setValue("aos_channelid", aos_channelid, 0);

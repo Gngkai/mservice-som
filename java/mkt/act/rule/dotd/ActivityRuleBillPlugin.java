@@ -1,6 +1,7 @@
 package mkt.act.rule.dotd;
 
 import com.google.common.collect.ImmutableMap;
+import common.CommonDataSomAct;
 import common.Cux_Common_Utl;
 import kd.bos.algo.DataSet;
 import kd.bos.algo.Row;
@@ -22,7 +23,6 @@ import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
-import sal.act.ActShopProfit.aos_sal_act_from;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -141,7 +141,7 @@ public class ActivityRuleBillPlugin extends AbstractBillPlugIn {
         Map<String,String> map_itemToDate = new HashMap<>();
         map_itemToDate.put(itemId,startdate.toString()+"/"+enddate.toString());
         Map<String, BigDecimal[]> map_itemToPrice = ImmutableMap.of(itemId, bd_ItemPrice);
-        Map<String, Map<String, BigDecimal>> map_profit = aos_sal_act_from.get_formula(orgId, shopId, map_itemToDate, map_itemToPrice);
+        Map<String, Map<String, BigDecimal>> map_profit = CommonDataSomAct.get_formula(orgId, shopId, map_itemToDate, map_itemToPrice);
         BigDecimal bd_profit = BigDecimal.ZERO;
         if (map_profit.containsKey(itemId))
             bd_profit = map_profit.get(itemId).getOrDefault("value",BigDecimal.ZERO);

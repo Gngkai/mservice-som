@@ -8,8 +8,8 @@ import java.util.Map;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
+import common.fnd.FndGlobal;
 import common.fnd.FndMsg;
-import common.sal.impl.ComImpl;
 import common.sal.impl.ComImpl2;
 import kd.bos.context.RequestContext;
 import kd.bos.dataentity.OperateOption;
@@ -21,7 +21,6 @@ import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
-import sal.synciface.imp.aos_sal_import_pub;
 
 /** 最低定价结存接口 **/
 public class aos_mkt_dayprice_bak extends AbstractTask {
@@ -51,8 +50,8 @@ public class aos_mkt_dayprice_bak extends AbstractTask {
 			for (int i = 0; i < length; i++) {
 				FndMsg.debug("i:" + i);
 				HashMap<String, Object> RankJson = (HashMap<String, Object>) p_ret_cursor.get(i);
-				Object aos_orgid = aos_sal_import_pub.get_import_id(RankJson.get("OU_NAME"), "bd_country");
-				Object aos_itemid = aos_sal_import_pub.get_import_id(RankJson.get("MHSKU"), "bd_material");
+				Object aos_orgid = FndGlobal.get_import_id(RankJson.get("OU_NAME"), "bd_country");
+				Object aos_itemid = FndGlobal.get_import_id(RankJson.get("MHSKU"), "bd_material");
 				DynamicObject aos_entryentity = aos_entryentityS.addNew();
 				aos_entryentity.set("aos_orgid", aos_orgid);
 				aos_entryentity.set("aos_itemid", aos_itemid);

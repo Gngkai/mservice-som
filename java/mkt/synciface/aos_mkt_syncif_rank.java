@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import common.fnd.FndGlobal;
 import common.sal.impl.ComImpl2;
 import kd.bos.context.RequestContext;
 import kd.bos.dataentity.OperateOption;
@@ -13,7 +14,6 @@ import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
-import sal.synciface.imp.aos_sal_import_pub;
 
 public class aos_mkt_syncif_rank extends AbstractTask {
 	@Override
@@ -30,8 +30,8 @@ public class aos_mkt_syncif_rank extends AbstractTask {
 		if (length > 0) {
 			for (int i = 0; i < length; i++) {
 				JSONObject RankJson =  p_ret_cursor.getJSONObject(i);
-				Object aos_orgid = aos_sal_import_pub.get_import_id(RankJson.get("ou_name"), "bd_country");
-				Object aos_itemid = aos_sal_import_pub.get_import_id(RankJson.get("sku"), "bd_material");
+				Object aos_orgid = FndGlobal.get_import_id(RankJson.get("ou_name"), "bd_country");
+				Object aos_itemid = FndGlobal.get_import_id(RankJson.get("sku"), "bd_material");
 				DynamicObject aos_base_rank = BusinessDataServiceHelper.newDynamicObject("aos_base_rank");
 				aos_base_rank.set("aos_orgid", aos_orgid);
 				aos_base_rank.set("aos_itemid", aos_itemid);

@@ -1,6 +1,8 @@
 package mkt.act.rule.allCountries;
 
 import com.alibaba.nacos.common.utils.Pair;
+import common.CommonDataSom;
+import common.CommonDataSomAct;
 import common.Cux_Common_Utl;
 import common.fnd.AosomLog;
 import common.fnd.FndError;
@@ -14,6 +16,7 @@ import kd.bos.isc.util.misc.Quad;
 import kd.bos.isc.util.script.feature.tool.date.Quarters;
 import kd.bos.logging.Log;
 import kd.bos.logging.LogFactory;
+import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
@@ -29,8 +32,10 @@ import mkt.act.rule.service.impl.ActPlanServiceImpl;
 import mkt.common.MKTCom;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.TreeBidiMap;
-import sal.act.ActShopProfit.aos_sal_act_from;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.math.BigDecimal;
@@ -38,6 +43,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -238,7 +244,7 @@ public class TrackerVipon implements ActStrategy {
 			ActPlanService actPlanService = new ActPlanServiceImpl();
 			actPlanService.updateActInfo(object);
 			// 统计行信息到头表
-			sal.act.ActShopProfit.aos_sal_act_from.collectRevenueCost(object);
+			CommonDataSomAct.collectRevenueCost(object);
 			SaveServiceHelper.save(new DynamicObject[] { object });
 			logger.info(billno + "   TrackerVipon  头表填充数据   ");
 		} catch (Exception e) {
@@ -538,10 +544,11 @@ public class TrackerVipon implements ActStrategy {
 		}
 		// 计算毛利率
 		// 计算毛利率
-		Map<String, Map<String, BigDecimal>> map_profit = aos_sal_act_from.get_formula(orgid.toString(),
+		Map<String, Map<String, BigDecimal>> map_profit = CommonDataSomAct.get_formula(orgid.toString(),
 				shopid.toString(), null, map_itemPrice);
 		return new Quad(map_profit, map_itemPrice, list_re, map_increase);
 	}
+
 
 	/**
 	 * 根据比例分配数量
@@ -728,9 +735,9 @@ public class TrackerVipon implements ActStrategy {
 			map_itemInfo.put(item, map);
 		}
 
-		Map<String, BigDecimal> map_calCost = aos_sal_act_from.get_cost(orgid.toString(), shopid.toString(),
+		Map<String, BigDecimal> map_calCost = CommonDataSomAct.get_cost(orgid.toString(), shopid.toString(),
 				map_itemInfo);
-		Map<String, BigDecimal> map_calRevenue = aos_sal_act_from.get_revenue(orgid.toString(), shopid.toString(),
+		Map<String, BigDecimal> map_calRevenue = CommonDataSomAct.get_revenue(orgid.toString(), shopid.toString(),
 				map_itemInfo);
 
 		Pair<Map<String, BigDecimal>, Map<String, BigDecimal>> pair_re = Pair.with(map_calCost, map_calRevenue);

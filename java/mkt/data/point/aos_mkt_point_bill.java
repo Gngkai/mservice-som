@@ -1,6 +1,7 @@
 package mkt.data.point;
 
 import common.Cux_Common_Utl;
+import common.fnd.FndGlobal;
 import common.sal.util.SalUtil;
 import kd.bos.algo.DataSet;
 import kd.bos.algo.Row;
@@ -39,7 +40,6 @@ import kd.bos.servicehelper.user.UserServiceHelper;
 import common.sal.util.QFBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
-import sal.synciface.imp.aos_sal_import_pub;
 
 import java.util.*;
 
@@ -352,7 +352,7 @@ public class aos_mkt_point_bill extends AbstractBillPlugIn implements RowClickEv
 			if (list != null) {
 				rows = list.size();
 			}
-			Object aos_org_id = aos_sal_import_pub.get_import_id(aos_orgid.toString(), "bd_country");
+			Object aos_org_id = FndGlobal.get_import_id(aos_orgid.toString(), "bd_country");
 
 			if (StringUtils.equals(importtype, "overridenew")) {
 				for (int l = 0; l < rows; l++) {

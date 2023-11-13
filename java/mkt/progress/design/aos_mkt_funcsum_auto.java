@@ -7,6 +7,7 @@ import java.util.Map;
 
 import common.Cux_Common_Utl;
 import common.fnd.FndDate;
+import common.fnd.FndGlobal;
 import common.fnd.FndHistory;
 import kd.bos.context.RequestContext;
 import kd.bos.dataentity.OperateOption;
@@ -23,7 +24,6 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import mkt.progress.ProgressUtil;
 import mkt.progress.listing.aos_mkt_listingmin_bill;
-import sal.synciface.imp.aos_sal_import_pub;
 
 /** Listing优化需求表小语种 海外编辑确认:功能图 状态 三个工作日后自动提交 **/
 public class aos_mkt_funcsum_auto extends AbstractTask {
@@ -99,7 +99,7 @@ public class aos_mkt_funcsum_auto extends AbstractTask {
 
 	private void GenerateOsSmall(Object id, String aos_orgnumber) {
 		DynamicObject aos_mkt_listing_minold = BusinessDataServiceHelper.loadSingle(id, "aos_mkt_listing_min");
-		Object aos_orgsmall = aos_sal_import_pub.get_import_id(aos_orgnumber, "bd_country");
+		Object aos_orgsmall = FndGlobal.get_import_id(aos_orgnumber, "bd_country");
 		DynamicObject aos_mkt_listing_min = BusinessDataServiceHelper.newDynamicObject("aos_mkt_listing_min");
 		Object aos_user = null;
 		QFilter filter = new QFilter("number", "=", "024044");

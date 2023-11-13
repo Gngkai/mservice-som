@@ -6,6 +6,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import common.CommonDataSom;
 import org.apache.commons.lang3.SerializationUtils;
 
 import common.Cux_Common_Utl;
@@ -33,8 +35,6 @@ import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.threads.ThreadPools;
 import mkt.common.aos_mkt_common_redis;
-import sal.quote.CommData;
-import sal.synciface.imp.aos_sal_import_pub;
 
 public class aos_mkt_popbudgetp_init extends AbstractTask {
 	private static final DistributeSessionlessCache cache = CacheFactory.getCommonCacheFactory()
@@ -85,7 +85,7 @@ public class aos_mkt_popbudgetp_init extends AbstractTask {
 		@Override
 		public void run() {
 			try {
-				CommData.init();
+				CommonDataSom.init();
 				aos_mkt_common_redis.init_redis("ppcbudget_p");
 				do_operate(params);
 			} catch (Exception e) {
@@ -103,7 +103,7 @@ public class aos_mkt_popbudgetp_init extends AbstractTask {
 		
 		SimpleDateFormat DF = new SimpleDateFormat("yyyy-MM-dd");
 		String p_ou_code = (String) params.get("p_ou_code");
-		Object p_org_id = aos_sal_import_pub.get_import_id(p_ou_code, "bd_country");
+		Object p_org_id = FndGlobal.get_import_id(p_ou_code, "bd_country");
 		byte[] serialize_skurptSerial7 = cache.getByteValue("mkt_skurptSerial7"); // SKU报告系列7日
 		HashMap<String, Map<String, Object>> SkuRpt_Serial = SerializationUtils.deserialize(serialize_skurptSerial7);
 		byte[] serialize_poporgInfo = cache.getByteValue("mkt_poporginfo"); // 营销国别参数表
@@ -209,7 +209,7 @@ public class aos_mkt_popbudgetp_init extends AbstractTask {
 			Object aos_salemanual = aos_mkt_popular_ppc.get("aos_salemanual"); 
 			
 			BigDecimal aos_budget = aos_mkt_popular_ppc.getBigDecimal("aos_budget");
-			Object aos_seasonsetingid = aos_sal_import_pub.get_import_id2(aos_seasonseting, "aos_scm_seasonatt");
+			Object aos_seasonsetingid = FndGlobal.get_import_id2(aos_seasonseting, "aos_scm_seasonatt");
 			BigDecimal Roi7Days_Serial = BigDecimal.ZERO;// 7天ROI 系列维度
 			Map<String, Object> SkuRptMap_Serial = SkuRpt_Serial.get(p_org_id + "~" + aos_productno);// Sku报告
 			Map<String, Object> PpcYesterSerialMap = PpcYesterSerial.get(p_org_id + "~" + aos_productno);// 默认昨日数据

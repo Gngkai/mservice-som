@@ -7,7 +7,7 @@ import java.util.Map;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
-import common.sal.impl.ComImpl;
+import common.fnd.FndGlobal;
 import common.sal.impl.ComImpl2;
 import kd.bos.context.RequestContext;
 import kd.bos.dataentity.OperateOption;
@@ -17,7 +17,6 @@ import kd.bos.exception.KDException;
 import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
-import sal.synciface.imp.aos_sal_import_pub;
 
 public class aos_mkt_syncif_flow extends AbstractTask {
 
@@ -58,10 +57,10 @@ public class aos_mkt_syncif_flow extends AbstractTask {
 				Object aos_units_order = FlowRpt.get("aos_units_order");
 				String aos_up_date_str = FlowRpt.get("aos_up_date").toString();
 				Date aos_up_date = aos_mkt_syncif_connect.parse_date(aos_up_date_str);
-				Object p_org_id = aos_sal_import_pub.get_import_id(aos_ou_name, "bd_country");
-				Object item_id = aos_sal_import_pub.get_import_id(aos_sku, "bd_material");// 货号id
-				Object platform_id = aos_sal_import_pub.get_import_id(aos_sales_channel, "aos_sal_channel");
-				Object shop_id = aos_sal_import_pub.get_shop_id(aos_stores, p_org_id);
+				Object p_org_id = FndGlobal.get_import_id(aos_ou_name, "bd_country");
+				Object item_id = FndGlobal.get_import_id(aos_sku, "bd_material");// 货号id
+				Object platform_id = FndGlobal.get_import_id(aos_sales_channel, "aos_sal_channel");
+				Object shop_id = FndGlobal.get_shop_id(aos_stores, p_org_id);
 				DynamicObject aos_entryentity = aos_entryentityS.addNew();
 				aos_entryentity.set("aos_orgid", p_org_id);
 				aos_entryentity.set("aos_itemid", item_id);

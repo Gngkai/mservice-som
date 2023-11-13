@@ -1,6 +1,7 @@
 package mkt.act.rule;
 
 import com.grapecity.documents.excel.B;
+import common.CommonDataSomAct;
 import common.sal.util.SalUtil;
 import kd.bos.algo.DataSet;
 import kd.bos.algo.Row;
@@ -13,7 +14,6 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import org.apache.commons.lang3.time.DateFormatUtils;
-import sal.act.ActShopProfit.aos_sal_act_from;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
@@ -282,7 +282,7 @@ public class ActUtil {
 			}
 		}
 		// 计算毛利率
-		Map<String, Map<String, BigDecimal>> map_for = aos_sal_act_from.get_formula(orgid, shopid, map_itemToDate,
+		Map<String, Map<String, BigDecimal>> map_for = CommonDataSomAct.get_formula(orgid, shopid, map_itemToDate,
 				map_itemAndPrice);
 		List<String> list_mapItem = new ArrayList<>(map_for.keySet());
 		dyc_ent.stream()

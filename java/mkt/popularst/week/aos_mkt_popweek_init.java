@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import common.CommonDataSom;
 import common.Cux_Common_Utl;
 import common.fnd.FndGlobal;
 import common.sal.util.InStockAvailableDays;
@@ -28,9 +29,6 @@ import kd.bos.servicehelper.operation.OperationServiceHelper;
 import mkt.common.AosMktGenerate;
 import mkt.popular.aos_mkt_pop_common;
 import mkt.popularst.ppc.aos_mkt_popppcst_init;
-import sal.quote.CommData;
-import sal.sche.aos_sal_sche_pub.aos_sal_sche_pub;
-import sal.synciface.imp.aos_sal_import_pub;
 
 public class aos_mkt_popweek_init extends AbstractTask {
 
@@ -50,7 +48,6 @@ public class aos_mkt_popweek_init extends AbstractTask {
 			return;// 如果不是周一 直接跳过
 		}
 //		int hour = Today.get(Calendar.HOUR_OF_DAY);
-		long is_oversea_flag = aos_sal_sche_pub.get_lookup_values("AOS_YES_NO", "Y");
 		QFilter qf_time = null;
 		DynamicObject dynamicObject = QueryServiceHelper.queryOne("aos_mkt_base_orgvalue", "aos_value",
 				new QFilter[] { new QFilter("aos_type", QCP.equals, "TIME") });
@@ -58,11 +55,11 @@ public class aos_mkt_popweek_init extends AbstractTask {
 		if (dynamicObject != null)
 			time = dynamicObject.getBigDecimal("aos_value").intValue();
 		if (p_hour < time)
-			qf_time = new QFilter("aos_is_north_america", QCP.not_equals, is_oversea_flag);
+			qf_time = new QFilter("aos_is_north_america.number", QCP.not_equals, "Y");
 		else
-			qf_time = new QFilter("aos_is_north_america", QCP.equals, is_oversea_flag);
+			qf_time = new QFilter("aos_is_north_america.number", QCP.equals, "Y");
 		// 调用线程池
-		QFilter oversea_flag = new QFilter("aos_is_oversea_ou", "=", is_oversea_flag);// 海外公司
+		QFilter oversea_flag = new QFilter("aos_is_oversea_ou.number", "=", "Y");// 海外公司
 		QFilter oversea_flag2 = new QFilter("aos_isomvalid", "=", true);
 		QFilter[] filters_ou = new QFilter[] { oversea_flag, oversea_flag2, qf_time };
 		DynamicObjectCollection bd_country = QueryServiceHelper.query("bd_country", "id,number", filters_ou);
@@ -77,7 +74,7 @@ public class aos_mkt_popweek_init extends AbstractTask {
 	public static void do_operate(Map<String, Object> params) {
 		// 获取传入参数 国别
 		Object p_ou_code = params.get("p_ou_code");
-		Object p_org_id = aos_sal_import_pub.get_import_id(p_ou_code, "bd_country");
+		Object p_org_id = FndGlobal.get_import_id(p_ou_code, "bd_country");
 		// 删除数据
 		Calendar date = Calendar.getInstance();
 		date.set(Calendar.HOUR_OF_DAY, 0);
@@ -141,11 +138,11 @@ public class aos_mkt_popweek_init extends AbstractTask {
 				Row aos_mkt_pop_ppcst = Copy.next();
 				long item_id = aos_mkt_pop_ppcst.getLong("aos_itemid");
 				// 销售组别
-				String itemCategoryId = CommData.getItemCategoryId(item_id + "");
+				String itemCategoryId = CommonDataSom.getItemCategoryId(item_id + "");
 				if (itemCategoryId == null || "".equals(itemCategoryId)) {
 					continue;
 				}
-				String salOrg = CommData.getSalOrgV2(p_org_id + "", itemCategoryId); // 小类获取组别
+				String salOrg = CommonDataSom.getSalOrgV2(p_org_id + "", itemCategoryId); // 小类获取组别
 				if (salOrg == null || "".equals(salOrg)) {
 					continue;
 				}

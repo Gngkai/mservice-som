@@ -1,6 +1,7 @@
 package mkt.popular.adjust_s;
 
 import com.alibaba.nacos.common.utils.Pair;
+import common.CommonDataSom;
 import common.Cux_Common_Utl;
 import common.fnd.FndGlobal;
 import common.sal.util.SalUtil;
@@ -24,9 +25,6 @@ import mkt.common.aos_mkt_common_redis;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import sal.quote.CommData;
-import sal.sche.aos_sal_sche_pub.aos_sal_sche_pub;
-import sal.synciface.imp.aos_sal_import_pub;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
@@ -42,7 +40,7 @@ public class aos_mkt_popadds_init extends AbstractTask {
 			.getDistributeSessionlessCache("mkt_redis");
 
 	public void execute(RequestContext ctx, Map<String, Object> param) throws KDException {// 初始化数据
-		CommData.init();
+		CommonDataSom.init();
 		aos_mkt_common_redis.init_redis("ppc");
 		Run();
 	}
@@ -52,7 +50,6 @@ public class aos_mkt_popadds_init extends AbstractTask {
 		int hour = Today.get(Calendar.HOUR_OF_DAY);
 		// OU循环
 		QFilter qf_time = null;
-		long is_oversea_flag = aos_sal_sche_pub.get_lookup_values("AOS_YES_NO", "Y");
 		DynamicObject dynamicObject = QueryServiceHelper.queryOne("aos_mkt_base_orgvalue", "aos_value",
 				new QFilter[] { new QFilter("aos_type", QCP.equals, "TIME") });
 		int time = 16;
@@ -60,10 +57,10 @@ public class aos_mkt_popadds_init extends AbstractTask {
 			time = dynamicObject.getBigDecimal("aos_value").intValue();
 		}
 		if (hour < time)
-			qf_time = new QFilter("aos_is_north_america", QCP.not_equals, is_oversea_flag);
+			qf_time = new QFilter("aos_is_north_america.number", QCP.not_equals, "Y");
 		else
-			qf_time = new QFilter("aos_is_north_america", QCP.equals, is_oversea_flag);
-		QFilter oversea_flag = new QFilter("aos_is_oversea_ou", "=", is_oversea_flag);// 海外公司
+			qf_time = new QFilter("aos_is_north_america.number", QCP.equals, "Y");
+		QFilter oversea_flag = new QFilter("aos_is_oversea_ou.number", "=", "Y");// 海外公司
 		QFilter oversea_flag2 = new QFilter("aos_isomvalid", "=", true);
 		QFilter[] filters_ou = new QFilter[] { oversea_flag, oversea_flag2, qf_time };
 		DynamicObjectCollection bd_country = QueryServiceHelper.query("bd_country", "id,number", filters_ou);
@@ -110,7 +107,7 @@ public class aos_mkt_popadds_init extends AbstractTask {
 	public static void do_operate(Map<String, Object> params, HashMap<String, Object> Act) {
 		String p_ou_code = (String) params.get("p_ou_code");
 		long p_group_id = (long) params.get("p_group_id");
-		Object p_org_id = aos_sal_import_pub.get_import_id(p_ou_code, "bd_country");
+		Object p_org_id = FndGlobal.get_import_id(p_ou_code, "bd_country");
 		Boolean aos_is_north_america = QueryServiceHelper
 				.queryOne("bd_country", "aos_is_north_america", new QFilter[] { new QFilter("id", "=", p_org_id) })
 				.getBoolean("aos_is_north_america");
@@ -248,7 +245,7 @@ public class aos_mkt_popadds_init extends AbstractTask {
 				Impress3Avg = (BigDecimal) SkuRpt3AvgMap.get("aos_impressions");
 			}
 
-			String category = CommData.getItemCategoryName(item_id + "");
+			String category = CommonDataSom.getItemCategoryName(item_id + "");
 			if (category == null || "".equals(category))
 				continue;
 			String[] category_group = category.split(",");

@@ -1,5 +1,6 @@
 package mkt.act.rule;
 
+import common.CommonDataSomAct;
 import common.fnd.FndGlobal;
 import common.fnd.FndLog;
 import common.sal.sys.basedata.dao.ItemCategoryDao;
@@ -28,7 +29,6 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import common.sal.util.QFBuilder;
 import mkt.common.MKTCom;
-import sal.act.ActShopProfit.aos_sal_act_from;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -1885,7 +1885,7 @@ public class EventRule {
         }
         String shopId = actPlanEntity.getDynamicObject("aos_shop").getString("id");
         try {
-            itemActProfit = aos_sal_act_from.get_formula(orgEntity.getString("id"), shopId, map_itemPrice, "/");
+            itemActProfit = CommonDataSomAct.get_formula(orgEntity.getString("id"), shopId, map_itemPrice, "/");
         }catch (Exception e){
             e.printStackTrace();
             throw new KDException(new ErrorCode("计算毛利率异常",e.getMessage()));

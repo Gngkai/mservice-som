@@ -13,7 +13,6 @@ import kd.bos.list.plugin.AbstractListPlugin;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
-import sal.synciface.common.aos_sal_sync_common;
 
 public class aos_mkt_imgtest_list extends AbstractListPlugin {
 
@@ -32,8 +31,7 @@ public class aos_mkt_imgtest_list extends AbstractListPlugin {
 		params.put("p_org_id", "81");
 		params.put("p_user_id", UserServiceHelper.getCurrentUserId());
 		
-		
-		aos_sal_sync_common.submit_request(params, "aos_mkt_syncif_clear");
+
 		
 	}
 

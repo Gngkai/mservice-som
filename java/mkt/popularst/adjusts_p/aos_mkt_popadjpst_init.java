@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import common.fnd.FndGlobal;
 import common.sal.util.SalUtil;
 import kd.bos.cache.CacheFactory;
 import kd.bos.cache.DistributeSessionlessCache;
@@ -35,7 +36,6 @@ import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import mkt.common.AosMktGenerate;
 import mkt.common.MKTCom;
-import sal.synciface.imp.aos_sal_import_pub;
 
 public class aos_mkt_popadjpst_init extends AbstractTask {
 	private static final String DB_MKT = "aos.mkt";
@@ -90,7 +90,7 @@ public class aos_mkt_popadjpst_init extends AbstractTask {
 		try {
 			SimpleDateFormat DF = new SimpleDateFormat("yyyy-MM-dd");
 			String p_ou_code = (String) param.get("p_ou_code");
-			Object p_org_id = aos_sal_import_pub.get_import_id(p_ou_code, "bd_country");
+			Object p_org_id = FndGlobal.get_import_id(p_ou_code, "bd_country");
 			// 删除数据
 			Calendar today = Calendar.getInstance();
 			today.set(Calendar.HOUR_OF_DAY, 0);

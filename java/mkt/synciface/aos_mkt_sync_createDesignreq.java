@@ -1,5 +1,7 @@
 package mkt.synciface;
 
+import common.CommonDataSom;
+import common.CommonDataSomQuo;
 import common.Cux_Common_Utl;
 import common.fnd.FndHistory;
 import common.sal.util.SalUtil;
@@ -20,8 +22,6 @@ import mkt.common.MKTCom;
 import mkt.common.MKTS3PIC;
 import mkt.progress.ProgressUtil;
 import mkt.progress.iface.iteminfo;
-import sal.sche.aos_sal_sche_pub.aos_sal_sche_pvt;
-import sal.sche.aos_sal_sche_pub.scmQtyType;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -109,9 +109,9 @@ public class aos_mkt_sync_createDesignreq extends AbstractTask {
         //查找供应链数量
         ArrayList <String> arr_itemid = (ArrayList<String>) dyc_otherItem.stream()
                 .map(dy -> dy.getString("id")).distinct().collect(Collectors.toList());
-        Map<String, Integer> map_domesticAndInPro = aos_sal_sche_pvt.getScmQty(scmQtyType.domesticAndInProcess, aos_org, arr_itemid);
-        Map<String, Integer> map_oversea = aos_sal_sche_pvt.getScmQty(scmQtyType.oversea, aos_org, arr_itemid);
-        Map<String, Integer> map_onhand = aos_sal_sche_pvt.getScmQty(scmQtyType.onHand, aos_org, arr_itemid);
+        Map<String, Integer> map_domesticAndInPro = CommonDataSom.getScmQty(common.scmQtyType.domesticAndInProcess, aos_org, arr_itemid);
+        Map<String, Integer> map_oversea = CommonDataSom.getScmQty(common.scmQtyType.oversea, aos_org, arr_itemid);
+        Map<String, Integer> map_onhand = CommonDataSom.getScmQty(common.scmQtyType.onHand, aos_org, arr_itemid);
         for (DynamicObject dy_productNo : dyc_otherItem) {
             String itemid = dy_productNo.getString("id");
             int scmQty = 0;
@@ -197,7 +197,7 @@ public class aos_mkt_sync_createDesignreq extends AbstractTask {
             Object org_id = aos_nationality.get("id"); // ItemId
             int OsQty = iteminfo.GetItemOsQty(org_id, aos_item);
             int SafeQty = iteminfo.GetSafeQty(org_id);
-            int onQty = sal.sche.aos_sal_sche_pub.aos_sal_sche_pvt
+            int onQty = CommonDataSomQuo
                     .get_on_hand_qty(Long.valueOf(org_id.toString()),Long.valueOf(aos_item));
             OsQty += onQty;
             // 安全库存 海外库存

@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import common.CommonDataSomQuo;
 import common.Cux_Common_Utl;
 import kd.bos.dataentity.OperateOption;
 import kd.bos.dataentity.entity.DynamicObject;
@@ -20,7 +21,6 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.MKTCom;
-import sal.quote.QuoteComm;
 
 public class aos_mkt_popweek_list extends AbstractListPlugin {
 
@@ -52,7 +52,7 @@ public class aos_mkt_popweek_list extends AbstractListPlugin {
 		// 1.判断该人员是否销售人员 (品类人员对应表)
 		QFilter salespersonOrg = MKTCom.querySalespersonOrg(currentUserId, "aos_orgid", "aos_groupid");
 		// 2.判断该人员是否为审核人员
-		Set<String> salesAuditorSet = QuoteComm.querySalesAuditors(currentUserId);
+		Set<String> salesAuditorSet = CommonDataSomQuo.querySalesAuditors(currentUserId);
 		List<Object> salesAuditorList = Arrays.asList(salesAuditorSet.toArray());
 		List<QFilter> qFilters = e.getQFilters();
 		qFilters.add(new QFilter("aos_orgid", QCP.in, salesAuditorList).or(salespersonOrg));

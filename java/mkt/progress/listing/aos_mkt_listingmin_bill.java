@@ -5,6 +5,7 @@ import java.io.StringWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import common.CommonDataSomQuo;
 import common.Cux_Common_Utl;
 import common.fnd.FndError;
 import common.fnd.FndGlobal;
@@ -43,7 +44,6 @@ import mkt.progress.ProgressUtil;
 import mkt.progress.design.aos_mkt_designreq_bill;
 import mkt.progress.iface.iteminfo;
 import mkt.progress.parameter.errorListing.ErrorListEntity;
-import sal.synciface.imp.aos_sal_import_pub;
 
 public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemClickListener, HyperLinkClickListener {
     /**
@@ -319,7 +319,7 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
      * 生成小站海外编辑确认:功能图 的listing优化需求小语种
      **/
     private static void GenerateOsSmall(String aos_orgnumber, DynamicObject dy_main) {
-        Object aos_orgsmall = aos_sal_import_pub.get_import_id(aos_orgnumber, "bd_country");
+        Object aos_orgsmall = FndGlobal.get_import_id(aos_orgnumber, "bd_country");
         DynamicObject dy_user = null;
         Object aos_oseditor = dy_main.get("aos_oseditor");
 
@@ -447,7 +447,7 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
         Object aos_orgid = dy_main.get("aos_orgid");
         Object ReqFId = dy_main.getPkValue(); // 当前界面主键
         DynamicObjectCollection aos_entryentityS = dy_main.getDynamicObjectCollection("aos_entryentity");
-        aos_orgid = aos_sal_import_pub.get_import_id(aos_orgnumber, "bd_country");
+        aos_orgid = FndGlobal.get_import_id(aos_orgnumber, "bd_country");
 
         // 校验
         if ("A".equals("B")) {
@@ -782,7 +782,7 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
                     continue;
                 Object org_id = aos_nationality.get("id"); // ItemId
                 int OsQty = iteminfo.GetItemOsQty(org_id, aos_itemid);
-                int onQty = sal.sche.aos_sal_sche_pub.aos_sal_sche_pvt.get_on_hand_qty(Long.valueOf(org_id.toString()),
+                int onQty = CommonDataSomQuo.get_on_hand_qty(Long.valueOf(org_id.toString()),
                         Long.valueOf(aos_itemid.toString()));
                 OsQty += onQty;
                 int SafeQty = iteminfo.GetSafeQty(org_id);

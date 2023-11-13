@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import common.fnd.FndGlobal;
 import common.sal.util.SalUtil;
 import kd.bos.context.RequestContext;
 import kd.bos.dataentity.entity.DynamicObject;
@@ -17,8 +18,6 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
-import sal.sche.aos_sal_sche_pub.aos_sal_sche_pub;
-import sal.synciface.imp.aos_sal_import_pub;
 
 public class aos_mkt_syncif_point extends AbstractTask {
 
@@ -32,8 +31,7 @@ public class aos_mkt_syncif_point extends AbstractTask {
 		QFilter qf_time = null;
 		Calendar Today = Calendar.getInstance();
 		int hour = Today.get(Calendar.HOUR_OF_DAY);
-		long is_oversea_flag = aos_sal_sche_pub.get_lookup_values("AOS_YES_NO", "Y");
-		QFilter oversea_flag = new QFilter("aos_is_oversea_ou", "=", is_oversea_flag);// 海外公司
+		QFilter oversea_flag = new QFilter("aos_is_oversea_ou.number", "=", "Y");// 海外公司
 		QFilter oversea_flag2 = new QFilter("aos_isomvalid", "=", true);
 		DynamicObject dynamicObject = QueryServiceHelper.queryOne("aos_mkt_base_orgvalue", "aos_value",
 				new QFilter[] { new QFilter("aos_type", QCP.equals, "TIME") });
@@ -41,9 +39,9 @@ public class aos_mkt_syncif_point extends AbstractTask {
 		if (dynamicObject != null)
 			time = dynamicObject.getBigDecimal("aos_value").intValue();
 		if (hour < time)
-			qf_time = new QFilter("aos_is_north_america", QCP.not_equals, is_oversea_flag);
+			qf_time = new QFilter("aos_is_north_america.number", QCP.not_equals, "Y");
 		else
-			qf_time = new QFilter("aos_is_north_america", QCP.equals, is_oversea_flag);
+			qf_time = new QFilter("aos_is_north_america.number", QCP.equals, "Y");
 		QFilter[] filters_ou = new QFilter[] { oversea_flag, oversea_flag2, qf_time };
 		DynamicObjectCollection bd_country = QueryServiceHelper.query("bd_country", "id,number", filters_ou);
 		for (DynamicObject ou : bd_country) {
@@ -75,7 +73,7 @@ public class aos_mkt_syncif_point extends AbstractTask {
 
 	public static void do_operate(Map<String, Object> param) {
 		Object p_ou_code = param.get("ou_name");
-		Object p_org_id = aos_sal_import_pub.get_import_id(p_ou_code, "bd_country");
+		Object p_org_id = FndGlobal.get_import_id(p_ou_code, "bd_country");
 		Calendar Today = Calendar.getInstance();
 		Today.set(Calendar.HOUR_OF_DAY, 0);
 		Today.set(Calendar.MINUTE, 0);

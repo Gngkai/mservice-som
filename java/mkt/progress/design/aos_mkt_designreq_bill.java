@@ -47,7 +47,6 @@ import mkt.progress.iface.iteminfo;
 import mkt.progress.iface.parainfo;
 import mkt.progress.listing.aos_mkt_listingson_bill;
 import mkt.progress.parameter.errorListing.ErrorListEntity;
-import sal.synciface.imp.aos_sal_import_pub;
 
 public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemClickListener, HyperLinkClickListener {
 	/** 设计需求表标识 **/

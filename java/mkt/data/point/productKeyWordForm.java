@@ -1,5 +1,6 @@
 package mkt.data.point;
 
+import common.CommonDataSom;
 import common.Cux_Common_Utl;
 import common.fnd.FndError;
 import common.fnd.FndGlobal;
@@ -51,7 +52,6 @@ import common.sal.util.QFBuilder;
 import mkt.common.util.arrangeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
-import sal.sche.aos_sal_sche_pub.aos_sal_sche_pvt;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
@@ -367,7 +367,7 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
             DynamicObjectCollection aos_ent = this.getModel().getDataEntity(true).getDynamicObjectCollection("aos_linentity");
             EntryGrid entryGrid = this.getControl("aos_linentity");
             List<String> list_control = entryGrid.getItems().stream().map(control -> control.getKey()).collect(Collectors.toList());
-            List<String> list_allFields = aos_sal_sche_pvt.getDynamicObjectType(aos_ent.getDynamicObjectType());
+            List<String> list_allFields = CommonDataSom.getDynamicObjectType(aos_ent.getDynamicObjectType());
             List<String> list_fields = new ArrayList<>(list_control.size());
             for (String key : list_control) {
                 if (list_allFields.contains(key))
@@ -430,7 +430,7 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         for (DynamicObject row : dyc) {
             int index = getModel().createNewEntryRow("aos_itementity");
             this.getModel().setValue("aos_itemid",row.get("aos_itemid"),index);
-            this.getModel().setValue("aos_picture1", aos_sal_sche_pvt.get_img_url(row.getString("number")),index);
+            this.getModel().setValue("aos_picture1", CommonDataSom.get_img_url(row.getString("number")),index);
         }
     }
 

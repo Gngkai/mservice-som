@@ -1,5 +1,6 @@
 package mkt.popular.ppc;
 
+import common.CommonDataSom;
 import kd.bos.bill.AbstractBillPlugIn;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
@@ -8,7 +9,6 @@ import kd.bos.form.events.AfterDoOperationEventArgs;
 import kd.bos.form.events.BeforeClosedEvent;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.QueryServiceHelper;
-import sal.sche.aos_sal_sche_pub.aos_sal_sche_pvt;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -63,7 +63,7 @@ public class aos_mkt_popular_ppc_for extends AbstractBillPlugIn {
 		DynamicObjectCollection cateDy = this.getModel().getDataEntity(true)
 				.getDynamicObjectCollection("aos_entryentity1");
 		// 获取所有的产品大类
-		Map<String, String> map_cate = aos_sal_sche_pvt.getCate(1, false);
+		Map<String, String> map_cate = CommonDataSom.getCate(1, false);
 		// 获取大类的名称
 		List<String> listCateName = map_cate.entrySet().stream().map(e -> e.getKey()).collect(Collectors.toList());
 		// 大类的预算金额

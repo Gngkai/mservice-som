@@ -5,6 +5,7 @@ import java.util.*;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.base.Joiner;
+import common.CommonDataSom;
 import common.Cux_Common_Utl;
 import common.fnd.FndGlobal;
 import common.sal.util.SalUtil;
@@ -37,7 +38,6 @@ import kd.bos.servicehelper.operation.SaveServiceHelper;
 import mkt.common.util.sensitiveWordsUtils;
 import mkt.common.util.translateUtils;
 import mkt.progress.design.aos_mkt_funcreq_init;
-import sal.sche.aos_sal_sche_pub.aos_sal_sche_pvt;
 
 @SuppressWarnings("unchecked")
 public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn implements RowClickEventListener, HyperLinkClickListener {
@@ -146,7 +146,7 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn implements RowCli
 		DynamicObject dy = QueryServiceHelper.queryOne("bd_material", "number", materialFilter.toArray(new QFilter[0]));
 		if (dy!=null){
 			Image image = this.getView().getControl("aos_imageap");
-			image.setUrl(aos_sal_sche_pvt.get_img_url(dy.getString("number")));
+			image.setUrl(CommonDataSom.get_img_url(dy.getString("number")));
 		}
 		initSensitiveWords();
 		AosProductNoChange();

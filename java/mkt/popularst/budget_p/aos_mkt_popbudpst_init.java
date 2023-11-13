@@ -6,7 +6,10 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import common.CommonDataSom;
 import common.Cux_Common_Utl;
+import common.fnd.FndGlobal;
 import common.sal.util.SalUtil;
 import kd.bos.algo.DataSet;
 import kd.bos.algo.Row;
@@ -26,8 +29,6 @@ import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.threads.ThreadPools;
 import mkt.common.AosMktGenerate;
-import sal.quote.CommData;
-import sal.synciface.imp.aos_sal_import_pub;
 
 public class aos_mkt_popbudpst_init extends AbstractTask {
 	private static Log logger = LogFactory.getLog(aos_mkt_popbudpst_init.class);
@@ -76,7 +77,7 @@ public class aos_mkt_popbudpst_init extends AbstractTask {
 		@Override
 		public void run() {
 			try {
-				CommData.init();
+				CommonDataSom.init();
 				do_operate(params);
 			} catch (Exception e) {
 				String message = e.toString();
@@ -92,7 +93,7 @@ public class aos_mkt_popbudpst_init extends AbstractTask {
 		Cux_Common_Utl.Log(logger, "===== into aos_mkt_popbudgetp_init =====");
 		SimpleDateFormat DF = new SimpleDateFormat("yyyy-MM-dd");
 		String p_ou_code = (String) params.get("p_ou_code");
-		Object p_org_id = aos_sal_import_pub.get_import_id(p_ou_code, "bd_country");
+		Object p_org_id = FndGlobal.get_import_id(p_ou_code, "bd_country");
 		// 删除数据
 		Calendar today = Calendar.getInstance();
 		today.set(Calendar.HOUR_OF_DAY, 0);

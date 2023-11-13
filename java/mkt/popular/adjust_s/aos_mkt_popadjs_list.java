@@ -2,6 +2,8 @@ package mkt.popular.adjust_s;
 
 import java.util.*;
 
+import common.CommonDataSom;
+import common.CommonDataSomQuo;
 import common.Cux_Common_Utl;
 import kd.bos.dataentity.OperateOption;
 import kd.bos.dataentity.entity.DynamicObject;
@@ -19,8 +21,6 @@ import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.MKTCom;
 import mkt.common.aos_mkt_common_redis;
-import sal.quote.CommData;
-import sal.quote.QuoteComm;
 
 public class aos_mkt_popadjs_list extends AbstractListPlugin {
 
@@ -35,7 +35,7 @@ public class aos_mkt_popadjs_list extends AbstractListPlugin {
 		// 1.判断该人员是否销售人员 (品类人员对应表)
 		QFilter salespersonOrg = MKTCom.querySalespersonOrg(currentUserId, "aos_orgid", "aos_groupid");
 		// 2.判断该人员是否为审核人员
-		Set<String> salesAuditorSet = QuoteComm.querySalesAuditors(currentUserId);
+		Set<String> salesAuditorSet = CommonDataSomQuo.querySalesAuditors(currentUserId);
 		List<Object> salesAuditorList = Arrays.asList(salesAuditorSet.toArray());
 		List<QFilter> qFilters = e.getQFilters();
 		qFilters.add(new QFilter("aos_orgid", QCP.in, salesAuditorList).or(salespersonOrg));
@@ -58,7 +58,7 @@ public class aos_mkt_popadjs_list extends AbstractListPlugin {
 	}
 	private void aos_init() {
 		// TODO PPC数据源初始化
-		CommData.init();
+		CommonDataSom.init();
 		aos_mkt_common_redis.init_redis("ppc");
 		Map<String, Object> params = new HashMap<>();
 		params.put("p_ou_code", "UK");

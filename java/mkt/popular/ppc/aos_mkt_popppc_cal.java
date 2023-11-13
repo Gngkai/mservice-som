@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import common.CommonDataSom;
+import common.fnd.FndGlobal;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.time.DateUtils;
 
@@ -35,9 +37,6 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import mkt.common.MKTCom;
 import mkt.common.aos_mkt_common_redis;
-import sal.quote.CommData;
-import sal.sche.aos_sal_sche_pub.aos_sal_sche_pub;
-import sal.synciface.imp.aos_sal_import_pub;
 
 public class aos_mkt_popppc_cal extends AbstractTask {
 
@@ -52,7 +51,7 @@ public class aos_mkt_popppc_cal extends AbstractTask {
 
 	public static void ManualitemClick(String aos_ou_code) {
 		// 初始化数据
-		CommData.init();
+		CommonDataSom.init();
 		aos_mkt_common_redis.init_redis("ppc");
 		Map<String, Object> params = new HashMap<>();
 		params.put("p_ou_code", aos_ou_code);
@@ -61,12 +60,11 @@ public class aos_mkt_popppc_cal extends AbstractTask {
 
 	private static void executerun() {
 		// 初始化数据
-		CommData.init();
+		CommonDataSom.init();
 		aos_mkt_common_redis.init_redis("ppc");
 
 		Calendar Today = Calendar.getInstance();
 		int hour = Today.get(Calendar.HOUR_OF_DAY);
-		long is_oversea_flag = aos_sal_sche_pub.get_lookup_values("AOS_YES_NO", "Y");
 		QFilter qf_time = null;
 
 		DynamicObject dynamicObject = QueryServiceHelper.queryOne("aos_mkt_base_orgvalue", "aos_value",
@@ -76,11 +74,11 @@ public class aos_mkt_popppc_cal extends AbstractTask {
 			time = dynamicObject.getBigDecimal("aos_value").intValue();
 		}
 		if (hour < time)
-			qf_time = new QFilter("aos_is_north_america", QCP.not_equals, is_oversea_flag);
+			qf_time = new QFilter("aos_is_north_america.number", QCP.not_equals, "Y");
 		else
-			qf_time = new QFilter("aos_is_north_america", QCP.equals, is_oversea_flag);
+			qf_time = new QFilter("aos_is_north_america.number", QCP.equals, "Y");
 		// 调用线程池
-		QFilter oversea_flag = new QFilter("aos_is_oversea_ou", "=", is_oversea_flag);// 海外公司
+		QFilter oversea_flag = new QFilter("aos_is_oversea_ou.number", "=", "Y");// 海外公司
 		QFilter oversea_flag2 = new QFilter("aos_isomvalid", "=", true);
 		QFilter[] filters_ou = new QFilter[] { oversea_flag, oversea_flag2, qf_time };
 		DynamicObjectCollection bd_country = QueryServiceHelper.query("bd_country", "id,number", filters_ou);
@@ -119,7 +117,7 @@ public class aos_mkt_popppc_cal extends AbstractTask {
 
 			// 获取传入参数 国别
 			Object p_ou_code = params.get("p_ou_code");
-			Object p_org_id = aos_sal_import_pub.get_import_id(p_ou_code, "bd_country");
+			Object p_org_id = FndGlobal.get_import_id(p_ou_code, "bd_country");
 
 			// 获取当前日期
 			Calendar date = Calendar.getInstance();
@@ -250,7 +248,7 @@ public class aos_mkt_popppc_cal extends AbstractTask {
 				if (aos_groupdate == null)
 					aos_groupdate = Today;// 新组
 				// =====结束是否新系列新组判断=====
-				String itemCategoryName = CommData.getItemCategoryName(String.valueOf(item_id));
+				String itemCategoryName = CommonDataSom.getItemCategoryName(String.valueOf(item_id));
 				String aos_category2 = "";
 				if (!"".equals(itemCategoryName) && null != itemCategoryName) {
 					String[] split = itemCategoryName.split(",");
@@ -261,12 +259,12 @@ public class aos_mkt_popppc_cal extends AbstractTask {
 
 				// 获取销售组别并赋值
 				// 2.获取产品小类
-				String itemCategoryId = CommData.getItemCategoryId(item_id + "");
+				String itemCategoryId = CommonDataSom.getItemCategoryId(item_id + "");
 				if (itemCategoryId == null || "".equals(itemCategoryId)) {
 					continue;
 				}
 				// 3.根据小类获取组别
-				String salOrg = CommData.getSalOrgV2(p_org_id + "", itemCategoryId); // 小类获取组别
+				String salOrg = CommonDataSom.getSalOrgV2(p_org_id + "", itemCategoryId); // 小类获取组别
 				if (salOrg == null || "".equals(salOrg)) {
 					continue;
 				}

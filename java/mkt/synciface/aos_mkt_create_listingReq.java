@@ -1,7 +1,11 @@
 package mkt.synciface;
 
+import common.CommonDataSom;
 import common.Cux_Common_Utl;
 import common.fnd.FndHistory;
+import common.scmQtyType;
+import kd.bos.algo.DataSet;
+import kd.bos.algo.Row;
 import kd.bos.context.RequestContext;
 import kd.bos.dataentity.OperateOption;
 import kd.bos.dataentity.entity.DynamicObject;
@@ -15,11 +19,8 @@ import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
-import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.MKTCom;
 import mkt.progress.listing.aos_mkt_listingreq_bill;
-import sal.sche.aos_sal_sche_pub.aos_sal_sche_pvt;
-import sal.sche.aos_sal_sche_pub.scmQtyType;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -104,6 +105,9 @@ public class aos_mkt_create_listingReq extends AbstractTask {
         QFilter filter_status = new QFilter("aos_status","!=","结束");
         return !QueryServiceHelper.exists("aos_mkt_designreq", new QFilter[]{filter_billno, filter_status});
     }
+
+
+
     /** 查找备货单  合同的首批海外入库后，海外库存数量+5＜该合同的首批海外入库数量；**/
     private static boolean QueryNote (Object itemid,Object poNumber,Object org,StringJoiner log){
         QFilter filter_item = new QFilter("aos_stockentry.aos_sto_artno","=",itemid);
@@ -122,7 +126,7 @@ public class aos_mkt_create_listingReq extends AbstractTask {
         log.add("海外入库： "+shipmentCount);
         ArrayList<String> arr = new ArrayList<>();
         arr.add(String.valueOf(itemid));
-        Map<String, Integer> map_qty = aos_sal_sche_pvt.getScmQty(scmQtyType.oversea, String.valueOf(org), arr);
+        Map<String, Integer> map_qty = CommonDataSom.getScmQty(scmQtyType.oversea, String.valueOf(org), arr);
         int overSeaQty = 5;
         overSeaQty += map_qty.getOrDefault(String.valueOf(itemid),0);
         log.add("海外库存+5： "+overSeaQty);

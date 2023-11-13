@@ -1,6 +1,8 @@
 package mkt.popular.adjust_s;
 
+import common.CommonDataSom;
 import common.Cux_Common_Utl;
+import common.fnd.FndGlobal;
 import common.sal.util.InStockAvailableDays;
 import kd.bos.algo.DataSet;
 import kd.bos.algo.JoinType;
@@ -26,9 +28,6 @@ import mkt.common.aos_mkt_common_redis;
 import mkt.popular.adjust_p.aos_mkt_popadjp_init;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.time.DateUtils;
-import sal.quote.CommData;
-import sal.sche.aos_sal_sche_pub.aos_sal_sche_pub;
-import sal.synciface.imp.aos_sal_import_pub;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
@@ -46,11 +45,10 @@ public class aos_mkt_popadjs_init extends AbstractTask {
 	public void execute(RequestContext ctx, Map<String, Object> param) throws KDException {
 
 		// 初始化数据
-		CommData.init();
+		CommonDataSom.init();
 		aos_mkt_common_redis.init_redis("ppc");
-		
-		long is_oversea_flag = aos_sal_sche_pub.get_lookup_values("AOS_YES_NO", "Y");
-		QFilter oversea_flag = new QFilter("aos_is_oversea_ou", "=", is_oversea_flag);
+
+		QFilter oversea_flag = new QFilter("aos_is_oversea_ou.number", "=", "Y");
 		QFilter oversea_flag2 = new QFilter("aos_isomvalid", "=", true);
 		QFilter[] filters_ou = new QFilter[] { oversea_flag, oversea_flag2 };
 		DynamicObjectCollection bd_country = QueryServiceHelper.query("bd_country", "id,number", filters_ou);
@@ -79,8 +77,7 @@ public class aos_mkt_popadjs_init extends AbstractTask {
 		DeleteServiceHelper.delete("aos_mkt_popular_adjs", filters_adj);
 		DeleteServiceHelper.delete("aos_mkt_popadjusts_data", filters_adj);
 		// 初始化数据
-		long is_oversea_flag = aos_sal_sche_pub.get_lookup_values("AOS_YES_NO", "Y");
-		QFilter oversea_flag = new QFilter("aos_is_oversea_ou", "=", is_oversea_flag);
+		QFilter oversea_flag = new QFilter("aos_is_oversea_ou.number", "=", "Y");
 		QFilter oversea_flag2 = new QFilter("aos_isomvalid", "=", true);
 		QFilter qf_ou = new QFilter("number", "=", p_ou_code);// 海外公司
 		QFilter[] filters_ou = new QFilter[] { oversea_flag, oversea_flag2, qf_ou };
@@ -119,7 +116,7 @@ public class aos_mkt_popadjs_init extends AbstractTask {
 		SimpleDateFormat DF = new SimpleDateFormat("yyyy-MM-dd");
 		String p_ou_code = (String) params.get("p_ou_code");
 		long p_group_id = (long) params.get("p_group_id");
-		Object p_org_id = aos_sal_import_pub.get_import_id(p_ou_code, "bd_country");
+		Object p_org_id = FndGlobal.get_import_id(p_ou_code, "bd_country");
 		byte[] serialize_adprice = cache.getByteValue("mkt_adprice"); // 建议价格
 		HashMap<String, Map<String, Object>> AdPrice = SerializationUtils.deserialize(serialize_adprice);
 		byte[] serialize_skurptdetail = cache.getByteValue("mkt_skurptDetail"); // SKU报告1日
@@ -290,7 +287,7 @@ public class aos_mkt_popadjs_init extends AbstractTask {
 			Map<String, Object> SkuRptDetailMap = SkuRptDetail.get(p_org_id + "~" + item_id);// Sku报告
 			if (SkuRptDetailMap == null)
 				continue;
-			String category = CommData.getItemCategoryName(item_id + "");
+			String category = CommonDataSom.getItemCategoryName(item_id + "");
 			if (category == null || "".equals(category))
 				continue;
 			/*Map<String, Object> SkuRptDetailSerialMap = SkuRptDetailSerial

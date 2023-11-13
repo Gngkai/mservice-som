@@ -8,28 +8,11 @@ import kd.bos.algo.DataSet;
 import kd.bos.algo.Row;
 import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.plugin.AbstractFormPlugin;
-import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.QueryServiceHelper;
-import mkt.data.standard.AosMktDesignInit;
-import mkt.data.standard.AosMktPhotoInit;
-import mkt.data.standard.AosMktStdInit;
-import mkt.data.standard.AosMktViewInit;
 import mkt.progress.design.aadd.aos_mkt_aadd_init;
-import mkt.synciface.*;
-import org.apache.commons.lang3.SerializationUtils;
-import sal.synciface.imp.aos_sal_import_invprice;
-import sal.synciface.newcost.somCostSync;
 
 public class aos_mkt_bitest_form extends AbstractFormPlugin {
-
-	/*private static AosomLog logger = AosomLog.init("aos_mkt_bitest_form");
-
-	static {
-		logger.setService("aos.mms");
-		logger.setDomain("mms.act");
-		logger.setFile("aos_mkt_bitest_form");
-	}*/
 
 	public void registerListener(EventObject e) {
 		super.registerListener(e);

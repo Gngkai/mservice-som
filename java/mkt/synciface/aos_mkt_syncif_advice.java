@@ -6,6 +6,7 @@ import java.util.Map;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
+import common.fnd.FndGlobal;
 import common.sal.impl.ComImpl;
 import common.sal.impl.ComImpl2;
 import kd.bos.context.RequestContext;
@@ -17,7 +18,6 @@ import kd.bos.exception.KDException;
 import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
-import sal.synciface.imp.aos_sal_import_pub;
 
 public class aos_mkt_syncif_advice extends AbstractTask {
 	@Override
@@ -48,7 +48,7 @@ public class aos_mkt_syncif_advice extends AbstractTask {
 				Object aos_bid_rangeend = AdPopRpt.get("aos_bid_rangeend");
 				Object aos_bid_rangestart = AdPopRpt.get("aos_bid_rangestart");
 				Object aos_bid_suggest = AdPopRpt.get("aos_bid_suggest");
-				Object p_org_id = aos_sal_import_pub.get_import_id(aos_ou_name, "bd_country");
+				Object p_org_id = FndGlobal.get_import_id(aos_ou_name, "bd_country");
 				DynamicObject aos_entryentity = aos_entryentityS.addNew();
 				aos_entryentity.set("aos_orgid", p_org_id);
 				aos_entryentity.set("aos_ad_name", aos_ad_name);
