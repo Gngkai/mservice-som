@@ -36,16 +36,12 @@ sourceSets {
         }
     }
 }
-jar {
+jar{
     manifest {
         attributes 'Builddate': date
         attributes 'Release': 'CICD'
     }
-    include('common/fms/**')
-    include('fms/**')
-    include('sys/fms/**')
-
-    archiveName("aos_mkt.jar")
+    archiveName("aos-mkt.jar")
 }
 
 task sourcesJar(type: Jar, dependsOn: build) {
