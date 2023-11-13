@@ -26,6 +26,7 @@ dependencies {
     implementation 'com.aosom.gpaas.common:com-sal:1.0-SNAPSHOT'
     implementation 'com.aosom.gpaas.common:com-scm:1.0-SNAPSHOT'
     implementation 'com.aosom.gpaas.common:com-fms:1.0-SNAPSHOT'
+    implementation 'com.deepl.api:deepl-java:1.0.1'
 }
 
 
