@@ -1,6 +1,7 @@
 package mkt.progress;
 
 import com.alibaba.nacos.common.utils.Pair;
+import common.CommonDataSomQuo;
 import common.Cux_Common_Utl;
 import common.fnd.FndBotp;
 import common.fnd.FndError;
@@ -437,7 +438,7 @@ public class ProgressUtil {
 				continue;
 			Object org_id = aos_nationality.get("id"); // ItemId
 			int OsQty = iteminfo.GetItemOsQty(org_id, itemID); // 海外库存
-			int onQty = sal.sche.aos_sal_sche_pub.aos_sal_sche_pvt.get_on_hand_qty(Long.valueOf(org_id.toString()),
+			int onQty = CommonDataSomQuo.get_on_hand_qty(Long.valueOf(org_id.toString()),
 					Long.valueOf(itemID.toString()));
 			OsQty += onQty;
 
