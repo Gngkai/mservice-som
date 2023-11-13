@@ -45,7 +45,7 @@ jar {
     include('fms/**')
     include('sys/fms/**')
 
-    archiveName("aos-fms.jar")
+    archiveName("aos_mkt.jar")
 }
 
 task sourcesJar(type: Jar, dependsOn: build) {
