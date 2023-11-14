@@ -151,13 +151,19 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn implements RowCli
 	}
 
 	@Override
-	public void itemClick(ItemClickEvent evt) {
-		super.itemClick(evt);
-		String control = evt.getItemKey();
+	public void afterDoOperation(AfterDoOperationEventArgs evt) {
+		super.afterDoOperation(evt);
+		String control = evt.getOperateKey();
 		if ("aos_change".equals(control)) {
 			aos_change();
 		}
-		else if ("aos_copyto".equals(control)){
+	}
+
+	@Override
+	public void itemClick(ItemClickEvent evt) {
+		super.itemClick(evt);
+		String control = evt.getItemKey();
+		if ("aos_copyto".equals(control)){
 			filterSentivitEntry();
 			FormShowParameter showParameter = FndGlobal.CraeteForm(this, "aos_mkt_functcopy", "copyTo", null);
 			showParameter.setCaption("A+ Copy To");
