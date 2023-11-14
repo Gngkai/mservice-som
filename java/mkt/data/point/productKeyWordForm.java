@@ -97,14 +97,11 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         super.itemClick(evt);
         String itemKey = evt.getItemKey();
         if (itemKey.equals("aos_cal")){
-           try {
-               setUpACategory();
-           }catch (FndError error){
-               getView().showErrorNotification(error.getErrorMessage());
-           }
-           catch (Exception e){
-               getView().showErrorNotification(e.getMessage());
-           }
+            try {
+                setUpACategory();
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
         }
         else if (itemKey.equals("aos_split")){
             spiltWord();
