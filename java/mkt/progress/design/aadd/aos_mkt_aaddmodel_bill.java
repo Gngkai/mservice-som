@@ -46,10 +46,9 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn implements RowCli
 	//敏感词语种缓存标识
 	public static final String KEY_SENSITIVE ="seniive";
 	//需要进行敏感词校验的字段
-	private final static List<String> sensitiveFields;
+	private final static List<String> sensitiveFields = Arrays.asList("aos_usca","aos_uk","aos_de","aos_fr","aos_it","aos_es");
 	static {
 		list_lans = Arrays.asList("CN", "中文", "US","CA","UK","EN","DE","FR","IT","ES");
-		sensitiveFields = Arrays.asList("aos_usca","aos_uk","aos_de","aos_fr","aos_it","aos_es");
 	}
 
 	@Override
@@ -92,9 +91,7 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn implements RowCli
 			String sentitiveWord = senSitiveRow.getString("aos_word");
 			//判断替换的控件名
 			String field;
-			if (lan.equals("US/CA")) {
-				field = "aos_usca";
-			}
+			if (lan.equals("US/CA")) field = "aos_usca";
 			else {
 				field = "aos_"+lan.toLowerCase();
 			}
@@ -395,6 +392,7 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn implements RowCli
 				DynamicObjectCollection targetRowDy = null;
 				//目标单据存在则覆盖
 				if (targetData.containsKey(tab)) {
+					tabEntity.get(Integer.valueOf(tab)).set("aos_tab",sourcEntity.get(Integer.parseInt(tab)).get("aos_tab"));
 					targetRowDy = targetData.get(tab);
 				}
 				//目标单据不存在则新增
@@ -441,9 +439,7 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn implements RowCli
 			if (lan.equals("中文")){
 				field = "aos_cn";
 			}
-			else if (lan.equals("CA") || lan.equals("US") || lan.equals("EN")){
-				field = "aos_usca";
-			}
+			else if (lan.equals("CA") || lan.equals("US") || lan.equals("EN")) field = "aos_usca";
 			else {
 				field = "aos_"+lan.toLowerCase();
 			}
@@ -623,6 +619,13 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn implements RowCli
 		}
 	}
 
+	/**
+	 * 填充敏感词单据
+	 * @param dy_tab	敏感词单据
+	 * @param sensitiveResult	校验结果
+	 * @param lanRow	行索引
+	 * @param lan	语言
+	 */
 	private  static void setSentiviteWord(DynamicObject dy_tab,JSONObject sensitiveResult,int lanRow,String lan){
 		DynamicObjectCollection wordEntityRows = dy_tab.getDynamicObjectCollection("aos_subentryentity");
 		//记录敏感词对应的单据行,顺便删除该行单据体以前的敏感词信息
@@ -683,8 +686,14 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn implements RowCli
 	 */
 	private void setEntityColor(){
 		int tabRow = this.getModel().getEntryCurrentRowIndex("aos_ent_tab");
+		if (FndGlobal.IsNull(tabRow)) {
+			return;
+		}
 		DynamicObjectCollection dyc_tab = this.getModel().getDataEntity(true)
 				.getDynamicObjectCollection("aos_ent_tab");
+		if (dyc_tab.isEmpty()) {
+			return;
+		}
 		DynamicObject tabEntryRow = dyc_tab.get(tabRow);
 		//获取语言信息单据体控件
 		AbstractGrid grid = this.getView().getControl("aos_entryentity");
@@ -699,9 +708,8 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn implements RowCli
 
 			String field;
 			String lan = row.getString("aos_sublan");
-			if (lan.equals("US/CA")) {
-				field = "aos_usca";
-			}else {
+			if (lan.equals("US/CA")) field = "aos_usca";
+			else {
 				field = "aos_"+lan.toLowerCase();
 			}
 			map_sentiviteRows.put(field,Arrays.asList(row.getString("aos_rows").split("/")));
