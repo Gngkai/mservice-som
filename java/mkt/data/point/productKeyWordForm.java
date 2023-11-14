@@ -97,14 +97,11 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         super.itemClick(evt);
         String itemKey = evt.getItemKey();
         if (itemKey.equals("aos_cal")){
-           try {
-               setUpACategory();
-           }catch (FndError error){
-               getView().showErrorNotification(error.getErrorMessage());
-           }
-           catch (Exception e){
-               getView().showErrorNotification(e.getMessage());
-           }
+            try {
+                setUpACategory();
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
         }
         else if (itemKey.equals("aos_split")){
             spiltWord();
@@ -793,7 +790,7 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         }
         str.add("aos_search1");
         str.add("aos_search2");
-        DynamicObject dy_parameter = QueryServiceHelper.queryOne("aos_mkt_keyword_par", "", builder.toArray());
+        DynamicObject dy_parameter = QueryServiceHelper.queryOne("aos_mkt_keyword_par", str.toString(), builder.toArray());
         if (dy_parameter==null)
             throw new FndError("相关性参数未维护,请先维护相关参数");
 

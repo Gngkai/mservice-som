@@ -62,55 +62,84 @@ public class aos_czj_test_bill extends AbstractBillPlugIn implements ItemClickLi
 	}
 
 	public  void find() {
+		//迁移高级A+模板
+		DynamicObjectCollection dyc = QueryServiceHelper.query("aos_aadd_model", "id", null);
+		List<String> pks = dyc.stream().map(dy -> dy.getString("id")).collect(Collectors.toList());
 
-		DynamicObject orgEntity = this.getModel().getDataEntity(true).getDynamicObject("aos_orgid");
-		QFBuilder builder = new QFBuilder();
-		builder.clear();
-		builder.add("aos_org","=",orgEntity.getPkValue());
-		builder.add("aos_assessment.number","=","Y");
-		DynamicObjectCollection dyc = QueryServiceHelper.query("aos_sal_act_type_p", "aos_acttype", builder.toArray());
-		List<String> listActTypes = new ArrayList<>(dyc.size());
+		//查找明细信息
+		QFilter filter = new QFilter("aos_sourceid","!=","");
+		StringJoiner str = new StringJoiner(",");
+		str.add("aos_sourceid");
+		str.add("aos_seq");
+		str.add("aos_button");
+		str.add("aos_cate1");
+		str.add("aos_cate2");
+		str.add("aos_cn");
+		str.add("aos_usca");
+		str.add("aos_uk");
+		str.add("aos_de");
+		str.add("aos_fr");
+		str.add("aos_it");
+		str.add("aos_es");
+
+		dyc = QueryServiceHelper.query("aos_aadd_model_detail", str.toString(), new QFilter[]{filter});
+		//根据主键分组
+		Map<String,Map<String,List<DynamicObject>>> map_data = new HashMap<>();
 		for (DynamicObject dy : dyc) {
-			listActTypes.add(dy.getString("aos_acttype"));
+			String aos_sourceid = dy.getString("aos_sourceid");
+			Map<String, List<DynamicObject>> map = map_data.computeIfAbsent(aos_sourceid, k -> new HashMap<>());
+			String aos_seq = dy.getString("aos_button");
+			List<DynamicObject> list = map.computeIfAbsent(aos_seq, k -> new ArrayList<>());
+			list.add(dy);
 		}
-		LocalDate now = LocalDate.now();
 
-		builder.clear();
-		builder.add("aos_nationality","=",orgEntity.getPkValue());
-		List<String> channels = Arrays.asList("AMAZON", "EBAY");
-		builder.add("aos_channel.number",QFilter.not_in,channels);
-		String shop = orgEntity.getString("number")+"-Wayfair";
-		builder.add("aos_shop.number","!=",shop);
-		//大型活动
-		List<String> actType = Arrays.asList("B", "C");
-		builder.add("aos_act_type",QFilter.not_in,actType);
-		//活动为平台活动
-		builder.add("aos_acttype",QFilter.in,listActTypes);
-		builder.add("aos_sal_actplanentity.aos_itemnum","!=","");
-		//活动时间
-		builder.add("aos_sal_actplanentity.aos_enddate",">=",now.withDayOfMonth(1).toString());
-		builder.add("aos_sal_actplanentity.aos_enddate","<",now.withDayOfMonth(1).plusMonths(1).toString());
-		log.info("查询活动条件： {} ",builder);
-
-		dyc = QueryServiceHelper.query("aos_act_select_plan",
-				"billno,aos_sal_actplanentity.aos_itemnum aos_itemnum,aos_sal_actplanentity.aos_itemnum.number number", builder.toArray());
-		log.info("查询结果长度：  {}",dyc.size());
-
-		FndLog fndLog = FndLog.init("活动插叙测试", LocalDate.now().toString());
-
-		Map<String,Integer> itemActNumber = new HashMap<>(dyc.size());
-		for (DynamicObject dy : dyc) {
-			String item = dy.getString("aos_itemnum");
-			int actFreq = itemActNumber.getOrDefault(item, 0)+1;
-			fndLog.add("单号： "+dy.getString("billno")+"   物料：  "+dy.getString("number")+"  次数： "+actFreq);
-			if (actFreq>2){
-
+		List<DynamicObject> list_save = new ArrayList<>(5000);
+		//主键
+		for (Map.Entry<String, Map<String, List<DynamicObject>>> entry : map_data.entrySet()) {
+			if (!pks.contains(entry.getKey())) {
+				continue;
 			}
-			else {
-				itemActNumber.put(item,actFreq);
+			DynamicObject addEntry = BusinessDataServiceHelper.loadSingle(entry.getKey(), "aos_aadd_model");
+			if (addEntry == null) {
+				continue;
 			}
+
+			list_save.add(addEntry);
+
+			DynamicObjectCollection tabEntRows = addEntry.getDynamicObjectCollection("aos_ent_tab");
+			//页签遍历
+			for (Map.Entry<String, List<DynamicObject>> lanEntry : entry.getValue().entrySet()) {
+				//页签对应的第几行
+				String tabIndex = lanEntry.getKey();
+				//添加页签数据
+				DynamicObject tabNewRow = tabEntRows.addNew();
+				tabNewRow.set("seq",Integer.valueOf(tabIndex));
+				tabNewRow.set("aos_tab",addEntry.getString("aos_textfield"+tabIndex));
+
+				DynamicObjectCollection lanEntryRows = tabNewRow.getDynamicObjectCollection("aos_entryentity");
+				//填加语言行
+				for (DynamicObject lanRow : lanEntry.getValue()) {
+					DynamicObject lanNewRow = lanEntryRows.addNew();
+					lanNewRow.set("seq",lanRow.get("aos_seq"));
+					lanNewRow.set("aos_cate1",lanRow.get("aos_cate1"));
+					lanNewRow.set("aos_cate2",lanRow.get("aos_cate2"));
+					lanNewRow.set("aos_cn",lanRow.get("aos_cn"));
+					lanNewRow.set("aos_usca",lanRow.get("aos_usca"));
+					lanNewRow.set("aos_uk",lanRow.get("aos_uk"));
+					lanNewRow.set("aos_de",lanRow.get("aos_de"));
+					lanNewRow.set("aos_fr",lanRow.get("aos_fr"));
+					lanNewRow.set("aos_it",lanRow.get("aos_it"));
+					lanNewRow.set("aos_es",lanRow.get("aos_es"));
+				}
+			}
+			SaveUtils.SaveEntity(list_save,false);
 		}
+		SaveUtils.SaveEntity(list_save,true);
+
 	}
+
+
+
 
 	/** 同步敏感词库 **/
 	private void aos_test() {
