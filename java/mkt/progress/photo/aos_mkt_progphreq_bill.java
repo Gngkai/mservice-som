@@ -511,6 +511,9 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		if ("工厂简拍".equals(aos_phstate)) {
 			this.getModel().setValue("aos_3dflag", true);
 			this.getModel().setValue("aos_3d_reason", true);
+		} else {
+			this.getModel().setValue("aos_3dflag", false);
+			this.getModel().setValue("aos_3d_reason", false);
 		}
 	}
 
