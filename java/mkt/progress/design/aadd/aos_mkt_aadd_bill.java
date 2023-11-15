@@ -885,8 +885,7 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
         aosMktAadd.set("aos_oueditor", aosMktProgOrgUser.get("aos_oueditor"));
         aosMktAadd.set("aos_monitor", aosMktProgOrgUser.get("aos_02hq"));
         aosMktAadd.set("aos_design", sourceBill.get("aos_design"));
-
-        aosMktAadd.set("aos_design", sourceBill.get("aos_design"));
+        aosMktAadd.set("aos_sale", aosMktProgOrgUser.get("aos_salehelper"));
 
 
         aosMktAadd.set("aos_sourceid", sourceBill.get("id"));
