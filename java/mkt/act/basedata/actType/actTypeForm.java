@@ -1,6 +1,7 @@
 package mkt.act.basedata.actType;
 
 import common.fnd.FndGlobal;
+import common.sal.util.SalUtil;
 import kd.bos.bill.AbstractBillPlugIn;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
@@ -17,6 +18,7 @@ import kd.bos.formula.FormulaEngine;
 import kd.bos.list.ListShowParameter;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.QueryServiceHelper;
+import org.apache.commons.collections4.BidiMap;
 
 import java.util.*;
 
@@ -190,13 +192,9 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
             DynamicObjectCollection dyc = this.getModel().getDataEntity(true).getDynamicObjectCollection("aos_entryentity2");
             if (dyc.size()==0)
                 return;
-            List<String> values = new ArrayList<>(dyc.size());
-            for (DynamicObject dy : dyc) {
-                String seq = dy.getString("seq");
-                values.add(seq);
-            }
+
             showParameter.setCustomParam(Key_entity,"rule");
-            showParameter.setCustomParam("value",values);
+
         }
         //活动价
         else if (type.equals("aos_priceformula")){
