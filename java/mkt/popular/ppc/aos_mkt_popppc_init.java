@@ -63,15 +63,15 @@ public class aos_mkt_popppc_init extends AbstractTask {
 		logger.setService("aos.mms");
 		logger.setDomain("mms.popular");
 	}
-	public static final String urlSP = "https://open.feishu.cn/open-apis/bot/v2/hook/242e7160-8309-4312-8586-5fe58482d8c5";
+	public static final String URL = "https://open.feishu.cn/open-apis/bot/v2/hook/242e7160-8309-4312-8586-5fe58482d8c5";
 
 	@Override
 	public void execute(RequestContext ctx, Map<String, Object> param) throws KDException {
 		executerun();
-		FndWebHook.send(urlSP, "PPC推广SP初始化已成功生成!");
+		FndWebHook.send(URL, "PPC推广SP初始化已成功生成!");
 	}
 
-	public static void ManualitemClick(String aos_ou_code) {
+	public static void ManualitemClick(String aosOuCode) {
 		// 删除数据
 		Calendar today = Calendar.getInstance();
 		today.set(Calendar.HOUR_OF_DAY, 0);
@@ -79,7 +79,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
 		today.set(Calendar.SECOND, 0);
 		today.set(Calendar.MILLISECOND, 0);
 		Date Today = today.getTime();
-		QFilter filter_id = new QFilter("aos_orgid.number", "=", aos_ou_code);
+		QFilter filter_id = new QFilter("aos_orgid.number", "=", aosOuCode);
 		QFilter filter_date = new QFilter("aos_date", "=", Today);
 		QFilter[] filters_adj = new QFilter[] { filter_id, filter_date };
 		DeleteServiceHelper.delete("aos_mkt_popular_ppc", filters_adj);
@@ -87,7 +87,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
 		CommonDataSom.init();
 		aos_mkt_common_redis.init_redis("ppc");
 		Map<String, Object> params = new HashMap<>();
-		params.put("p_ou_code", aos_ou_code);
+		params.put("p_ou_code", aosOuCode);
 		do_operate(params);
 	}
 
@@ -107,10 +107,11 @@ public class aos_mkt_popppc_init extends AbstractTask {
 		if (dynamicObject != null) {
 			time = dynamicObject.getBigDecimal("aos_value").intValue();
 		}
-		if (hour < time)
+		if (hour < time) {
 			qf_time = new QFilter("aos_is_north_america.number", QCP.not_equals, "Y");
-		else
+		} else {
 			qf_time = new QFilter("aos_is_north_america.number", QCP.equals, "Y");
+		}
 		QFilter oversea_flag = new QFilter("aos_is_oversea_ou.number", "=", "Y");// 海外公司
 		QFilter oversea_flag2 = new QFilter("aos_isomvalid", "=", true);
 		QFilter[] filters_ou = new QFilter[] { oversea_flag, oversea_flag2, qf_time };
@@ -122,10 +123,8 @@ public class aos_mkt_popppc_init extends AbstractTask {
 			params.put("p_ou_code", p_ou_code);
 			do_operate(params);
 		}
-
 		// 生成销售加回数据
-		Boolean CopyFlag = aos_mkt_pop_common.GetCopyFlag("PPC_ADD", week);
-		if (CopyFlag)
+		if (aos_mkt_pop_common.GetCopyFlag("PPC_ADD", week))
 			aos_mkt_popadds_init.Run();
 	}
 
@@ -159,15 +158,25 @@ public class aos_mkt_popppc_init extends AbstractTask {
 					.deserialize(serialize_ppcyestSerial);
 			byte[] serialize_DailyPrice = cache.getByteValue("mkt_dailyprice"); // Amazon每日价格
 			HashMap<String, Object> DailyPrice = SerializationUtils.deserialize(serialize_DailyPrice);
+
+
+			byte[] serialize_skurpt3 = cache.getByteValue("mkt_skurpt3"); // SKU报告3日
+			HashMap<String, Map<String, Object>> SkuRpt3 = SerializationUtils.deserialize(serialize_skurpt3);
+
 			byte[] serialize_skurpt = cache.getByteValue("mkt_skurpt"); // SKU报告7日
 			HashMap<String, Map<String, Object>> SkuRpt = SerializationUtils.deserialize(serialize_skurpt);
 			byte[] serialize_skurpt14 = cache.getByteValue("mkt_skurpt14"); // SKU报告14日
 			HashMap<String, Map<String, Object>> SkuRpt14 = SerializationUtils.deserialize(serialize_skurpt14);
 			byte[] serialize_adprice = cache.getByteValue("mkt_adprice"); // 建议价格
 			HashMap<String, Map<String, Object>> AdPrice = SerializationUtils.deserialize(serialize_adprice);
-			byte[] serialize_skurptSerial14 = cache.getByteValue("mkt_skurptSerial14"); // SKU报告系列7日
+
+			byte[] serialize_skurptSerial14 = cache.getByteValue("mkt_skurptSerial14"); // SKU报告系列14日
 			HashMap<String, Map<String, Object>> SkuRpt_Serial14 = SerializationUtils
 					.deserialize(serialize_skurptSerial14);
+			byte[] serialize_skurptSerial7 = cache.getByteValue("mkt_skurptSerial7"); // SKU报告系列7日
+			HashMap<String, Map<String, Object>> SkuRpt_Serial7 = SerializationUtils
+					.deserialize(serialize_skurptSerial7);
+
 			byte[] serialize_skurpt3Serial = cache.getByteValue("mkt_skurpt3Serial"); // SKU报告系列近3日
 			HashMap<String, Map<String, Map<String, Object>>> SkuRpt3Serial = SerializationUtils
 					.deserialize(serialize_skurpt3Serial);
@@ -1122,8 +1131,8 @@ public class aos_mkt_popppc_init extends AbstractTask {
 				// =====结束是否新系列新组判断=====
 
 				// =====Start 出价&预算 参数=====
-				Map<String, Object> SkuRptMap = SkuRpt14.get(org_id + "~" + item_id);// Sku报告14日 原为7日
-				Map<String, Object> SkuRptMap3 = SkuRpt.get(org_id + "~" + item_id);// Sku报告7日 原为3日
+				Map<String, Object> SkuRptMap = SkuRpt.get(org_id + "~" + item_id);// 原为7日
+				Map<String, Object> SkuRptMap3 = SkuRpt3.get(org_id + "~" + item_id);// 原为3日
 				Map<String, Object> PpcYester_Map = PpcYester.get(p_org_id + "~" + item_id);// 默认昨日数据
 				Map<String, Object> PpcYesterSerial_Map = PpcYesterSerial.get(p_org_id + "~" + aos_productno);
 
@@ -1348,7 +1357,8 @@ public class aos_mkt_popppc_init extends AbstractTask {
 
 				BigDecimal Roi7Days_Serial = BigDecimal.ZERO;// 7天ROI 系列维度
 				Map<String, Object> PpcYesterSerial_Map = PpcYesterSerial.get(p_org_id + "~" + aos_productno);
-				Map<String, Object> SkuRptMap_Serial = SkuRpt_Serial14.get(org_id + "~" + aos_productno);// Sku报告
+				Map<String, Object> SkuRptMap_Serial = SkuRpt_Serial7.get(org_id + "~" + aos_productno);// Sku报告
+
 				if (SkuRptMap_Serial != null
 						&& ((BigDecimal) SkuRptMap_Serial.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0)
 					Roi7Days_Serial = ((BigDecimal) SkuRptMap_Serial.get("aos_total_sales"))
