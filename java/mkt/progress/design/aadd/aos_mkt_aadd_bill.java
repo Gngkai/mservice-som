@@ -310,6 +310,7 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
             dy_main.set("aos_status", "新品对比模块录入");
             dy_main.set("aos_user", aos_user);
             submitForModel(dy_main);
+            FndHistory.Create(dy_main, "提交", "新品对比模块录入");
         }
 
         // 发送消息
@@ -1019,6 +1020,7 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
                 Object id = result.getSuccessPkIds().get(0);
                 DynamicObject dy_main = BusinessDataServiceHelper.loadSingle(id, "aos_mkt_aadd");
                 submitForModel(dy_main);
+                FndHistory.Create(dy_main, "提交", "新品对比模块录入");
                 SaveServiceHelper.save(new DynamicObject[]{dy_main});
             }
         }
