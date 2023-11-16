@@ -21,6 +21,7 @@ import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.dataentity.entity.LocaleString;
 import kd.bos.entity.datamodel.events.PropertyChangedArgs;
+import kd.bos.entity.operate.result.OperationResult;
 import kd.bos.form.ClientProperties;
 import kd.bos.form.control.EntryGrid;
 import kd.bos.form.control.Image;
@@ -308,6 +309,8 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
         else {
             dy_main.set("aos_status", "新品对比模块录入");
             dy_main.set("aos_user", aos_user);
+            submitForModel(dy_main);
+            FndHistory.Create(dy_main, "提交", "新品对比模块录入");
         }
 
         // 发送消息
@@ -1008,7 +1011,18 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
         DynamicObject aos_entryentity = aos_entryentityS.addNew();
         aos_entryentity.set("aos_itemid", aos_itemid);
 
-        OperationServiceHelper.executeOperate("save", "aos_mkt_aadd", new DynamicObject[]{aosMktAadd}, OperateOption.create());
+        OperationResult result = OperationServiceHelper.executeOperate("save", "aos_mkt_aadd", new DynamicObject[]{aosMktAadd}, OperateOption.create());
+        //2023-11-16 gk 单据到达新品确认节点后立马提交
+        if (result.isSuccess()){
+            String status = aosMktAadd.getString("aos_status");
+            if (FndGlobal.IsNotNull(status) && status.equals("新品对比模块录入")){
+                Object id = result.getSuccessPkIds().get(0);
+                DynamicObject dy_main = BusinessDataServiceHelper.loadSingle(id, "aos_mkt_aadd");
+                submitForModel(dy_main);
+                FndHistory.Create(dy_main, "提交", "新品对比模块录入");
+                SaveServiceHelper.save(new DynamicObject[]{dy_main});
+            }
+        }
     }
 
     private static Boolean queryItemExist(DynamicObject aosItemid, String ou) {
