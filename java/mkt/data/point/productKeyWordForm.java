@@ -101,6 +101,7 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
                 setUpACategory();
                 this.getView().showSuccessNotification("分类计算成功");
             }catch (FndError fndError){
+                fndError.printStackTrace();
                 this.getView().showTipNotification(fndError.getErrorMessage());
             }
         }
@@ -844,7 +845,8 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
             DynamicObject dy_row = entityRows.get(index);
             String correlate = dy_row.getLocaleString("aos_correlate").getLocaleValue_zh_CN();
             if (FndGlobal.IsNull(correlate)) {
-                throw new FndError("第 "+(index+1)+"  相关性为空，请先填写");
+                String seq = dy_row.getString("seq");
+                throw new FndError("第 "+seq+"  相关性为空，请先填写");
             }
             if (correlate.contains("高")) {
                 relevance = "高相关";
