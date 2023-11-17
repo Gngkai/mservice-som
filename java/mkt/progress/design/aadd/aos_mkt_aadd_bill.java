@@ -182,6 +182,9 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 
         dy_main.set("aos_status", "已完成");
         dy_main.set("aos_user", system);
+
+        dy_main.set("aos_salesub_date", new Date());
+
         // 发送消息
         String messageId = aos_requireby.toString();
         MKTCom.SendGlobalMessage(messageId, "aos_mkt_aadd", ReqFId, aosBillNo, "高级A+需求单-已完成");
@@ -211,6 +214,7 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
             dy_main.set("aos_status", "已完成");
         } else {
             dy_main.set("aos_status", "销售上线");
+            dy_main.set("aos_salerece_date", new Date());
             dy_main.set("aos_user", aos_user);
         }
         // 发送消息
@@ -313,6 +317,7 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
             FndHistory.Create(dy_main, "提交", "新品对比模块录入");
         }
 
+        dy_main.set("aos_design_date",new Date());
         // 发送消息
         String messageId = aos_user.toString();
         MKTCom.SendGlobalMessage(messageId, "aos_mkt_aadd", ReqFId, aosBillNo, "高级A+需求单-新品对比模块录入");
@@ -884,7 +889,8 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
             throw fndError;
         }
 
-        aosMktAadd.set("aos_osconfirm", aosMktProgOrgUser.get("aos_oseditor"));
+//        aosMktAadd.set("aos_osconfirm", aosMktProgOrgUser.get("aos_oseditor"));
+
         aosMktAadd.set("aos_oueditor", aosMktProgOrgUser.get("aos_oueditor"));
         aosMktAadd.set("aos_monitor", aosMktProgOrgUser.get("aos_02hq"));
         aosMktAadd.set("aos_design", sourceBill.get("aos_design"));
