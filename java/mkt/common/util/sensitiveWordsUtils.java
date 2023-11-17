@@ -164,6 +164,8 @@ public class sensitiveWordsUtils {
             JSONObject  caResult = calibrate(sensitiveWords.getJSONArray("CA"), contentArrays);
             JSONObject  usResult = calibrate(sensitiveWords.getJSONArray("US"), contentArrays);
 
+            result.put("data",new JSONArray());
+
             //记录已经校验出来的敏感词
             List<String> fillWords = new ArrayList<>();
             if (ukResult.getBoolean("state")) {
