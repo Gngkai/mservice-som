@@ -758,10 +758,23 @@ public class EventRule {
                 getItemPlatStock(dataType,rule,result);
                 break;
             case "ownWarehouse":
+                //非平台仓
                 getItemNoPlatStock(dataType,rule,result);
                 break;
             case "actProfit":
+                //活动毛利率
                 getActProfit(dataType,result);
+                break;
+            case "festive":
+                //执行关于节日的公式
+                getItemFestive(dataType,rule,result);
+                break;
+            case "brands":
+                //品牌
+                break;
+            case "platformSalDay":
+                //平台仓可售天数
+
                 break;
         }
         return result;
@@ -2061,5 +2074,32 @@ public class EventRule {
             results.put(itemFid,value);
         }
         pastSale.put(day,results);
+    }
+
+    /**
+     * 执行关于节日属性的公式
+     * @param key   参数名
+     * @param rule  公式
+     * @param result    记录执行结果
+     */
+    private void getItemFestive(String key,String rule,Map<String,Boolean> result){
+        //获取所有的节日属性
+        DynamicObjectCollection festRulst = QueryServiceHelper.query("aos_scm_fest_attr", "number,name", null);
+        //记录节日属性的 num to name
+        Map<String,String> festNum = new HashMap<>(festRulst.size());
+        for (DynamicObject row : festRulst) {
+            festNum.put(row.getString("number"),row.getString("name"));
+        }
+        Map<String,Object> paramars = new HashMap<>();
+        for (DynamicObject itemInfoe : itemInfoes)
+        {
+            paramars.clear();
+            String itemid = itemInfoe.getString("id");
+            String festival = itemInfoe.getString("festival");
+            Object value = festNum.getOrDefault(festival,"");
+            fndLog.add(itemInfoe.getString("number")+"  "+rowRuleName.get(key)+" : "+value);
+            paramars.put(key,value);
+            result.put(itemid,Boolean.parseBoolean(FormulaEngine.execExcelFormula(rule,paramars).toString()));
+        }
     }
 }
