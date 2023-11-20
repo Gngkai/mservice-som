@@ -32,6 +32,7 @@ import mkt.act.rule.de.DotdDE;
 import mkt.act.rule.de.LDAnd7DDDE;
 import mkt.act.rule.de.PocoDE;
 import mkt.act.rule.de.WayfairDE;
+import mkt.act.rule.detailImprot.EventRule;
 import mkt.act.rule.dotd.GenerateData;
 import mkt.act.rule.es.*;
 import mkt.act.rule.service.ActPlanService;

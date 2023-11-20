@@ -1,0 +1,167 @@
+package mkt.act.rule.detailImprot;
+
+import common.fnd.FndGlobal;
+import common.fnd.FndLog;
+import common.sal.util.QFBuilder;
+import kd.bos.dataentity.entity.DynamicObject;
+import kd.bos.dataentity.entity.DynamicObjectCollection;
+import kd.bos.formula.FormulaEngine;
+import kd.bos.orm.query.QFilter;
+import kd.bos.servicehelper.QueryServiceHelper;
+
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.*;
+
+/**
+ * @author: GK
+ * @create: 2023-11-20 16:56
+ * @Description: 活动库解析函数的工具类，即记录每一行公式的执行结果
+ */
+public class FormulaResults {
+    //国别
+    DynamicObject orgEntity;
+    //国别下所有的物料，方便后续筛选
+    List<DynamicObject> itemInfoes;
+    //日志
+    FndLog fndLog;
+    //行下拉项
+    Map<String,String> rowRuleName;
+    FormulaResults(DynamicObject orgEntity, List<DynamicObject> itemInfoes, FndLog fndLog, Map<String,String> rowRuleName){
+        this.fndLog = fndLog;
+        this.itemInfoes = itemInfoes;
+        this.orgEntity = orgEntity;
+        this.rowRuleName = rowRuleName;
+    }
+
+    /**
+     * 执行公式
+     * @param key       属性名
+     * @param rule      公式
+     * @param result    记录结果
+     */
+    public void getFormulaResult (String key,String rule,Map<String,Boolean> result){
+        Map<String,Object> paramars = new HashMap<>();
+        for (DynamicObject itemInfoe : itemInfoes)
+        {
+            paramars.clear();
+            String itemid = itemInfoe.getString("id");
+            Object value = itemInfoe.getString("aos_contrybrand");
+            fndLog.add(itemInfoe.getString("number")+"  "+rowRuleName.get(key)+" : "+value);
+            paramars.put(key,value);
+            result.put(itemid,Boolean.parseBoolean(FormulaEngine.execExcelFormula(rule,paramars).toString()));
+        }
+    }
+
+    /**
+     * 执行关表达式
+     * @param key      参数名
+     * @param rule     公式
+     * @param result   结果
+     */
+    public void getFormulaResult(String key,String rule,Map<String,Boolean> result,Map<String,Integer> itemSotck){
+        //获取海外库存
+
+        //执行公式的参数
+        Map<String,Object> paramars = new HashMap<>();
+        //遍历物料
+        for (DynamicObject itemInfoe : itemInfoes)
+        {
+            paramars.clear();
+            String itemid = itemInfoe.getString("id");
+            //获取该物料的库存
+            Object value = itemSotck.getOrDefault(Long.parseLong(itemid),0);
+            //添加日志
+            fndLog.add(itemInfoe.getString("number")+"  "+rowRuleName.get(key)+" : "+value);
+            paramars.put(key,value);
+            //执行公式并且将执行结果添加到返回结果里面
+            result.put(itemid,Boolean.parseBoolean(FormulaEngine.execExcelFormula(rule,paramars).toString()));
+        }
+    }
+
+    /**
+     * 执行关于节日属性的公式
+     * @param key   参数名
+     * @param rule  公式
+     * @param result    记录执行结果
+     */
+    public void getItemFestive(String key,String rule,Map<String,Boolean> result){
+        //获取所有的节日属性
+        DynamicObjectCollection festRulst = QueryServiceHelper.query("aos_scm_fest_attr", "number,name", null);
+        //记录节日属性的 num to name
+        Map<String,String> festNum = new HashMap<>(festRulst.size());
+        for (DynamicObject row : festRulst) {
+            festNum.put(row.getString("number"),row.getString("name"));
+        }
+        Map<String,Object> paramars = new HashMap<>();
+        for (DynamicObject itemInfoe : itemInfoes)
+        {
+            paramars.clear();
+            String itemid = itemInfoe.getString("id");
+            String festival = itemInfoe.getString("festival");
+            Object value = festNum.getOrDefault(festival,"");
+            fndLog.add(itemInfoe.getString("number")+"  "+rowRuleName.get(key)+" : "+value);
+            paramars.put(key,value);
+            result.put(itemid,Boolean.parseBoolean(FormulaEngine.execExcelFormula(rule,paramars).toString()));
+        }
+    }
+
+    /**
+     * 执行关于非平台仓库 公式
+     * @param key      参数名
+     * @param rule     公式
+     * @param result   结果
+     */
+    public void getItemNoPlatStock(String key,String rule,Map<String,Boolean> result,Map<Long,Integer> itemNoPlatStock){
+        Map<String,Object> paramars = new HashMap<>();
+        for (DynamicObject itemInfoe : itemInfoes)
+        {
+            paramars.clear();
+            String itemid = itemInfoe.getString("id");
+            Object value = itemNoPlatStock.getOrDefault(Long.parseLong(itemid),0);
+            fndLog.add(itemInfoe.getString("number")+"  "+rowRuleName.get(key)+" : "+value);
+            paramars.put(key,value);
+            result.put(itemid,Boolean.parseBoolean(FormulaEngine.execExcelFormula(rule,paramars).toString()));
+        }
+    }
+
+
+
+    /**
+     * 执行关于物料状态的表达式
+     * @param key      参数名
+     * @param rule     公式
+     * @param result   结果
+     */
+    public void getItemStatus(String key,String rule,Map<String,Boolean> result,Map<String,String> itemStatus){
+        Map<String,Object> paramars = new HashMap<>();
+        for (DynamicObject itemInfoe : itemInfoes)
+        {
+            paramars.clear();
+            String itemid = itemInfoe.getString("id");
+            Object value = itemStatus.getOrDefault(itemid,"0");
+            fndLog.add(itemInfoe.getString("number")+"  "+rowRuleName.get(key)+" : "+value);
+            paramars.put(key,value);
+            result.put(itemid,Boolean.parseBoolean(FormulaEngine.execExcelFormula(rule,paramars).toString()));
+        }
+    }
+
+    /**
+     * 执行关于物料季节属性
+     * @param key      参数名
+     * @param rule     公式
+     * @param result   结果
+     */
+    public void getItemSeason(String key,String rule,Map<String,Boolean> result,Map<String,String> itemSeason){
+        Map<String,Object> paramars = new HashMap<>();
+        for (DynamicObject itemInfoe : itemInfoes)
+        {
+            paramars.clear();
+            String itemid = itemInfoe.getString("id");
+            Object value = itemSeason.getOrDefault(itemid,"0");
+            fndLog.add(itemInfoe.getString("number")+"  "+rowRuleName.get(key)+" : "+value);
+            paramars.put(key,value);
+            result.put(itemid,Boolean.parseBoolean(FormulaEngine.execExcelFormula(rule,paramars).toString()));
+        }
+    }
+}

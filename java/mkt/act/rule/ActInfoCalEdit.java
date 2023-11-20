@@ -8,10 +8,9 @@ import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.entity.datamodel.events.ImportDataEventArgs;
 import kd.bos.form.control.events.ItemClickEvent;
-import kd.bos.logging.Log;
-import kd.bos.logging.LogFactory;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.threads.ThreadPools;
+import mkt.act.rule.detailImprot.EventRule;
 import mkt.act.rule.service.ActPlanService;
 import mkt.act.rule.service.impl.ActPlanServiceImpl;
 
@@ -26,7 +25,6 @@ import java.time.ZoneId;
 import java.util.*;
 
 import common.fnd.AosomLog;
-import sal.act.ActShopProfit.aos_sal_act_from;
 
 /**
  * 活动信息计算
