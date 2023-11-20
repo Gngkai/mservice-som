@@ -23,7 +23,7 @@ public class aos_mkt_aadd_auto extends AbstractTask {
 	private void do_operate() {
 		Date today = new Date();
 		DynamicObject[] aosMktAaddS = BusinessDataServiceHelper.load("aos_mkt_aadd",
-				"aos_status,aos_osdate,aos_org,aos_oueditor,aos_design",
+				"aos_status,aos_osdate,aos_org,aos_oueditor,aos_design,aos_user",
 				new QFilter("aos_status", QCP.equals, "海外确认").toArray());
 		for (DynamicObject aosMktAadd : aosMktAaddS) {
 			Date aos_osdate = aosMktAadd.getDate("aos_osdate");
