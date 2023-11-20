@@ -891,7 +891,7 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
             throw fndError;
         }
 
-//        aosMktAadd.set("aos_osconfirm", aosMktProgOrgUser.get("aos_oseditor"));
+        aosMktAadd.set("aos_osconfirm", sourceBill.get("aos_osconfirm"));
 
         aosMktAadd.set("aos_oueditor", aosMktProgOrgUser.get("aos_oueditor"));
         aosMktAadd.set("aos_monitor", aosMktProgOrgUser.get("aos_02hq"));
@@ -919,9 +919,9 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
                 aosMktAadd.set("aos_min", true);// 小语种同步主单
                 aosMktAadd.set("aos_status", "海外确认");
                 aosMktAadd.set("aos_osdate", new Date());
-                Object aos_user = aosMktProgOrgUser.get("aos_oueditor");
                 aosMktAadd.set("aos_user", aosMktProgOrgUser.get("aos_oseditor"));
-                aosMktAadd.set("aos_oueditor", aos_user);
+                aosMktAadd.set("aos_oseditor", aosMktProgOrgUser.get("aos_oseditor"));
+                aosMktAadd.set("aos_oueditor", aosMktProgOrgUser.get("aos_oueditor"));
             } else if ("NORMAL".equals(type)) {
                 aosMktAadd.set("aos_status", "设计制作");
                 aosMktAadd.set("aos_user", sourceBill.get("aos_design"));
