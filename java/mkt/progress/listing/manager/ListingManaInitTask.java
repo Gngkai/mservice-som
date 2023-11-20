@@ -199,6 +199,14 @@ public class ListingManaInitTask extends AbstractTask {
         listManaDyn.set("aos_picture", itemPictureMap.get(itemId));
         listManaDyn.set("aos_amurl", itemAmUrlMap.get(orgId + "~" + itemId));
 
+        if (aaddMap.contains(orgId + "~" + itemId)) {
+            listManaDyn.set("aos_aadd", true);
+        }
+        if (design3DSet.contains(itemId)) {
+            listManaDyn.set("aos_3d", true);
+        }
+
+
         Map<String, String> photoInfo = photoMap.get(itemId);
         if (FndGlobal.IsNotNull(photoInfo)) {
             listManaDyn.set("aos_veditem", photoInfo.get("aos_veditem"));
