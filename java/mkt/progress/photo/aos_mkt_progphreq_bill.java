@@ -1655,6 +1655,20 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 		this.getView().invokeOperation("save");
 		this.getView().invokeOperation("refresh");
 
+		// 获取当前单据国别
+		Object aos_orgid = this.getModel().getValue("aos_orgid");
+		if (FndGlobal.IsNotNull(aos_orgid)){
+			String aosOrgNum = ((DynamicObject)aos_orgid).getString("number");
+			DynamicObjectCollection aos_entryentity4S = this.getModel().getEntryEntity("aos_entryentity4");
+			for (DynamicObject aos_entryentity4:aos_entryentity4S) {
+				if (aos_entryentity4.getString("aos_orgshort").equals(aosOrgNum)){
+					aos_entryentity4.set("aos_salesub_date",new Date());
+				}
+			}
+		}
+
+
+
 		// 判断是否为最后一个完成
 		Object aos_parentid = this.getModel().getValue("aos_parentid");
 		QFilter filter_id = new QFilter("aos_parentid", "=", aos_parentid);
@@ -1667,6 +1681,18 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			aos_mkt_photoreq = BusinessDataServiceHelper.loadSingle(aos_parentid, "aos_mkt_photoreq");
 			aos_mkt_photoreq.set("aos_status", "已完成");
 			aos_mkt_photoreq.set("aos_user", system);
+
+			if (FndGlobal.IsNotNull(aos_orgid)) {
+				String aosOrgNum = ((DynamicObject) aos_orgid).getString("number");
+				DynamicObjectCollection aos_entryentity4S = aos_mkt_photoreq
+						.getDynamicObjectCollection("aos_entryentity4");
+				for (DynamicObject aos_entryentity4:aos_entryentity4S) {
+					if (aos_entryentity4.getString("aos_orgshort").equals(aosOrgNum)){
+						aos_entryentity4.set("aos_salesub_date",new Date());
+					}
+				}
+			}
+
 			OperationServiceHelper.executeOperate("save", "aos_mkt_photoreq", new DynamicObject[] { aos_mkt_photoreq },
 					OperateOption.create());
 			// 回写拍照任务清单
@@ -2749,12 +2775,17 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
 			aos_entryentity4.set("aos_s3address2", aos_entryentityOri4.get("aos_s3address2"));
 
 
+			aos_entryentityOri4.set("aos_salerece_date", new Date());
+			aos_entryentity4.set("aos_salerece_date", new Date());
+
 //			aos_entryentity4.set("aos_vediocate", aos_entryentityOri4.get("aos_vediocate"));
 //			aos_entryentity4.set("aos_vediosku", aos_entryentityOri4.get("aos_vediosku"));
 
 		}
 
 		OperationServiceHelper.executeOperate("save", "aos_mkt_photoreq", new DynamicObject[] { AosMktPhotoReq },
+				OperateOption.create());
+		OperationServiceHelper.executeOperate("save", "aos_mkt_photoreq", new DynamicObject[] { aos_mkt_photoreq },
 				OperateOption.create());
 
 	}
