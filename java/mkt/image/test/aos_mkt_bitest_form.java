@@ -11,6 +11,7 @@ import kd.bos.form.plugin.AbstractFormPlugin;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.QueryServiceHelper;
 import mkt.progress.design.aadd.aos_mkt_aadd_init;
+import mkt.progress.listing.manager.ListingManaInitTask;
 
 public class aos_mkt_bitest_form extends AbstractFormPlugin {
 
@@ -31,7 +32,7 @@ public class aos_mkt_bitest_form extends AbstractFormPlugin {
 	}
 
 	private void aos_test() {
-		aos_mkt_aadd_init.do_operate();
+		ListingManaInitTask.process();
 	}
 
 
