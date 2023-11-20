@@ -434,6 +434,7 @@ public class EventRule {
         selectFields.add("aos_contryentry.aos_is_saleout aos_is_saleout");
         selectFields.add("aos_contryentry.aos_festivalseting.number festival");
         selectFields.add("aos_contryentry.aos_seasonseting.aos_seasonal_pro.number seasonpro");
+        selectFields.add("aos_contryentry.aos_contrybrand.name aos_contrybrand");
         QFilter filter = new QFilter("aos_contryentry.aos_nationality","=",orgEntity.getPkValue());
         if (cateItem.size()>0)
             filter.and(new QFilter("id",QFilter.in,cateItem.keySet()));
@@ -771,6 +772,7 @@ public class EventRule {
                 break;
             case "brands":
                 //品牌
+                getItemBrand(dataType,rule,result);
                 break;
             case "platformSalDay":
                 //平台仓可售天数
@@ -2097,6 +2099,25 @@ public class EventRule {
             String itemid = itemInfoe.getString("id");
             String festival = itemInfoe.getString("festival");
             Object value = festNum.getOrDefault(festival,"");
+            fndLog.add(itemInfoe.getString("number")+"  "+rowRuleName.get(key)+" : "+value);
+            paramars.put(key,value);
+            result.put(itemid,Boolean.parseBoolean(FormulaEngine.execExcelFormula(rule,paramars).toString()));
+        }
+    }
+
+    /**
+     * 执行关于品牌的公式
+     * @param key       属性名
+     * @param rule      公式
+     * @param result    记录结果
+     */
+    private void getItemBrand(String key,String rule,Map<String,Boolean> result){
+        Map<String,Object> paramars = new HashMap<>();
+        for (DynamicObject itemInfoe : itemInfoes)
+        {
+            paramars.clear();
+            String itemid = itemInfoe.getString("id");
+            Object value = itemInfoe.getString("aos_contrybrand");
             fndLog.add(itemInfoe.getString("number")+"  "+rowRuleName.get(key)+" : "+value);
             paramars.put(key,value);
             result.put(itemid,Boolean.parseBoolean(FormulaEngine.execExcelFormula(rule,paramars).toString()));
