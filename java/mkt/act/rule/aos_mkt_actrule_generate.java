@@ -10,8 +10,12 @@ import common.sal.util.SalUtil;
 import kd.bos.algo.DataSet;
 import kd.bos.algo.Row;
 import kd.bos.bill.AbstractBillPlugIn;
+import kd.bos.bill.BillShowParameter;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
+import kd.bos.form.FormShowParameter;
+import kd.bos.form.ShowType;
+import kd.bos.form.StyleCss;
 import kd.bos.form.control.EntryGrid;
 import kd.bos.form.control.events.ContainerOnShowEvent;
 import kd.bos.form.control.events.ContainerOnShowListener;
@@ -85,22 +89,56 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 				aos_generate();
 			else if (Control.equals("aos_detailimp")) {
 				genActPlan();// 明细导入
-			} else if ("aos_batchquery".equals(Control)) {
+			}
+			else if ("aos_batchquery".equals(Control)) {
 				aos_batchquery();
-			} else if ("aos_batchclose".equals(Control)) {
+			}
+			else if ("aos_batchclose".equals(Control)) {
 				aos_batchclose();
-			} else if ("aos_batchopen".equals(Control)) {
+			}
+			else if ("aos_batchopen".equals(Control)) {
 				aos_batchopen();
-			} else if ("aos_qtycal".equals(Control)) {
+			}
+			else if ("aos_qtycal".equals(Control)) {
 				// 从新批量设置活动数量
 				batchSetActQty();
 			}
+			else if ("aos_open".equals(Control)){
+				//打开活动库界面修改规则集
+				openActForm();
+			}
+
 		} catch (FndError fndMessage) {
 			this.getView().showTipNotification(fndMessage.getErrorMessage());
 		} catch (Exception e) {
 			this.getView().showErrorNotification(SalUtil.getExceptionStr(e));
 		}
 
+	}
+
+	/**
+	 * 打开活动库界面
+	 */
+	private void openActForm(){
+		QFBuilder builder = new QFBuilder();
+		DynamicObject entity = getModel().getDataEntity();
+		builder.add("aos_org","=",entity.getDynamicObject("aos_nationality").getPkValue());
+		builder.add("aos_channel","=",entity.getDynamicObject("aos_channel").getPkValue());
+		builder.add("aos_shop","=",entity.getDynamicObject("aos_shop").getPkValue());
+		builder.add("aos_acttype","=",entity.getDynamicObject("aos_acttype").getPkValue());
+		DynamicObject dy_actType = QueryServiceHelper.queryOne("aos_sal_act_type_p", "id", builder.toArray());
+		if (dy_actType == null)
+			return;
+		//创建弹出单据页面对象，并赋值
+		BillShowParameter billShowParameter = FndGlobal.CraeteBillForm(this,"aos_sal_act_type_p","aos_sal_act",new HashMap<>());
+		//设置弹出子单据页面的样式，高600宽800
+		StyleCss inlineStyleCss = new StyleCss();
+		inlineStyleCss.setHeight("800");
+		inlineStyleCss.setWidth("1500");
+		billShowParameter.getOpenStyle().setInlineStyleCss(inlineStyleCss);
+		billShowParameter.setPkId(dy_actType.get("id"));
+		//弹窗子页面和父页面绑定
+		this.getView().showForm(billShowParameter);
 	}
 
 	/** 批量打开 **/

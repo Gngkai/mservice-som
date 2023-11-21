@@ -1027,8 +1027,14 @@ public class ActUtil {
 		QFilter filter_item = new QFilter("aos_item_code", QFilter.in, list_itemid);
 		QFilter filter_asin = new QFilter("aos_asin", QFilter.not_equals, "");
 		QFilter[] qfs = new QFilter[] { filter_org, filter_shop, filter_item, filter_asin };
-		return QueryServiceHelper.query("aos_sync_invprice", "aos_item_code,aos_asin", qfs).stream().collect(Collectors
+		//每日价格中的数据
+		Map<String, String> map_inv = QueryServiceHelper.query("aos_sync_invprice", "aos_item_code,aos_asin", qfs).stream().collect(Collectors
 				.toMap(dy -> dy.getString("aos_item_code"), dy -> dy.getString("aos_asin"), (key1, key2) -> key1));
+
+		Map<String,String> result = new HashMap<>();
+		return result;
+		//查找店铺维护表中的Asin
+//		filter_org = new QFilter("aos_org","=" ,orgid)
 	}
 
 	/**

@@ -48,7 +48,7 @@ public class EventRule {
     private static final Log logger = LogFactory.getLog("mkt.act.rule.EventRule");
     //活动库单据
     private  DynamicObject typEntity;
-    private DynamicObject actPlanEntity;
+    private final DynamicObject actPlanEntity;
     //活动库每行规则的执行结果，key：project+seq,value: (item:result)
     private  Map<String,Map<String,Boolean>> rowResults;
     //国别
@@ -288,6 +288,7 @@ public class EventRule {
         for (DynamicObject info : filterItem) {
             list_filterItem.add(info.getString("id"));
         }
+        //
         Map<String, String> map_asin = ActUtil.queryOrgShopItemASIN(orgEntity.getPkValue(),shopid, list_filterItem);
 
         //店铺现价
@@ -457,9 +458,7 @@ public class EventRule {
         }
 
         //判断是否在店铺价格维护表中在线，不在线，剔除
-        QFilter priceFilter = new QFilter("aos_price",">","0");
-        QFilter orgFilter = new QFilter("aos_org","=",orgEntity.getPkValue());
-//       QFilter shopFilter = new QFilter("aos_shop","=",);
+        List<String> shopPriceItemList = getShopItem();
 
 
         DynamicObjectCollection dyc = itemDao.listItemObj(selectFields.toString(), filter, null);
@@ -505,6 +504,12 @@ public class EventRule {
                 continue;
             }
 
+            //不在店铺价格参数表中，剔除
+            if (!shopPriceItemList.contains(itemid)) {
+                logRow.add("不在店铺价格维护表中，剔除");
+                fndLog.add(logRow.toString());
+                continue;
+            }
 
             if (map_actProfit.containsKey(itemid) && map_actProfit.get(itemid) && !fillItem.contains(itemid)){
                 fillItem.add(itemid);
@@ -526,11 +531,21 @@ public class EventRule {
     /**
      * 获取在店铺价格维护表中在线 的物料
      */
-    private void getShopItem(){
+    private List<String> getShopItem(){
         //判断是否，不在线，剔除
-        QFilter priceFilter = new QFilter("aos_price",">","0");
-        QFilter orgFilter = new QFilter("aos_org","=",orgEntity.getPkValue());
-       QFilter shopFilter = new QFilter("aos_shop","=","");
+        QFBuilder builder = new QFBuilder();
+        builder.add("aos_price",">","0");
+        builder.add("aos_org","=",orgEntity.getPkValue());
+        //店铺
+        if (actPlanEntity.get("aos_shop")!=null) {
+            builder.add("aos_shop","=",actPlanEntity.getDynamicObject("aos_shop").getPkValue());
+        }
+        DynamicObjectCollection dyc = QueryServiceHelper.query("aos_mkt_shop_price", "aos_item", builder.toArray());
+        List<String> results = new ArrayList<>(dyc.size());
+        for (DynamicObject dy : dyc) {
+            results.add(dy.getString("aos_item"));
+        }
+        return results;
     }
 
 
@@ -741,7 +756,7 @@ public class EventRule {
             case "overseasStock":
                 //海外库存
                 setItemStock();
-                //formulaResults.getFormulaResult(dataType,rule,result,itemSotck);
+                formulaResults.getFormulaResultLong(dataType,rule,result,itemSotck);
                 break;
             case "saleDays":
                 //可售天数
@@ -751,12 +766,12 @@ public class EventRule {
             case "itemStatus":
                 //物料状态
                 setItemStatus();
-                formulaResults.getItemStatus(dataType,rule,result,itemStatus);
+                formulaResults.getFormulaResultStr(dataType,rule,result,itemStatus);
                 break;
             case "season":
                 //季节属性
                 setItemSeason();
-                formulaResults.getItemSeason(dataType,rule,result, itemSeason);
+                formulaResults.getFormulaResultStr(dataType,rule,result, itemSeason);
                 break;
             case "countyAverage":
                 //国别日均
@@ -764,27 +779,33 @@ public class EventRule {
                 break;
             case "activityDayInv":
                 //活动库存
-                getActInv(dataType,rule,result);
+                setActInv();
+                formulaResults.getFormulaResult(dataType,rule,result,itemActInv);
                 break;
             case "activityDay":
                 //活动日可售天数
-                getActSaleDay(dataType,rule,result);
+                setActSaleDay();
+                formulaResults.getFormulaResult(dataType,rule,result,itemActSalDay);
                 break;
             case "reviewScore":
                 //review 分数
-                getRewvieStars(dataType,rule,result);
+                setReview();
+                formulaResults.getFormulaResultBde(dataType,rule,result,reviewStars);
                 break;
             case "reviewNumber":
                 //review 个数
-                getRewvieNumber(dataType,rule,result);
+                setReview();
+                formulaResults.getFormulaResult(dataType,rule,result,reviewQty);
                 break;
             case "price":
                 //定价
-                getItemPrice(dataType,rule,result);
+                setItemPrice();
+                formulaResults.getFormulaResultBde(dataType,rule,result,itemPrice);
                 break;
             case "activityPrice":
                 //活动价格
-                getItemActPrice(dataType,rule,result);
+                setItemActPrice();
+                formulaResults.getFormulaResultBde(dataType,rule,result,itemActPrice);
                 break;
             case "hot":
                 //爆品
@@ -796,7 +817,8 @@ public class EventRule {
                 break;
             case "unsalType":
                 //滞销类型
-                getItemUnsale(dataType,rule,result);
+                setItemUnsale();
+                formulaResults.getFormulaResultStr(dataType,rule,result,itemUnsaleTyep);
                 break;
             case "weekUnsold":
                 //周滞销
@@ -813,7 +835,7 @@ public class EventRule {
             case "ownWarehouse":
                 //非平台仓
                 setItemNoPlatStock();
-                formulaResults.getItemNoPlatStock(dataType,rule,result,itemNoPlatStock);
+                formulaResults.getFormulaResultLong(dataType,rule,result,itemNoPlatStock);
                 break;
             case "actProfit":
                 //活动毛利率
@@ -829,7 +851,8 @@ public class EventRule {
                 break;
             case "platformSalDay":
                 //平台仓可售天数
-
+                setItemPlatSalDay();
+                formulaResults.getFormulaResultBde(dataType,rule,result,platSalDay);
                 break;
         }
         return result;
@@ -848,7 +871,6 @@ public class EventRule {
         //获取国别下的所有物料的海外库存
         itemSotck = stockDao.listItemOverSeaStock(orgEntity.getLong("id"));
     }
-
 
     private Map<String,Integer> itemSaleDay;
     /**
@@ -1056,25 +1078,6 @@ public class EventRule {
         }
 
     }
-    /**
-     * 执行关于国别库存
-     * @param key      参数名
-     * @param rule     公式
-     * @param result   结果
-     */
-    private void getActInv(String key,String rule,Map<String,Boolean> result){
-        setActInv();
-        Map<String,Object> paramars = new HashMap<>();
-        for (DynamicObject itemInfoe : itemInfoes)
-        {
-            paramars.clear();
-            String itemid = itemInfoe.getString("id");
-            Object value = itemActInv.getOrDefault(itemid,0);
-            fndLog.add(itemInfoe.getString("number")+"  "+rowRuleName.get(key)+" : "+value);
-            paramars.put(key,value);
-            result.put(itemid,Boolean.parseBoolean(FormulaEngine.execExcelFormula(rule,paramars).toString()));
-        }
-    }
 
     private Map<String,Integer> itemActSalDay;
     /**
@@ -1098,25 +1101,6 @@ public class EventRule {
             BigDecimal sale = itemAverageSale.getOrDefault(itemID, BigDecimal.ZERO);
             int day = service.calAvailableDays(orgEntity.getLong("id"), Long.parseLong(itemID), stock, sale, startdate);
             itemActSalDay.put(itemID,day);
-        }
-    }
-    /**
-     * 执行关于活动可售天数
-     * @param key      参数名
-     * @param rule     公式
-     * @param result   结果
-     */
-    private void getActSaleDay(String key,String rule,Map<String,Boolean> result){
-        setActSaleDay();
-        Map<String,Object> paramars = new HashMap<>();
-        for (DynamicObject itemInfoe : itemInfoes)
-        {
-            paramars.clear();
-            String itemid = itemInfoe.getString("id");
-            Object value = itemActSalDay.getOrDefault(itemid,0);
-            fndLog.add(itemInfoe.getString("number")+"  "+rowRuleName.get(key)+" : "+value);
-            paramars.put(key,value);
-            result.put(itemid,Boolean.parseBoolean(FormulaEngine.execExcelFormula(rule,paramars).toString()));
         }
     }
 
@@ -1147,45 +1131,6 @@ public class EventRule {
             reviewQty.put(itemid,qty);
         }
     }
-    /**
-     * 执行关于Review 分数
-     * @param key      参数名
-     * @param rule     公式
-     * @param result   结果
-     */
-    private void getRewvieStars(String key,String rule,Map<String,Boolean> result){
-       setReview();
-        Map<String,Object> paramars = new HashMap<>();
-        for (DynamicObject itemInfoe : itemInfoes)
-        {
-            paramars.clear();
-            String itemid = itemInfoe.getString("id");
-            Object value = reviewStars.getOrDefault(itemid,BigDecimal.ZERO);
-            fndLog.add(itemInfoe.getString("number")+"  "+rowRuleName.get(key)+" : "+value);
-            paramars.put(key,value);
-            result.put(itemid,Boolean.parseBoolean(FormulaEngine.execExcelFormula(rule,paramars).toString()));
-        }
-    }
-
-    /**
-     * 执行关于Review 个数
-     * @param key      参数名
-     * @param rule     公式
-     * @param result   结果
-     */
-    private void getRewvieNumber(String key,String rule,Map<String,Boolean> result){
-        setReview();
-        Map<String,Object> paramars = new HashMap<>();
-        for (DynamicObject itemInfoe : itemInfoes)
-        {
-            paramars.clear();
-            String itemid = itemInfoe.getString("id");
-            Object value = reviewQty.getOrDefault(itemid,0);
-            fndLog.add(itemInfoe.getString("number")+"  "+rowRuleName.get(key)+" : "+value);
-            paramars.put(key,value);
-            result.put(itemid,Boolean.parseBoolean(FormulaEngine.execExcelFormula(rule,paramars).toString()));
-        }
-    }
 
     private Map<String,BigDecimal> itemPrice;
     /**
@@ -1197,25 +1142,6 @@ public class EventRule {
         ItemPriceDao itemPriceDao = new ItemPriceDaoImpl();
         Object shopid = actPlanEntity.getDynamicObject("aos_shop").getPkValue();
         itemPrice = itemPriceDao.queryShopItemPrice(orgEntity.getPkValue(),shopid);
-    }
-    /**
-     * 执行关于定价 公式
-     * @param key      参数名
-     * @param rule     公式
-     * @param result   结果
-     */
-    private void getItemPrice(String key,String rule,Map<String,Boolean> result){
-        setItemPrice();
-        Map<String,Object> paramars = new HashMap<>();
-        for (DynamicObject itemInfoe : itemInfoes)
-        {
-            paramars.clear();
-            String itemid = itemInfoe.getString("id");
-            Object value = itemPrice.getOrDefault(itemid,BigDecimal.ZERO);
-            fndLog.add(itemInfoe.getString("number")+"  "+rowRuleName.get(key)+" : "+value);
-            paramars.put(key,value);
-            result.put(itemid,Boolean.parseBoolean(FormulaEngine.execExcelFormula(rule,paramars).toString()));
-        }
     }
 
     private Map<String,BigDecimal> itemActPrice;
@@ -1259,25 +1185,6 @@ public class EventRule {
             itemActPrice.put(itemid,price);
         }
     }
-    /**
-     * 执行关于活动价格 公式
-     * @param key      参数名
-     * @param rule     公式
-     * @param result   结果
-     */
-    private void getItemActPrice(String key,String rule,Map<String,Boolean> result){
-        setItemActPrice();
-        Map<String,Object> paramars = new HashMap<>();
-        for (DynamicObject itemInfoe : itemInfoes)
-        {
-            paramars.clear();
-            String itemid = itemInfoe.getString("id");
-            Object value = itemActPrice.getOrDefault(itemid,BigDecimal.ZERO);
-            fndLog.add(itemInfoe.getString("number")+"  "+rowRuleName.get(key)+" : "+value);
-            paramars.put(key,value);
-            result.put(itemid,Boolean.parseBoolean(FormulaEngine.execExcelFormula(rule,paramars).toString()));
-        }
-    }
 
     /**
      * 执行关于爆品 公式
@@ -1307,7 +1214,6 @@ public class EventRule {
     }
 
     private Map<String,Map<Long,Integer>> itemShopSale;
-
     /**
      * 计算店铺销量
      * @param day 天数
@@ -1334,6 +1240,7 @@ public class EventRule {
         Map<Long, Integer> result = orderLineDao.listItemSales(orgID, null, shopId, start, end);
         itemShopSale.put(String.valueOf(day),result);
     }
+
     /**
      * 执行关于店铺历史销量 公式
      * @param key      参数名
@@ -1376,25 +1283,6 @@ public class EventRule {
         itemUnsaleTyep = new HashMap<>(results.size());
         for (DynamicObject result : results) {
             itemUnsaleTyep.put(result.getString("aos_itemid"),typeValue.get(result.getString("aos_type")));
-        }
-    }
-    /**
-     * 执行关于物料滞销 公式
-     * @param key      参数名
-     * @param rule     公式
-     * @param result   结果
-     */
-    private void getItemUnsale(String key,String rule,Map<String,Boolean> result){
-        setItemUnsale();
-        Map<String,Object> paramars = new HashMap<>();
-        for (DynamicObject itemInfoe : itemInfoes)
-        {
-            paramars.clear();
-            String itemid = itemInfoe.getString("id");
-            Object value = itemUnsaleTyep.getOrDefault(itemid,"0");
-            fndLog.add(itemInfoe.getString("number")+"  "+rowRuleName.get(key)+" : "+value);
-            paramars.put(key,value);
-            result.put(itemid,Boolean.parseBoolean(FormulaEngine.execExcelFormula(rule,paramars).toString()));
         }
     }
 
@@ -2030,6 +1918,45 @@ public class EventRule {
             results.put(itemFid,value);
         }
         pastSale.put(day,results);
+    }
+
+    private Map<String,BigDecimal> platSalDay;
+    /**
+     * 设置平台仓可售天数
+     */
+    private void setItemPlatSalDay (){
+        if (platSalDay!=null) {
+            return;
+        }
+        platSalDay = new HashMap<>();
+
+        //获取7天店铺销量
+        setItemShopSale(7);
+        Map<Long, Integer> shopSalQty = itemShopSale.get(7);
+        //获取平台仓库存和非平台仓库存
+        setItemPlatStock();
+        setItemNoPlatStock();
+        for (DynamicObject itemInfoe : itemInfoes) {
+            long itemID = Long.parseLong(itemInfoe.getString("id"));
+            //库存
+            int sock = itemPlatStock.getOrDefault(itemID,0);
+            if (sock ==0){
+                sock = itemNoPlatStock.getOrDefault(itemID,0);
+            }
+            //销量
+            int salQty = shopSalQty.getOrDefault(itemID, 0);
+            if (sock == 0){
+                platSalDay.put(String.valueOf(itemID),new BigDecimal(0));
+            }
+            else {
+                if (salQty ==0 ){
+                    platSalDay.put(String.valueOf(itemID),new BigDecimal(999));
+                }
+                else{
+                    platSalDay.put(String.valueOf(itemID),new BigDecimal(sock).divide(new BigDecimal(salQty),1,BigDecimal.ROUND_UP));
+                }
+            }
+        }
     }
 
  }
