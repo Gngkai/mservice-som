@@ -82,7 +82,7 @@ public class ListingManaInitTask extends AbstractTask {
         listManaDyn.set("aos_follower", itemUserMap.get(itemId + "~FOL"));
         listManaDyn.set("aos_picture", itemPictureMap.get(itemId));
         listManaDyn.set("aos_amurl", itemAmUrlMap.get(orgId + "~" + itemId));
-        if (aaddMap.contains(orgId + "~" + itemId)) {
+        if (aaddMap.contains(aosOrgNum + "~" + itemId)) {
             listManaDyn.set("aos_aadd", true);
         }
         if (design3DSet.contains(itemId)) {
@@ -153,7 +153,7 @@ public class ListingManaInitTask extends AbstractTask {
                         "aos_contryentry.aos_is_saleout aos_is_saleout",
                 new QFilter("aos_protype", QCP.equals, "N")
                         .and("aos_contryentry.aos_contryentrystatus", QCP.not_in, new String[]{"H", "F"})
-//                        .and("number", QCP.equals, "D1-0014")
+//                        .and("number", QCP.equals, "350-020")
                         .toArray());
         List<DynamicObject> listManaDynS = new ArrayList<>();
         int seq = 1;
@@ -199,7 +199,7 @@ public class ListingManaInitTask extends AbstractTask {
         listManaDyn.set("aos_picture", itemPictureMap.get(itemId));
         listManaDyn.set("aos_amurl", itemAmUrlMap.get(orgId + "~" + itemId));
 
-        if (aaddMap.contains(orgId + "~" + itemId)) {
+        if (aaddMap.contains(aosOrgNum + "~" + itemId)) {
             listManaDyn.set("aos_aadd", true);
         }
         if (design3DSet.contains(itemId)) {
@@ -329,9 +329,9 @@ public class ListingManaInitTask extends AbstractTask {
     private static void aaddMapInit() {
         FndMsg.debug("======Start 高级A+需求表初始化======");
         DynamicObjectCollection list = QueryServiceHelper.query("aos_mkt_aadd",
-                "aos_org aos_orgid,aos_entryentity.aos_itemid aos_itemid",
+                "aos_org,aos_entryentity.aos_itemid aos_itemid",
                 new QFilter("aos_status", QCP.equals, "已完成").toArray());
-        aaddMap = list.stream().map(obj -> obj.getString("aos_orgid")
+        aaddMap = list.stream().map(obj -> obj.getString("aos_org")
                         + "~" + obj.getString("aos_itemid"))
                 .collect(Collectors.toSet());
         FndMsg.debug("======End 高级A+需求表初始化======");
