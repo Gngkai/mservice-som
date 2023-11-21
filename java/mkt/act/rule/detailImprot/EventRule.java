@@ -80,7 +80,6 @@ public class EventRule {
             }
             throw new KDException(new ErrorCode("活动选品明细导入异常",e.getMessage()));
         }
-
     }
 
     public EventRule(DynamicObject dy_main){
@@ -147,6 +146,48 @@ public class EventRule {
         if (FndGlobal.IsNotNull(typEntity.get("aos_qty"))) {
             selectQty = Integer.parseInt(typEntity.getString("aos_qty"));
         }
+
+        //根据活动计数维度进行拆分，如果是sku，则按照物料维度计数；否则按照item ID 维度计数
+        //计数类型
+        String countType = typEntity.getString("aos_count");
+
+        List<DynamicObject> filterItem = new ArrayList<>();
+        //item 计数
+        if (FndGlobal.IsNotNull(countType) && countType.equals("item")){
+
+        }
+        //sku 计数
+        else {
+           filterItem = implementFormulaSku();
+        }
+
+
+        //Item Id 类型时;判断是否全部sku都参加
+        boolean addAll = false;
+        String whole = typEntity.getString("aos_whole");
+        if (FndGlobal.IsNotNull(whole) && whole.equals("Y")) {
+            addAll = true;
+        }
+        //将筛选完成的物料填入活动选品表中
+        //选品数
+        addData(filterItem,selectQty);
+    }
+
+    /**
+     * sku类型的转入数据
+     */
+    public List<DynamicObject> implementFormulaSku(){
+        String ruleValue = typEntity.getString("aos_rule_v");
+        String[] parameterKey = new String[0];
+        if (FndGlobal.IsNotNull(ruleValue)){
+            parameterKey = FormulaEngine.extractVariables(ruleValue);
+        }
+        Map<String,Object> parameters = new HashMap<>(parameterKey.length);
+        //选品数
+        int selectQty = 100;
+        if (FndGlobal.IsNotNull(typEntity.get("aos_qty"))) {
+            selectQty = Integer.parseInt(typEntity.getString("aos_qty"));
+        }
         //根据国别品类占比确定每个品类的数量
         Map<String, Integer> cateQty = new HashMap<>();
         //最大占比的品类
@@ -183,7 +224,7 @@ public class EventRule {
             }
             //能够填入备用数据
             else if (cate.equals(maxProportCate) && backupData.size()< backCateSize){
-               fillType = "B";
+                fillType = "B";
             }
             //品类已满，跳过
             else {
@@ -216,11 +257,11 @@ public class EventRule {
         for (int index = 0; index < missQty; index++) {
             filterItem.add(backupData.get(index));
         }
-        //将筛选完成的物料填入活动选品表中
-        //选品数
-
-        addData(filterItem,selectQty);
+        return filterItem;
     }
+
+
+
 
     /**
      * 根据国别品类的占比计算 每个品类的数量
@@ -548,7 +589,6 @@ public class EventRule {
         return results;
     }
 
-
     /**
      * 获取去重规则剔除的物料
      */
@@ -557,10 +597,9 @@ public class EventRule {
         Set<String> result = new HashSet<>();
         LocalDate startdate = actPlanEntity.getDate("aos_startdate").toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate endDate = actPlanEntity.getDate("aos_enddate1").toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-        LocalDate now = LocalDate.now();
 
         QFBuilder builder = new QFBuilder();
-        //规则单据体
+        //规则单据体，先根据规则单据体中规则，筛选出应该剔除的物料
         for (DynamicObject row : ruleEntityRows) {
             String project = row.getString("aos_re_project");
             if (FndGlobal.IsNull(project)) {
@@ -582,14 +621,27 @@ public class EventRule {
                 builder.add("aos_sal_actplanentity.aos_l_startdate","<=",  endDate.plusDays(1).toString());
                 builder.add("aos_sal_actplanentity.aos_enddate",">=",startdate.toString());
             }
-            //过去几天
-            else {
+            //活动开始日前几天
+            else if (project.equals("pastDays")){
                 int day = 0;
                 if (row.get("aos_frame")!=null) {
                     day = row.getInt("aos_frame");
                 }
-                builder.add("aos_sal_actplanentity.aos_enddate",">=",now.minusDays(day).toString());
-                builder.add("aos_sal_actplanentity.aos_l_startdate","<",now.toString());
+                builder.add("aos_sal_actplanentity.aos_enddate",">=",startdate.minusDays(day).toString());
+                builder.add("aos_sal_actplanentity.aos_enddate","<",startdate.toString());
+            }
+            //活动结束日后几天
+            else if (project.equals("endDays")){
+                int day = 0;
+                if (row.get("aos_frame")!=null) {
+                    day = row.getInt("aos_frame");
+                }
+                builder.add("aos_sal_actplanentity.aos_enddate",">=",endDate.toString());
+                builder.add("aos_sal_actplanentity.aos_enddate","<",endDate.plusDays(day+1).toString());
+
+            }
+            else {
+                continue;
             }
             DynamicObjectCollection dyc = QueryServiceHelper.query("aos_act_select_plan",
                     "aos_sal_actplanentity.aos_itemnum aos_itemnum,aos_sal_actplanentity.aos_itemnum.number number", builder.toArray());
@@ -598,8 +650,9 @@ public class EventRule {
                 result.add(dy.getString("aos_itemnum"));
             }
         }
-        //本月平台活动超过2次的物料
 
+        //本月平台活动超过2次的物料
+        LocalDate now = LocalDate.now();
         //首先查找所有的平台活动
         builder.clear();
         builder.add("aos_org","=",orgEntity.getPkValue());
@@ -641,7 +694,6 @@ public class EventRule {
         }
         return result;
     }
-
 
     /**
      * 解析规则
