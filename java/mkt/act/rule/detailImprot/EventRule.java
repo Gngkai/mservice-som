@@ -140,12 +140,12 @@ public class EventRule {
         if (FndGlobal.IsNotNull(ruleValue)){
           parameterKey = FormulaEngine.extractVariables(ruleValue);
         }
-        Map<String,Object> parameters = new HashMap<>(parameterKey.length);
         //选品数
         int selectQty = 100;
         if (FndGlobal.IsNotNull(typEntity.get("aos_qty"))) {
             selectQty = Integer.parseInt(typEntity.getString("aos_qty"));
         }
+
 
         //根据活动计数维度进行拆分，如果是sku，则按照物料维度计数；否则按照item ID 维度计数
         //计数类型
@@ -154,20 +154,14 @@ public class EventRule {
         List<DynamicObject> filterItem = new ArrayList<>();
         //item 计数
         if (FndGlobal.IsNotNull(countType) && countType.equals("item")){
-
+            filterItem = implementFormulaItem();
         }
         //sku 计数
         else {
-           filterItem = implementFormulaSku();
+           //filterItem = implementFormulaSku();
         }
 
 
-        //Item Id 类型时;判断是否全部sku都参加
-        boolean addAll = false;
-        String whole = typEntity.getString("aos_whole");
-        if (FndGlobal.IsNotNull(whole) && whole.equals("Y")) {
-            addAll = true;
-        }
         //将筛选完成的物料填入活动选品表中
         //选品数
         addData(filterItem,selectQty);
@@ -176,18 +170,8 @@ public class EventRule {
     /**
      * sku类型的转入数据
      */
-    public List<DynamicObject> implementFormulaSku(){
-        String ruleValue = typEntity.getString("aos_rule_v");
-        String[] parameterKey = new String[0];
-        if (FndGlobal.IsNotNull(ruleValue)){
-            parameterKey = FormulaEngine.extractVariables(ruleValue);
-        }
+    public List<DynamicObject> implementFormulaSku( String[] parameterKey,int selectQty,String ruleValue){
         Map<String,Object> parameters = new HashMap<>(parameterKey.length);
-        //选品数
-        int selectQty = 100;
-        if (FndGlobal.IsNotNull(typEntity.get("aos_qty"))) {
-            selectQty = Integer.parseInt(typEntity.getString("aos_qty"));
-        }
         //根据国别品类占比确定每个品类的数量
         Map<String, Integer> cateQty = new HashMap<>();
         //最大占比的品类
@@ -260,8 +244,19 @@ public class EventRule {
         return filterItem;
     }
 
-
-
+    /**
+     * item类型的转入数据
+     * @return
+     */
+    public List<DynamicObject> implementFormulaItem(){
+        //Item Id 类型时;判断是否全部sku都参加
+        boolean addAll = false;
+        String whole = typEntity.getString("aos_whole");
+        if (FndGlobal.IsNotNull(whole) && whole.equals("Y")) {
+            addAll = true;
+        }
+        return null;
+    }
 
     /**
      * 根据国别品类的占比计算 每个品类的数量
