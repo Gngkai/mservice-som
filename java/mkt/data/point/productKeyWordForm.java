@@ -831,6 +831,7 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
                 })
                 .collect(Collectors.toList());
         NumberFormat instance = NumberFormat.getInstance();
+        BigDecimal bd_divisor = new BigDecimal(100);
         for (int index = 0; index < entityRows.size(); index++) {
             //判断搜索
             String search = "";
@@ -862,6 +863,7 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
                 try {
                     if (correlate.contains("%")) {
                         bd_correlate = BigDecimal.valueOf(instance.parse(correlate).doubleValue());
+                        bd_correlate = bd_correlate.divide(bd_divisor,4,BigDecimal.ROUND_HALF_UP);
                     }
                     else {
                         bd_correlate = new BigDecimal(correlate);
