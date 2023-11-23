@@ -14,8 +14,6 @@ import common.fnd.FndDate;
 import common.fnd.FndError;
 import common.fnd.FndGlobal;
 import common.fnd.FndMsg;
-import common.fnd.FndWebHook;
-import kd.bos.algo.DataSet;
 import kd.bos.bill.AbstractBillPlugIn;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
@@ -154,9 +152,9 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
 
 	/**
 	 * 明细值改变事件
-	 * 
 	 * @param name
-	 * @param newValue
+	 * @param value
+	 * @throws FndError
 	 */
 	private void detailRowChanged(String name, String value) throws FndError {
 		int currentRowIndex = this.getModel().getEntryCurrentRowIndex("aos_entryentity1");
@@ -183,7 +181,7 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
 	 * 
 	 * @param value
 	 * 
-	 * @param object
+	 * @param name
 	 */
 	private void lineRowChanged(String name, String value) throws FndError {
 		int currentRowIndex = this.getModel().getEntryCurrentRowIndex("aos_entryentity");
@@ -280,10 +278,10 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
 	 * 计算营收
 	 */
 	private void aos_cal() {
-		// 计算活动计划
-		calActivityPlan();
 		// 计算上月实际
 		calLastMonthActual();
+		// 计算活动计划
+		calActivityPlan();
 		// 保存计算的值
 		this.getView().invokeOperation("save");
 	}
@@ -291,7 +289,7 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
 	/**
 	 * 计算活动计划
 	 */
-	private void calLastMonthActual() {
+	private void calActivityPlan() {
 		// 数据层
 		Date aos_month = (Date) this.getModel().getValue("aos_month");
 		Calendar calendar = Calendar.getInstance();
@@ -464,7 +462,7 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
 	/**
 	 * 计算上月实际
 	 */
-	private void calActivityPlan() {
+	private void calLastMonthActual() {
 		// 判断当前月份
 		Date aos_month = (Date) this.getModel().getValue("aos_month");
 		Calendar calendar = Calendar.getInstance();
@@ -501,7 +499,7 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
 			DynamicObjectCollection aosActSelectYardS = QueryServiceHelper.query("aos_act_select_plan",
 					"aos_sal_actplanentity.aos_incre_reven aos_incre_reven",
 					new QFilter("aos_nationality.id", QCP.equals, aosOrgIdStr)
-							.and("aos_planentity.aos_yard_plan", QCP.equals, "Y")
+//							.and("aos_planentity.aos_yard_plan", QCP.equals, "Y")
 							.and("aos_sal_actplanentity.aos_category_stat1", QCP.equals, "庭院&花园")
 							.and("aos_enddate1", QCP.large_equals, lastFromDate)
 							.and("aos_enddate1", QCP.less_equals, lastToDate).and("aos_acttype", QCP.in, aosSalActLibS)
@@ -513,7 +511,7 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
 			DynamicObjectCollection aosActSelectRattanS = QueryServiceHelper.query("aos_act_select_plan",
 					"aos_sal_actplanentity.aos_incre_reven aos_incre_reven",
 					new QFilter("aos_nationality.id", QCP.equals, aosOrgIdStr)
-							.and("aos_planentity.aos_rattan_plan", QCP.equals, "Y")
+//							.and("aos_planentity.aos_rattan_plan", QCP.equals, "Y")
 							.and("aos_sal_actplanentity.aos_category_stat1", QCP.equals, "藤编产品")
 							.and("aos_enddate1", QCP.large_equals, lastFromDate)
 							.and("aos_enddate1", QCP.less_equals, lastToDate).and("aos_acttype", QCP.in, aosSalActLibS)
@@ -530,7 +528,7 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
 						"aos_sal_actplanentity.aos_incre_reven aos_incre_reven",
 						new QFilter("aos_nationality.id", QCP.equals, aosOrgIdStr)
 								.and("aos_acttype.id", QCP.equals, aosSalActLib)
-								.and("aos_planentity.aos_yard_plan", QCP.equals, "Y")
+//								.and("aos_planentity.aos_yard_plan", QCP.equals, "Y")
 								.and("aos_sal_actplanentity.aos_category_stat1", QCP.equals, "庭院&花园")
 								.and("aos_enddate1", QCP.large_equals, toDate)
 								.and("aos_enddate1", QCP.less_equals, fromDate).toArray());
@@ -540,7 +538,7 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
 				DynamicObjectCollection countYardS = QueryServiceHelper.query("aos_act_select_plan", "id",
 						new QFilter("aos_nationality.id", QCP.equals, aosOrgIdStr)
 								.and("aos_acttype.id", QCP.equals, aosSalActLib)
-								.and("aos_planentity.aos_yard_plan", QCP.equals, "Y")
+//								.and("aos_planentity.aos_yard_plan", QCP.equals, "Y")
 								.and("aos_sal_actplanentity.aos_category_stat1", QCP.equals, "庭院&花园")
 								.and("aos_enddate1", QCP.large_equals, toDate)
 								.and("aos_enddate1", QCP.less_equals, fromDate).toArray());
@@ -560,7 +558,7 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
 						"aos_sal_actplanentity.aos_incre_reven aos_incre_reven",
 						new QFilter("aos_nationality.id", QCP.equals, aosOrgIdStr)
 								.and("aos_acttype.id", QCP.equals, aosSalActLib)
-								.and("aos_planentity.aos_rattan_plan", QCP.equals, "Y")
+//								.and("aos_planentity.aos_rattan_plan", QCP.equals, "Y")
 								.and("aos_sal_actplanentity.aos_category_stat1", QCP.equals, "藤编产品")
 								.and("aos_enddate1", QCP.large_equals, toDate)
 								.and("aos_enddate1", QCP.less_equals, fromDate).toArray());
@@ -570,7 +568,7 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
 				DynamicObjectCollection countRattanS = QueryServiceHelper.query("aos_act_select_plan", "id",
 						new QFilter("aos_nationality.id", QCP.equals, aosOrgIdStr)
 								.and("aos_acttype.id", QCP.equals, aosSalActLib)
-								.and("aos_planentity.aos_rattan_plan", QCP.equals, "Y")
+//								.and("aos_planentity.aos_rattan_plan", QCP.equals, "Y")
 								.and("aos_sal_actplanentity.aos_category_stat1", QCP.equals, "藤编产品")
 								.and("aos_enddate1", QCP.large_equals, toDate)
 								.and("aos_enddate1", QCP.less_equals, fromDate).toArray());
@@ -590,7 +588,7 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
 						"aos_sal_actplanentity.aos_incre_reven aos_incre_reven",
 						new QFilter("aos_nationality.id", QCP.equals, aosOrgIdStr)
 								.and("aos_acttype.id", QCP.equals, aosSalActLib)
-								.and("aos_planentity.aos_home_plan", QCP.equals, "Y")
+//								.and("aos_planentity.aos_home_plan", QCP.equals, "Y")
 								.and("aos_sal_actplanentity.aos_category_stat1", QCP.equals, "居家系列")
 								.and("aos_enddate1", QCP.large_equals, toDate)
 								.and("aos_enddate1", QCP.less_equals, fromDate).toArray());
@@ -600,7 +598,7 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
 				DynamicObjectCollection countHomeS = QueryServiceHelper.query("aos_act_select_plan", "id",
 						new QFilter("aos_nationality.id", QCP.equals, aosOrgIdStr)
 								.and("aos_acttype.id", QCP.equals, aosSalActLib)
-								.and("aos_planentity.aos_home_plan", QCP.equals, "Y")
+//								.and("aos_planentity.aos_home_plan", QCP.equals, "Y")
 								.and("aos_sal_actplanentity.aos_category_stat1", QCP.equals, "居家系列")
 								.and("aos_enddate1", QCP.large_equals, toDate)
 								.and("aos_enddate1", QCP.less_equals, fromDate).toArray());
@@ -620,7 +618,7 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
 						"aos_sal_actplanentity.aos_incre_reven aos_incre_reven",
 						new QFilter("aos_nationality.id", QCP.equals, aosOrgIdStr)
 								.and("aos_acttype.id", QCP.equals, aosSalActLib)
-								.and("aos_planentity.aos_sport_plan", QCP.equals, "Y")
+//								.and("aos_planentity.aos_sport_plan", QCP.equals, "Y")
 								.and("aos_sal_actplanentity.aos_category_stat1", QCP.equals, "运动&娱乐&汽配")
 								.and("aos_enddate1", QCP.large_equals, toDate)
 								.and("aos_enddate1", QCP.less_equals, fromDate).toArray());
@@ -630,7 +628,7 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
 				DynamicObjectCollection countSportS = QueryServiceHelper.query("aos_act_select_plan", "id",
 						new QFilter("aos_nationality.id", QCP.equals, aosOrgIdStr)
 								.and("aos_acttype.id", QCP.equals, aosSalActLib)
-								.and("aos_planentity.aos_sport_plan", QCP.equals, "Y")
+//								.and("aos_planentity.aos_sport_plan", QCP.equals, "Y")
 								.and("aos_sal_actplanentity.aos_category_stat1", QCP.equals, "运动&娱乐&汽配")
 								.and("aos_enddate1", QCP.large_equals, toDate)
 								.and("aos_enddate1", QCP.less_equals, fromDate).toArray());
@@ -650,7 +648,7 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
 						"aos_sal_actplanentity.aos_incre_reven aos_incre_reven",
 						new QFilter("aos_nationality.id", QCP.equals, aosOrgIdStr)
 								.and("aos_acttype.id", QCP.equals, aosSalActLib)
-								.and("aos_planentity.aos_pet_plan", QCP.equals, "Y")
+//								.and("aos_planentity.aos_pet_plan", QCP.equals, "Y")
 								.and("aos_sal_actplanentity.aos_category_stat1", QCP.equals, "宠物用品")
 								.and("aos_enddate1", QCP.large_equals, toDate)
 								.and("aos_enddate1", QCP.less_equals, fromDate).toArray());
@@ -660,7 +658,7 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
 				DynamicObjectCollection countPetS = QueryServiceHelper.query("aos_act_select_plan", "id",
 						new QFilter("aos_nationality.id", QCP.equals, aosOrgIdStr)
 								.and("aos_acttype.id", QCP.equals, aosSalActLib)
-								.and("aos_planentity.aos_pet_plan", QCP.equals, "Y")
+//								.and("aos_planentity.aos_pet_plan", QCP.equals, "Y")
 								.and("aos_sal_actplanentity.aos_category_stat1", QCP.equals, "宠物用品")
 								.and("aos_enddate1", QCP.large_equals, toDate)
 								.and("aos_enddate1", QCP.less_equals, fromDate).toArray());
@@ -679,7 +677,7 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
 						"aos_sal_actplanentity.aos_incre_reven aos_incre_reven",
 						new QFilter("aos_nationality.id", QCP.equals, aosOrgIdStr)
 								.and("aos_acttype.id", QCP.equals, aosSalActLib)
-								.and("aos_planentity.aos_baby_plan", QCP.equals, "Y")
+//								.and("aos_planentity.aos_baby_plan", QCP.equals, "Y")
 								.and("aos_sal_actplanentity.aos_category_stat1", QCP.equals, "婴儿产品&玩具及游戏")
 								.and("aos_enddate1", QCP.large_equals, toDate)
 								.and("aos_enddate1", QCP.less_equals, fromDate).toArray());
@@ -689,7 +687,7 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
 				DynamicObjectCollection countKidS = QueryServiceHelper.query("aos_act_select_plan", "id",
 						new QFilter("aos_nationality.id", QCP.equals, aosOrgIdStr)
 								.and("aos_acttype.id", QCP.equals, aosSalActLib)
-								.and("aos_planentity.aos_baby_plan", QCP.equals, "Y")
+//								.and("aos_planentity.aos_baby_plan", QCP.equals, "Y")
 								.and("aos_sal_actplanentity.aos_category_stat1", QCP.equals, "婴儿产品&玩具及游戏")
 								.and("aos_enddate1", QCP.large_equals, toDate)
 								.and("aos_enddate1", QCP.less_equals, fromDate).toArray());
