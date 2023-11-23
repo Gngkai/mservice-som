@@ -698,7 +698,7 @@ public class EventRule {
             if (!shopPriceItemList.contains(itemid)) {
                 logRow.add("不在店铺价格维护表中，剔除");
                 fndLog.add(logRow.toString());
-                //continue;
+                continue;
             }
 
             if (!map_actProfit.containsKey(itemid) || !map_actProfit.get(itemid) || fillItem.contains(itemid) ){
