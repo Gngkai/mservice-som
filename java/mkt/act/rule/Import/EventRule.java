@@ -1,4 +1,4 @@
-package mkt.act.rule.detailImprot;
+package mkt.act.rule.Import;
 
 import common.CommonDataSomAct;
 import common.fnd.FndGlobal;
@@ -43,7 +43,6 @@ import java.util.*;
  * @date 2023/8/21 14:11
  * @action  活动规则,用于活动信息表的明细导入
  */
-
 public class EventRule {
     private static final Log logger = LogFactory.getLog("mkt.act.rule.EventRule");
     //活动库单据
@@ -128,7 +127,7 @@ public class EventRule {
         //解析行公式
         rowResults = new HashMap<>();
         parsingRowRule();
-        addData(itemids);
+        addData();
     }
 
     /**
@@ -151,20 +150,20 @@ public class EventRule {
         //计数类型
         String countType = typEntity.getString("aos_count");
 
-        List<DynamicObject> filterItem = new ArrayList<>();
+        List<DynamicObject> filterItem ;
         //item 计数
         if (FndGlobal.IsNotNull(countType) && countType.equals("item")){
-            filterItem = implementFormulaItem();
+            filterItem = implementFormulaItem(parameterKey,selectQty,ruleValue);
         }
         //sku 计数
         else {
-           //filterItem = implementFormulaSku();
+           filterItem = implementFormulaSku(parameterKey,selectQty,ruleValue);
         }
 
 
         //将筛选完成的物料填入活动选品表中
         //选品数
-        addData(filterItem,selectQty);
+        addData(filterItem);
     }
 
     /**
@@ -190,8 +189,11 @@ public class EventRule {
         for (DynamicObject itemInfoe : itemInfoes) {
             String itemId = itemInfoe.getString("id");
             //获取物料品类
-            if (!cateItem.containsKey(itemId))
-                continue;
+            if (!cateItem.containsKey(itemId)){
+                continue ;
+            }
+
+
             String cate = cateItem.get(itemId).getString("gnumber").split(",")[0];
             if (!alreadyFilledCate.containsKey(cate)){
                 continue;
@@ -222,7 +224,7 @@ public class EventRule {
             boolean result = Boolean.parseBoolean(FormulaEngine.execExcelFormula(ruleValue, parameters).toString());
             if (result){
                 //正常填入该品类
-                if (fillType.equals("A")){
+                if ("A".equals(fillType)){
                     filterItem.add(itemInfoe);
                     alreadyQty++;
                     alreadyFilledCate.put(cate,alreadyQty);
@@ -246,16 +248,163 @@ public class EventRule {
 
     /**
      * item类型的转入数据
-     * @return
+     * @param parameterKey  公式中包含的参数
+     * @param selectQty     帖子ID 数
+     * @param ruleValue     公式
+     * @return  符合条件的物料
      */
-    public List<DynamicObject> implementFormulaItem(){
+    public List<DynamicObject> implementFormulaItem(String[] parameterKey,int selectQty,String ruleValue){
         //Item Id 类型时;判断是否全部sku都参加
         boolean addAll = false;
         String whole = typEntity.getString("aos_whole");
-        if (FndGlobal.IsNotNull(whole) && whole.equals("Y")) {
+        if (FndGlobal.IsNotNull(whole) && "Y".equals(whole)) {
             addAll = true;
         }
-        return null;
+        //获取每个物料的Asin
+        setItemAsin();
+        Map<String,Object> parameters = new HashMap<>(parameterKey.length);
+        //根据国别品类占比确定每个品类的数量
+        Map<String, Integer> cateQty = new HashMap<>();
+        //最大占比的品类
+        String maxProportCate = calCateQty(selectQty, cateQty);
+        //通过公式筛选的物料，能够填入单据的数据
+        List<DynamicObject> filterItem = new ArrayList<>();
+        //记录每个品类已经填入数据
+        Map<String,Integer> alreadyFilledCate = new HashMap<>();
+        //记录每个品类下的帖子ID，以及每个物料是否满足条件
+        Map<String,Map<String,List<DynamicObject>>> map_fillInfo = new HashMap<>();
+        //筛选数据
+        for (DynamicObject itemInfoe : itemInfoes) {
+            String itemId = itemInfoe.getString("id");
+            String itemNum = itemInfoe.getString("number");
+            //首先获取帖子ID
+            if (!map_asin.containsKey(itemId)) {
+                fndLog.add(itemNum+"   不存在帖子ID剔除");
+                continue;
+            }
+            String itemAsin = map_asin.get(itemId);
+            //获取物料品类
+            if (!cateItem.containsKey(itemId)){
+                fndLog.add(itemNum+"   不存在品类剔除");
+                continue;
+            }
+            String cate = cateItem.get(itemId).getString("gnumber").split(",")[0];
+            //不需要这个品类，剔除
+            if (!cateQty.containsKey(cate)){
+                fndLog.add(itemNum+"   物料品类剔除");
+                continue;
+            }
+            //品类已满
+            if (map_fillInfo.size()>= selectQty && !map_fillInfo.containsKey(cate)) {
+                fndLog.add(itemNum+"   品类已满");
+                continue;
+            }
+            //已经填入的该品类下的数据
+            Map<String, List<DynamicObject>> fillData = map_fillInfo.computeIfAbsent(cate, k -> new HashMap<>());
+
+            //判断是否需要执行公式
+            boolean needImp = true;
+            //全部 id转入
+            if (addAll){
+                //判断这个品类是否已经 有执行结果为 true 的数据
+                if (fillData.containsKey(itemAsin+"/t")){
+                    List<DynamicObject> list = fillData.computeIfAbsent(itemAsin + "/f", k -> new ArrayList<>());
+                    list.add(itemInfoe);
+                    needImp = false;
+                }
+            }
+
+            if (needImp){
+                parameters.clear();
+                for (String key : parameterKey) {
+                    parameters.put(key,rowResults.get(key).get(itemId));
+                }
+                //执行公式
+                boolean result = Boolean.parseBoolean(FormulaEngine.execExcelFormula(ruleValue, parameters).toString());
+                if (result){
+                    List<DynamicObject> list = fillData.computeIfAbsent(itemAsin + "/t", k -> new ArrayList<>());
+                    list.add(itemInfoe);
+                }
+                else{
+                    List<DynamicObject> list = fillData.computeIfAbsent(itemAsin + "/f", k -> new ArrayList<>());
+                    list.add(itemInfoe);
+                }
+            }
+        }
+        //记录已经填入的帖子ID
+        List<String> fillAsin = new ArrayList<>(selectQty);
+        //筛选完成，将数据填入
+        //类别维度遍历
+        for (Map.Entry<String, Map<String, List<DynamicObject>>> cateEntry : map_fillInfo.entrySet()) {
+            int alradyFillQty;
+            //最大的品类,查找全部的数量，用以补充其他品类
+            if (cateEntry.getKey().equals(maxProportCate)) {
+                alradyFillQty = fillData(cateEntry.getValue(), fillAsin, filterItem, addAll, cateQty.getOrDefault(cateEntry.getKey(), 0));
+            }
+            else{
+                alradyFillQty = fillData(cateEntry.getValue(), fillAsin, filterItem, addAll, selectQty);
+            }
+            alreadyFilledCate.put(cateEntry.getKey(),alradyFillQty);
+        }
+
+        //将数量不足的品类 用其他品类数据补上
+        for (Map.Entry<String, Integer> entry : cateQty.entrySet()) {
+            //类名
+            String cate = entry.getKey();
+            //应该填入的总数
+            int cateAllQty = entry.getValue();
+            //获取需要继续填入的数
+            int alreadyFillQty = cateAllQty - alreadyFilledCate.getOrDefault(cate, 0);
+            if (alreadyFillQty<=0) {
+                continue;
+            }
+            //先将最多的品类填入
+            alreadyFillQty = alreadyFillQty - fillData(map_fillInfo.get(maxProportCate), fillAsin, filterItem, addAll,alreadyFillQty);
+            alreadyFilledCate.put(cate,cateAllQty - alreadyFillQty);
+        }
+        return filterItem;
+    }
+
+    /**
+     * 填充数据
+     * @param cateEntry 品类下对应的 asin数据
+     * @param fillAsin  已经填入的asin
+     * @param filterItem    已经填入的物料
+     * @param addAll        是否全部转入
+     * @param fillAllQty    填入aisn个数
+     * @return 已经填充数
+     */
+    private int fillData( Map<String, List<DynamicObject>> cateEntry, List<String> fillAsin, List<DynamicObject> filterItem,
+                           boolean addAll, int fillAllQty){
+        if (fillAllQty<=0) {
+            return 0;
+        }
+        int alreadyFillQty = 0;
+        //Asin维度遍历
+        for (Map.Entry<String, List<DynamicObject>> asinEntry : cateEntry.entrySet()) {
+            if (asinEntry.getKey().contains("/t")) {
+                    String asin = asinEntry.getKey().split("/")[0];
+                    //已经填入过了，跳过这个id
+                    if (fillAsin.contains(asin)) {
+                        continue;
+                    }
+                    filterItem.addAll(asinEntry.getValue());
+                    //全部转入
+                    if (addAll) {
+                        //将结果为false的也加入其中
+                        if (cateEntry.containsKey(asin+"/f")){
+                            filterItem.addAll( cateEntry.get(asin + "/f"));
+                        }
+                    }
+
+                   alreadyFillQty++;
+                    //如果品类数足够，跳出这个品类循环
+                    if (alreadyFillQty >= fillAllQty){
+                        break;
+                    }
+                }
+        }
+        return alreadyFillQty;
     }
 
     /**
@@ -313,27 +462,17 @@ public class EventRule {
     /**
      * 向活动选品表中添加数据
      */
-    private void addData(List<DynamicObject> filterItem,int selectQty){
-        selectQty = Math.min(selectQty, filterItem.size());
+    private void addData(List<DynamicObject> filterItem){
         DynamicObjectCollection dyc = actPlanEntity.getDynamicObjectCollection("aos_sal_actplanentity");
         Date startdate = actPlanEntity.getDate("aos_startdate");
         Date enddate = actPlanEntity.getDate("aos_enddate1");
-        //查找帖子id
-        Object shopid = actPlanEntity.getDynamicObject("aos_shop").getPkValue();
-        List<String> list_filterItem = new ArrayList<>(filterItem.size());
-        for (DynamicObject info : filterItem) {
-            list_filterItem.add(info.getString("id"));
-        }
-        //
-        Map<String, String> map_asin = ActUtil.queryOrgShopItemASIN(orgEntity.getPkValue(),shopid, list_filterItem);
-
+        //获取ASIN
+        setItemAsin();
         //店铺现价
         setCurrentPrice();
         //活动价
         setItemActPrice();
-
-        for (int index = 0; index <selectQty; index++) {
-            DynamicObject itemInfo = filterItem.get(index);
+        for (DynamicObject itemInfo : filterItem) {
             DynamicObject addNewRow = dyc.addNew();
             String itemid = itemInfo.getString("id");
             addNewRow.set("aos_itemnum",itemid);
@@ -362,7 +501,7 @@ public class EventRule {
     /**
      * 判断活动选品表中的数据是否符合规定
      */
-    private void addData(List<String> list_filterItem){
+    private void addData(){
         String ruleValue = typEntity.getString("aos_rule_v");
         String[] parameterKey = FormulaEngine.extractVariables(ruleValue);
         Map<String,Object> parameters = new HashMap<>(parameterKey.length);
@@ -370,9 +509,7 @@ public class EventRule {
         DynamicObjectCollection dyc = actPlanEntity.getDynamicObjectCollection("aos_sal_actplanentity");
         Date startdate = actPlanEntity.getDate("aos_startdate");
         Date enddate = actPlanEntity.getDate("aos_enddate1");
-        //查找帖子id
-        Object shopid = actPlanEntity.getDynamicObject("aos_shop").getPkValue();
-        Map<String, String> map_asin = ActUtil.queryOrgShopItemASIN(orgEntity.getPkValue(),shopid, list_filterItem);
+
 
         Map<String,DynamicObject> map_itemInfo = new HashMap<>(itemInfoes.size());
         for (DynamicObject infoe : itemInfoes) {
@@ -421,6 +558,23 @@ public class EventRule {
             }
         }
         fndLog.finnalSave();
+    }
+
+
+    /**
+     * 设置 物料帖子ID
+     */
+    Map<String,String> map_asin;
+    private void setItemAsin(){
+        if (map_asin!=null) {
+            return;
+        }
+        Object shopid = actPlanEntity.getDynamicObject("aos_shop").getPkValue();
+        List<String> list_filterItem = new ArrayList<>(itemInfoes.size());
+        for (DynamicObject info : itemInfoes) {
+            list_filterItem.add(info.getString("id"));
+        }
+        map_asin = ActUtil.queryOrgShopItemASIN(orgEntity,shopid,list_filterItem);
     }
 
     /**
@@ -479,7 +633,7 @@ public class EventRule {
         //判断是否参与考核，如果参与考核，需要取值物料清单,不在清单中的，剔除
         List<String> actSelectList = null;
         if (typEntity.get("aos_assessment")!=null) {
-            if (typEntity.getDynamicObject("aos_assessment").getString("number").equals("Y")) {
+            if ("Y".equals(typEntity.getDynamicObject("aos_assessment").getString("number"))) {
                 builder.clear();
                 LocalDate now = LocalDate.now();
                 builder.add("createtime",">=",now.toString());
@@ -513,7 +667,7 @@ public class EventRule {
             StringJoiner logRow = new StringJoiner(" ; ");
             logRow.add(itemNum);
             //添加品类过滤
-            if (!cateItem.containsKey(itemid)){
+            if (cateItem.size()>0 && !cateItem.containsKey(itemid)){
                 logRow.add("不在品类中，剔除");
                 fndLog.add(logRow.toString());
                 continue;
@@ -544,13 +698,17 @@ public class EventRule {
             if (!shopPriceItemList.contains(itemid)) {
                 logRow.add("不在店铺价格维护表中，剔除");
                 fndLog.add(logRow.toString());
+                //continue;
+            }
+
+            if (!map_actProfit.containsKey(itemid) || !map_actProfit.get(itemid) || fillItem.contains(itemid) ){
+                logRow.add("活动毛利剔除，剔除");
+                fndLog.add(logRow.toString());
                 continue;
             }
 
-            if (map_actProfit.containsKey(itemid) && map_actProfit.get(itemid) && !fillItem.contains(itemid)){
-                fillItem.add(itemid);
-                itemInfoes.add(row);
-            }
+            fillItem.add(itemid);
+            itemInfoes.add(row);
         }
         logger.info("单号： {}  毛利率计算后物料长度：{} ",actPlanEntity.getString("billno"),itemInfoes.size());
 
@@ -570,12 +728,14 @@ public class EventRule {
     private List<String> getShopItem(){
         //判断是否，不在线，剔除
         QFBuilder builder = new QFBuilder();
-        builder.add("aos_price",">","0");
         builder.add("aos_org","=",orgEntity.getPkValue());
+        builder.add("aos_item","!=","");
         //店铺
         if (actPlanEntity.get("aos_shop")!=null) {
             builder.add("aos_shop","=",actPlanEntity.getDynamicObject("aos_shop").getPkValue());
         }
+
+
         DynamicObjectCollection dyc = QueryServiceHelper.query("aos_mkt_shop_price", "aos_item", builder.toArray());
         List<String> results = new ArrayList<>(dyc.size());
         for (DynamicObject dy : dyc) {
@@ -612,31 +772,34 @@ public class EventRule {
                 builder.add("aos_shop","=",row.getDynamicObject("aos_re_act").getPkValue());
             }
             //同期
-            if (project.equals("sameTerm")){
-                builder.add("aos_sal_actplanentity.aos_l_startdate","<=",  endDate.plusDays(1).toString());
-                builder.add("aos_sal_actplanentity.aos_enddate",">=",startdate.toString());
-            }
-            //活动开始日前几天
-            else if (project.equals("pastDays")){
-                int day = 0;
-                if (row.get("aos_frame")!=null) {
-                    day = row.getInt("aos_frame");
+            switch (project) {
+                case "sameTerm":
+                    builder.add("aos_sal_actplanentity.aos_l_startdate", "<=", endDate.plusDays(1).toString());
+                    builder.add("aos_sal_actplanentity.aos_enddate", ">=", startdate.toString());
+                    break;
+                //活动开始日前几天
+                case "pastDays": {
+                    int day = 0;
+                    if (row.get("aos_frame") != null) {
+                        day = row.getInt("aos_frame");
+                    }
+                    builder.add("aos_sal_actplanentity.aos_enddate", ">=", startdate.minusDays(day).toString());
+                    builder.add("aos_sal_actplanentity.aos_enddate", "<", startdate.toString());
+                    break;
                 }
-                builder.add("aos_sal_actplanentity.aos_enddate",">=",startdate.minusDays(day).toString());
-                builder.add("aos_sal_actplanentity.aos_enddate","<",startdate.toString());
-            }
-            //活动结束日后几天
-            else if (project.equals("endDays")){
-                int day = 0;
-                if (row.get("aos_frame")!=null) {
-                    day = row.getInt("aos_frame");
-                }
-                builder.add("aos_sal_actplanentity.aos_enddate",">=",endDate.toString());
-                builder.add("aos_sal_actplanentity.aos_enddate","<",endDate.plusDays(day+1).toString());
+                //活动结束日后几天
+                case "endDays": {
+                    int day = 0;
+                    if (row.get("aos_frame") != null) {
+                        day = row.getInt("aos_frame");
+                    }
+                    builder.add("aos_sal_actplanentity.aos_enddate", ">=", endDate.toString());
+                    builder.add("aos_sal_actplanentity.aos_enddate", "<", endDate.plusDays(day + 1).toString());
 
-            }
-            else {
-                continue;
+                    break;
+                }
+                default:
+                    continue;
             }
             DynamicObjectCollection dyc = QueryServiceHelper.query("aos_act_select_plan",
                     "aos_sal_actplanentity.aos_itemnum aos_itemnum,aos_sal_actplanentity.aos_itemnum.number number", builder.toArray());
@@ -713,15 +876,16 @@ public class EventRule {
             //值
             String value = row.getString("aos_rule_value");
 
-            if (condite.equals("in")){
+            if ("in".equals(condite)){
                 String[] split = value.split(",");
                 rule.append(" ( ");
                 for (int i = 0; i < split.length; i++) {
                     rule.append("'");
                     rule.append(split[i]);
                     rule.append("'");
-                    if (i<split.length-1)
+                    if (i<split.length-1) {
                         rule.append(",");
+                    }
                 }
                 rule.append(" ) ");
             }
@@ -765,18 +929,20 @@ public class EventRule {
                     match = true;
                     parameters.put(value,setDiscount());
                     break;
+                default:
+                    continue;
             }
             //上面没有匹配成功则说明 需要用到天数
             if (!match){
                 String caption = value.substring(0, value.length() - 2);
                 String day = value.substring(value.length() - 2);
                 //店铺过去最低定价
-                if (caption.equals("shopPrice")){
+                if ("shopPrice".equals(caption)){
                     setPastPrice(day);
                     parameters.put(value,pastPrices.get(day));
                 }
                 //店铺过去最低成交价
-                else if (caption.equals("shopSale")){
+                else if ("shopSale".equals(caption)){
                     setPastSale(day);
                     parameters.put(value,pastSale.get(day));
                 }
@@ -786,7 +952,6 @@ public class EventRule {
     }
 
     private Map<String,String> rowRuleName;
-
     /**
      * 判断公式的类型并且执行
      * @param rule      公式
@@ -986,8 +1151,9 @@ public class EventRule {
      */
     private void getItemAverage(String key,String rule,Map<String,Boolean> result,DynamicObject row){
         int days = 7;
-        if (FndGlobal.IsNotNull(row.get("aos_rule_day")))
+        if (FndGlobal.IsNotNull(row.get("aos_rule_day"))) {
             days = row.getInt("aos_rule_day");
+        }
         setItemAverageByDay(days);
         Map<String,Object> paramars = new HashMap<>();
         //对应天数的国别日均
@@ -1017,7 +1183,7 @@ public class EventRule {
             String number = orgEntity.getString("number");
             Calendar instance = Calendar.getInstance();
             //美加前推一天
-            if (number.equals("US") || number.equals("CA")){
+            if ("US".equals(number) || "CA".equals(number)){
                 instance.add(Calendar.DATE,-1);
             }
             //设置开始时间和结束时间
@@ -1050,8 +1216,9 @@ public class EventRule {
      * 国别库存
      */
     private void setActInv(){
-        if (itemActInv!=null)
+        if (itemActInv!=null) {
             return;
+        }
         //先获取海外库存
         setItemStock();
         //取活动前的入库数量
@@ -1131,8 +1298,9 @@ public class EventRule {
      * 活动可售天数
      */
     private void setActSaleDay(){
-        if (itemActSalDay !=null)
+        if (itemActSalDay !=null) {
             return;
+        }
         itemActSalDay = new HashMap<>(itemInfoes.size());
         //设置活动库存
         setActInv();
@@ -1154,8 +1322,9 @@ public class EventRule {
     private Map<String,BigDecimal> reviewStars;
     private Map<String,Integer> reviewQty;
     private void setReview(){
-        if (reviewStars!=null)
+        if (reviewStars!=null) {
             return;
+        }
         reviewStars = new HashMap<>();
         reviewQty = new HashMap<>();
         QFBuilder builder = new QFBuilder();
@@ -1184,8 +1353,9 @@ public class EventRule {
      * 定价
      */
     private void setItemPrice(){
-        if (itemPrice!=null)
+        if (itemPrice!=null) {
             return;
+        }
         ItemPriceDao itemPriceDao = new ItemPriceDaoImpl();
         Object shopid = actPlanEntity.getDynamicObject("aos_shop").getPkValue();
         itemPrice = itemPriceDao.queryShopItemPrice(orgEntity.getPkValue(),shopid);
@@ -1270,11 +1440,13 @@ public class EventRule {
             itemShopSale = new HashMap<>();
         }
         //判断传入天数天数是否为空
-        if (FndGlobal.IsNull(day))
+        if (FndGlobal.IsNull(day)) {
             return;
+        }
         //判断这种天数的销量是否已经计算过
-        if (itemShopSale.containsKey(String.valueOf(day)))
+        if (itemShopSale.containsKey(String.valueOf(day))) {
             return;
+        }
         //设置查找销量的开始时间和结束时间
         long orgID = orgEntity.getLong("id");
         long shopId = actPlanEntity.getDynamicObject("aos_shop").getLong("id");
@@ -1296,8 +1468,9 @@ public class EventRule {
      */
     private void getItemShopSale(String key,String rule,Map<String,Boolean> result,DynamicObject row){
         int day = 7;
-        if (FndGlobal.IsNotNull(row.get("aos_rule_day")))
+        if (FndGlobal.IsNotNull(row.get("aos_rule_day"))) {
             day = row.getInt("aos_rule_day");
+        }
         setItemShopSale(day);
         Map<Long, Integer> shopSale = itemShopSale.get(String.valueOf(day));
         Map<String,Object> paramars = new HashMap<>();
@@ -1385,8 +1558,9 @@ public class EventRule {
      * 最大库龄
      */
     private void setItemMaxAge(){
-        if (itemMaxAge!=null)
+        if (itemMaxAge!=null) {
             return;
+        }
         ItemAgeDao ageDao = new ItemAgeDaoImpl();
         itemMaxAge = ageDao.listItemMaxAgeByOrgId(orgEntity.getLong("id"));
     }
@@ -1415,8 +1589,9 @@ public class EventRule {
      * 平台仓库存
      */
     private void setItemPlatStock(){
-        if (itemPlatStock!=null)
+        if (itemPlatStock!=null) {
             return;
+        }
         itemPlatStock = new HashMap<>(itemInfoes.size());
         setItemStock();
         setItemNoPlatStock();
@@ -1452,8 +1627,9 @@ public class EventRule {
      * 非平台仓库存
      */
     private void setItemNoPlatStock(){
-        if (itemNoPlatStock!=null)
+        if (itemNoPlatStock!=null) {
             return;
+        }
         ItemStockDao itemStockDao = new ItemStockDaoImpl();
         itemNoPlatStock = itemStockDao.listItemNoPlatformStock(orgEntity.getLong("id"));
     }
@@ -1497,12 +1673,12 @@ public class EventRule {
             str.add("日均销量： "+saleAve);
             String type = MKTCom.Get_RegularUn(orgEntity.getString("number"), saleDay, saleAve);
             fndLog.add(str.toString());
-            if (type.equals("低动销")){
+            if ("低动销".equals(type)){
                 if (profitStand.containsKey("低动销1") && profitStand.get("低动销1").contains(itemId) ){
                     result.put(itemId,true);
                 }
             }
-            else if (type.equals("低周转")){
+            else if ("低周转".equals(type)){
                 String stand;
                 if (saleAve<=3){
                     stand = "低周转1";
@@ -1573,10 +1749,10 @@ public class EventRule {
             else {
                 String seasonpro = itemInfoe.getString("seasonpro");
                 //春夏品
-                if (FndGlobal.IsNotNull(seasonpro) && seasonpro.equals("SPRING_SUMMER_PRO")){
+                if (FndGlobal.IsNotNull(seasonpro) && "SPRING_SUMMER_PRO".equals(seasonpro)){
                     String stand;
                     //判断是否 春夏滞销
-                    if (itemUnsaleTyep.containsKey(itemId) && itemUnsaleTyep.get(itemId).equals("SPRING")){
+                    if (itemUnsaleTyep.containsKey(itemId) && "SPRING".equals(itemUnsaleTyep.get(itemId))){
                         stand = "季节品4";
                     }
                     else {
@@ -1601,8 +1777,9 @@ public class EventRule {
                 if (profitStand.containsKey("爆品") && profitStand.get("爆品").contains(itemId)){
                     result.put(itemId,true);
                 }
-                else
+                else {
                     result.put(itemId,false);
+                }
             }
             else {
                 result.put(itemId,false);
@@ -1698,8 +1875,9 @@ public class EventRule {
      * 设置季节品和节日品的 季初、季中，季末
      */
     private void setSeasonStage(){
-        if (seasonStage!=null)
+        if (seasonStage!=null) {
             return;
+        }
         seasonStage = new HashMap<>();
         QFBuilder builder = new QFBuilder();
         builder.add("aos_orgid","=",orgEntity.getPkValue());
@@ -1773,8 +1951,9 @@ public class EventRule {
      */
     Map<String, Map<String, BigDecimal>> itemActProfit;
     private void setItemActProfit() {
-        if (itemActProfit != null)
+        if (itemActProfit != null) {
             return;
+        }
         //获取活动价格
         setItemActPrice();
         //获取原价
@@ -1827,8 +2006,9 @@ public class EventRule {
         ItemPriceDao priceDao = new ItemPriceDaoImpl();
         Map<String, BigDecimal> results = priceDao.queryShopItemPrice(orgEntity.getPkValue(), actPlanEntity.getDynamicObject("aos_shop").getPkValue());
         for (Map.Entry<String, BigDecimal> entry : results.entrySet()) {
-            if (missingPrice.contains(entry.getKey()))
+            if (missingPrice.contains(entry.getKey())) {
                 itemCurrentPrice.put(entry.getKey(),entry.getValue());
+            }
         }
     }
 
@@ -1895,8 +2075,9 @@ public class EventRule {
      */
     private Map<String,BigDecimal> setDiscount(){
         BigDecimal discount = actPlanEntity.getBigDecimal("aos_disstrength");
-        if (discount ==null)
+        if (discount ==null) {
             discount = BigDecimal.ONE;
+        }
         Map<String,BigDecimal> result = new HashMap<>(itemInfoes.size());
         for (DynamicObject infoe : itemInfoes) {
             result.put(infoe.getString("id"),discount);
@@ -1910,10 +2091,12 @@ public class EventRule {
      * @param day 天数
      */
     private void setPastPrice(String day){
-        if (pastPrices==null)
+        if (pastPrices==null) {
             pastPrices = new HashMap<>();
-        if (pastPrices.containsKey(day))
+        }
+        if (pastPrices.containsKey(day)) {
             return;
+        }
         Map<String,BigDecimal> results = new HashMap<>(itemInfoes.size());
         QFBuilder builder = new QFBuilder();
         LocalDate now = LocalDate.now();
@@ -1938,10 +2121,12 @@ public class EventRule {
      * @param day 天数
      */
     private void setPastSale(String day){
-        if (pastSale==null)
+        if (pastSale==null) {
             pastSale = new HashMap<>();
-        if (pastSale.containsKey(day))
+        }
+        if (pastSale.containsKey(day)) {
             return;
+        }
         QFBuilder builder = new QFBuilder();
         builder.add("aos_org","=",orgEntity.getPkValue());
         builder.add("aos_shopfid","=",actPlanEntity.getDynamicObject("aos_shop").getPkValue());
@@ -1957,8 +2142,9 @@ public class EventRule {
         for (DynamicObject row : orderInfoes) {
             String itemFid = row.getString("aos_item_fid");
             BigDecimal value = BigDecimal.ZERO;
-            if (results.containsKey(itemFid))
+            if (results.containsKey(itemFid)) {
                 value = results.get(itemFid);
+            }
             if (value.compareTo(row.getBigDecimal("aos_trans_price"))<0) {
                 value = row.getBigDecimal("aos_trans_price");
             }
@@ -1979,7 +2165,7 @@ public class EventRule {
 
         //获取7天店铺销量
         setItemShopSale(7);
-        Map<Long, Integer> shopSalQty = itemShopSale.get(7);
+        Map<Long, Integer> shopSalQty = itemShopSale.getOrDefault(7,new HashMap<>());
         //获取平台仓库存和非平台仓库存
         setItemPlatStock();
         setItemNoPlatStock();

@@ -10,7 +10,7 @@ import kd.bos.entity.datamodel.events.ImportDataEventArgs;
 import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.threads.ThreadPools;
-import mkt.act.rule.detailImprot.EventRule;
+import mkt.act.rule.Import.EventRule;
 import mkt.act.rule.service.ActPlanService;
 import mkt.act.rule.service.impl.ActPlanServiceImpl;
 

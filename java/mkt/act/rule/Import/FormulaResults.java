@@ -1,17 +1,12 @@
-package mkt.act.rule.detailImprot;
+package mkt.act.rule.Import;
 
-import common.fnd.FndGlobal;
 import common.fnd.FndLog;
-import common.sal.util.QFBuilder;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.formula.FormulaEngine;
-import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.QueryServiceHelper;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.*;
 
 /**
