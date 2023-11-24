@@ -976,7 +976,7 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
 
 			// 提示：所有国别已终止，且无库存，不建议优化listing
 			if (FndGlobal.IsNull(aos_orgtext) && !aos_iscomb) {
-				throw new FndError("所有国别已终止，且无库存，不建议优化listing!");
+				throw new FndError(item_number +"- 所有国别已终止，且无库存，不建议优化listing!");
 			}
 
 			// 获取同产品号物料
