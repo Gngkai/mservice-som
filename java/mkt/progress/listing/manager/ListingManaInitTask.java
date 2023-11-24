@@ -80,7 +80,7 @@ public class ListingManaInitTask extends AbstractTask {
         listManaDyn.set("aos_itemid", itemId);
         listManaDyn.set("aos_purer", itemUserMap.get(itemId + "~PUR"));
         listManaDyn.set("aos_follower", itemUserMap.get(itemId + "~FOL"));
-        listManaDyn.set("aos_picture", itemPictureMap.get(itemId));
+//        listManaDyn.set("aos_picture", itemPictureMap.get(itemId));
         listManaDyn.set("aos_amurl", itemAmUrlMap.get(orgId + "~" + itemId));
         if (aaddMap.contains(aosOrgNum + "~" + itemId)) {
             listManaDyn.set("aos_aadd", true);
@@ -150,7 +150,8 @@ public class ListingManaInitTask extends AbstractTask {
                 "aos_contryentry.aos_nationality aos_orgid," +
                         "id aos_itemid," +
                         "aos_contryentry.aos_nationality.number aos_orgnum," +
-                        "aos_contryentry.aos_is_saleout aos_is_saleout",
+                        "aos_contryentry.aos_is_saleout aos_is_saleout," +
+                        "picturefield",
                 new QFilter("aos_protype", QCP.equals, "N")
                         .and("aos_contryentry.aos_contryentrystatus", QCP.not_in, new String[]{"H", "F"})
 //                        .and("number", QCP.equals, "350-020")
@@ -175,6 +176,7 @@ public class ListingManaInitTask extends AbstractTask {
                 listManaDyn = BusinessDataServiceHelper.newDynamicObject("aos_mkt_listing_mana");
                 listManaCreate(listManaDyn, orgId, itemId, aosOrgNum);
                 listManaDyn.set("aos_is_saleout", bdMaterial.get("aos_is_saleout"));
+                listManaDyn.set("aos_picture", bdMaterial.get("picturefield"));
             }
             listManaDynS.add(listManaDyn);
             if (listManaDynS.size() >= 5000 || seq == biffSize) {
