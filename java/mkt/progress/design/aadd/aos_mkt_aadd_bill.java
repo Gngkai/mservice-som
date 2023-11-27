@@ -363,7 +363,11 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
         Boolean aos_min = dy_main.getBoolean("aos_min");
         Object aos_sourceid = dy_main.get("aos_sourceid");
         if (aos_min) {
-            DynamicObjectCollection aosMktAaddS = QueryServiceHelper.query("aos_mkt_aadd", "id", new QFilter("aos_son", QCP.equals, true).and("aos_sourceid", QCP.equals, aos_sourceid).toArray());
+            DynamicObjectCollection aosMktAaddS = QueryServiceHelper
+                    .query("aos_mkt_aadd", "id",
+                            new QFilter("aos_son", QCP.equals, true)
+                                    .and("aos_org", QCP.equals, dy_main.getString("aos_org"))
+                                    .and("aos_sourceid", QCP.equals, aos_sourceid).toArray());
             for (DynamicObject aosMktAadd : aosMktAaddS) {
                 DynamicObject son = BusinessDataServiceHelper.loadSingle(aosMktAadd.get("id"), "aos_mkt_aadd");
                 son.set("aos_user", son.get("aos_design"));
