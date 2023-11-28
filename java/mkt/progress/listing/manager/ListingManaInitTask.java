@@ -15,6 +15,7 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -23,10 +24,31 @@ import java.util.stream.Collectors;
  * 数字资产管理初始化调度任务类
  */
 public class ListingManaInitTask extends AbstractTask {
+
     /**
      * 亚马逊链接
      */
     private static Map<String, String> itemAmUrlMap;
+
+    /**
+     * CL链接
+     */
+    private static Map<String, Map<String, String>> clUrlMap;
+
+    /**
+     * CL埋词个数
+     */
+    private static Map<String, Integer> clKeyWordMap;
+
+    /**
+     * AM属性字段填写率
+     */
+    private static Map<String, BigDecimal> clCateMap;
+
+    /**
+     * AM属性字段填写率
+     */
+    private static Map<String, Date> clDateMap;
 
     /**
      * 物料图片
@@ -82,6 +104,11 @@ public class ListingManaInitTask extends AbstractTask {
         listManaDyn.set("aos_follower", itemUserMap.get(itemId + "~FOL"));
         listManaDyn.set("aos_picture", itemPictureMap.get(itemId));
         listManaDyn.set("aos_amurl", itemAmUrlMap.get(orgId + "~" + itemId));
+        listManaDyn.set("aos_qty", clKeyWordMap.get(orgId + "~" + itemId));
+        listManaDyn.set("aos_amrate", clCateMap.get(orgId + "~" + itemId));
+        listManaDyn.set("aos_onlinedate", clDateMap.get(orgId + "~" + itemId));
+
+
         if (aaddMap.contains(aosOrgNum + "~" + itemId)) {
             listManaDyn.set("aos_aadd", true);
         }
@@ -119,6 +146,20 @@ public class ListingManaInitTask extends AbstractTask {
         DynamicObjectCollection aosPointS = listManaDyn.getDynamicObjectCollection("aos_pointentity");
         aosPointS.clear();
         aosPointS.addNew();
+
+        DynamicObjectCollection aosUrlS = listManaDyn
+                .getDynamicObjectCollection("aos_urlentity");
+        aosUrlS.clear();
+        Map<String, String> itemClUrlMap = clUrlMap.get(orgId + "~" + itemId);
+        if (FndGlobal.IsNotNull(itemClUrlMap)){
+            for (String key : itemClUrlMap.keySet()) {
+                DynamicObject aosUrl = aosUrlS.addNew();
+                aosUrl.set("aos_platformid", key.split("~")[0]);
+                aosUrl.set("aos_shopid", key.split("~")[1]);
+                aosUrl.set("aos_shopsku", key.split("~")[2]);
+                aosUrl.set("aos_url", itemClUrlMap.get(key));
+            }
+        }
     }
 
     /**
@@ -145,6 +186,12 @@ public class ListingManaInitTask extends AbstractTask {
         itemPictureMapInit();
         itemAmUrlMapInit();
 
+        // CL Data
+        clUrlInit();
+        clKeyWordInit();
+        clCateInit();
+        clDateInit();
+
         Set<String> manaSet = getManaSet();
         DynamicObjectCollection bdMaterialS = QueryServiceHelper.query("bd_material",
                 "aos_contryentry.aos_nationality aos_orgid," +
@@ -153,7 +200,7 @@ public class ListingManaInitTask extends AbstractTask {
                         "aos_contryentry.aos_is_saleout aos_is_saleout",
                 new QFilter("aos_protype", QCP.equals, "N")
                         .and("aos_contryentry.aos_contryentrystatus", QCP.not_in, new String[]{"H", "F"})
-//                        .and("number", QCP.equals, "350-020")
+//                       .and("number", QCP.equals, "D34-005V00CG")
                         .toArray());
         List<DynamicObject> listManaDynS = new ArrayList<>();
         int seq = 1;
@@ -171,6 +218,8 @@ public class ListingManaInitTask extends AbstractTask {
                                 .and("aos_itemid", QCP.equals, itemId)
                                 .toArray());
                 listManaUpdate(listManaDyn);
+                listManaDyn.set("aos_is_saleout", bdMaterial.get("aos_is_saleout"));
+                listManaDyn.set("aos_picture", bdMaterial.get("picturefield"));
             } else {
                 listManaDyn = BusinessDataServiceHelper.newDynamicObject("aos_mkt_listing_mana");
                 listManaCreate(listManaDyn, orgId, itemId, aosOrgNum);
@@ -187,7 +236,78 @@ public class ListingManaInitTask extends AbstractTask {
     }
 
     /**
+     * CL物料上线日期初始化
+     */
+    private static void clDateInit() {
+        FndMsg.debug("======Start CL物料上线日期初始化======");
+        clDateMap = new HashMap<>();
+        DynamicObjectCollection dyns = QueryServiceHelper.query("aos_mkt_cloldate",
+                "aos_orgid,aos_itemid,aos_date"
+                , null);
+        for (DynamicObject dyn : dyns) {
+            String key = dyn.getString("aos_orgid") + "~" +
+                    dyn.getString("aos_itemid");
+            clDateMap.put(key, dyn.getDate("aos_date"));
+        }
+    }
+
+    /**
+     * CL-AM属性字段填写率初始化
+     */
+    private static void clCateInit() {
+        FndMsg.debug("======Start CL-AM属性字段填写率初始化======");
+        clCateMap = new HashMap<>();
+        DynamicObjectCollection dyns = QueryServiceHelper.query("aos_mkt_caterate",
+                "aos_orgid,aos_itemid,aos_caterate"
+                , new QFilter("aos_platform", QCP.equals, "AMAZONTEMPLATE").toArray());
+        for (DynamicObject dyn : dyns) {
+            String key = dyn.getString("aos_orgid") + "~" +
+                    dyn.getString("aos_itemid");
+            clCateMap.put(key, dyn.getBigDecimal("aos_caterate"));
+        }
+    }
+
+    /**
+     * CL链接初始化
+     */
+    private static void clUrlInit() {
+        FndMsg.debug("======Start CL链接初始化======");
+        clUrlMap = new HashMap<>();
+        DynamicObjectCollection dyns = QueryServiceHelper.query("aos_mkt_clurl",
+                "aos_orgid , aos_platformid, aos_shopid, aos_itemid, " +
+                        "aos_shopsku, aos_url"
+                , null);
+        for (DynamicObject dyn : dyns) {
+            String key = dyn.getString("aos_orgid") + "~" +
+                    dyn.getString("aos_itemid");
+            Map<String, String> info = clUrlMap.computeIfAbsent(key, k -> new HashMap<>());
+            info.put(dyn.getString("aos_platformid")
+                            + "~" + dyn.getString("aos_shopid")
+                            + "~" + dyn.getString("aos_shopsku")
+                    , dyn.getString("aos_url"));
+            clUrlMap.put(key, info);
+        }
+    }
+
+    /**
+     * CL埋词初始化
+     */
+    private static void clKeyWordInit() {
+        FndMsg.debug("======Start CL埋词初始化======");
+        clKeyWordMap = new HashMap<>();
+        DynamicObjectCollection dyns = QueryServiceHelper.query("aos_mkt_clkeyword",
+                "aos_orgid,aos_itemid,aos_keycount"
+                , null);
+        for (DynamicObject dyn : dyns) {
+            String key = dyn.getString("aos_orgid") + "~" +
+                    dyn.getString("aos_itemid");
+            clKeyWordMap.put(key, dyn.getInt("aos_keycount"));
+        }
+    }
+
+    /**
      * 更新已生成的Listing资产管理界面
+     *
      * @param listManaDyn 单据实体
      */
     private static void listManaUpdate(DynamicObject listManaDyn) {
@@ -198,11 +318,14 @@ public class ListingManaInitTask extends AbstractTask {
         listManaDyn.set("aos_follower", itemUserMap.get(itemId + "~FOL"));
         listManaDyn.set("aos_picture", itemPictureMap.get(itemId));
         listManaDyn.set("aos_amurl", itemAmUrlMap.get(orgId + "~" + itemId));
+        listManaDyn.set("aos_qty", clKeyWordMap.get(orgId + "~" + itemId));
+        listManaDyn.set("aos_amrate", clCateMap.get(orgId + "~" + itemId));
+        listManaDyn.set("aos_onlinedate", clDateMap.get(orgId + "~" + itemId));
 
-        if (aaddMap.contains(aosOrgNum + "~" + itemId)) {
+        if (aaddMap.contains(aosOrgNum + "~" + itemId) && !listManaDyn.getBoolean("aos_aadd")) {
             listManaDyn.set("aos_aadd", true);
         }
-        if (design3DSet.contains(itemId)) {
+        if (design3DSet.contains(itemId) && !listManaDyn.getBoolean("aos_3d")) {
             listManaDyn.set("aos_3d", true);
         }
 
@@ -233,6 +356,20 @@ public class ListingManaInitTask extends AbstractTask {
             listManaDyn.set("aos_fr_sale", orgCateUserMap.get("FR~" + cateKey));
             listManaDyn.set("aos_it_sale", orgCateUserMap.get("IT~" + cateKey));
             listManaDyn.set("aos_es_sale", orgCateUserMap.get("ES~" + cateKey));
+        }
+
+        DynamicObjectCollection aosUrlS = listManaDyn
+                .getDynamicObjectCollection("aos_urlentity");
+        aosUrlS.clear();
+        Map<String, String> itemClUrlMap = clUrlMap.get(orgId + "~" + itemId);
+        if (FndGlobal.IsNotNull(itemClUrlMap)){
+            for (String key : itemClUrlMap.keySet()) {
+                DynamicObject aosUrl = aosUrlS.addNew();
+                aosUrl.set("aos_platformid", key.split("~")[0]);
+                aosUrl.set("aos_shopid", key.split("~")[1]);
+                aosUrl.set("aos_shopsku", key.split("~")[2]);
+                aosUrl.set("aos_url", itemClUrlMap.get(key));
+            }
         }
     }
 
