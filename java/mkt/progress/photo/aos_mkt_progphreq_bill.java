@@ -1404,6 +1404,24 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
             }).collect(Collectors.toList());
 
 
+            // 产品类别
+            String category = (String) SalUtil.getCategoryByItemId(String.valueOf(fid)).get("name");
+            String[] category_group = category.split(",");
+            String AosCategory1 = null;
+            String AosCategory2 = null;
+            String AosCategory3 = null;
+            int category_length = category_group.length;
+            if (category_length > 0)
+                AosCategory1 = category_group[0];
+            if (category_length > 1)
+                AosCategory2 = category_group[1];
+            if (category_length > 2)
+                AosCategory3 = category_group[2];
+
+            if ("新建".equals(aosStatus)||"视频拍摄".equals(aosStatus)) {
+                this.getModel().deleteEntryData("aos_entryentity4");
+            }
+
             int i = 1;
                 // 获取所有国家品牌 字符串拼接 终止
                 for (DynamicObject aos_contryentry : list_country) {
@@ -1431,8 +1449,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
                         Str = "-" + aos_nationalitynumber;
 
 
-                    if ("新建".equals(aosStatus)) {
-                        this.getModel().deleteEntryData("aos_entryentity4");
+                    if ("新建".equals(aosStatus)||"视频拍摄".equals(aosStatus)) {
                         this.getModel().batchCreateNewEntryRow("aos_entryentity4", 1);
                         this.getModel().setValue("aos_orgshort", aos_nationalitynumber, i - 1);
                         this.getModel().setValue("aos_brand", value, i - 1);
@@ -1440,10 +1457,13 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
                         DynamicObject aos_mkt_progorguser = QueryServiceHelper.queryOne("aos_mkt_progorguser",
                                 "aos_oueditor",
                                 new QFilter("aos_orgid.number",QCP.equals,aos_nationalitynumber)
-                                        .and("aos_category1",QCP.equals,aos_category1)
-                                        .and("aos_category2",QCP.equals,aos_category2).toArray());
+                                        .and("aos_category1",QCP.equals,AosCategory1)
+                                        .and("aos_category2",QCP.equals,AosCategory2).toArray());
+                        FndMsg.debug("aos_category1:"+AosCategory1);
+                        FndMsg.debug("aos_category2:"+AosCategory2);
                         if (FndGlobal.IsNotNull(aos_mkt_progorguser))
                         {
+                            FndMsg.debug("into not null prorguser");
                             this.getModel().setValue("aos_editor", aos_mkt_progorguser.get("aos_oueditor"), i - 1);
                         }
 
@@ -1497,19 +1517,6 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
                 this.getModel().setValue("aos_picturefield", o);
             }
 
-            // 产品类别
-            String category = (String) SalUtil.getCategoryByItemId(String.valueOf(fid)).get("name");
-            String[] category_group = category.split(",");
-            String AosCategory1 = null;
-            String AosCategory2 = null;
-            String AosCategory3 = null;
-            int category_length = category_group.length;
-            if (category_length > 0)
-                AosCategory1 = category_group[0];
-            if (category_length > 1)
-                AosCategory2 = category_group[1];
-            if (category_length > 2)
-                AosCategory3 = category_group[2];
             // 赋值物料相关
             String aosItemName = bd_material.getString("name");
             this.getModel().setValue(aos_itemname, aosItemName);
@@ -2133,8 +2140,8 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
                 DynamicObject aos_mkt_progorguser = QueryServiceHelper.queryOne("aos_mkt_progorguser",
                         "aos_oueditor",
                         new QFilter("aos_orgid.number",QCP.equals,aos_nationalitynumber)
-                                .and("aos_category1",QCP.equals,aos_category1)
-                                .and("aos_category2",QCP.equals,aos_category2).toArray());
+                                .and("aos_category1",QCP.equals,AosCategory1)
+                                .and("aos_category2",QCP.equals,AosCategory2).toArray());
                 if (FndGlobal.IsNotNull(aos_mkt_progorguser))
                 {
                     this.getModel().setValue("aos_editor", aos_mkt_progorguser.get("aos_oueditor"), i - 1);
@@ -3424,6 +3431,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
             aos_entryentity4.set("aos_s3address1", aos_entryentityOri4.get("aos_s3address1"));
             aos_entryentity4.set("aos_s3address2", aos_entryentityOri4.get("aos_s3address2"));
 
+            aos_entryentity4.set("aos_editor", aos_entryentityOri4.get("aos_editor"));
 
             aos_entryentityOri4.set("aos_salerece_date", new Date());
             aos_entryentity4.set("aos_salerece_date", new Date());
