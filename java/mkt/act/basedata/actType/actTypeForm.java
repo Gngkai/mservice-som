@@ -1,7 +1,7 @@
 package mkt.act.basedata.actType;
 
 import common.fnd.FndGlobal;
-import common.sal.util.SalUtil;
+import common.sal.util.QFBuilder;
 import kd.bos.bill.AbstractBillPlugIn;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
@@ -10,15 +10,18 @@ import kd.bos.form.CloseCallBack;
 import kd.bos.form.FormShowParameter;
 import kd.bos.form.ShowType;
 import kd.bos.form.control.Control;
+import kd.bos.form.events.AfterDoOperationEventArgs;
+import kd.bos.form.events.BeforeDoOperationEventArgs;
 import kd.bos.form.events.ClosedCallBackEvent;
 import kd.bos.form.field.BasedataEdit;
 import kd.bos.form.field.events.BeforeF7SelectEvent;
 import kd.bos.form.field.events.BeforeF7SelectListener;
+import kd.bos.form.operate.FormOperate;
 import kd.bos.formula.FormulaEngine;
 import kd.bos.list.ListShowParameter;
 import kd.bos.orm.query.QFilter;
+import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
-import org.apache.commons.collections4.BidiMap;
 
 import java.util.*;
 
@@ -126,6 +129,7 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
         else if (key.equals("aos_name")){
             showParameter(key,"aos_act_type_cate");
         }
+
     }
 
     @Override
@@ -180,6 +184,20 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
         }
     }
 
+    @Override
+    public void beforeDoOperation(BeforeDoOperationEventArgs args) {
+        super.beforeDoOperation(args);
+        FormOperate formOperate = (FormOperate) args.getSource();
+        if (formOperate.getOperateKey().equals("orgrule")){
+            String message = syncOrgRule();
+            if (FndGlobal.IsNotNull(message)){
+                args.setCancel(true);
+                getView().showTipNotification(message);
+            }
+        }
+
+    }
+
     /**
      * 弹窗规则编辑框
      * @param type
@@ -227,5 +245,51 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
             parameters.put(value,true);
         }
         FormulaEngine.execExcelFormula(formula,parameters);
+    }
+
+    /**
+     * 同步国别规则
+     */
+    private String syncOrgRule (){
+        Object aos_org = this.getModel().getValue("aos_org");
+        if (aos_org==null){
+           return "请先选择国别";
+        }
+        String orgId = ((DynamicObject) aos_org).getString("id");
+        //查找对应的国别规则
+        QFBuilder qfBuilder = new QFBuilder();
+        qfBuilder.add("aos_org","=",orgId);
+        qfBuilder.add("enable","=",1);
+        StringJoiner str = new StringJoiner(",");
+        str.add("aos_entryentity.aos_project");
+        str.add("aos_entryentity.aos_condite");
+        str.add("aos_entryentity.aos_rule_value");
+        str.add("aos_entryentity.aos_rule_day");
+        str.add("aos_entryentity.seq");
+        str.add("aos_rule");
+        str.add("aos_rule_v");
+        //国别规则单据
+        DynamicObject orgRuleEntity = BusinessDataServiceHelper.loadSingle("aos_sal_act_rule", str.toString(), qfBuilder.toArray());
+        if (orgRuleEntity==null){
+            return "未找到对应的国别规则";
+        }
+
+        this.getModel().setValue("aos_rule",orgRuleEntity.get("aos_rule"));
+        this.getModel().setValue("aos_rule_v",orgRuleEntity.get("aos_rule_v"));
+
+        DynamicObjectCollection ruleRows = orgRuleEntity.getDynamicObjectCollection("aos_entryentity");
+
+        DynamicObjectCollection theFormRuleRows = this.getModel().getDataEntity(true).getDynamicObjectCollection("aos_entryentity2");
+        theFormRuleRows.removeIf(row->true);
+        for (DynamicObject row : ruleRows) {
+            DynamicObject addNewRow = theFormRuleRows.addNew();
+            addNewRow.set("seq",row.get("seq"));
+            addNewRow.set("aos_project",row.get("aos_project"));
+            addNewRow.set("aos_condite",row.get("aos_condite"));
+            addNewRow.set("aos_rule_value",row.get("aos_rule_value"));
+            addNewRow.set("aos_rule_day",row.get("aos_rule_day"));
+        }
+        getView().updateView("aos_entryentity2");
+        return null;
     }
 }
