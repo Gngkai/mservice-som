@@ -161,7 +161,10 @@ public class aos_mkt_popadjp_init extends AbstractTask {
 					+ "aos_entryentity.aos_highvalue aos_highvalue," + "aos_entryentity.aos_basestitem aos_basestitem,"
 					+ "aos_entryentity.aos_age aos_age," + "aos_entryentity.aos_overseaqty aos_overseaqty,"
 					+ "aos_entryentity.aos_is_saleout aos_is_saleout,"
-					+ "aos_entryentity.aos_category1 aos_category1,aos_entryentity.aos_category2 aos_category2";
+					+ "aos_entryentity.aos_category1 aos_category1," +
+					"aos_entryentity.aos_category2 aos_category2," +
+					"aos_entryentity.aos_special aos_special," +
+					"aos_entryentity.aos_offline aos_offline";
 			DynamicObjectCollection aos_mkt_popular_ppcS = QueryServiceHelper.query("aos_mkt_popular_ppc", SelectField,
 					filters, "aos_entryentity.aos_productno");
 			int rows = aos_mkt_popular_ppcS.size();
@@ -336,6 +339,9 @@ public class aos_mkt_popadjp_init extends AbstractTask {
 				aos_detailentry.set("aos_age", aos_mkt_popular_ppc.get("aos_age"));// 最大库龄
 				aos_detailentry.set("aos_is_saleout", aos_mkt_popular_ppc.get("aos_is_saleout"));
 				aos_detailentry.set("aos_overseaqty", aos_mkt_popular_ppc.get("aos_overseaqty"));
+
+				aos_detailentry.set("aos_offline", aos_mkt_popular_ppc.get("aos_offline"));
+				aos_detailentry.set("aos_special", aos_mkt_popular_ppc.get("aos_special"));
 
 				String aos_category1 = aos_mkt_popular_ppc.getString("aos_category1");
 				String aos_category2 = aos_mkt_popular_ppc.getString("aos_category2");
