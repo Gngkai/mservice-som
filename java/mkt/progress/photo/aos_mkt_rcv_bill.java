@@ -761,6 +761,17 @@ public class aos_mkt_rcv_bill extends AbstractBillPlugIn implements ItemClickLis
 		super.afterLoadData(e);
 		StatusControl();
 		GenerateLov();
+
+		Boolean aosPhotoFlag = (Boolean) this.getModel().getValue("aos_photoflag");
+		if (aosPhotoFlag) {
+			this.getModel().setValue("aos_reason", null);
+			this.getModel().setValue("aos_sameitemid", null);
+			this.getView().setEnable(false, "aos_reason");
+			this.getView().setEnable(false, "aos_sameitemid");
+		} else {
+			this.getView().setEnable(true, "aos_reason");
+			this.getView().setEnable(true, "aos_sameitemid");
+		}
 	}
 
 	public void afterCreateNewData(EventObject e) {
@@ -799,7 +810,19 @@ public class aos_mkt_rcv_bill extends AbstractBillPlugIn implements ItemClickLis
 
 	/** 是否拍照值改变 **/
 	private void AosPhotoFlagChange() {
-		this.getModel().setValue("aos_photo", this.getModel().getValue("aos_photoflag"));
+		Boolean aosPhotoFlag = (Boolean) this.getModel().getValue("aos_photoflag");
+		this.getModel().setValue("aos_photo", aosPhotoFlag);
+
+
+		if (aosPhotoFlag) {
+			this.getModel().setValue("aos_reason", null);
+			this.getModel().setValue("aos_sameitemid", null);
+			this.getView().setEnable(false, "aos_reason");
+			this.getView().setEnable(false, "aos_sameitemid");
+		} else {
+			this.getView().setEnable(true, "aos_reason");
+			this.getView().setEnable(true, "aos_sameitemid");
+		}
 	}
 
 	public void beforeClosed(BeforeClosedEvent e) {
