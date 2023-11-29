@@ -268,6 +268,13 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
         str.add("aos_entryentity.seq");
         str.add("aos_rule");
         str.add("aos_rule_v");
+        str.add("aos_entryentity3.aos_re_project");
+        str.add("aos_entryentity3.aos_frame");
+        str.add("aos_entryentity3.aos_re_channel");
+        str.add("aos_entryentity3.aos_re_shop");
+        str.add("aos_entryentity3.aos_re_act");
+        str.add("aos_entryentity3.seq");
+
         //国别规则单据
         DynamicObject orgRuleEntity = BusinessDataServiceHelper.loadSingle("aos_sal_act_rule", str.toString(), qfBuilder.toArray());
         if (orgRuleEntity==null){
@@ -289,7 +296,22 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
             addNewRow.set("aos_rule_value",row.get("aos_rule_value"));
             addNewRow.set("aos_rule_day",row.get("aos_rule_day"));
         }
+
+        DynamicObjectCollection deWeightRows = this.getModel().getDataEntity(true).getDynamicObjectCollection("aos_entryentity3");
+        deWeightRows.removeIf(row->true);
+        for (DynamicObject row : orgRuleEntity.getDynamicObjectCollection("aos_entryentity3")) {
+            //将国别规则的去重规则同步到单据
+            DynamicObject addNewRow = deWeightRows.addNew();
+            addNewRow.set("seq",row.get("seq"));
+            addNewRow.set("aos_re_project",row.get("aos_re_project"));
+            addNewRow.set("aos_frame",row.get("aos_frame"));
+            addNewRow.set("aos_re_channel",row.get("aos_re_channel"));
+            addNewRow.set("aos_re_shop",row.get("aos_re_shop"));
+            addNewRow.set("aos_re_act",row.get("aos_re_act"));
+        }
+
         getView().updateView("aos_entryentity2");
+        getView().updateView("aos_entryentity3");
         return null;
     }
 }
