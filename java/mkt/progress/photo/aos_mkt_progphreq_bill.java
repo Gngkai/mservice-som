@@ -340,14 +340,22 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
         if ("剪辑".equals(aos_vediotype) && (!AosVedioFlag || AosPhotoFlag)) {
             ErrorCount++;
             ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "视频优化类型为剪辑时 只允许勾选是否拍展示视频!");
-        } else
+        }
 
-            // 校验 新建时是否拍照、是否拍展示视频不能同时为false
-            if ("新建".equals(AosStatus) && AosPhotoFlag != null && AosVedioFlag != null && !AosPhotoFlag && !AosVedioFlag
-                    && (AosReason == null || "".equals(AosReason))) {
-                ErrorCount++;
-                ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "是否拍照与是否拍视频同时为否时不拍照原因必填!");
-            }
+        // 校验 新建时是否拍照、是否拍展示视频不能同时为false
+        if ("新建".equals(AosStatus) && AosPhotoFlag != null && AosVedioFlag != null && !AosPhotoFlag && !AosVedioFlag
+                && (AosReason == null || "".equals(AosReason))) {
+            ErrorCount++;
+            ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "是否拍照与是否拍视频同时为否时不拍照原因必填!");
+        }
+
+        // 新增、开发/采购确认 是否拍照选择否时，不拍照原因必填
+        if (("新建".equals(AosStatus) || "开发/采购确认".equals(AosStatus))
+                && !AosPhotoFlag && (FndGlobal.IsNull(AosReason))) {
+            ErrorCount++;
+            ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "是否拍照为否时不拍照原因必填!");
+        }
+
         // 校验 新建时如果选择了拍照或者拍视频 拍照地点必填 非视频剪辑类型才做校验
 
         if ("开发/采购确认".equals(AosStatus) && AosPhotoFlag != null && AosVedioFlag != null
@@ -363,7 +371,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
         }
         // 校验 同货号在是否拍照为否不拍照原因=同XX货号时必填
         if (AosPhotoFlag != null && !AosPhotoFlag
-                && (aos_sameitemid == null && AosReason != null && "同XX货号".equals(AosReason))) {
+                && (aos_sameitemid == null && "同XX货号".equals(AosReason))) {
             ErrorCount++;
             ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "同货号在是否拍照为否,不拍照原因为同XX货号时必填!");
         }
@@ -1418,93 +1426,92 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
             if (category_length > 2)
                 AosCategory3 = category_group[2];
 
-            if ("新建".equals(aosStatus)||"视频拍摄".equals(aosStatus)) {
+            if ("新建".equals(aosStatus) || "视频拍摄".equals(aosStatus)) {
                 this.getModel().deleteEntryData("aos_entryentity4");
             }
 
             int i = 1;
-                // 获取所有国家品牌 字符串拼接 终止
-                for (DynamicObject aos_contryentry : list_country) {
-                    DynamicObject aos_nationality = aos_contryentry.getDynamicObject("aos_nationality");
-                    String aos_nationalitynumber = aos_nationality.getString("number");
-                    if ("IE".equals(aos_nationalitynumber))
-                        continue;
-                    Object org_id = aos_nationality.get("id"); // ItemId
-                    int OsQty = iteminfo.GetItemOsQty(org_id, fid);
-                    int SafeQty = iteminfo.GetSafeQty(org_id);
-                    if ("C".equals(aos_contryentry.getString("aos_contryentrystatus")) && OsQty < SafeQty)
-                        continue;
-                    aos_orgtext = aos_orgtext + aos_nationalitynumber + ";";
+            // 获取所有国家品牌 字符串拼接 终止
+            for (DynamicObject aos_contryentry : list_country) {
+                DynamicObject aos_nationality = aos_contryentry.getDynamicObject("aos_nationality");
+                String aos_nationalitynumber = aos_nationality.getString("number");
+                if ("IE".equals(aos_nationalitynumber))
+                    continue;
+                Object org_id = aos_nationality.get("id"); // ItemId
+                int OsQty = iteminfo.GetItemOsQty(org_id, fid);
+                int SafeQty = iteminfo.GetSafeQty(org_id);
+                if ("C".equals(aos_contryentry.getString("aos_contryentrystatus")) && OsQty < SafeQty)
+                    continue;
+                aos_orgtext = aos_orgtext + aos_nationalitynumber + ";";
 
-                    Object obj = aos_contryentry.getDynamicObject("aos_contrybrand");
-                    if (obj == null)
-                        continue;
-                    String value = aos_contryentry.getDynamicObject("aos_contrybrand").getString("name");
-                    String Str = "";
+                Object obj = aos_contryentry.getDynamicObject("aos_contrybrand");
+                if (obj == null)
+                    continue;
+                String value = aos_contryentry.getDynamicObject("aos_contrybrand").getString("name");
+                String Str = "";
+
+                if ("US".equals(aos_nationalitynumber) || "CA".equals(aos_nationalitynumber)
+                        || "UK".equals(aos_nationalitynumber))
+                    Str = "";
+                else
+                    Str = "-" + aos_nationalitynumber;
+
+
+                if ("新建".equals(aosStatus) || "视频拍摄".equals(aosStatus)) {
+                    this.getModel().batchCreateNewEntryRow("aos_entryentity4", 1);
+                    this.getModel().setValue("aos_orgshort", aos_nationalitynumber, i - 1);
+                    this.getModel().setValue("aos_brand", value, i - 1);
+                    // 设置编辑人员
+                    DynamicObject aos_mkt_progorguser = QueryServiceHelper.queryOne("aos_mkt_progorguser",
+                            "aos_oueditor",
+                            new QFilter("aos_orgid.number", QCP.equals, aos_nationalitynumber)
+                                    .and("aos_category1", QCP.equals, AosCategory1)
+                                    .and("aos_category2", QCP.equals, AosCategory2).toArray());
+                    FndMsg.debug("aos_category1:" + AosCategory1);
+                    FndMsg.debug("aos_category2:" + AosCategory2);
+                    if (FndGlobal.IsNotNull(aos_mkt_progorguser)) {
+                        FndMsg.debug("into not null prorguser");
+                        this.getModel().setValue("aos_editor", aos_mkt_progorguser.get("aos_oueditor"), i - 1);
+                    }
+
+                    String first = ItemNumber.substring(0, 1);
+
+                    // 含品牌
+                    if ("US".equals(aos_nationalitynumber) || "CA".equals(aos_nationalitynumber)
+                            || "UK".equals(aos_nationalitynumber))
+                        // 非小语种
+                        this.getModel().setValue("aos_s3address1", "https://uspm.aosomcdn.com/videos/en/" + first + "/"
+                                + ItemNumber + "/" + ItemNumber + "-" + value + ".mp4", i - 1);
+                    else
+                        // 小语种
+                        this.getModel()
+                                .setValue(
+                                        "aos_s3address1", "https://uspm.aosomcdn.com/videos/en/" + first + "/" + ItemNumber
+                                                + "/" + ItemNumber + "-" + value + "-" + aos_nationalitynumber + ".mp4",
+                                        i - 1);
+
+                    // 不含品牌
+                    if ("US".equals(aos_nationalitynumber) || "CA".equals(aos_nationalitynumber)
+                            || "UK".equals(aos_nationalitynumber))
+                        // 非小语种
+                        this.getModel().setValue("aos_s3address2", "https://uspm.aosomcdn.com/videos/en/" + first + "/"
+                                + ItemNumber + "/" + ItemNumber + ".mp4", i - 1);
+                    else
+                        // 小语种
+                        this.getModel().setValue("aos_s3address2", "https://uspm.aosomcdn.com/videos/en/" + first + "/"
+                                + ItemNumber + "/" + ItemNumber + "-" + aos_nationalitynumber + ".mp4", i - 1);
 
                     if ("US".equals(aos_nationalitynumber) || "CA".equals(aos_nationalitynumber)
                             || "UK".equals(aos_nationalitynumber))
-                        Str = "";
+                        this.getModel().setValue("aos_filename", ItemNumber + "-" + value, i - 1);
                     else
-                        Str = "-" + aos_nationalitynumber;
-
-
-                    if ("新建".equals(aosStatus)||"视频拍摄".equals(aosStatus)) {
-                        this.getModel().batchCreateNewEntryRow("aos_entryentity4", 1);
-                        this.getModel().setValue("aos_orgshort", aos_nationalitynumber, i - 1);
-                        this.getModel().setValue("aos_brand", value, i - 1);
-                        // 设置编辑人员
-                        DynamicObject aos_mkt_progorguser = QueryServiceHelper.queryOne("aos_mkt_progorguser",
-                                "aos_oueditor",
-                                new QFilter("aos_orgid.number",QCP.equals,aos_nationalitynumber)
-                                        .and("aos_category1",QCP.equals,AosCategory1)
-                                        .and("aos_category2",QCP.equals,AosCategory2).toArray());
-                        FndMsg.debug("aos_category1:"+AosCategory1);
-                        FndMsg.debug("aos_category2:"+AosCategory2);
-                        if (FndGlobal.IsNotNull(aos_mkt_progorguser))
-                        {
-                            FndMsg.debug("into not null prorguser");
-                            this.getModel().setValue("aos_editor", aos_mkt_progorguser.get("aos_oueditor"), i - 1);
-                        }
-
-                        String first = ItemNumber.substring(0, 1);
-
-                        // 含品牌
-                        if ("US".equals(aos_nationalitynumber) || "CA".equals(aos_nationalitynumber)
-                                || "UK".equals(aos_nationalitynumber))
-                            // 非小语种
-                            this.getModel().setValue("aos_s3address1", "https://uspm.aosomcdn.com/videos/en/" + first + "/"
-                                    + ItemNumber + "/" + ItemNumber + "-" + value + ".mp4", i - 1);
-                        else
-                            // 小语种
-                            this.getModel()
-                                    .setValue(
-                                            "aos_s3address1", "https://uspm.aosomcdn.com/videos/en/" + first + "/" + ItemNumber
-                                                    + "/" + ItemNumber + "-" + value + "-" + aos_nationalitynumber + ".mp4",
-                                            i - 1);
-
-                        // 不含品牌
-                        if ("US".equals(aos_nationalitynumber) || "CA".equals(aos_nationalitynumber)
-                                || "UK".equals(aos_nationalitynumber))
-                            // 非小语种
-                            this.getModel().setValue("aos_s3address2", "https://uspm.aosomcdn.com/videos/en/" + first + "/"
-                                    + ItemNumber + "/" + ItemNumber + ".mp4", i - 1);
-                        else
-                            // 小语种
-                            this.getModel().setValue("aos_s3address2", "https://uspm.aosomcdn.com/videos/en/" + first + "/"
-                                    + ItemNumber + "/" + ItemNumber + "-" + aos_nationalitynumber + ".mp4", i - 1);
-
-                        if ("US".equals(aos_nationalitynumber) || "CA".equals(aos_nationalitynumber)
-                                || "UK".equals(aos_nationalitynumber))
-                            this.getModel().setValue("aos_filename", ItemNumber + "-" + value, i - 1);
-                        else
-                            this.getModel().setValue("aos_filename", ItemNumber + "-" + value + "-" + aos_nationalitynumber,
-                                    i - 1);
-                    }
-                    i++;
-                    if (!aos_contrybrandStr.contains(value))
-                        aos_contrybrandStr = aos_contrybrandStr + value + ";";
+                        this.getModel().setValue("aos_filename", ItemNumber + "-" + value + "-" + aos_nationalitynumber,
+                                i - 1);
                 }
+                i++;
+                if (!aos_contrybrandStr.contains(value))
+                    aos_contrybrandStr = aos_contrybrandStr + value + ";";
+            }
 
 
             // 图片字段
@@ -1628,6 +1635,27 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
             VedioTypeChange();
         else if (name.equals("aos_ponumber")) {
             poNumberChanged();
+        } else if ("aos_photoflag".equals(name)) {
+            photoChanged();
+        }
+    }
+
+    /**
+     * 是否拍照值改变事件
+     */
+    private void photoChanged() {
+        Object aosStatus = this.getModel().getValue("aos_status");
+        Boolean aosPhotoFlag = (Boolean) this.getModel().getValue("aos_photoflag");
+        if ("新建".equals(aosStatus) || "开发/采购确认".equals(aosStatus)) {
+            if (aosPhotoFlag) {
+                this.getModel().setValue("aos_reason", null);
+                this.getModel().setValue("aos_sameitemid", null);
+                this.getView().setEnable(false, "aos_reason");
+                this.getView().setEnable(false, "aos_sameitemid");
+            } else {
+                this.getView().setEnable(true, "aos_reason");
+                this.getView().setEnable(true, "aos_sameitemid");
+            }
         }
     }
 
@@ -2139,11 +2167,10 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
                 // 设置编辑人员
                 DynamicObject aos_mkt_progorguser = QueryServiceHelper.queryOne("aos_mkt_progorguser",
                         "aos_oueditor",
-                        new QFilter("aos_orgid.number",QCP.equals,aos_nationalitynumber)
-                                .and("aos_category1",QCP.equals,AosCategory1)
-                                .and("aos_category2",QCP.equals,AosCategory2).toArray());
-                if (FndGlobal.IsNotNull(aos_mkt_progorguser))
-                {
+                        new QFilter("aos_orgid.number", QCP.equals, aos_nationalitynumber)
+                                .and("aos_category1", QCP.equals, AosCategory1)
+                                .and("aos_category2", QCP.equals, AosCategory2).toArray());
+                if (FndGlobal.IsNotNull(aos_mkt_progorguser)) {
                     this.getModel().setValue("aos_editor", aos_mkt_progorguser.get("aos_oueditor"), i - 1);
                 }
 
@@ -2563,6 +2590,20 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
             this.getView().updateControlMetadata("aos_color", fieldMap);
 
         }
+
+        Boolean aosPhotoFlag = (Boolean) this.getModel().getValue("aos_photoflag");
+        if ("新建".equals(AosStatus) || "开发/采购确认".equals(AosStatus)) {
+            if (aosPhotoFlag) {
+                this.getModel().setValue("aos_reason", null);
+                this.getModel().setValue("aos_sameitemid", null);
+                this.getView().setEnable(false, "aos_reason");
+                this.getView().setEnable(false, "aos_sameitemid");
+            } else {
+                this.getView().setEnable(true, "aos_reason");
+                this.getView().setEnable(true, "aos_sameitemid");
+            }
+        }
+
 
         InitDifference();
     }
