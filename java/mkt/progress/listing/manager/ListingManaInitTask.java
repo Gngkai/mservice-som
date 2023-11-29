@@ -398,6 +398,11 @@ public class ListingManaInitTask extends AbstractTask {
             String aosOrgNum = prz.getString("aos_orgnum");
             String url = "";
             String aos_asin = prz.getString("aos_asin");
+
+            if (FndGlobal.IsNull(aos_asin)){
+                continue;
+            }
+
             switch (aosOrgNum) {
                 case "US":
                     url = "https://www.amazon.com/dp/";
