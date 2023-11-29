@@ -93,7 +93,7 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
 
         if ("RO".equals(aos_orgnumber) || "PT".equals(aos_orgnumber))
             // 生成Listing优化销售确认单
-            GenerateListingSal(dy_main);
+            GenerateListingSalSmall(dy_main);
 
         dy_main.set("aos_submitter", "B");
         dy_main.set("aos_status", "结束");
@@ -944,6 +944,123 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
         }
         return aos_mkt_designreq.getString("billno");
     }
+
+    /**
+     * 如果是Listing类型生成销售信息确认单
+     **/
+    private static void GenerateListingSalSmall(DynamicObject dy_main) throws FndError {
+        // 信息处理
+        String ErrorMessage = "";
+        String MessageId = null;
+        String Message = "";
+        // 数据层
+        DynamicObject aos_designerObj = dy_main.getDynamicObject("aos_designer");// 设计
+        Object aos_designer = null;
+        if (!Cux_Common_Utl.IsNull(aos_designerObj))
+            aos_designer = aos_designerObj.get("id");
+        Object billno = dy_main.get("billno");
+        Object ReqFId = dy_main.getPkValue(); // 当前界面主键
+        Object aos_orgid = dy_main.get("aos_orgsmall");//小站国别
+        Object aos_type = dy_main.get("aos_type");
+        DynamicObject aos_editorminObj = dy_main.getDynamicObject("aos_editormin");
+        Object aos_editorminid = null;
+        if (!Cux_Common_Utl.IsNull(aos_editorminObj))
+            aos_editorminid = aos_editorminObj.get("id");
+        // 设计
+        // 编辑确认师
+        Object aos_make = null;
+        DynamicObject dy_make = dy_main.getDynamicObject("aos_make");
+        if (dy_make != null)
+            aos_make = dy_make.getPkValue();
+
+        DynamicObjectCollection aos_entryentityS = dy_main.getDynamicObjectCollection("aos_entryentity");
+        // 初始化
+        DynamicObject aos_mkt_listing_sal = BusinessDataServiceHelper.newDynamicObject("aos_mkt_listing_sal");
+        aos_mkt_listing_sal.set("aos_requireby", aos_make);
+        aos_mkt_listing_sal.set("aos_designer", aos_designer);
+        aos_mkt_listing_sal.set("aos_status", "销售确认");
+        aos_mkt_listing_sal.set("aos_orgid", aos_orgid);
+        aos_mkt_listing_sal.set("aos_orignbill", billno);
+        aos_mkt_listing_sal.set("aos_sourceid", ReqFId);
+        aos_mkt_listing_sal.set("aos_type", aos_type);
+        aos_mkt_listing_sal.set("aos_requiredate", new Date());
+        aos_mkt_listing_sal.set("aos_editor", aos_editorminid);
+        aos_mkt_listing_sal.set("aos_sourcetype", "Listing优化需求表小语种");
+        // BOTP
+        aos_mkt_listing_sal.set("aos_sourcebilltype", "aos_mkt_listing_min");
+        aos_mkt_listing_sal.set("aos_sourcebillno", dy_main.get("billno"));
+        aos_mkt_listing_sal.set("aos_srcentrykey", "aos_entryentity");
+
+        DynamicObjectCollection cmp_entryentityS = aos_mkt_listing_sal.getDynamicObjectCollection("aos_entryentity");
+        for (DynamicObject aos_entryentity : aos_entryentityS) {
+            DynamicObject aos_subentryentity = aos_entryentity.getDynamicObjectCollection("aos_subentryentity").get(0);
+            DynamicObject cmp_entryentity = cmp_entryentityS.addNew();
+            cmp_entryentity.set("aos_itemid", aos_entryentity.get("aos_itemid"));
+            cmp_entryentity.set("aos_segment3", aos_subentryentity.get("aos_segment3"));
+            cmp_entryentity.set("aos_itemname", aos_subentryentity.get("aos_itemname"));
+            cmp_entryentity.set("aos_broitem", aos_subentryentity.get("aos_broitem"));
+            cmp_entryentity.set("aos_salestatus", "已确认");
+            cmp_entryentity.set("aos_text", aos_entryentity.get("aos_case"));
+            cmp_entryentity.set("aos_srcrowseq", aos_entryentity.get("SEQ"));
+        }
+
+        Object ItemId = aos_entryentityS.get(0).getDynamicObject("aos_itemid").getPkValue();
+        String category = MKTCom.getItemCateNameZH(ItemId);
+        String[] category_group = category.split(",");
+        String AosCategory1 = null;
+        String AosCategory2 = null;
+        int category_length = category_group.length;
+        if (category_length > 0)
+            AosCategory1 = category_group[0];
+        if (category_length > 1)
+            AosCategory2 = category_group[1];
+        long aos_sale = 0;
+        if (AosCategory1 != null & AosCategory2 != null && !AosCategory1.equals("") && !AosCategory2.equals("")) {
+            QFilter filter_category1 = new QFilter("aos_category1", "=", AosCategory1);
+            QFilter filter_category2 = new QFilter("aos_category2", "=", AosCategory2);
+            String id = "";
+            if (aos_orgid != null) {
+                DynamicObject dy_org = (DynamicObject) aos_orgid;
+                id = dy_org.getString("id");
+            }
+
+            QFilter filter_ou = new QFilter("aos_orgid", "=", id);
+            QFilter[] filters_category = new QFilter[]{filter_category1, filter_category2, filter_ou};
+            String SelectStr = "aos_salehelper aos_salehelper";
+            DynamicObject aos_mkt_progorguser = QueryServiceHelper.queryOne("aos_mkt_progorguser", SelectStr,
+                    filters_category);
+            if (aos_mkt_progorguser != null) {
+                aos_sale = aos_mkt_progorguser.getLong("aos_salehelper");
+            }
+        }
+
+        if (aos_sale == 0) {
+            ErrorMessage = FndError.AddErrorMessage(ErrorMessage, AosCategory1 + "," + AosCategory2 + "国别销售不存在!");
+            FndError fndMessage = new FndError(ErrorMessage);
+            throw fndMessage;
+        }
+
+        aos_mkt_listing_sal.set("aos_sale", aos_sale);
+        aos_mkt_listing_sal.set("aos_user", aos_sale);
+        MessageId = String.valueOf(aos_sale);
+        Message = "Listing优化销售确认单-Listing优化销售确认表小语种自动创建";
+        OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_listing_sal",
+                new DynamicObject[]{aos_mkt_listing_sal}, OperateOption.create());
+
+        // 修复关联关系
+        try {
+            ProgressUtil.botp("aos_mkt_listing_sal", aos_mkt_listing_sal.get("id"));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
+            MKTCom.SendGlobalMessage(MessageId, String.valueOf(aos_mkt_listing_sal), String.valueOf(operationrst.getSuccessPkIds().get(0)),
+                    aos_mkt_listing_sal.getString("billno"), Message);
+        }
+
+    }
+
 
     /**
      * 如果是Listing类型生成销售信息确认单
