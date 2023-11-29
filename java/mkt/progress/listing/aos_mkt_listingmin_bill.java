@@ -90,6 +90,11 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
         if ("功能图翻译".equals(aos_type)) {
             GenerateFuncSummary(aos_orgnumber, dy_main);// 插入功能图翻译台账
         }
+
+        if ("RO".equals(aos_orgnumber) || "PT".equals(aos_orgnumber))
+            // 生成Listing优化销售确认单
+            GenerateListingSal(dy_main);
+
         dy_main.set("aos_submitter", "B");
         dy_main.set("aos_status", "结束");
         dy_main.set("aos_user", system);
@@ -107,11 +112,6 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
         String aos_orgnumber = ((DynamicObject) aos_orgid).getString("number");
         Object aos_type = dy_main.get("aos_type");
 
-        DynamicObject aosOrgSmall = dy_main.getDynamicObject("aos_orgsmall");
-        String smallNumber = "";
-        if (FndGlobal.IsNotNull(aosOrgSmall))
-            smallNumber = aosOrgSmall.getString("number");
-
         // 校验
         if (ErrorCount > 0) {
             FndError fndMessage = new FndError(ErrorMessage);
@@ -125,11 +125,6 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
         if ("功能图翻译".equals(aos_type)) {
             GenerateFuncSummary(aos_orgnumber, dy_main);// 插入功能图翻译台账
         }
-
-
-        if ("RO".equals(smallNumber) || "PT".equals(smallNumber))
-            // 生成Listing优化销售确认单
-            GenerateListingSal(dy_main);
 
         // 设置功能图节点操作人为 人提交
         dy_main.set("aos_submitter", "B");
