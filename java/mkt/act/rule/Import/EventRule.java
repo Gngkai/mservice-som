@@ -929,8 +929,6 @@ public class EventRule {
                     match = true;
                     parameters.put(value,setDiscount());
                     break;
-                default:
-                    continue;
             }
             //上面没有匹配成功则说明 需要用到天数
             if (!match){
@@ -1972,6 +1970,7 @@ public class EventRule {
         }catch (Exception e){
             e.printStackTrace();
             throw new KDException(new ErrorCode("计算毛利率异常",e.getMessage()));
+
         }
 
     }

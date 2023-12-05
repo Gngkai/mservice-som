@@ -50,6 +50,8 @@ import mkt.act.rule.us.WalmartTheme;
 import mkt.act.rule.us.WayfairCloseOutUS;
 import mkt.act.rule.us.WayfairPro;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -326,7 +328,9 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 			SaveServiceHelper.save(new DynamicObject[]{actPlanEntity});
 
 		}catch (Exception e){
-			getView().showMessage(e.getMessage());
+			StringWriter sw = new StringWriter();
+			e.printStackTrace(new PrintWriter(sw));
+			getView().showMessage(sw.toString());
 		}
 		finally {
 			actPlanEntity.set("aos_actstatus",actstatus);
