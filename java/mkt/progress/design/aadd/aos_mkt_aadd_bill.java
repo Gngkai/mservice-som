@@ -387,6 +387,9 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
         Object itemId = aos_entryentityS.get(0).getDynamicObject("aos_itemid").getPkValue();// 物料ID
         Object aosItemId = aos_entryentityS.get(0).getDynamicObject("aos_itemid");
         Object aos_org = dy_main.get("aos_org");// 国别
+
+        dy_main.set("aos_edsubmit", UserServiceHelper.getCurrentUserId());
+
         // 校验是否海外确认必填
         Object aos_osconfirm = dy_main.get("aos_osconfirm");
         if (FndGlobal.IsNull(aos_osconfirm)) {
