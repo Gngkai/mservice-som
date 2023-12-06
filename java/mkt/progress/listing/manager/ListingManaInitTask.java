@@ -386,13 +386,12 @@ public class ListingManaInitTask extends AbstractTask {
                 "aos_orgid.id aos_orgid," +
                         "aos_orgid.number aos_orgnum," +
                         "aos_item_code aos_itemid," +
-                        "aos_asin," +
-                        "id",
+                        "aos_asin",
                 new QFilter("aos_shelfstatus", QCP.equals, "Listed")
                         .and("aos_shopfid.aos_is_mainshop", QCP.equals, true)
+                        .and("aos_asin", QCP.not_equals, "")
                         .toArray(), null);
-        przS = przS.groupBy(new String[]{"aos_orgid", "aos_orgnum", "aos_itemid"})
-                .maxP("id", "aos_asin").finish();
+//        przS = przS.groupBy(new String[]{"aos_orgid", "aos_orgnum", "aos_itemid", "aos_asin"}).finish();
         while (przS.hasNext()) {
             Row prz = przS.next();
             String aosOrgNum = prz.getString("aos_orgnum");
