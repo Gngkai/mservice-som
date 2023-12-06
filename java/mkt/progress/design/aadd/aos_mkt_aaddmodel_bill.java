@@ -46,9 +46,13 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn implements RowCli
 	//敏感词语种缓存标识
 	public static final String KEY_SENSITIVE ="seniive";
 	//需要进行敏感词校验的字段
-	private final static List<String> sensitiveFields = Arrays.asList("aos_usca","aos_uk","aos_de","aos_fr","aos_it","aos_es");
+	private final static List<String> sensitiveFields;
+	//需要判定字符串长度的字段
+	private final static List<String> lengthFields;
 	static {
-		list_lans = Arrays.asList("CN", "中文", "US","CA","UK","EN","DE","FR","IT","ES");
+		sensitiveFields = Arrays.asList("aos_usca","aos_uk","aos_de","aos_fr","aos_it","aos_es","aos_pt");
+		lengthFields = Arrays.asList("aos_cn","aos_usca","aos_uk","aos_de","aos_fr","aos_it","aos_es","aos_pt","aos_ro");
+		list_lans = Arrays.asList("CN", "中文", "US","CA","UK","EN","DE","FR","IT","ES","PT","RO");
 	}
 
 	@Override
@@ -111,8 +115,11 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn implements RowCli
 	@Override
 	public void propertyChanged(PropertyChangedArgs e) {
 		String name = e.getProperty().getName();
-		if (name.equals("aos_productno"))
+		//修改产品编号
+		if (name.equals("aos_productno")){
 			AosProductNoChange();
+		}
+		//敏感词校验
 		else if (sensitiveFields.contains(name)){
 			ChangeData changeData = e.getChangeSet()[0];
 			if (changeData.getRowIndex()>=0) {
@@ -128,6 +135,35 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn implements RowCli
 				}
 				else {
 					getModel().setValue("aos_check",false,tabRow);
+				}
+			}
+		}
+		//tab修改检验行长度
+		else if(name.equals("aos_tab")){
+			int rowIndex = e.getChangeSet()[0].getRowIndex();
+			if (rowIndex>=0){
+				if (!checkTable(rowIndex)){
+					this.getView().showTipNotification("The input exceeds the specified length!");
+				}
+			}
+		}
+		//小项修改校验长度
+		else if (name.equals("aos_cate2")) {
+			int rowIndex = e.getChangeSet()[0].getRowIndex();
+			int tabIndex = e.getChangeSet()[0].getParentRowIndex();
+			if (rowIndex>=0 && tabIndex>=0){
+				if (!checkLanRow(tabIndex,rowIndex)) {
+					this.getView().showTipNotification("The input exceeds the specified length!");
+				}
+			}
+		}
+		//判断字符串长度
+		if (lengthFields.contains(name)){
+			int rowIndex = e.getChangeSet()[0].getRowIndex();
+			int tabIndex = e.getChangeSet()[0].getParentRowIndex();
+			if (rowIndex>=0 && tabIndex>=0){
+				if (!checkSensitiveWord(tabIndex,rowIndex,name)) {
+					this.getView().showTipNotification("The input exceeds the specified length!");
 				}
 			}
 		}
@@ -156,6 +192,11 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn implements RowCli
 		String control = evt.getOperateKey();
 		if ("aos_change".equals(control)) {
 			aos_change();
+		}
+		else if (control.equals("save")){
+			if (!checkTable()) {
+				getView().showTipNotification("The input exceeds the specified length!");
+			}
 		}
 	}
 
@@ -740,5 +781,109 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn implements RowCli
 			}
 		}
 		grid.setCellStyle(list);
+	}
+
+	private boolean checkTable( ){
+		DynamicObjectCollection dyc_tab = this.getModel().getEntryEntity("aos_ent_tab");
+		boolean flag = true;
+		for (int tabIndex = 0; tabIndex < dyc_tab.size(); tabIndex++) {
+			if (!checkTable(tabIndex)) {
+				flag = false;
+			}
+		}
+		return flag;
+	}
+
+	/**
+	 * 校验敏感词
+	 */
+	private boolean checkTable( int tabRow){
+		DynamicObjectCollection dyc_lan = this.getModel().getEntryEntity("aos_ent_tab").get(tabRow).getDynamicObjectCollection("aos_entryentity");
+		boolean flag = true;
+		for (int i = 0; i < dyc_lan.size(); i++) {
+			if (!checkLanRow(tabRow,i)) {
+				flag = false;
+			}
+		}
+		return flag;
+	}
+
+	/**
+	 * 校验敏感词行
+	 */
+	private boolean checkLanRow (int tabRow,int lanRow){
+		boolean flag = true;
+		for (String lengthField : lengthFields) {
+			if (!checkSensitiveWord(tabRow,lanRow,lengthField)) {
+				flag = false;
+			}
+		}
+		return flag;
+	}
+
+	/**
+	 * @param tabRow	单据头行
+	 * @param lanRow	语言行
+	 * @param field		字段
+	 * @return		是否校验成功
+	 */
+	private boolean checkSensitiveWord(int tabRow,int lanRow,String field){
+		Object aos_tab = getModel().getValue("aos_tab",tabRow);
+		Object aos_cate2 = getModel().getValue("aos_cate2", lanRow,tabRow);
+		if (FndGlobal.IsNull(aos_tab) || FndGlobal.IsNull(aos_cate2)){
+			this.getModel().setValue(field+"_t","",lanRow,tabRow);
+			return true;
+		}
+
+		String tabValue = String.valueOf(aos_tab);
+		String cate2Value = String.valueOf(aos_cate2);
+		Object value =  this.getModel().getValue(field, lanRow, tabRow);
+
+		int valueSize = 0;
+		if(FndGlobal.IsNotNull(value)){
+			valueSize = value.toString().length();
+		}
+		String filterValue = "";
+		boolean resultt = true;
+		if (tabValue.equals("轮播图模块")) {
+			//标题
+			if (cate2Value.equals("TITLE")|| cate2Value.equals("标题")){
+				filterValue = valueSize+"/"+25;
+				resultt = valueSize<=25;
+			}
+		}
+		else if (tabValue.equals("锚点模块")){
+			if (cate2Value.equals("TITLE") || cate2Value.equals("标题")){
+				filterValue = valueSize+"/"+50;
+				resultt = valueSize<=50;
+			}
+			else if (cate2Value.equals("CONTENT") || cate2Value.equals("正文")){
+				filterValue = valueSize+"/"+120;
+				resultt = valueSize<=120;
+			}
+		}
+		else if (tabValue.equals("细节模块")){
+			if (cate2Value.equals("TITLE") || cate2Value.equals("标题")){
+				filterValue = valueSize+"/"+30;
+				resultt = valueSize<=30;
+			}
+			else if (cate2Value.equals("CONTENT") || cate2Value.equals("正文")){
+				filterValue = valueSize+"/"+150;
+				resultt = valueSize<=150;
+			}
+		}
+		else if (tabValue.equals("QA模块")){
+			if (cate2Value.equals("Q")){
+				filterValue = valueSize+"/"+120;
+				resultt = valueSize<=120;
+			}
+			else if (cate2Value.equals("A")){
+				filterValue = valueSize+"/"+250;
+				resultt = valueSize<=250;
+			}
+		}
+
+		this.getModel().setValue(field+"_t",filterValue,lanRow,tabRow);
+		return resultt;
 	}
 }
