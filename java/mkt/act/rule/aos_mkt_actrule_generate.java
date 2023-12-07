@@ -21,6 +21,8 @@ import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.control.events.ItemClickListener;
 import kd.bos.form.control.events.RowClickEventListener;
 import kd.bos.form.events.BeforeClosedEvent;
+import kd.bos.logging.Log;
+import kd.bos.logging.LogFactory;
 import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
@@ -46,12 +48,14 @@ import mkt.act.rule.us.WalmartDeal;
 import mkt.act.rule.us.WalmartTheme;
 import mkt.act.rule.us.WayfairCloseOutUS;
 import mkt.act.rule.us.WayfairPro;
+import org.apache.commons.lang3.time.DateFormatUtils;
 
 import java.math.BigDecimal;
 import java.util.*;
 
 public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 		implements ItemClickListener, RowClickEventListener, EntryFilterChangedListener, ContainerOnShowListener {
+	static Log logging = LogFactory.getLog("aos_mkt_actrule_generate");
 	public void registerListener(EventObject e) {
 		// 给工具栏加监听事件
 		this.addItemClickListeners("tbmain");
@@ -90,7 +94,7 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 				aos_batchclose();
 			} else if ("aos_batchopen".equals(Control)) {
 				aos_batchopen();
-			} else if ("aos_qtycal".equals(Control)) {
+			} else if ("aos_qtycal".equals(Control)) {  //计算数量
 				// 从新批量设置活动数量
 				batchSetActQty();
 			}
@@ -260,8 +264,8 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 //		if (noPriceItem.length() > 0) {
 //			this.getView().showMessage("以下物料缺失价格：  " + noPriceItem);
 //		}
-		// 从新批量设置活动数量
-		//batchSetActQty();
+		//从新批量设置活动数量
+		batchSetActQty();
 	}
 	private void execute(Object actstatus,DynamicObject ou,DynamicObject channel ,DynamicObject shop, DynamicObject actType, DynamicObject actPlanEntity){
 		QFBuilder builder = new QFBuilder();
@@ -302,38 +306,44 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 	 * 批量设置活动数量
 	 */
 	private void batchSetActQty() {
-		FndMsg.debug("=====into batchSetActQty=====");
+		System.out.println("活动数量计算---活动数量计算开始");
+		logging.info("导入数据---活动数量计算开始");
 		DynamicObject aos_act_select_plan = this.getModel().getDataEntity();
 		Object fid = aos_act_select_plan.getPkValue().toString();
 		DynamicObject aos_nationality = aos_act_select_plan.getDynamicObject("aos_nationality");
 		DynamicObject aos_acttype = aos_act_select_plan.getDynamicObject("aos_acttype");
 		DynamicObject aos_shop = aos_act_select_plan.getDynamicObject("aos_shop");
+		Date date = FndDate.GetGlMonth(new Date(),-6);
+		String format = DateFormatUtils.format(date, "yyyy-MM-dd");//开始日期
 		String shopIdStr = aos_shop.getPkValue().toString();
 		String orgIdStr = aos_nationality.getPkValue().toString();
 		HashMap<String, Integer> itemShopMap = getItemShopQty(orgIdStr);
+		logging.info("获取七日 国别+物料+店铺销量 ：" + itemShopMap);
 		DynamicObjectCollection aos_sal_actplanentityS = this.getModel().getEntryEntity("aos_sal_actplanentity");
 		int size = aos_sal_actplanentityS.size();
 		FndMsg.debug("size:" + size);
-		int count = 0;
 		for (DynamicObject aos_sal_actplanentity : aos_sal_actplanentityS) {
-			FndMsg.debug(count++ + "/" + size);
 			DynamicObject aos_itemnum = aos_sal_actplanentity.getDynamicObject("aos_itemnum");
 			Date aos_l_startdate = aos_sal_actplanentity.getDate("aos_l_startdate");
 			Date aos_enddate = aos_sal_actplanentity.getDate("aos_enddate");
-			int betweenDays = FndDate.GetBetweenDays(aos_enddate, aos_l_startdate);
+			int betweenDays = FndDate.GetBetweenDays(aos_enddate, aos_l_startdate) + 1;
 			String itemIdStr = aos_itemnum.getPkValue().toString();
 			DynamicObjectCollection queryLastThreeS = QueryServiceHelper.query("aos_act_select_plan",
-					"aos_sal_actplanentity.aos_actproid_salqty aos_actproid_salqty,"
-							+ "aos_sal_actplanentity.aos_actbefore_salqty aos_actbefore_salqty",
+					"billno,aos_sal_actplanentity.aos_itemnum.number,aos_sal_actplanentity.aos_actproid_salqty aos_actproid_salqty,"    //活动期间日销量
+							+ "aos_sal_actplanentity.aos_actbefore_salqty aos_actbefore_salqty",  //活动前日销量
 					new QFilter("aos_nationality.id", QCP.equals, orgIdStr).and("id", QCP.not_equals, fid)
 							.and("aos_sal_actplanentity.aos_itemnum.id", QCP.equals, itemIdStr)
+							.and("aos_makedate", QCP.large_equals,format) //近6个月数据
 							.and("aos_acttype.id", QCP.equals, aos_acttype.getPkValue().toString()).toArray(),
-					"aos_sal_actplanentity.id desc", 3);
+					"aos_sal_actplanentity.id desc", 3);//降序
+
 			BigDecimal aos_actqty = BigDecimal.ZERO;
 			int hisQty = 0;
+			logging.info("天数：" + betweenDays + " 活动计划表个数：" + queryLastThreeS);
 			String key = itemIdStr + "~" + shopIdStr;
 			if (FndGlobal.IsNotNull(itemShopMap) && FndGlobal.IsNotNull(itemShopMap.get(key)))
 				hisQty = itemShopMap.get(key);
+
 			if (queryLastThreeS.size() == 3) {
 				for (DynamicObject queryLastThree : queryLastThreeS) {
 					aos_actqty = aos_actqty.add(BigDecimal.valueOf(queryLastThree.getInt("aos_actproid_salqty")))
@@ -342,12 +352,18 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 				aos_actqty = FndMath
 						.max(aos_actqty.divide(BigDecimal.valueOf(3), 2, BigDecimal.ROUND_HALF_UP), BigDecimal.ZERO)
 						.add(BigDecimal.valueOf(hisQty)).multiply(BigDecimal.valueOf(betweenDays));
+
+				if(aos_actqty.compareTo(BigDecimal.ZERO) < 0)
+					aos_actqty = BigDecimal.ZERO;
+				logging.info("活动计划表个数=3时，活动数量 = " + aos_actqty);
 			} else {
 				aos_actqty = BigDecimal.valueOf(hisQty).multiply(BigDecimal.valueOf(1.1))
 						.multiply(BigDecimal.valueOf(betweenDays));
+				logging.info("活动计划表个数!=3时，活动数量 = " + aos_actqty);
 			}
 			aos_sal_actplanentity.set("aos_actqty", aos_actqty);
 		}
+		logging.info("活动数量计算--活动数量计算结束");
 		this.getView().updateView();
 		this.getView().showSuccessNotification("批量计算" + size + "条活动数量成功!");
 	}
