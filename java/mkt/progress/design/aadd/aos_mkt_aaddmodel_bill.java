@@ -858,8 +858,8 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn implements RowCli
 				resultt = valueSize<=50;
 			}
 			else if (cate2Value.equals("CONTENT") || cate2Value.equals("正文")){
-				filterValue = valueSize+"/"+120;
-				resultt = valueSize<=120;
+				filterValue = valueSize+"/"+200;
+				resultt = valueSize<=200;
 			}
 		}
 		else if (tabValue.equals("细节模块")){
