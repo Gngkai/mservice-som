@@ -50,7 +50,7 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn implements RowCli
 	//需要判定字符串长度的字段
 	private final static List<String> lengthFields;
 	static {
-		sensitiveFields = Arrays.asList("aos_usca","aos_uk","aos_de","aos_fr","aos_it","aos_es","aos_pt");
+		sensitiveFields = Arrays.asList("aos_usca","aos_uk","aos_de","aos_fr","aos_it","aos_es","aos_pt","aos_ro");
 		lengthFields = Arrays.asList("aos_cn","aos_usca","aos_uk","aos_de","aos_fr","aos_it","aos_es","aos_pt","aos_ro");
 		list_lans = Arrays.asList("CN", "中文", "US","CA","UK","EN","DE","FR","IT","ES","PT","RO");
 	}
