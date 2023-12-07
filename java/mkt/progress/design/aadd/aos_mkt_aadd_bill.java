@@ -47,128 +47,6 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 
     public final static String system = Cux_Common_Utl.SYSTEM;
 
-    @Override
-    public void registerListener(EventObject e) {
-        super.registerListener(e);
-        EntryGrid entryGrid = this.getControl("aos_entryentity");
-        entryGrid.addHyperClickListener(this);
-    }
-
-    @Override
-    public void hyperLinkClick(HyperLinkClickEvent hyperLinkClickEvent) {
-        int RowIndex = hyperLinkClickEvent.getRowIndex();
-        String FieldName = hyperLinkClickEvent.getFieldName();
-        FndMsg.debug("FieldName " + FieldName);
-        if ("aos_url".equals(FieldName)) getView().openUrl(this.getModel().getValue(FieldName, RowIndex).toString());
-        else if ("aos_productno".equals(FieldName)) {
-            DynamicObject aos_itemid = (DynamicObject) this.getModel().getValue("aos_itemid", 0);// 根据状态判断当前流程节点
-            DynamicObject aos_aadd_model = QueryServiceHelper.queryOne("aos_aadd_model", "id", new QFilter("aos_productno", QCP.equals, aos_itemid.getString("aos_productno")).toArray());
-            if (FndGlobal.IsNotNull(aos_aadd_model)) {
-                FndGlobal.OpenBillById(getView(), "aos_aadd_model", aos_aadd_model.get("id"));
-            }
-        }
-    }
-
-    public void propertyChanged(PropertyChangedArgs e) {
-        String name = e.getProperty().getName();
-        FndMsg.debug("name =" + name);
-        if ("aos_type".equals(name)) aosTypeChange();// 任务类型
-        else if ("aos_itemid".equals(name)) aosItemIdChange();
-    }
-
-    public void afterCreateNewData(EventObject e) {
-        super.afterCreateNewData(e);
-        statusControl();
-        init();
-    }
-
-    /**
-     * 初始化事件
-     **/
-    public void afterLoadData(EventObject e) {
-        super.afterLoadData(e);
-        statusControl();
-        aosItemIdChange();
-    }
-
-    public void beforeDoOperation(BeforeDoOperationEventArgs args) {
-        FormOperate formOperate = (FormOperate) args.getSource();
-        String Operatation = formOperate.getOperateKey();
-        try {
-            if ("save".equals(Operatation)) {
-                saveControl();
-            }
-            statusControl();
-        } catch (FndError fndError) {
-            fndError.show(getView());
-            args.setCancel(true);
-        } catch (Exception ex) {
-            FndError.showex(getView(), ex);
-            args.setCancel(true);
-        }
-    }
-
-    @Override
-    public void itemClick(ItemClickEvent evt) {
-        super.itemClick(evt);
-        String Control = evt.getItemKey();
-        try {
-            if ("aos_submit".equals(Control)) aosSubmit(this.getModel().getDataEntity(true), "A");
-            else if ("aos_history".equals(Control)) aos_history();// 查看历史记录
-        } catch (FndError fndError) {
-            fndError.show(getView());
-        } catch (Exception ex) {
-            FndError.showex(getView(), ex);
-        }
-    }
-
-    /**
-     * 查看历史记录
-     */
-    private void aos_history() {
-        FndHistory.OpenHistory(this.getView());
-    }
-
-    /**
-     * 提交按钮逻辑
-     */
-    public void aosSubmit(DynamicObject dy_main, String type) throws FndError {
-        // 手工提交时先保存数据
-        if (type.equals("A")) {
-            this.getView().invokeOperation("save");
-            this.getView().invokeOperation("refresh");
-            statusControl();// 提交完成后做新的界面状态控制
-        }
-        FndMsg.debug("=====Into aosSubmit=====");
-        String aos_status = dy_main.getString("aos_status");// 根据状态判断当前流程节点
-        switch (aos_status) {
-            case "新建":
-                submitForNew(dy_main);
-                break;
-            case "文案确认":
-                submitForEdit(dy_main);
-                break;
-            case "海外确认":
-                submitForOs(dy_main);
-                break;
-            case "设计制作":
-                submitForDesign(dy_main);
-                break;
-            case "新品对比模块录入":
-                submitForModel(dy_main);
-                break;
-            case "销售上线":
-                submitForSale(dy_main);
-                break;
-        }
-        SaveServiceHelper.saveOperate("aos_mkt_aadd", new DynamicObject[]{dy_main}, OperateOption.create());
-        FndHistory.Create(dy_main, "提交", aos_status);
-        if (type.equals("A")) {
-            this.getView().invokeOperation("refresh");
-            statusControl();// 提交完成后做新的界面状态控制
-        }
-    }
-
     /**
      * 销售上线提交
      *
@@ -203,23 +81,56 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 
         DynamicObjectCollection aos_entryentityS = dy_main.getDynamicObjectCollection("aos_entryentity");
         DynamicObject aosItemId = null;
-        for (DynamicObject aos_entryentity:aos_entryentityS) {
-             aosItemId = aos_entryentity.getDynamicObject("aos_itemid");
+        for (DynamicObject aos_entryentity : aos_entryentityS) {
+            aosItemId = aos_entryentity.getDynamicObject("aos_itemid");
         }
         String aos_org = dy_main.getString("aos_org");// 国别
 
-        Boolean itemExist = queryItemExist(aosItemId,aos_org);
+        Boolean itemExist = queryItemExist(aosItemId, aos_org);
         if (!itemExist) {
             dy_main.set("aos_user", system);
             dy_main.set("aos_status", "已完成");
         } else {
-            dy_main.set("aos_status", "销售上线");
-            dy_main.set("aos_salerece_date", new Date());
-            dy_main.set("aos_user", aos_user);
+            // 判断是否存在国别首次入库日期
+            Date aos_firstindate = queryItemFirstDate(aosItemId, aos_org);
+
+            if (FndGlobal.IsNotNull(aos_firstindate))
+            {
+                dy_main.set("aos_status", "销售上线");
+                dy_main.set("aos_firstindate", aos_firstindate);
+                dy_main.set("aos_salerece_date", new Date());
+                dy_main.set("aos_user", aos_user);
+            } else
+            {
+                dy_main.set("aos_status", "销售上线");
+//                dy_main.set("aos_firstindate", aos_firstindate);
+//                dy_main.set("aos_salerece_date", new Date());
+                dy_main.set("aos_user", system);
+            }
+
         }
         // 发送消息
         String messageId = aos_user.toString();
         MKTCom.SendGlobalMessage(messageId, "aos_mkt_aadd", ReqFId, aosBillNo, "高级A+需求单-销售上线");
+    }
+
+    private static Date queryItemFirstDate(DynamicObject aosItemId, String aosOrg) {
+        try {
+            DynamicObject bd_material = QueryServiceHelper.queryOne("bd_material",
+                    "aos_contryentry.aos_firstindate aos_firstindate",
+                    new QFilter("id", QCP.equals, aosItemId.getPkValue().toString())
+                            .and("aos_contryentry.aos_nationality.number", QCP.equals, aosOrg)
+                            .and("aos_contryentry.aos_contryentrystatus", QCP.not_equals, "F")
+                            .and("aos_contryentry.aos_contryentrystatus", QCP.not_equals, "H")
+                            .toArray());
+            if (FndGlobal.IsNotNull(bd_material)) {
+                return bd_material.getDate("aos_firstindate");
+            } else {
+                return null;
+            }
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
     /**
@@ -304,20 +215,19 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
             OperationServiceHelper.executeOperate("save", "aos_mkt_addtrack", new DynamicObject[]{aos_mkt_addtrack}, OperateOption.create());
         }
 
-        Boolean itemExist = queryItemExist((DynamicObject)aosItemId,aos_org.toString());
+        Boolean itemExist = queryItemExist((DynamicObject) aosItemId, aos_org.toString());
         Object aos_user = dy_main.get("aos_monitor");
-        if (!itemExist){
+        if (!itemExist) {
             dy_main.set("aos_user", system);
             dy_main.set("aos_status", "已完成");
-        }
-        else {
+        } else {
             dy_main.set("aos_status", "新品对比模块录入");
             dy_main.set("aos_user", aos_user);
             submitForModel(dy_main);
             FndHistory.Create(dy_main, "提交", "新品对比模块录入");
         }
 
-        dy_main.set("aos_design_date",new Date());
+        dy_main.set("aos_design_date", new Date());
         // 发送消息
         String messageId = aos_user.toString();
         MKTCom.SendGlobalMessage(messageId, "aos_mkt_aadd", ReqFId, aosBillNo, "高级A+需求单-新品对比模块录入");
@@ -460,11 +370,11 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
             throw fndError;
         }
         String aos_productno = aos_entryentityS.get(0).getDynamicObject("aos_itemid").getString("aos_productno");
-        DynamicObject aos_mkt_aadd = QueryServiceHelper.queryOne("aos_mkt_aadd","aos_entryentity.aos_itemid",
+        DynamicObject aos_mkt_aadd = QueryServiceHelper.queryOne("aos_mkt_aadd", "aos_entryentity.aos_itemid",
                 new QFilter("aos_entryentity.aos_itemid.aos_productno", QCP.equals, aos_productno)
-                        .and("id",QCP.not_equals,dy_main.getPkValue().toString()).toArray());
+                        .and("id", QCP.not_equals, dy_main.getPkValue().toString()).toArray());
         if (FndGlobal.IsNotNull(aos_mkt_aadd)) {
-            throw new FndError(aos_productno+"产品号已有高级A+，不允许重复生成！");
+            throw new FndError(aos_productno + "产品号已有高级A+，不允许重复生成！");
         }
 
         Object itemId = aos_entryentityS.get(0).getDynamicObject("aos_itemid").getPkValue();// 物料ID
@@ -546,6 +456,401 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
         String ReqFId = dy_main.getPkValue().toString();
         String aosBillNo = dy_main.getString("aos_billno");
         MKTCom.SendGlobalMessage(messageId, "aos_mkt_aadd", ReqFId, aosBillNo, "高级A+需求单-文案确认");
+    }
+
+    /**
+     * 获取下单国别
+     *
+     * @param aosItemId
+     * @return
+     */
+    public static Set<String> getItemOrg(Object aosItemId) {
+        Set<String> ouSet = new HashSet<>();
+        DynamicObject bd_material = BusinessDataServiceHelper.loadSingle(aosItemId, "bd_material");
+        DynamicObjectCollection aos_contryentryS = bd_material.getDynamicObjectCollection("aos_contryentry");
+        // 获取所有国家品牌 字符串拼接 终止
+        for (DynamicObject aos_contryentry : aos_contryentryS) {
+            DynamicObject aos_nationality = aos_contryentry.getDynamicObject("aos_nationality");// 物料国别
+            String aos_nationalitynumber = aos_nationality.getString("number");// 物料国别编码
+            if ("IE".equals(aos_nationalitynumber)) continue;
+            Object org_id = aos_nationality.get("id"); // ItemId
+            int OsQty = iteminfo.GetItemOsQty(org_id, aosItemId);
+            int onQty = get_on_hand_qty(Long.valueOf(org_id.toString()), Long.valueOf(aosItemId.toString()));
+            OsQty += onQty;
+            int SafeQty = iteminfo.GetSafeQty(org_id);
+            String aos_contryentrystatus = aos_contryentry.getString("aos_contryentrystatus");
+            if ("F".equals(aos_contryentrystatus) || "H".equals(aos_contryentrystatus)) continue;
+            if ("C".equals(aos_contryentry.getString("aos_contryentrystatus")) && OsQty < SafeQty) continue;
+            ouSet.add(aos_nationalitynumber);
+        }
+        return ouSet;
+    }
+
+    /**
+     * 获取在途数量
+     *
+     * @param fk_aos_org_fid
+     * @param fk_aos_item_fid
+     * @return
+     */
+    public static int get_on_hand_qty(long fk_aos_org_fid, long fk_aos_item_fid) {
+        try {
+            QFilter filter_item = new QFilter("aos_itemid", "=", fk_aos_item_fid);
+            QFilter filter_ou = new QFilter("aos_orgid", "=", fk_aos_org_fid);
+            QFilter filter_qty = new QFilter("aos_ship_qty", ">", 0);
+            QFilter filter_flag = new QFilter("aos_os_flag", "=", "N");
+            QFilter filter_status = new QFilter("aos_shp_status", "=", "PACKING");
+            filter_status = filter_status.or("aos_shp_status", "=", "SHIPPING");
+            QFilter[] filters = new QFilter[]{filter_item, filter_ou, filter_qty, filter_flag, filter_status};
+            DynamicObjectCollection aos_sync_shp = QueryServiceHelper.query("aos_sync_shp", "aos_ship_qty", filters);
+            int aos_ship_qty = 0;
+            for (DynamicObject d : aos_sync_shp) {
+                aos_ship_qty += d.getInt("aos_ship_qty");
+            }
+            return aos_ship_qty;
+        } catch (Exception Ex) {
+            throw Ex;
+        }
+    }
+
+    /**
+     * 生成同款高级A+需求单
+     *
+     * @param reqFId
+     * @param ou
+     * @param count  用于判断是否小语种第一个货号
+     * @param type
+     * @param itemId
+     */
+    public static void genSameAadd(String reqFId, String ou, int count, String type, Object itemId) throws FndError {
+        FndError fndError = new FndError();
+
+        FndMsg.debug("ou =" + ou);
+        FndMsg.debug("count =" + count);
+        FndMsg.debug("type =" + type);
+
+
+        DynamicObject sourceBill = BusinessDataServiceHelper.loadSingle(reqFId, "aos_mkt_aadd");
+        String category = MKTCom.getItemCateNameZH(itemId);
+        String[] category_group = category.split(",");
+        String AosCategory1 = null;// 大类
+        String AosCategory2 = null;// 中类
+        int category_length = category_group.length;
+        if (category_length > 0) AosCategory1 = category_group[0];
+        if (category_length > 1) AosCategory2 = category_group[1];
+
+        DynamicObject aosMktAadd = BusinessDataServiceHelper.newDynamicObject("aos_mkt_aadd");
+        aosMktAadd.set("aos_requireby", sourceBill.get("aos_requireby"));
+        aosMktAadd.set("aos_organization1", sourceBill.get("aos_organization1"));
+        aosMktAadd.set("aos_requiredate", sourceBill.get("aos_requiredate"));
+        aosMktAadd.set("aos_type", "同款");
+        aosMktAadd.set("aos_org", ou);
+
+        DynamicObject aosMktProgOrgUser = QueryServiceHelper.queryOne("aos_mkt_progorguser",
+                "aos_oueditor,aos_02hq,aos_salehelper,aos_oseditor",
+                new QFilter("aos_orgid.number", QCP.equals, ou).
+                        and("aos_category1", QCP.equals, AosCategory1)
+                        .and("aos_category2", QCP.equals, AosCategory2).toArray());
+        if (FndGlobal.IsNull(aosMktProgOrgUser) || FndGlobal.IsNull(aosMktProgOrgUser.get("aos_oueditor"))) {
+            fndError.add(ou + "~" + AosCategory1 + "~" + AosCategory2 + ",国别编辑不存在!");
+            throw fndError;
+        }
+        // 带出组长
+        if (FndGlobal.IsNull(aosMktProgOrgUser) || FndGlobal.IsNull(aosMktProgOrgUser.get("aos_02hq"))) {
+            fndError.add(ou + "~" + AosCategory1 + "~" + AosCategory2 + ",组长不存在!");
+            throw fndError;
+        }
+        // 带出销售助理
+        if (FndGlobal.IsNull(aosMktProgOrgUser) || FndGlobal.IsNull(aosMktProgOrgUser.get("aos_salehelper"))) {
+            fndError.add(ou + "~" + AosCategory1 + "~" + AosCategory2 + ",销售助理不存在!");
+            throw fndError;
+        }
+
+        // 带出海外编辑
+        if (FndGlobal.IsNull(aosMktProgOrgUser) || FndGlobal.IsNull(aosMktProgOrgUser.get("aos_oseditor"))) {
+            fndError.add(ou + "~" + AosCategory1 + "~" + AosCategory2 + ",海外编辑不存在!");
+            throw fndError;
+        }
+
+        aosMktAadd.set("aos_osconfirm", sourceBill.get("aos_osconfirm"));
+
+        aosMktAadd.set("aos_oueditor", aosMktProgOrgUser.get("aos_oueditor"));
+        aosMktAadd.set("aos_monitor", aosMktProgOrgUser.get("aos_02hq"));
+        aosMktAadd.set("aos_design", sourceBill.get("aos_design"));
+        aosMktAadd.set("aos_sale", aosMktProgOrgUser.get("aos_salehelper"));
+
+
+        aosMktAadd.set("aos_sourceid", sourceBill.get("id"));
+        aosMktAadd.set("aos_sourcebillno", sourceBill.get("aos_billno"));
+
+        DynamicObjectCollection sourceEntryS = sourceBill.getDynamicObjectCollection("aos_entryentity");
+        DynamicObject sourceEntry = sourceEntryS.get(0);
+        DynamicObjectCollection aos_entryentityS = aosMktAadd.getDynamicObjectCollection("aos_entryentity");
+        DynamicObject aos_entryentity = aos_entryentityS.addNew();
+
+        aos_entryentity.set("aos_itemid", itemId);
+        aos_entryentity.set("aos_aadd", sourceEntry.get("aos_aadd"));
+        aos_entryentity.set("aos_new", sourceEntry.get("aos_new"));
+        aos_entryentity.set("aos_same", sourceEntry.get("aos_same"));
+        aos_entryentity.set("aos_trans", sourceEntry.get("aos_trans"));
+        aos_entryentity.set("aos_url", sourceEntry.get("aos_url"));
+
+        if (count == 0) {
+            if ("MIN".equals(type)) {
+                aosMktAadd.set("aos_min", true);// 小语种同步主单
+                aosMktAadd.set("aos_status", "海外确认");
+                aosMktAadd.set("aos_osdate", new Date());
+                aosMktAadd.set("aos_user", aosMktProgOrgUser.get("aos_oseditor"));
+                aosMktAadd.set("aos_oseditor", aosMktProgOrgUser.get("aos_oseditor"));
+                aosMktAadd.set("aos_oueditor", aosMktProgOrgUser.get("aos_oueditor"));
+            } else if ("NORMAL".equals(type)) {
+                aosMktAadd.set("aos_status", "设计制作");
+                aosMktAadd.set("aos_user", sourceBill.get("aos_design"));
+            }
+        } else {
+            if ("MIN".equals(type)) {
+                aosMktAadd.set("aos_son", true);// 小语种同步子单
+                aosMktAadd.set("aos_status", "小语种同步");
+                aosMktAadd.set("aos_user", system);
+            }
+        }
+
+        OperationServiceHelper.executeOperate("save", "aos_mkt_aadd", new DynamicObject[]{aosMktAadd}, OperateOption.create());
+    }
+
+    public static void generateAddFromDesign(DynamicObject aos_itemid, String ou, String type) throws FndError {
+        FndError fndError = new FndError();
+        // 申请人
+        DynamicObject aos_mkt_aadd = QueryServiceHelper.queryOne("aos_mkt_aadd", "aos_requireby,aos_organization1", new QFilter("aos_itemid.aos_productno", QCP.equals, aos_itemid.getString("aos_productno")).toArray());
+
+        DynamicObject aosMktAadd = BusinessDataServiceHelper.newDynamicObject("aos_mkt_aadd");
+        aosMktAadd.set("aos_requireby", aos_mkt_aadd.get("aos_requireby"));
+        aosMktAadd.set("aos_organization1", aos_mkt_aadd.get("aos_organization1"));
+        aosMktAadd.set("aos_requiredate", new Date());
+        aosMktAadd.set("aos_type", "国别新品");
+        aosMktAadd.set("aos_org", ou);
+        aosMktAadd.set("aos_osconfirm", "是");
+
+        String category = MKTCom.getItemCateNameZH(aos_itemid.getPkValue());
+        String[] category_group = category.split(",");
+        String AosCategory1 = null;// 大类
+        String AosCategory2 = null;// 中类
+        int category_length = category_group.length;
+        if (category_length > 0) AosCategory1 = category_group[0];
+        if (category_length > 1) AosCategory2 = category_group[1];
+        DynamicObject aosMktProgUser = QueryServiceHelper.queryOne("aos_mkt_proguser", "aos_designassit", new QFilter("aos_category1", QCP.equals, AosCategory1).and("aos_category2", QCP.equals, AosCategory2).toArray());
+        if (FndGlobal.IsNull(aosMktProgUser) || FndGlobal.IsNull(aosMktProgUser.get("aos_designassit"))) {
+            fndError.add(AosCategory1 + "~" + AosCategory2 + ",初级品类不存在!");
+            throw fndError;
+        }
+        DynamicObject aosMktProgOrgUser = QueryServiceHelper.queryOne("aos_mkt_progorguser", "aos_oueditor,aos_02hq,aos_salehelper,aos_oseditor", new QFilter("aos_orgid.number", QCP.equals, ou).and("aos_category1", QCP.equals, AosCategory1).and("aos_category2", QCP.equals, AosCategory2).toArray());
+        if (FndGlobal.IsNull(aosMktProgOrgUser) || FndGlobal.IsNull(aosMktProgOrgUser.get("aos_oueditor"))) {
+            fndError.add(ou + "~" + AosCategory1 + "~" + AosCategory2 + ",国别编辑不存在!");
+            throw fndError;
+        }
+        aosMktAadd.set("aos_design", aosMktProgUser.get("aos_designassit"));
+        aosMktAadd.set("aos_oueditor", aosMktProgOrgUser.get("aos_oueditor"));
+        aosMktAadd.set("aos_monitor", aosMktProgOrgUser.get("aos_02hq"));
+        aosMktAadd.set("aos_sale", aosMktProgOrgUser.get("aos_salehelper"));
+        if ("EN_05".equals(type)) {
+            // 判断国别物料是否存在
+            Boolean itemExist = queryItemExist(aos_itemid, ou);
+            if (!itemExist) {
+                aosMktAadd.set("aos_user", system);
+                aosMktAadd.set("aos_status", "已完成");
+            } else {
+                aosMktAadd.set("aos_user", aosMktProgOrgUser.get("aos_02hq"));
+                aosMktAadd.set("aos_status", "新品对比模块录入");
+            }
+            // 将对应A+需求表对应国别勾选
+            DynamicObject aos_mkt_addtrack = BusinessDataServiceHelper.loadSingleFromCache("aos_mkt_addtrack", new QFilter("aos_itemid", QCP.equals, aos_itemid.getPkValue()).toArray());
+            if (FndGlobal.IsNotNull(aos_mkt_addtrack)) {
+                aos_mkt_addtrack.set("aos_" + ou, true);
+            } else {
+                aos_mkt_addtrack = BusinessDataServiceHelper.newDynamicObject("aos_mkt_addtrack");
+                aos_mkt_addtrack.set("aos_" + ou, true);
+                aos_mkt_addtrack.set("aos_itemid", aos_itemid);
+            }
+            OperationServiceHelper.executeOperate("save", "aos_mkt_addtrack", new DynamicObject[]{aos_mkt_addtrack}, OperateOption.create());
+        } else if ("EN_04".equals(type)) {
+            aosMktAadd.set("aos_user", aosMktProgUser.get("aos_designassit"));
+            aosMktAadd.set("aos_status", "设计制作");
+        } else if ("SM_04".equals(type)) {
+            aosMktAadd.set("aos_user", aosMktProgUser.get("aos_designassit"));
+            aosMktAadd.set("aos_status", "设计制作");
+            // 将对应A+需求表对应国别勾选
+            DynamicObject aos_mkt_addtrack = BusinessDataServiceHelper.loadSingleFromCache("aos_mkt_addtrack", new QFilter("aos_itemid", QCP.equals, aos_itemid.getPkValue()).toArray());
+            if (FndGlobal.IsNotNull(aos_mkt_addtrack)) {
+                aos_mkt_addtrack.set("aos_" + ou, true);
+            } else {
+                aos_mkt_addtrack = BusinessDataServiceHelper.newDynamicObject("aos_mkt_addtrack");
+                aos_mkt_addtrack.set("aos_" + ou, true);
+                aos_mkt_addtrack.set("aos_itemid", aos_itemid);
+            }
+            OperationServiceHelper.executeOperate("save", "aos_mkt_addtrack", new DynamicObject[]{aos_mkt_addtrack}, OperateOption.create());
+        } else if ("SM_02".equals(type)) {
+//            aosMktAadd.set("aos_user", aosMktProgOrgUser.get("aos_oueditor"));
+//            aosMktAadd.set("aos_status", "文案确认");
+            aosMktAadd.set("aos_oseditor", aosMktProgOrgUser.get("aos_oseditor"));
+            aosMktAadd.set("aos_user", aosMktProgOrgUser.get("aos_oseditor"));
+            aosMktAadd.set("aos_status", "海外确认");
+            aosMktAadd.set("aos_osdate", new Date());
+        }
+
+        DynamicObjectCollection aos_entryentityS = aosMktAadd.getDynamicObjectCollection("aos_entryentity");
+        DynamicObject aos_entryentity = aos_entryentityS.addNew();
+        aos_entryentity.set("aos_itemid", aos_itemid);
+
+        OperationResult result = OperationServiceHelper.executeOperate("save", "aos_mkt_aadd", new DynamicObject[]{aosMktAadd}, OperateOption.create());
+        //2023-11-16 gk 单据到达新品确认节点后立马提交
+        if (result.isSuccess()) {
+            String status = aosMktAadd.getString("aos_status");
+            if (FndGlobal.IsNotNull(status) && status.equals("新品对比模块录入")) {
+                Object id = result.getSuccessPkIds().get(0);
+                DynamicObject dy_main = BusinessDataServiceHelper.loadSingle(id, "aos_mkt_aadd");
+                submitForModel(dy_main);
+                FndHistory.Create(dy_main, "提交", "新品对比模块录入");
+                SaveServiceHelper.save(new DynamicObject[]{dy_main});
+            }
+        }
+    }
+
+    private static Boolean queryItemExist(DynamicObject aosItemid, String ou) {
+        try {
+            DynamicObject bd_material = QueryServiceHelper.queryOne("bd_material",
+                    "id",
+                    new QFilter("id", QCP.equals, aosItemid.getPkValue().toString())
+                            .and("aos_contryentry.aos_nationality.number", QCP.equals, ou)
+                            .and("aos_contryentry.aos_contryentrystatus", QCP.not_equals, "F")
+                            .and("aos_contryentry.aos_contryentrystatus", QCP.not_equals, "H")
+                            .toArray());
+            return FndGlobal.IsNotNull(bd_material);
+
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+    @Override
+    public void registerListener(EventObject e) {
+        super.registerListener(e);
+        EntryGrid entryGrid = this.getControl("aos_entryentity");
+        entryGrid.addHyperClickListener(this);
+    }
+
+    @Override
+    public void hyperLinkClick(HyperLinkClickEvent hyperLinkClickEvent) {
+        int RowIndex = hyperLinkClickEvent.getRowIndex();
+        String FieldName = hyperLinkClickEvent.getFieldName();
+        FndMsg.debug("FieldName " + FieldName);
+        if ("aos_url".equals(FieldName)) getView().openUrl(this.getModel().getValue(FieldName, RowIndex).toString());
+        else if ("aos_productno".equals(FieldName)) {
+            DynamicObject aos_itemid = (DynamicObject) this.getModel().getValue("aos_itemid", 0);// 根据状态判断当前流程节点
+            DynamicObject aos_aadd_model = QueryServiceHelper.queryOne("aos_aadd_model", "id", new QFilter("aos_productno", QCP.equals, aos_itemid.getString("aos_productno")).toArray());
+            if (FndGlobal.IsNotNull(aos_aadd_model)) {
+                FndGlobal.OpenBillById(getView(), "aos_aadd_model", aos_aadd_model.get("id"));
+            }
+        }
+    }
+
+    public void propertyChanged(PropertyChangedArgs e) {
+        String name = e.getProperty().getName();
+        FndMsg.debug("name =" + name);
+        if ("aos_type".equals(name)) aosTypeChange();// 任务类型
+        else if ("aos_itemid".equals(name)) aosItemIdChange();
+    }
+
+    public void afterCreateNewData(EventObject e) {
+        super.afterCreateNewData(e);
+        statusControl();
+        init();
+    }
+
+    /**
+     * 初始化事件
+     **/
+    public void afterLoadData(EventObject e) {
+        super.afterLoadData(e);
+        statusControl();
+        aosItemIdChange();
+    }
+
+    public void beforeDoOperation(BeforeDoOperationEventArgs args) {
+        FormOperate formOperate = (FormOperate) args.getSource();
+        String Operatation = formOperate.getOperateKey();
+        try {
+            if ("save".equals(Operatation)) {
+                saveControl();
+            }
+            statusControl();
+        } catch (FndError fndError) {
+            fndError.show(getView());
+            args.setCancel(true);
+        } catch (Exception ex) {
+            FndError.showex(getView(), ex);
+            args.setCancel(true);
+        }
+    }
+
+    @Override
+    public void itemClick(ItemClickEvent evt) {
+        super.itemClick(evt);
+        String Control = evt.getItemKey();
+        try {
+            if ("aos_submit".equals(Control)) aosSubmit(this.getModel().getDataEntity(true), "A");
+            else if ("aos_history".equals(Control)) aos_history();// 查看历史记录
+        } catch (FndError fndError) {
+            fndError.show(getView());
+        } catch (Exception ex) {
+            FndError.showex(getView(), ex);
+        }
+    }
+
+    /**
+     * 查看历史记录
+     */
+    private void aos_history() {
+        FndHistory.OpenHistory(this.getView());
+    }
+
+    /**
+     * 提交按钮逻辑
+     */
+    public void aosSubmit(DynamicObject dy_main, String type) throws FndError {
+        // 手工提交时先保存数据
+        if (type.equals("A")) {
+            this.getView().invokeOperation("save");
+            this.getView().invokeOperation("refresh");
+            statusControl();// 提交完成后做新的界面状态控制
+        }
+        FndMsg.debug("=====Into aosSubmit=====");
+        String aos_status = dy_main.getString("aos_status");// 根据状态判断当前流程节点
+        switch (aos_status) {
+            case "新建":
+                submitForNew(dy_main);
+                break;
+            case "文案确认":
+                submitForEdit(dy_main);
+                break;
+            case "海外确认":
+                submitForOs(dy_main);
+                break;
+            case "设计制作":
+                submitForDesign(dy_main);
+                break;
+            case "新品对比模块录入":
+                submitForModel(dy_main);
+                break;
+            case "销售上线":
+                submitForSale(dy_main);
+                break;
+        }
+        SaveServiceHelper.saveOperate("aos_mkt_aadd", new DynamicObject[]{dy_main}, OperateOption.create());
+        FndHistory.Create(dy_main, "提交", aos_status);
+        if (type.equals("A")) {
+            this.getView().invokeOperation("refresh");
+            statusControl();// 提交完成后做新的界面状态控制
+        }
     }
 
     /**
@@ -669,13 +974,13 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
                 throw fndError;
             }
 
-            String aos_productno = ((DynamicObject)aosItemId).getString("aos_productno");
+            String aos_productno = ((DynamicObject) aosItemId).getString("aos_productno");
             // 判断产品号是否已存在
-            DynamicObject aos_mkt_aadd = QueryServiceHelper.queryOne("aos_mkt_aadd","aos_entryentity.aos_itemid",
+            DynamicObject aos_mkt_aadd = QueryServiceHelper.queryOne("aos_mkt_aadd", "aos_entryentity.aos_itemid",
                     new QFilter("aos_entryentity.aos_itemid.aos_productno", QCP.equals, aos_productno)
-                            .and("id",QCP.not_equals,fid).toArray());
+                            .and("id", QCP.not_equals, fid).toArray());
             if (FndGlobal.IsNotNull(aos_mkt_aadd)) {
-                fndError.add(aos_productno+"产品号已有高级A+，不允许重复生成！");
+                fndError.add(aos_productno + "产品号已有高级A+，不允许重复生成！");
                 throw fndError;
             }
 
@@ -698,8 +1003,8 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
         Object CurrentUserId = UserServiceHelper.getCurrentUserId();
         Object CurrentUserName = UserServiceHelper.getUserInfoByID((long) CurrentUserId).get("name");
         if (aosUser instanceof DynamicObject) aosUser = ((DynamicObject) aosUser).getPkValue();
-        else if (aosUser instanceof Long) aosUser = (Long) aosUser;
-            // 权限控制
+        else if (aosUser instanceof Long) aosUser = aosUser;
+        // 权限控制
         if (!aosUser.toString().equals(currentUserId.toString()) && !"程震杰".equals(CurrentUserName.toString()) && !"刘中怀".equals(CurrentUserName.toString()) && !"赵轩".equals(CurrentUserName.toString())) {
             this.getView().setEnable(false, "titlepanel");// 标题面板
             this.getView().setEnable(false, "aos_contentpanelflex");// 主界面面板
@@ -781,281 +1086,6 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
             this.getView().setEnable(false, 0, "aos_same");// 同款
             this.getView().setEnable(false, 0, "aos_trans");// 翻译
             this.getView().setEnable(false, 0, "aos_itemid");// 货号
-        }
-    }
-
-    /**
-     * 获取下单国别
-     *
-     * @param aosItemId
-     * @return
-     */
-    public static Set<String> getItemOrg(Object aosItemId) {
-        Set<String> ouSet = new HashSet<>();
-        DynamicObject bd_material = BusinessDataServiceHelper.loadSingle(aosItemId, "bd_material");
-        DynamicObjectCollection aos_contryentryS = bd_material.getDynamicObjectCollection("aos_contryentry");
-        // 获取所有国家品牌 字符串拼接 终止
-        for (DynamicObject aos_contryentry : aos_contryentryS) {
-            DynamicObject aos_nationality = aos_contryentry.getDynamicObject("aos_nationality");// 物料国别
-            String aos_nationalitynumber = aos_nationality.getString("number");// 物料国别编码
-            if ("IE".equals(aos_nationalitynumber)) continue;
-            Object org_id = aos_nationality.get("id"); // ItemId
-            int OsQty = iteminfo.GetItemOsQty(org_id, aosItemId);
-            int onQty = get_on_hand_qty(Long.valueOf(org_id.toString()), Long.valueOf(aosItemId.toString()));
-            OsQty += onQty;
-            int SafeQty = iteminfo.GetSafeQty(org_id);
-            String aos_contryentrystatus = aos_contryentry.getString("aos_contryentrystatus");
-            if ("F".equals(aos_contryentrystatus) || "H".equals(aos_contryentrystatus) ) continue;
-            if ("C".equals(aos_contryentry.getString("aos_contryentrystatus")) && OsQty < SafeQty) continue;
-            ouSet.add(aos_nationalitynumber);
-        }
-        return ouSet;
-    }
-
-    /**
-     * 获取在途数量
-     *
-     * @param fk_aos_org_fid
-     * @param fk_aos_item_fid
-     * @return
-     */
-    public static int get_on_hand_qty(long fk_aos_org_fid, long fk_aos_item_fid) {
-        try {
-            QFilter filter_item = new QFilter("aos_itemid", "=", fk_aos_item_fid);
-            QFilter filter_ou = new QFilter("aos_orgid", "=", fk_aos_org_fid);
-            QFilter filter_qty = new QFilter("aos_ship_qty", ">", 0);
-            QFilter filter_flag = new QFilter("aos_os_flag", "=", "N");
-            QFilter filter_status = new QFilter("aos_shp_status", "=", "PACKING");
-            filter_status = filter_status.or("aos_shp_status", "=", "SHIPPING");
-            QFilter[] filters = new QFilter[]{filter_item, filter_ou, filter_qty, filter_flag, filter_status};
-            DynamicObjectCollection aos_sync_shp = QueryServiceHelper.query("aos_sync_shp", "aos_ship_qty", filters);
-            int aos_ship_qty = 0;
-            for (DynamicObject d : aos_sync_shp) {
-                aos_ship_qty += d.getInt("aos_ship_qty");
-            }
-            return aos_ship_qty;
-        } catch (Exception Ex) {
-            throw Ex;
-        }
-    }
-
-    /**
-     * 生成同款高级A+需求单
-     *
-     * @param reqFId
-     * @param ou
-     * @param count  用于判断是否小语种第一个货号
-     * @param type
-     * @param itemId
-     */
-    public static void genSameAadd(String reqFId, String ou, int count, String type, Object itemId) throws FndError {
-        FndError fndError = new FndError();
-
-        FndMsg.debug("ou =" + ou);
-        FndMsg.debug("count =" + count);
-        FndMsg.debug("type =" + type);
-
-
-        DynamicObject sourceBill = BusinessDataServiceHelper.loadSingle(reqFId, "aos_mkt_aadd");
-       String category = MKTCom.getItemCateNameZH(itemId);
-        String[] category_group = category.split(",");
-        String AosCategory1 = null;// 大类
-        String AosCategory2 = null;// 中类
-        int category_length = category_group.length;
-        if (category_length > 0) AosCategory1 = category_group[0];
-        if (category_length > 1) AosCategory2 = category_group[1];
-
-        DynamicObject aosMktAadd = BusinessDataServiceHelper.newDynamicObject("aos_mkt_aadd");
-        aosMktAadd.set("aos_requireby", sourceBill.get("aos_requireby"));
-        aosMktAadd.set("aos_organization1", sourceBill.get("aos_organization1"));
-        aosMktAadd.set("aos_requiredate", sourceBill.get("aos_requiredate"));
-        aosMktAadd.set("aos_type", "同款");
-        aosMktAadd.set("aos_org", ou);
-
-        DynamicObject aosMktProgOrgUser = QueryServiceHelper.queryOne("aos_mkt_progorguser",
-                "aos_oueditor,aos_02hq,aos_salehelper,aos_oseditor",
-                new QFilter("aos_orgid.number", QCP.equals, ou).
-                        and("aos_category1", QCP.equals, AosCategory1)
-                        .and("aos_category2", QCP.equals, AosCategory2).toArray());
-        if (FndGlobal.IsNull(aosMktProgOrgUser) || FndGlobal.IsNull(aosMktProgOrgUser.get("aos_oueditor"))) {
-            fndError.add(ou + "~" + AosCategory1 + "~" + AosCategory2 + ",国别编辑不存在!");
-            throw fndError;
-        }
-        // 带出组长
-        if (FndGlobal.IsNull(aosMktProgOrgUser) || FndGlobal.IsNull(aosMktProgOrgUser.get("aos_02hq"))) {
-            fndError.add(ou + "~" + AosCategory1 + "~" + AosCategory2 + ",组长不存在!");
-            throw fndError;
-        }
-        // 带出销售助理
-        if (FndGlobal.IsNull(aosMktProgOrgUser) || FndGlobal.IsNull(aosMktProgOrgUser.get("aos_salehelper"))) {
-            fndError.add(ou + "~" + AosCategory1 + "~" + AosCategory2 + ",销售助理不存在!");
-            throw fndError;
-        }
-
-        // 带出海外编辑
-        if (FndGlobal.IsNull(aosMktProgOrgUser) || FndGlobal.IsNull(aosMktProgOrgUser.get("aos_oseditor"))) {
-            fndError.add(ou + "~" + AosCategory1 + "~" + AosCategory2 + ",海外编辑不存在!");
-            throw fndError;
-        }
-
-        aosMktAadd.set("aos_osconfirm", sourceBill.get("aos_osconfirm"));
-
-        aosMktAadd.set("aos_oueditor", aosMktProgOrgUser.get("aos_oueditor"));
-        aosMktAadd.set("aos_monitor", aosMktProgOrgUser.get("aos_02hq"));
-        aosMktAadd.set("aos_design", sourceBill.get("aos_design"));
-        aosMktAadd.set("aos_sale", aosMktProgOrgUser.get("aos_salehelper"));
-
-
-        aosMktAadd.set("aos_sourceid", sourceBill.get("id"));
-        aosMktAadd.set("aos_sourcebillno", sourceBill.get("aos_billno"));
-
-        DynamicObjectCollection sourceEntryS = sourceBill.getDynamicObjectCollection("aos_entryentity");
-        DynamicObject sourceEntry = sourceEntryS.get(0);
-        DynamicObjectCollection aos_entryentityS = aosMktAadd.getDynamicObjectCollection("aos_entryentity");
-        DynamicObject aos_entryentity = aos_entryentityS.addNew();
-
-        aos_entryentity.set("aos_itemid", itemId);
-        aos_entryentity.set("aos_aadd", sourceEntry.get("aos_aadd"));
-        aos_entryentity.set("aos_new", sourceEntry.get("aos_new"));
-        aos_entryentity.set("aos_same", sourceEntry.get("aos_same"));
-        aos_entryentity.set("aos_trans", sourceEntry.get("aos_trans"));
-        aos_entryentity.set("aos_url", sourceEntry.get("aos_url"));
-
-        if (count == 0) {
-            if ("MIN".equals(type)) {
-                aosMktAadd.set("aos_min", true);// 小语种同步主单
-                aosMktAadd.set("aos_status", "海外确认");
-                aosMktAadd.set("aos_osdate", new Date());
-                aosMktAadd.set("aos_user", aosMktProgOrgUser.get("aos_oseditor"));
-                aosMktAadd.set("aos_oseditor", aosMktProgOrgUser.get("aos_oseditor"));
-                aosMktAadd.set("aos_oueditor", aosMktProgOrgUser.get("aos_oueditor"));
-            } else if ("NORMAL".equals(type)) {
-                aosMktAadd.set("aos_status", "设计制作");
-                aosMktAadd.set("aos_user", sourceBill.get("aos_design"));
-            }
-        } else {
-            if ("MIN".equals(type)) {
-                aosMktAadd.set("aos_son", true);// 小语种同步子单
-                aosMktAadd.set("aos_status", "小语种同步");
-                aosMktAadd.set("aos_user", system);
-            }
-        }
-
-        OperationServiceHelper.executeOperate("save", "aos_mkt_aadd", new DynamicObject[]{aosMktAadd}, OperateOption.create());
-    }
-
-    public static void generateAddFromDesign(DynamicObject aos_itemid, String ou, String type) throws FndError {
-        FndError fndError = new FndError();
-        // 申请人
-        DynamicObject aos_mkt_aadd = QueryServiceHelper.queryOne("aos_mkt_aadd", "aos_requireby,aos_organization1", new QFilter("aos_itemid.aos_productno", QCP.equals, aos_itemid.getString("aos_productno")).toArray());
-
-        DynamicObject aosMktAadd = BusinessDataServiceHelper.newDynamicObject("aos_mkt_aadd");
-        aosMktAadd.set("aos_requireby", aos_mkt_aadd.get("aos_requireby"));
-        aosMktAadd.set("aos_organization1", aos_mkt_aadd.get("aos_organization1"));
-        aosMktAadd.set("aos_requiredate", new Date());
-        aosMktAadd.set("aos_type", "国别新品");
-        aosMktAadd.set("aos_org", ou);
-        aosMktAadd.set("aos_osconfirm", "是");
-
-        String category = MKTCom.getItemCateNameZH(aos_itemid.getPkValue());
-        String[] category_group = category.split(",");
-        String AosCategory1 = null;// 大类
-        String AosCategory2 = null;// 中类
-        int category_length = category_group.length;
-        if (category_length > 0) AosCategory1 = category_group[0];
-        if (category_length > 1) AosCategory2 = category_group[1];
-        DynamicObject aosMktProgUser = QueryServiceHelper.queryOne("aos_mkt_proguser", "aos_designassit", new QFilter("aos_category1", QCP.equals, AosCategory1).and("aos_category2", QCP.equals, AosCategory2).toArray());
-        if (FndGlobal.IsNull(aosMktProgUser) || FndGlobal.IsNull(aosMktProgUser.get("aos_designassit"))) {
-            fndError.add(AosCategory1 + "~" + AosCategory2 + ",初级品类不存在!");
-            throw fndError;
-        }
-        DynamicObject aosMktProgOrgUser = QueryServiceHelper.queryOne("aos_mkt_progorguser", "aos_oueditor,aos_02hq,aos_salehelper,aos_oseditor", new QFilter("aos_orgid.number", QCP.equals, ou).and("aos_category1", QCP.equals, AosCategory1).and("aos_category2", QCP.equals, AosCategory2).toArray());
-        if (FndGlobal.IsNull(aosMktProgOrgUser) || FndGlobal.IsNull(aosMktProgOrgUser.get("aos_oueditor"))) {
-            fndError.add(ou + "~" + AosCategory1 + "~" + AosCategory2 + ",国别编辑不存在!");
-            throw fndError;
-        }
-        aosMktAadd.set("aos_design", aosMktProgUser.get("aos_designassit"));
-        aosMktAadd.set("aos_oueditor", aosMktProgOrgUser.get("aos_oueditor"));
-        aosMktAadd.set("aos_monitor", aosMktProgOrgUser.get("aos_02hq"));
-        aosMktAadd.set("aos_sale", aosMktProgOrgUser.get("aos_salehelper"));
-        if ("EN_05".equals(type)) {
-            // 判断国别物料是否存在
-            Boolean itemExist = queryItemExist(aos_itemid,ou);
-            if (!itemExist){
-                aosMktAadd.set("aos_user", system);
-                aosMktAadd.set("aos_status", "已完成");
-            }
-            else {
-            aosMktAadd.set("aos_user", aosMktProgOrgUser.get("aos_02hq"));
-            aosMktAadd.set("aos_status", "新品对比模块录入");
-            }
-            // 将对应A+需求表对应国别勾选
-            DynamicObject aos_mkt_addtrack = BusinessDataServiceHelper.loadSingleFromCache("aos_mkt_addtrack", new QFilter("aos_itemid", QCP.equals, aos_itemid.getPkValue()).toArray());
-            if (FndGlobal.IsNotNull(aos_mkt_addtrack)) {
-                aos_mkt_addtrack.set("aos_" + ou, true);
-            } else {
-                aos_mkt_addtrack = BusinessDataServiceHelper.newDynamicObject("aos_mkt_addtrack");
-                aos_mkt_addtrack.set("aos_" + ou, true);
-                aos_mkt_addtrack.set("aos_itemid", aos_itemid);
-            }
-            OperationServiceHelper.executeOperate("save", "aos_mkt_addtrack", new DynamicObject[]{aos_mkt_addtrack}, OperateOption.create());
-        } else if ("EN_04".equals(type)) {
-            aosMktAadd.set("aos_user", aosMktProgUser.get("aos_designassit"));
-            aosMktAadd.set("aos_status", "设计制作");
-        } else if ("SM_04".equals(type)) {
-            aosMktAadd.set("aos_user", aosMktProgUser.get("aos_designassit"));
-            aosMktAadd.set("aos_status", "设计制作");
-            // 将对应A+需求表对应国别勾选
-            DynamicObject aos_mkt_addtrack = BusinessDataServiceHelper.loadSingleFromCache("aos_mkt_addtrack", new QFilter("aos_itemid", QCP.equals, aos_itemid.getPkValue()).toArray());
-            if (FndGlobal.IsNotNull(aos_mkt_addtrack)) {
-                aos_mkt_addtrack.set("aos_" + ou, true);
-            } else {
-                aos_mkt_addtrack = BusinessDataServiceHelper.newDynamicObject("aos_mkt_addtrack");
-                aos_mkt_addtrack.set("aos_" + ou, true);
-                aos_mkt_addtrack.set("aos_itemid", aos_itemid);
-            }
-            OperationServiceHelper.executeOperate("save", "aos_mkt_addtrack", new DynamicObject[]{aos_mkt_addtrack}, OperateOption.create());
-        } else if ("SM_02".equals(type)) {
-//            aosMktAadd.set("aos_user", aosMktProgOrgUser.get("aos_oueditor"));
-//            aosMktAadd.set("aos_status", "文案确认");
-            aosMktAadd.set("aos_oseditor", aosMktProgOrgUser.get("aos_oseditor"));
-            aosMktAadd.set("aos_user", aosMktProgOrgUser.get("aos_oseditor"));
-            aosMktAadd.set("aos_status", "海外确认");
-            aosMktAadd.set("aos_osdate", new Date());
-        }
-
-        DynamicObjectCollection aos_entryentityS = aosMktAadd.getDynamicObjectCollection("aos_entryentity");
-        DynamicObject aos_entryentity = aos_entryentityS.addNew();
-        aos_entryentity.set("aos_itemid", aos_itemid);
-
-        OperationResult result = OperationServiceHelper.executeOperate("save", "aos_mkt_aadd", new DynamicObject[]{aosMktAadd}, OperateOption.create());
-        //2023-11-16 gk 单据到达新品确认节点后立马提交
-        if (result.isSuccess()){
-            String status = aosMktAadd.getString("aos_status");
-            if (FndGlobal.IsNotNull(status) && status.equals("新品对比模块录入")){
-                Object id = result.getSuccessPkIds().get(0);
-                DynamicObject dy_main = BusinessDataServiceHelper.loadSingle(id, "aos_mkt_aadd");
-                submitForModel(dy_main);
-                FndHistory.Create(dy_main, "提交", "新品对比模块录入");
-                SaveServiceHelper.save(new DynamicObject[]{dy_main});
-            }
-        }
-    }
-
-    private static Boolean queryItemExist(DynamicObject aosItemid, String ou) {
-        try {
-        DynamicObject bd_material =QueryServiceHelper.queryOne("bd_material",
-                "id",
-                new QFilter("id", QCP.equals, aosItemid.getPkValue().toString())
-                        .and("aos_contryentry.aos_nationality.number",QCP.equals,ou)
-                        .and("aos_contryentry.aos_contryentrystatus",QCP.not_equals,"F")
-                        .and("aos_contryentry.aos_contryentrystatus",QCP.not_equals,"H")
-                        .toArray());
-        return FndGlobal.IsNotNull(bd_material);
-
-        }
-        catch (Exception ex) {
-           return false;
         }
     }
 

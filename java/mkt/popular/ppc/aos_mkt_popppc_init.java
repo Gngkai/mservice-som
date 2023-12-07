@@ -439,6 +439,8 @@ public class aos_mkt_popppc_init extends AbstractTask {
 			// 获取固定剔除剔除物料
 			List<String> list_itemRejectIds = getRejectItem(p_org_id);
 
+			HashMap<String, String> rptPro = getRptPro(p_org_id);
+
 			for (DynamicObject bd_material : bd_materialS) {
 				// 判断是否跳过
 				long item_id = bd_material.getLong("id");
@@ -447,6 +449,13 @@ public class aos_mkt_popppc_init extends AbstractTask {
 				String itemid_str = Long.toString(item_id);
 				String aos_itemnumer = bd_material.getString("number");
 				String aos_productno = bd_material.getString("aos_productno");
+
+				if (rptPro.containsKey(aos_itemnumer))
+				{
+					aos_productno = rptPro.get(aos_itemnumer);
+				}
+
+
 				int aos_shp_day = (int) aos_shpday_map.get(orgid_str);// 备货天数
 				int aos_freight_day = (int) aos_clearday_map.get(orgid_str);// 海运天数
 				int aos_clear_day = (int) aos_freightday_map.get(orgid_str);// 清关天数
@@ -1650,6 +1659,26 @@ public class aos_mkt_popppc_init extends AbstractTask {
 		}
 		return ProductInfo;
 	}
+
+	/**
+	 * SKU推广报告
+	 * @return
+	 */
+	public static HashMap<String, String> getRptPro(Object p_org_id) {
+		HashMap<String, String> rptPro = new HashMap<>();
+		DynamicObjectCollection skuRptS = QueryServiceHelper.query("aos_base_skupoprpt",
+				"aos_entryentity.aos_ad_sku aos_ad_sku," +
+						"aos_entryentity.aos_cam_name aos_cam_name",
+				new QFilter("aos_orgid",QCP.equals,p_org_id)
+						.and("aos_entryentity.aos_cam_name",QCP.like,"GJ-%")
+						.toArray());
+		for (DynamicObject skuRpt : skuRptS) {
+			rptPro.put(skuRpt.getString("aos_ad_sku"),
+					skuRpt.getString("aos_cam_name").replace("-AUTO",""));
+		}
+		return rptPro;
+	}
+
 
 	/** 平台上架信息 **/
 	private static Set<String> GenerateOnlineSkuSet(Object p_org_id) {

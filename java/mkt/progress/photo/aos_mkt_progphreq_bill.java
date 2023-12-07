@@ -620,14 +620,28 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
         Boolean aos_newvendor = dy_mian.getBoolean("aos_newvendor");// 新供应商
 
         if ("工厂简拍".equals(aos_phstate) && (aos_newitem || aos_newvendor)) {
+            FndMsg.debug("into A");
+
             Boolean isSealSample = QueryServiceHelper.exists("aos_sealsample",
-                    new QFilter("aos_item.id", QCP.equals, aos_itemid.getPkValue())
-                            .and("aos_contractnowb", QCP.equals, AosPoNumber).and("aos_islargeseal", QCP.equals, "是")
-                            .and("aos_largetext", QCP.equals, null).toArray());
+                    new QFilter("aos_item.id", QCP.equals, aos_itemid.getPkValue().toString())
+                            .and("aos_contractnowb", QCP.equals, AosPoNumber)
+                            .and("aos_islargeseal", QCP.equals, "是")
+                            .and("aos_largetext", QCP.equals, "").toArray());
             if (isSealSample) {
                 ErrorCount++;
+                ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "3D建模，必须有大货封样图片!");
             }
-            ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "3D建模，必须有大货封样图片!");
+            FndMsg.debug("isSealSample A:" + isSealSample);
+
+             isSealSample = QueryServiceHelper.exists("aos_sealsample",
+                    new QFilter("aos_item.id", QCP.equals, aos_itemid.getPkValue())
+                            .and("aos_contractnowb", QCP.equals, AosPoNumber)
+                            .and("aos_islargeseal", QCP.equals, "").toArray());
+            if (isSealSample) {
+                ErrorCount++;
+                ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "3D建模，必须有大货封样图片!");
+            }
+            FndMsg.debug("isSealSample B:" + isSealSample);
         }
 
         if (ErrorCount > 0) {
