@@ -544,16 +544,17 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 				if (FndGlobal.IsNull(portfolio.get(aos_productno))
 						&& "Y".equals(aos_entryentity.getString("aos_offline")))
 					portfolio.put(aos_productno, "aos_special");
-				if ((FndGlobal.IsNotNull(aos_firstindate))
-						&& (FndDate.GetBetweenDays(new Date(), aos_firstindate) < 30))
-					portfolio.put(aos_productno, "aos_new");
-				if ("秋冬产品".equals(aos_seasonseting) || "冬季产品".equals(aos_seasonseting))
-					portfolio.put(aos_productno, "autumn_winter");
-				if ("万圣装饰".equals(aos_category3))
-					portfolio.put(aos_productno, "halloween");
-				if ("圣诞装饰".equals(aos_category2))
-					portfolio.put(aos_productno, "chrismas");
 			}
+
+			if ((FndGlobal.IsNotNull(aos_firstindate))
+					&& (FndDate.GetBetweenDays(new Date(), aos_firstindate) < 30))
+				portfolio.put(aos_productno, "aos_new");
+			if ("秋冬产品".equals(aos_seasonseting) || "冬季产品".equals(aos_seasonseting))
+				portfolio.put(aos_productno, "autumn_winter");
+			if ("万圣装饰".equals(aos_category3))
+				portfolio.put(aos_productno, "halloween");
+			if ("圣诞装饰".equals(aos_category2))
+				portfolio.put(aos_productno, "chrismas");
 		}
 		return portfolio;
 	}
