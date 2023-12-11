@@ -94,14 +94,18 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
             // 判断是否存在国别首次入库日期
             Date aos_firstindate = queryItemFirstDate(aosItemId, aos_org);
 
+            FndMsg.debug("aos_firstindate:"+aos_firstindate);
+
             if (FndGlobal.IsNotNull(aos_firstindate))
             {
+                FndMsg.debug("A:");
                 dy_main.set("aos_status", "销售上线");
                 dy_main.set("aos_firstindate", aos_firstindate);
                 dy_main.set("aos_salerece_date", new Date());
                 dy_main.set("aos_user", aos_user);
             } else
             {
+                FndMsg.debug("B:");
                 dy_main.set("aos_status", "销售上线");
 //                dy_main.set("aos_firstindate", aos_firstindate);
 //                dy_main.set("aos_salerece_date", new Date());
@@ -185,13 +189,10 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
             Map<String, Integer> ouCount = new HashMap<>();
             for (DynamicObject sameSegment : sameSegmentS) {
                 Set<String> segmentSet = getItemOrg(sameSegment.get("id"));
-                FndMsg.debug("segmentSet.size():" + segmentSet.size());
                 if (segmentSet.size() > 0) {
                     Iterator<String> iterSeg = segmentSet.iterator();
                     while (iterSeg.hasNext()) {
                         String ou = iterSeg.next();
-                        FndMsg.debug("ou:" + ou);
-                        FndMsg.debug("aos_org" + aos_org);
                         if ("IT,ES,DE,FR".contains(ou) && !aos_org.equals(ou)) {
                             if (FndGlobal.IsNull(ouCount.get(ou))) ouCount.put(ou, 0);
                             else ouCount.put(ou, ouCount.get(ou) + 1);
@@ -221,8 +222,9 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
             dy_main.set("aos_user", system);
             dy_main.set("aos_status", "已完成");
         } else {
-            dy_main.set("aos_status", "新品对比模块录入");
-            dy_main.set("aos_user", aos_user);
+            FndMsg.debug("======新品对比模块录入======");
+//            dy_main.set("aos_status", "新品对比模块录入");
+//            dy_main.set("aos_user", aos_user);
             submitForModel(dy_main);
             FndHistory.Create(dy_main, "提交", "新品对比模块录入");
         }
