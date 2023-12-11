@@ -497,7 +497,7 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
 		Date date = calendar.getTime();
-		calendar.add(Calendar.DAY_OF_MONTH, -2);
+		calendar.add(Calendar.DAY_OF_MONTH, 0);
 		Date date_to = calendar.getTime();
 		calendar.add(Calendar.DAY_OF_MONTH, -7);
 		Date date_from = calendar.getTime();
