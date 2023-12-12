@@ -58,6 +58,8 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
     public void afterLoadData(EventObject e) {
         super.afterLoadData(e);
         StatusControl();
+        setCurrentTotal(0);
+        calTimeS();
     }
 
     /**
@@ -94,11 +96,48 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
             } else if (name.equals("aos_rate")) {
                 BigDecimal newValue = (BigDecimal) changeSet[0].getNewValue();
                 aosRateChanged(newValue);
+            } else if (name.equals("aos_month")) {
+                calTimeS();
             }
         } catch (FndError fndError) {
             fndError.show(getView());
         } catch (Exception ex) {
             FndError.showex(getView(), ex);
+        }
+    }
+
+    /**
+     * 计算平台活动次数
+     */
+    private void calTimeS() {
+        if (FndGlobal.IsNotNull(this.getModel().getValue("aos_month"))
+        && FndGlobal.IsNotNull(this.getModel().getValue("aos_orgid")))
+        {
+            DynamicObject aos_orgid = (DynamicObject) this.getModel().getValue("aos_orgid");
+            String aosOrgIdStr = aos_orgid.getPkValue().toString();
+            Set<String> aosSalActLibS = getSalActLib(aosOrgIdStr);
+            Date aos_month = (Date) this.getModel().getValue("aos_month");
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(aos_month);
+            // 获取当月第一天
+            calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMinimum(Calendar.DAY_OF_MONTH));
+            Date dateFrom = calendar.getTime();
+            // 获取当月最后一天
+            calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+            Date dateTo = calendar.getTime();
+
+            DynamicObjectCollection selectS =QueryServiceHelper.query("aos_act_select_plan","id," +
+                            "billno",
+                    new QFilter("aos_enddate1",QCP.large_equals,dateFrom)
+                            .and("aos_enddate1",QCP.less_equals,dateTo)
+                            .and("aos_acttype", QCP.in, aosSalActLibS)
+                            .and("aos_nationality.id",QCP.equals,aosOrgIdStr).toArray());
+            for (DynamicObject select:selectS) {
+                FndMsg.debug(select.getString("billno") );
+            }
+            if (FndGlobal.IsNotNull(selectS)){
+                this.getModel().setValue("aos_times",selectS.size());
+            }
         }
     }
 
@@ -282,6 +321,7 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
         BigDecimal aosTotalBd = aosHomeBd.add(aosRattanBd).add(aosYardBd).add(aosSportBd).add(aosPetBd)
                 .add(aosKidBd);
         this.getModel().setValue("aos_total", String.valueOf(aosTotalBd), currentRowIndex);
+        this.getModel().setValue("aos_amount", String.valueOf(aosTotalBd));
         this.getView().invokeOperation("save");
     }
 
@@ -670,6 +710,7 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
                             .and("aos_enddate1", QCP.large_equals, dateFrom)
                             .and("aos_enddate1", QCP.less_equals, dateTo)
                             .and("aos_acttype", QCP.equals, actSet)
+                            .and("aos_nationality.id",QCP.equals,orgIdStr)
                             .toArray(), null);
             actSelectS = actSelectS.groupBy().sum("aos_incre_reven").sum("aos_actqty").finish();
             while (actSelectS.hasNext()) {
@@ -728,6 +769,14 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
             }
 
             if (aosActQty.compareTo(BigDecimal.ZERO) != 0) {
+//                FndMsg.debug("returnVal:"+returnVal);
+//                FndMsg.debug("aosIncreReven:"+aosIncreReven);
+//                FndMsg.debug("aosActQty:"+aosActQty);
+//                FndMsg.debug("thisMonthQty:"+thisMonthQty);
+
+                if (FndGlobal.IsNull(thisMonthQty))
+                    thisMonthQty = BigDecimal.ZERO;
+
                 returnVal = returnVal.add(aosIncreReven.divide(aosActQty, 0, RoundingMode.HALF_UP).multiply(thisMonthQty));
             }
         }
