@@ -303,7 +303,7 @@ public class aos_mkt_actselect_init extends AbstractTask {
 
                     // 针对爆品 季节 节日 常规 进行筛选 不满足条件的直接跳过
                     Boolean issaleout = false;
-                    if ((saleout || distSkuSet.contains(itemIdStr)) && availableDays <= 90) {
+                    if ((saleout || distSkuSet.contains(itemIdStr)) && availableDays >= 90) {
                         issaleout = true;
                         aos_itemtype = "G";
                         aos_typedetail = "爆品/铺货";
