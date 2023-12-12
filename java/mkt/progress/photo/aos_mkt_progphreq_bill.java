@@ -590,6 +590,11 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
         Object AosFollower = dy_mian.get(aos_follower);
         Object AosPoNumber = dy_mian.get(aos_ponumber);
 
+        String aos_category1 = dy_mian.getString("aos_category1");
+        String aos_category2 = dy_mian.getString("aos_category2");
+        String aos_category3 = dy_mian.getString("aos_category3");
+        String aos_itemname = dy_mian.getString("aos_itemname");
+
         DynamicObject aos_itemid = dy_mian.getDynamicObject("aos_itemid");
 
         // 子流程不做判断
@@ -619,6 +624,40 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
         Boolean aos_newitem = dy_mian.getBoolean("aos_newitem");// 新产品
         Boolean aos_newvendor = dy_mian.getBoolean("aos_newvendor");// 新供应商
 
+        // 无法建模的产品不允许改成工厂简拍
+        if ("工厂简拍".equals(aos_phstate)) {
+            boolean cond1 = QueryServiceHelper.exists("aos_sealsample",
+                    new QFilter("aos_item.id", QCP.equals, aos_itemid.getPkValue().toString())
+                            .and("aos_contractnowb", QCP.equals, AosPoNumber)
+                            .and("aos_model", QCP.equals, "否").toArray());
+
+            boolean cond2 = QueryServiceHelper.exists("aos_sealsample",
+                    new QFilter("aos_item.id", QCP.equals, aos_itemid.getPkValue().toString())
+                            .and("aos_contractnowb", QCP.equals, AosPoNumber)
+                            .and("aos_model", QCP.equals, "").toArray());
+
+            boolean cond3 = QueryServiceHelper.exists("aos_sealsample",
+                    new QFilter("aos_item.id", QCP.equals, aos_itemid.getPkValue().toString())
+                            .and("aos_contractnowb", QCP.equals, AosPoNumber).toArray());
+
+            boolean cond4 = QueryServiceHelper.exists("aos_mkt_3dselect",
+                    new QFilter("aos_category1", QCP.equals, aos_category1)
+                            .and("aos_category2", QCP.equals, aos_category2)
+                            .and("aos_category3", QCP.equals, aos_category3)
+                            .and("aos_name", QCP.equals, aos_itemname)
+                            .toArray());
+
+            FndMsg.debug("cond1:" + cond1);
+            FndMsg.debug("cond2:" + cond2);
+            FndMsg.debug("cond3:" + cond3);
+            FndMsg.debug("cond4:" + cond4);
+            //860-020
+            if (cond1 || cond2 || (!cond3 && !cond4)) {
+                ErrorCount++;
+                ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "无法建模的产品不允许改成工厂简拍!");
+            }
+        }
+
         if ("工厂简拍".equals(aos_phstate) && (aos_newitem || aos_newvendor)) {
             FndMsg.debug("into A");
 
@@ -633,7 +672,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
             }
             FndMsg.debug("isSealSample A:" + isSealSample);
 
-             isSealSample = QueryServiceHelper.exists("aos_sealsample",
+            isSealSample = QueryServiceHelper.exists("aos_sealsample",
                     new QFilter("aos_item.id", QCP.equals, aos_itemid.getPkValue())
                             .and("aos_contractnowb", QCP.equals, AosPoNumber)
                             .and("aos_islargeseal", QCP.equals, "").toArray());

@@ -338,6 +338,52 @@ public class aos_mkt_rcv_bill extends AbstractBillPlugIn implements ItemClickLis
 			ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "拍照地点=工厂简拍时，建模资料字段必填!");
 		}
 
+		if (("新建".equals(aos_status) ||"备样中".equals(aos_status))&& "工厂简拍".equals(aos_phstate)) {
+			DynamicObject aos_itemid = dy_main.getDynamicObject("aos_itemid");
+			String aos_itemname = dy_main.getString("aos_itemname");
+			String aos_ponumber =dy_main.getString("aos_ponumber");
+			String category = (String) SalUtil.getCategoryByItemId(aos_itemid.getPkValue().toString()).get("name");
+			String[] category_group = category.split(",");
+			String AosCategory1 = null;
+			String AosCategory2 = null;
+			String AosCategory3 = null;
+			int category_length = category_group.length;
+			if (category_length > 0)
+				AosCategory1 = category_group[0];
+			if (category_length > 1)
+				AosCategory2 = category_group[1];
+			if (category_length > 2)
+				AosCategory3 = category_group[2];
+
+			boolean cond1 = QueryServiceHelper.exists("aos_sealsample",
+					new QFilter("aos_item.id", QCP.equals, aos_itemid.getPkValue().toString())
+							.and("aos_contractnowb", QCP.equals, aos_ponumber)
+							.and("aos_model", QCP.equals, "否").toArray());
+
+			boolean cond2 = QueryServiceHelper.exists("aos_sealsample",
+					new QFilter("aos_item.id", QCP.equals, aos_itemid.getPkValue().toString())
+							.and("aos_contractnowb", QCP.equals, aos_ponumber)
+							.and("aos_model", QCP.equals, "").toArray());
+
+			boolean cond3 = QueryServiceHelper.exists("aos_sealsample",
+					new QFilter("aos_item.id", QCP.equals, aos_itemid.getPkValue().toString())
+							.and("aos_contractnowb", QCP.equals, aos_ponumber).toArray());
+
+			boolean cond4 = QueryServiceHelper.exists("aos_mkt_3dselect",
+					new QFilter("aos_category1", QCP.equals, AosCategory1)
+							.and("aos_category2", QCP.equals, AosCategory2)
+							.and("aos_category3", QCP.equals, AosCategory3)
+							.and("aos_name", QCP.equals, aos_itemname)
+							.toArray());
+
+			if (cond1||cond2||(cond3 && !cond4)){
+				ErrorCount++;
+				ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "无法建模的产品不允许改成工厂简拍!");
+			}
+		}
+
+
+
 		if (ErrorCount > 0) {
 			FndError fndMessage = new FndError(ErrorMessage);
 			throw fndMessage;
