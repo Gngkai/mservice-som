@@ -12,6 +12,9 @@ import common.fnd.FndMsg;
 import common.sal.sys.basedata.dao.CountryDao;
 import common.sal.sys.basedata.dao.impl.CountryDaoImpl;
 import common.sal.util.SalUtil;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
 import kd.bos.bill.AbstractBillPlugIn;
 import kd.bos.context.RequestContext;
 import kd.bos.dataentity.OperateOption;
@@ -43,10 +46,12 @@ import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.GlobalMessage;
 import mkt.common.MKTCom;
+import mkt.common.otel.MmsOtelUtils;
 import mkt.progress.ProgressUtil;
 import mkt.progress.parameter.errorListing.ErrorListEntity;
 
 public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemClickListener, HyperLinkClickListener {
+    private static final Tracer tracer = MmsOtelUtils.getTracer(aos_mkt_listingson_bill.class, RequestContext.get());
 
     /**
      * 系统管理员
@@ -89,116 +94,155 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
      * 设置操作人的组织
      **/
     public static void setListSonUserOrganizate(DynamicObject dy_main) {
-        //设置操作人
-        setUser(dy_main);
-        //添加数据到 改错任务清单
-        setErrorList(dy_main);
+        Span span = MmsOtelUtils.getCusSubSpan(tracer, MmsOtelUtils.getMethodPath());
+        try (Scope scope = span.makeCurrent()) {
+            //设置操作人
+            setUser(dy_main);
+            //添加数据到 改错任务清单
+            setErrorList(dy_main);
+        } catch (Exception ex) {
+            MmsOtelUtils.setException(span, ex);
+            throw ex;
+        } finally {
+            MmsOtelUtils.spanClose(span);
+        }
     }
 
     private static void setUser(DynamicObject dy_main) {
-        Object aos_user = dy_main.get("aos_user");
-        Object userID;
-        if (aos_user instanceof Long) {
-            userID = aos_user;
-        } else if (aos_user instanceof DynamicObject) {
-            userID = ((DynamicObject) aos_user).get("id");
-        } else if (aos_user instanceof EntryProp) {
-            userID = ((DynamicObject) aos_user).get("id");
-        } else if (aos_user instanceof String) {
-            userID = aos_user;
-        } else
-            return;
-        List<DynamicObject> MapList = Cux_Common_Utl.GetUserOrg(userID);
-        if (MapList != null) {
-            if (MapList.size() >= 3 && MapList.get(2) != null)
-                dy_main.set("aos_userorganizat1", MapList.get(2).get("id"));
-            if (MapList.size() >= 4 && MapList.get(3) != null)
-                dy_main.set("aos_userorganizat2", MapList.get(3).get("id"));
-            if (MapList.size() >= 5 && MapList.get(4) != null)
-                dy_main.set("aos_userorganizat3", MapList.get(4).get("id"));
+        Span span = MmsOtelUtils.getCusSubSpan(tracer, MmsOtelUtils.getMethodPath());
+        try (Scope scope = span.makeCurrent()) {
+            Object aos_user = dy_main.get("aos_user");
+            Object userID;
+            if (aos_user instanceof Long) {
+                userID = aos_user;
+            } else if (aos_user instanceof DynamicObject) {
+                userID = ((DynamicObject) aos_user).get("id");
+            } else if (aos_user instanceof EntryProp) {
+                userID = ((DynamicObject) aos_user).get("id");
+            } else if (aos_user instanceof String) {
+                userID = aos_user;
+            } else
+                return;
+            List<DynamicObject> MapList = Cux_Common_Utl.GetUserOrg(userID);
+            if (MapList != null) {
+                if (MapList.size() >= 3 && MapList.get(2) != null)
+                    dy_main.set("aos_userorganizat1", MapList.get(2).get("id"));
+                if (MapList.size() >= 4 && MapList.get(3) != null)
+                    dy_main.set("aos_userorganizat2", MapList.get(3).get("id"));
+                if (MapList.size() >= 5 && MapList.get(4) != null)
+                    dy_main.set("aos_userorganizat3", MapList.get(4).get("id"));
+            }
+        } catch (Exception ex) {
+            MmsOtelUtils.setException(span, ex);
+            throw ex;
+        } finally {
+            MmsOtelUtils.spanClose(span);
         }
     }
 
     private static void setErrorList(DynamicObject dy_main) {
-        String aos_status = dy_main.getString("aos_status");
-        if (!aos_status.equals("结束"))
-            return;
-        String aos_type = dy_main.getString("aos_type");
-        if (!ErrorListEntity.errorListType.contains(aos_type))
-            return;
-        List<String> errorCountries = ErrorListEntity.errorCountries;
-        DynamicObject dy_org = dy_main.getDynamicObject("aos_orgid");
-        String billno = dy_main.getString("billno");
-        //国别为空
-        if (dy_org == null) {
-            DynamicObjectCollection dyc_ent = dy_main.getDynamicObjectCollection("aos_entryentity");
-            CountryDao countryDao = new CountryDaoImpl();
-            for (DynamicObject dy : dyc_ent) {
-                if (dy.get("aos_itemid") == null) {
-                    continue;
-                }
-                String itemid = dy.getDynamicObject("aos_itemid").getString("id");
-                String orgtextR = dy.getString("aos_orgtext_r");
-                if (Cux_Common_Utl.IsNull(orgtextR))
-                    continue;
-                String[] split = orgtextR.split(";");
-                for (String org : split) {
-                    if (errorCountries.contains(org)) {
-                        String orgid = countryDao.getCountryID(org);
-                        ErrorListEntity errorListEntity = new ErrorListEntity(billno, aos_type, orgid, itemid);
-                        errorListEntity.save();
-                    }
-                }
-
-            }
-        } else {
-            String orgid = dy_org.getString("id");
-            String orgNumber = dy_org.getString("number");
-            if (errorCountries.contains(orgNumber)) {
+        Span span = MmsOtelUtils.getCusSubSpan(tracer, MmsOtelUtils.getMethodPath());
+        try (Scope scope = span.makeCurrent()) {
+            String aos_status = dy_main.getString("aos_status");
+            if (!aos_status.equals("结束"))
+                return;
+            String aos_type = dy_main.getString("aos_type");
+            if (!ErrorListEntity.errorListType.contains(aos_type))
+                return;
+            List<String> errorCountries = ErrorListEntity.errorCountries;
+            DynamicObject dy_org = dy_main.getDynamicObject("aos_orgid");
+            String billno = dy_main.getString("billno");
+            //国别为空
+            if (dy_org == null) {
                 DynamicObjectCollection dyc_ent = dy_main.getDynamicObjectCollection("aos_entryentity");
+                CountryDao countryDao = new CountryDaoImpl();
                 for (DynamicObject dy : dyc_ent) {
                     if (dy.get("aos_itemid") == null) {
                         continue;
                     }
                     String itemid = dy.getDynamicObject("aos_itemid").getString("id");
-                    ErrorListEntity errorListEntity = new ErrorListEntity(billno, aos_type, orgid, itemid);
-                    errorListEntity.save();
+                    String orgtextR = dy.getString("aos_orgtext_r");
+                    if (Cux_Common_Utl.IsNull(orgtextR))
+                        continue;
+                    String[] split = orgtextR.split(";");
+                    for (String org : split) {
+                        if (errorCountries.contains(org)) {
+                            String orgid = countryDao.getCountryID(org);
+                            ErrorListEntity errorListEntity = new ErrorListEntity(billno, aos_type, orgid, itemid);
+                            errorListEntity.save();
+                        }
+                    }
+                }
+            } else {
+                String orgid = dy_org.getString("id");
+                String orgNumber = dy_org.getString("number");
+                if (errorCountries.contains(orgNumber)) {
+                    DynamicObjectCollection dyc_ent = dy_main.getDynamicObjectCollection("aos_entryentity");
+                    for (DynamicObject dy : dyc_ent) {
+                        if (dy.get("aos_itemid") == null) {
+                            continue;
+                        }
+                        String itemid = dy.getDynamicObject("aos_itemid").getString("id");
+                        ErrorListEntity errorListEntity = new ErrorListEntity(billno, aos_type, orgid, itemid);
+                        errorListEntity.save();
+                    }
                 }
             }
+        } catch (Exception ex) {
+            MmsOtelUtils.setException(span, ex);
+            throw ex;
+        } finally {
+            MmsOtelUtils.spanClose(span);
         }
     }
 
     private static void SubmitToOsConfirm(DynamicObject dy_main) {
-        long currentUserId = UserServiceHelper.getCurrentUserId();
-        dy_main.set("aos_make", currentUserId);
-        dy_main.set("aos_status", "海外确认");// 设置单据流程状态
+        Span span = MmsOtelUtils.getCusSubSpan(tracer, MmsOtelUtils.getMethodPath());
+        try (Scope scope = span.makeCurrent()) {
+            long currentUserId = UserServiceHelper.getCurrentUserId();
+            dy_main.set("aos_make", currentUserId);
+            dy_main.set("aos_status", "海外确认");// 设置单据流程状态
+        } catch (Exception ex) {
+            MmsOtelUtils.setException(span, ex);
+            throw ex;
+        } finally {
+            MmsOtelUtils.spanClose(span);
+        }
     }
 
     /**
      * 来源类型=设计需求表时，编辑确认节点可编辑；提交后将值回写到设计需求表的功能图文案备注字段
      **/
     private static void fillDesign(DynamicObject dy_main) {
-        String aos_sourcetype = dy_main.getString("aos_sourcetype");
-        if (aos_sourcetype.equals("DESIGN")) {
-            String aos_sourceid = dy_main.getString("aos_sourceid");
-            DynamicObject dy_design = BusinessDataServiceHelper.loadSingle(aos_sourceid, "aos_mkt_designreq");// 设计需求表
-            // 获取文中物料对应的行
-            Map<String, DynamicObject> map_itemToRow = dy_main.getDynamicObjectCollection("aos_entryentity").stream()
-                    .collect(Collectors.toMap(dy -> dy.getDynamicObject("aos_itemid").getString("id"), dy -> dy,
-                            (key1, key2) -> key1));
-            DynamicObjectCollection dyc_dsign = dy_design.getDynamicObjectCollection("aos_entryentity");
-            for (DynamicObject dy_row : dyc_dsign) {
-                DynamicObject aos_itemid = dy_row.getDynamicObject("aos_itemid");
-                if (aos_itemid == null)
-                    continue;
-                String itemid = aos_itemid.getString("id");
-                if (map_itemToRow.containsKey(itemid)) {
-                    DynamicObject dy_sonRow = map_itemToRow.get(itemid);
-                    dy_row.set("aos_remakes", dy_sonRow.get("aos_remakes"));
+        Span span = MmsOtelUtils.getCusSubSpan(tracer, MmsOtelUtils.getMethodPath());
+        try (Scope scope = span.makeCurrent()) {
+            String aos_sourcetype = dy_main.getString("aos_sourcetype");
+            if (aos_sourcetype.equals("DESIGN")) {
+                String aos_sourceid = dy_main.getString("aos_sourceid");
+                DynamicObject dy_design = BusinessDataServiceHelper.loadSingle(aos_sourceid, "aos_mkt_designreq");// 设计需求表
+                // 获取文中物料对应的行
+                Map<String, DynamicObject> map_itemToRow = dy_main.getDynamicObjectCollection("aos_entryentity").stream()
+                        .collect(Collectors.toMap(dy -> dy.getDynamicObject("aos_itemid").getString("id"), dy -> dy,
+                                (key1, key2) -> key1));
+                DynamicObjectCollection dyc_dsign = dy_design.getDynamicObjectCollection("aos_entryentity");
+                for (DynamicObject dy_row : dyc_dsign) {
+                    DynamicObject aos_itemid = dy_row.getDynamicObject("aos_itemid");
+                    if (aos_itemid == null)
+                        continue;
+                    String itemid = aos_itemid.getString("id");
+                    if (map_itemToRow.containsKey(itemid)) {
+                        DynamicObject dy_sonRow = map_itemToRow.get(itemid);
+                        dy_row.set("aos_remakes", dy_sonRow.get("aos_remakes"));
 
+                    }
                 }
+                SaveServiceHelper.update(new DynamicObject[]{dy_design});
             }
-            SaveServiceHelper.update(new DynamicObject[]{dy_design});
+        } catch (Exception ex) {
+            MmsOtelUtils.setException(span, ex);
+            throw ex;
+        } finally {
+            MmsOtelUtils.spanClose(span);
         }
     }
 
@@ -206,35 +250,49 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
      * 申请人提交
      **/
     private static void SubmitForApply(DynamicObject dy_main) {
-        String MessageId = null;
-        String Message = "Listing优化需求表子表-编辑确认";
-        Object aos_editor = dy_main.get("aos_editor");
-        Object ReqFId = dy_main.getPkValue(); // 当前界面主键
-        Object billno = dy_main.get("billno");
-        MessageId = aos_editor + "";
-        dy_main.set("aos_status", "编辑确认");// 设置单据流程状态
-        dy_main.set("aos_user", aos_editor);// 流转给编辑
-        MKTCom.SendGlobalMessage(MessageId, "aos_mkt_listing_son", ReqFId + "", billno + "", Message);
+        Span span = MmsOtelUtils.getCusSubSpan(tracer, MmsOtelUtils.getMethodPath());
+        try (Scope scope = span.makeCurrent()) {
+            String MessageId = null;
+            String Message = "Listing优化需求表子表-编辑确认";
+            Object aos_editor = dy_main.get("aos_editor");
+            Object ReqFId = dy_main.getPkValue(); // 当前界面主键
+            Object billno = dy_main.get("billno");
+            MessageId = aos_editor + "";
+            dy_main.set("aos_status", "编辑确认");// 设置单据流程状态
+            dy_main.set("aos_user", aos_editor);// 流转给编辑
+            MKTCom.SendGlobalMessage(MessageId, "aos_mkt_listing_son", ReqFId + "", billno + "", Message);
+        } catch (Exception ex) {
+            MmsOtelUtils.setException(span, ex);
+            throw ex;
+        } finally {
+            MmsOtelUtils.spanClose(span);
+        }
     }
 
     /**
      * 值校验
      **/
     private static void SaveControl(DynamicObject dy_main) throws FndError {
-        int ErrorCount = 0;
-        String ErrorMessage = "";
-        // 数据层
-
-        Object aos_osconfirmlov = dy_main.get("aos_osconfirmlov");
-        if (Cux_Common_Utl.IsNull(aos_osconfirmlov)) {
-            ErrorCount++;
-            ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "海外文字确认必填!");
-        }
-
-        // 校验
-        if (ErrorCount > 0) {
-            FndError fndMessage = new FndError(ErrorMessage);
-            throw fndMessage;
+        Span span = MmsOtelUtils.getCusSubSpan(tracer, MmsOtelUtils.getMethodPath());
+        try (Scope scope = span.makeCurrent()) {
+            int ErrorCount = 0;
+            String ErrorMessage = "";
+            // 数据层
+            Object aos_osconfirmlov = dy_main.get("aos_osconfirmlov");
+            if (Cux_Common_Utl.IsNull(aos_osconfirmlov)) {
+                ErrorCount++;
+                ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "海外文字确认必填!");
+            }
+            // 校验
+            if (ErrorCount > 0) {
+                FndError fndMessage = new FndError(ErrorMessage);
+                throw fndMessage;
+            }
+        } catch (Exception ex) {
+            MmsOtelUtils.setException(span, ex);
+            throw ex;
+        } finally {
+            MmsOtelUtils.spanClose(span);
         }
     }
 
@@ -242,158 +300,165 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
      * 编辑确认状态下提交
      **/
     private static void SubmitForEditor(DynamicObject dy_main) throws FndError {
-        // 异常参数
-        int ErrorCount = 0;
-        String ErrorMessage = "";
-        // 数据层
-        Object aos_designer = dy_main.get("aos_designer");
-        Object aos_orignbill = dy_main.get("aos_orignbill");
-        Object aos_sourceid = dy_main.get("aos_sourceid"); // 源单id
-        Object aos_sourcetype = dy_main.get("aos_sourcetype");
-        Boolean aos_ismall = false;
-        Object aos_ismalllov = dy_main.get("aos_ismalllov");
+        Span span = MmsOtelUtils.getCusSubSpan(tracer, MmsOtelUtils.getMethodPath());
+        try (Scope scope = span.makeCurrent()) {
+            // 异常参数
+            int ErrorCount = 0;
+            String ErrorMessage = "";
+            // 数据层
+            Object aos_designer = dy_main.get("aos_designer");
+            Object aos_orignbill = dy_main.get("aos_orignbill");
+            Object aos_sourceid = dy_main.get("aos_sourceid"); // 源单id
+            Object aos_sourcetype = dy_main.get("aos_sourcetype");
+            Boolean aos_ismall = false;
+            Object aos_ismalllov = dy_main.get("aos_ismalllov");
 
-        Object aos_orgid = dy_main.get("aos_orgid");
-        if (FndGlobal.IsNotNull(aos_orgid))
-            aos_orgid = dy_main.getDynamicObject("aos_orgid");
+            Object aos_orgid = dy_main.get("aos_orgid");
+            if (FndGlobal.IsNotNull(aos_orgid))
+                aos_orgid = dy_main.getDynamicObject("aos_orgid");
 
-        Object aos_type = dy_main.get("aos_type");// 任务类型
+            Object aos_type = dy_main.get("aos_type");// 任务类型
 
-        if ("是".equals(aos_ismalllov))
-            aos_ismall = true;
-        List<DynamicObject> ListLanguageListing = new ArrayList<DynamicObject>();// 需要生成小语种的行
-        List<DynamicObject> ListLanguageListingCA = new ArrayList<DynamicObject>();// 需要生成小语种的行
-        // 校验
-        DynamicObjectCollection aos_entryentityS = dy_main.getDynamicObjectCollection("aos_entryentity");
+            if ("是".equals(aos_ismalllov))
+                aos_ismall = true;
+            List<DynamicObject> ListLanguageListing = new ArrayList<DynamicObject>();// 需要生成小语种的行
+            List<DynamicObject> ListLanguageListingCA = new ArrayList<DynamicObject>();// 需要生成小语种的行
+            // 校验
+            DynamicObjectCollection aos_entryentityS = dy_main.getDynamicObjectCollection("aos_entryentity");
 
-		Object LastItemId = 0;
-		for (DynamicObject aos_entryentity : aos_entryentityS) {
-            // 获取优化项 合计
-            int aos_write = aos_entryentity.getInt("aos_write");
-            int aos_opt = aos_entryentity.getInt("aos_opt");
-            int aos_pic = aos_entryentity.getInt("aos_pic");
-            int aos_subtitle = aos_entryentity.getInt("aos_subtitle");
-            int aos_title = aos_entryentity.getInt("aos_title");
-            int aos_keyword = aos_entryentity.getInt("aos_keyword");
-            int aos_other = aos_entryentity.getInt("aos_other");
-            int aos_etc = aos_entryentity.getInt("aos_etc");
-            int total = aos_write + aos_opt + aos_pic + aos_subtitle + aos_title + aos_keyword + aos_other + aos_etc
-                    + aos_etc;
-            if (total == 0)
-                continue;// 优化项无数字 跳过
+            Object LastItemId = 0;
+            for (DynamicObject aos_entryentity : aos_entryentityS) {
+                // 获取优化项 合计
+                int aos_write = aos_entryentity.getInt("aos_write");
+                int aos_opt = aos_entryentity.getInt("aos_opt");
+                int aos_pic = aos_entryentity.getInt("aos_pic");
+                int aos_subtitle = aos_entryentity.getInt("aos_subtitle");
+                int aos_title = aos_entryentity.getInt("aos_title");
+                int aos_keyword = aos_entryentity.getInt("aos_keyword");
+                int aos_other = aos_entryentity.getInt("aos_other");
+                int aos_etc = aos_entryentity.getInt("aos_etc");
+                int total = aos_write + aos_opt + aos_pic + aos_subtitle + aos_title + aos_keyword + aos_other + aos_etc
+                        + aos_etc;
+                if (total == 0)
+                    continue;// 优化项无数字 跳过
 
-			if ("0".equals(LastItemId.toString()))
-				LastItemId = aos_entryentity.getDynamicObject("aos_itemid").getPkValue();
+                if ("0".equals(LastItemId.toString()))
+                    LastItemId = aos_entryentity.getDynamicObject("aos_itemid").getPkValue();
 
-            Object aos_case = aos_entryentity.get("aos_case");
-            if (Cux_Common_Utl.IsNull(aos_case) && !"DESIGN".equals(aos_sourcetype))
-                ErrorCount++;
-            DynamicObject aos_subentryentity = aos_entryentity.getDynamicObjectCollection("aos_subentryentity").get(0);
-            String aos_orgtext = aos_subentryentity.getString("aos_orgtext");
-            if (aos_orgtext.contains("ES") || aos_orgtext.contains("IT") || aos_orgtext.contains("FR")
-                    || aos_orgtext.contains("DE"))
-                ListLanguageListing.add(aos_entryentity);
-            if (aos_orgtext.contains("CA")) {
-                ListLanguageListingCA.add(aos_entryentity);
+                Object aos_case = aos_entryentity.get("aos_case");
+                if (Cux_Common_Utl.IsNull(aos_case) && !"DESIGN".equals(aos_sourcetype))
+                    ErrorCount++;
+                DynamicObject aos_subentryentity = aos_entryentity.getDynamicObjectCollection("aos_subentryentity").get(0);
+                String aos_orgtext = aos_subentryentity.getString("aos_orgtext");
+                if (aos_orgtext.contains("ES") || aos_orgtext.contains("IT") || aos_orgtext.contains("FR")
+                        || aos_orgtext.contains("DE"))
+                    ListLanguageListing.add(aos_entryentity);
+                if (aos_orgtext.contains("CA")) {
+                    ListLanguageListingCA.add(aos_entryentity);
+                }
             }
-        }
-        if (ErrorCount > 0)
-            ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "优化方案不允许为空!");
-        if (Cux_Common_Utl.IsNull(aos_designer)) {
-            ErrorCount++;
-            ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "设计为空,流程无法流转!");
-        }
-        if (ErrorCount > 0) {
-            FndError fndMessage = new FndError(ErrorMessage);
-            throw fndMessage;
-        }
+            if (ErrorCount > 0)
+                ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "优化方案不允许为空!");
+            if (Cux_Common_Utl.IsNull(aos_designer)) {
+                ErrorCount++;
+                ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "设计为空,流程无法流转!");
+            }
+            if (ErrorCount > 0) {
+                FndError fndMessage = new FndError(ErrorMessage);
+                throw fndMessage;
+            }
 
-        if (aos_ismall && ListLanguageListing.size() > 0 && !"DESIGN".equals(aos_sourcetype))
-            // 是否抄送小语种 按照下单国别分组生成listing小语种
-            GenerateListingLanguage(dy_main, ListLanguageListing);
-        else if ("VED".equals(aos_sourcetype) && aos_ismall && ListLanguageListing.size() == 0)
-            // 视频类型 抄送小语种 但是物料中下单国别没有小语种 直接回写视频状态 至视频剪辑
-            UpdatePhotoToCut(aos_sourceid);
+            if (aos_ismall && ListLanguageListing.size() > 0 && !"DESIGN".equals(aos_sourcetype))
+                // 是否抄送小语种 按照下单国别分组生成listing小语种
+                GenerateListingLanguage(dy_main, ListLanguageListing);
+            else if ("VED".equals(aos_sourcetype) && aos_ismall && ListLanguageListing.size() == 0)
+                // 视频类型 抄送小语种 但是物料中下单国别没有小语种 直接回写视频状态 至视频剪辑
+                UpdatePhotoToCut(aos_sourceid);
 
-        if ("四者一致".equals(aos_type) && ListLanguageListingCA.size() > 0)
-            GenerateListingLanguageCA(dy_main, ListLanguageListingCA);
+            if ("四者一致".equals(aos_type) && ListLanguageListingCA.size() > 0)
+                GenerateListingLanguageCA(dy_main, ListLanguageListingCA);
 
-        // 先执行保存操作
-        dy_main.set("aos_make", RequestContext.get().getCurrUserId());
-        dy_main.set("aos_status", "结束");// 设置单据流程状态
-        dy_main.set("aos_user", system);// 设置操作人为系统管理员
-        dy_main.set("aos_ecdate", new Date());
+            // 先执行保存操作
+            dy_main.set("aos_make", RequestContext.get().getCurrUserId());
+            dy_main.set("aos_status", "结束");// 设置单据流程状态
+            dy_main.set("aos_user", system);// 设置操作人为系统管理员
+            dy_main.set("aos_ecdate", new Date());
 
-        // 如果是US 获取抄送人员
+            // 如果是US 获取抄送人员
 //        FndMsg.debug("Org:" + "US".equals(((DynamicObject)aos_orgid).getString("number")));
 
-        if (FndGlobal.IsNotNull(aos_orgid) &&
-				"US".equals(((DynamicObject)aos_orgid).getString("number"))) {
-            FndMsg.debug("====Into US====");
-			String category = MKTCom.getItemCateNameZH(LastItemId);
-			String[] category_group = category.split(",");
-			String AosCategory1 = null;
-			String AosCategory2 = null;
-			int category_length = category_group.length;
-			if (category_length > 0)
-				AosCategory1 = category_group[0];
-			if (category_length > 1)
-				AosCategory2 = category_group[1];
-            FndMsg.debug("AosCategory1:" + AosCategory1);
-            FndMsg.debug("AosCategory2:" + AosCategory2);
-			DynamicObject aos_mkt_progorguser =
-					QueryServiceHelper.queryOne("aos_mkt_progorguser",
-							"aos_oseditor",
-							(new QFilter("aos_orgid", "=", ((DynamicObject)aos_orgid).getPkValue().toString())
-									.and("aos_category1", QCP.equals, AosCategory1)
-									.and("aos_category2", QCP.equals, AosCategory2)).toArray());
-			if (aos_mkt_progorguser != null) {
-				long aos_oseditor = aos_mkt_progorguser.getLong("aos_oseditor");
-				dy_main.set("aos_sendto", aos_oseditor);
-				MKTCom.SendGlobalMessage(String.valueOf(aos_oseditor),
-						"aos_mkt_listing_son",
-                        dy_main.getPkValue().toString(),
-                        dy_main.getString("billno"),
-						"Listing优化需求表-文案处理完成!");
-                GlobalMessage.SendMessage(dy_main.getString("billno") +
-                        "-Listing优化需求表-文案处理完成!",String.valueOf(aos_oseditor));
-			}
-		}
+            if (FndGlobal.IsNotNull(aos_orgid) &&
+                    "US".equals(((DynamicObject)aos_orgid).getString("number"))) {
+                FndMsg.debug("====Into US====");
+                String category = MKTCom.getItemCateNameZH(LastItemId);
+                String[] category_group = category.split(",");
+                String AosCategory1 = null;
+                String AosCategory2 = null;
+                int category_length = category_group.length;
+                if (category_length > 0)
+                    AosCategory1 = category_group[0];
+                if (category_length > 1)
+                    AosCategory2 = category_group[1];
+                FndMsg.debug("AosCategory1:" + AosCategory1);
+                FndMsg.debug("AosCategory2:" + AosCategory2);
+                DynamicObject aos_mkt_progorguser =
+                        QueryServiceHelper.queryOne("aos_mkt_progorguser",
+                                "aos_oseditor",
+                                (new QFilter("aos_orgid", "=", ((DynamicObject)aos_orgid).getPkValue().toString())
+                                        .and("aos_category1", QCP.equals, AosCategory1)
+                                        .and("aos_category2", QCP.equals, AosCategory2)).toArray());
+                if (aos_mkt_progorguser != null) {
+                    long aos_oseditor = aos_mkt_progorguser.getLong("aos_oseditor");
+                    dy_main.set("aos_sendto", aos_oseditor);
+                    MKTCom.SendGlobalMessage(String.valueOf(aos_oseditor),
+                            "aos_mkt_listing_son",
+                            dy_main.getPkValue().toString(),
+                            dy_main.getString("billno"),
+                            "Listing优化需求表-文案处理完成!");
+                    GlobalMessage.SendMessage(dy_main.getString("billno") +
+                            "-Listing优化需求表-文案处理完成!",String.valueOf(aos_oseditor));
+                }
+            }
 
             SaveServiceHelper.save(new DynamicObject[]{dy_main});
 
-
-        // 设计类型 判断本单下Listing需求子表是否全部已完成 非设计需求表过来的子表不触发此逻辑
-        if ("DESIGN".equals(aos_sourcetype)) {
-            QFilter filter_bill = new QFilter("aos_sourceid", "=", aos_sourceid);
-            QFilter filter_status = new QFilter("aos_status", "!=", "结束");
-            QFilter[] filters = new QFilter[]{filter_bill, filter_status};
-            DynamicObject aos_mkt_listing_son = QueryServiceHelper.queryOne("aos_mkt_listing_son", "count(0)", filters);
-            if (aos_mkt_listing_son == null || aos_mkt_listing_son.getInt(0) == 0) {
-                DynamicObject aos_mkt_designreq = BusinessDataServiceHelper.loadSingle(aos_sourceid,
-                        "aos_mkt_designreq");
-                String aos_status = aos_mkt_designreq.getString("aos_status");
-                String MessageId = ProgressUtil.getSubmitUser(aos_sourceid, "aos_mkt_designreq", "设计");// 发送消息
-                if (Cux_Common_Utl.IsNull(MessageId)) {
-                    MessageId = ((DynamicObject) aos_designer).getPkValue().toString();
-                }
-                aos_mkt_designreq.set("aos_user", MessageId);
-                aos_mkt_designreq.set("aos_status", "设计确认:翻译");
-                aos_mkt_designreq.set("aos_receivedate", new Date());
-                mkt.progress.design.aos_mkt_designreq_bill.setEntityValue(aos_mkt_designreq);
-                FndHistory.Create(aos_mkt_designreq, "提交", aos_status);
-                OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_designreq",
-                        new DynamicObject[]{aos_mkt_designreq}, OperateOption.create());
-                if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
-                    MKTCom.SendGlobalMessage(MessageId, "aos_mkt_designreq", aos_sourceid + "", aos_orignbill + "",
-                            "设计确认:翻译");
+            // 设计类型 判断本单下Listing需求子表是否全部已完成 非设计需求表过来的子表不触发此逻辑
+            if ("DESIGN".equals(aos_sourcetype)) {
+                QFilter filter_bill = new QFilter("aos_sourceid", "=", aos_sourceid);
+                QFilter filter_status = new QFilter("aos_status", "!=", "结束");
+                QFilter[] filters = new QFilter[]{filter_bill, filter_status};
+                DynamicObject aos_mkt_listing_son = QueryServiceHelper.queryOne("aos_mkt_listing_son", "count(0)", filters);
+                if (aos_mkt_listing_son == null || aos_mkt_listing_son.getInt(0) == 0) {
+                    DynamicObject aos_mkt_designreq = BusinessDataServiceHelper.loadSingle(aos_sourceid,
+                            "aos_mkt_designreq");
+                    String aos_status = aos_mkt_designreq.getString("aos_status");
+                    String MessageId = ProgressUtil.getSubmitUser(aos_sourceid, "aos_mkt_designreq", "设计");// 发送消息
+                    if (Cux_Common_Utl.IsNull(MessageId)) {
+                        MessageId = ((DynamicObject) aos_designer).getPkValue().toString();
+                    }
+                    aos_mkt_designreq.set("aos_user", MessageId);
+                    aos_mkt_designreq.set("aos_status", "设计确认:翻译");
+                    aos_mkt_designreq.set("aos_receivedate", new Date());
+                    mkt.progress.design.aos_mkt_designreq_bill.setEntityValue(aos_mkt_designreq);
+                    FndHistory.Create(aos_mkt_designreq, "提交", aos_status);
+                    OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_designreq",
+                            new DynamicObject[]{aos_mkt_designreq}, OperateOption.create());
+                    if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
+                        MKTCom.SendGlobalMessage(MessageId, "aos_mkt_designreq", aos_sourceid + "", aos_orignbill + "",
+                                "设计确认:翻译");
+                    }
                 }
             }
-        }
 
-        // 如果是Listing类型生成销售信息确认单
-        if ("LISTING".equals(aos_sourcetype)) {
-            GenerateListingSal(dy_main);// 销售信息确认单
+            // 如果是Listing类型生成销售信息确认单
+            if ("LISTING".equals(aos_sourcetype)) {
+                GenerateListingSal(dy_main);// 销售信息确认单
+            }
+        } catch (Exception ex) {
+            MmsOtelUtils.setException(span, ex);
+            throw ex;
+        } finally {
+            MmsOtelUtils.spanClose(span);
         }
     }
 
@@ -1065,9 +1130,10 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
 
     @Override
     public void itemClick(ItemClickEvent evt) {
+        Span span = MmsOtelUtils.getCusMainSpan(tracer, MmsOtelUtils.getMethodPath());
         super.itemClick(evt);
         String Control = evt.getItemKey();
-        try {
+        try (Scope scope = span.makeCurrent()){
             if ("aos_submit".equals(Control)) {
                 DynamicObject dy_main = this.getModel().getDataEntity(true);
                 aos_submit(dy_main, "A");
@@ -1083,8 +1149,13 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
                 aos_close();
         } catch (FndError fndMessage) {
             this.getView().showTipNotification(fndMessage.getErrorMessage());
+            MmsOtelUtils.setException(span, fndMessage);
         } catch (Exception ex) {
             this.getView().showErrorNotification(SalUtil.getExceptionStr(ex));
+            MmsOtelUtils.setException(span, ex);
+        }
+        finally {
+            MmsOtelUtils.spanClose(span);
         }
     }
 
@@ -1219,30 +1290,38 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
      * 提交
      **/
     public void aos_submit(DynamicObject dy_main, String type) throws FndError {
-        SaveControl(dy_main);// 先做数据校验判断是否可以提交
-        String aos_status = dy_main.getString("aos_status");// 根据状态判断当前流程节点
-        Object aos_osconfirmlov = dy_main.get("aos_osconfirmlov");
-        switch (aos_status) {
-            case "编辑确认":
-                if ("是".equals(aos_osconfirmlov))
-                    SubmitToOsConfirm(dy_main);
-                else
+        Span span = MmsOtelUtils.getCusSubSpan(tracer, MmsOtelUtils.getMethodPath());
+        try (Scope scope = span.makeCurrent()) {
+            SaveControl(dy_main);// 先做数据校验判断是否可以提交
+            String aos_status = dy_main.getString("aos_status");// 根据状态判断当前流程节点
+            Object aos_osconfirmlov = dy_main.get("aos_osconfirmlov");
+            switch (aos_status) {
+                case "编辑确认":
+                    if ("是".equals(aos_osconfirmlov))
+                        SubmitToOsConfirm(dy_main);
+                    else
+                        SubmitForEditor(dy_main);
+                    fillDesign(dy_main);
+                    break;
+                case "海外确认":
                     SubmitForEditor(dy_main);
-                fillDesign(dy_main);
-                break;
-            case "海外确认":
-                SubmitForEditor(dy_main);
-                break;
-            case "申请人":
-                SubmitForApply(dy_main);
-                break;
-        }
-        SaveServiceHelper.save(new DynamicObject[]{dy_main});
-        setListSonUserOrganizate(dy_main);
-        FndHistory.Create(dy_main, "提交", aos_status);
-        if (type.equals("A")) {
-            this.getView().updateView();
-            StatusControl();// 提交完成后做新的界面状态控制
+                    break;
+                case "申请人":
+                    SubmitForApply(dy_main);
+                    break;
+            }
+            SaveServiceHelper.save(new DynamicObject[]{dy_main});
+            setListSonUserOrganizate(dy_main);
+            FndHistory.Create(dy_main, "提交", aos_status);
+            if (type.equals("A")) {
+                this.getView().updateView();
+                StatusControl();// 提交完成后做新的界面状态控制
+            }
+        } catch (Exception ex) {
+            MmsOtelUtils.setException(span, ex);
+            throw ex;
+        } finally {
+            MmsOtelUtils.spanClose(span);
         }
     }
 
@@ -1250,53 +1329,61 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
      * 全局状态控制
      **/
     private void StatusControl() {
-        // 数据层
-        Object AosStatus = this.getModel().getValue("aos_status");
-        Object AosUser = this.getModel().getValue("aos_user");
-        String AosUserId = null;
-        if (AosUser instanceof String)
-            AosUserId = (String) AosUser;
-        else if (AosUser instanceof Long)
-            AosUserId = AosUser + "";
-        else
-            AosUserId = ((DynamicObject) AosUser).getString("id");
-        Object CurrentUserId = UserServiceHelper.getCurrentUserId();
-        // Object CurrentUserName = UserServiceHelper.getUserInfoByID((long)
-        // CurrentUserId).get("name");
-        // 图片控制
-        // InitPic();
-        // 锁住需要控制的字段
-        this.getView().setVisible(false, "aos_back");
-        this.getView().setVisible(true, "bar_save");
-        // 当前节点操作人不为当前用户 全锁
-        if (!AosUserId.equals(CurrentUserId.toString())) {
-            this.getView().setEnable(false, "aos_contentpanelflex");// 主界面面板
-            this.getView().setEnable(false, "bar_save");
-            this.getView().setEnable(false, "aos_submit");
-            this.getView().setEnable(false, "aos_close");
-        }
-        // 状态控制
-        Map<String, Object> map = new HashMap<>();
-        if ("编辑确认".equals(AosStatus)) {
-            map.put(ClientProperties.Text, new LocaleString("编辑确认"));
-            this.getView().updateControlMetadata("aos_submit", map);
-            this.getView().setVisible(true, "aos_submit");
-            this.getView().setEnable(true, "aos_contentpanelflex");// 主界面面板
-        } else if ("海外确认".equals(AosStatus)) {
-            map.put(ClientProperties.Text, new LocaleString("海外确认"));
-            this.getView().updateControlMetadata("aos_submit", map);
-            this.getView().setVisible(true, "aos_submit");
-            this.getView().setEnable(true, "aos_contentpanelflex");// 主界面面板
-        } else if ("申请人".equals(AosStatus)) {
-            map.put(ClientProperties.Text, new LocaleString("提交"));
-            this.getView().updateControlMetadata("aos_submit", map);
-            this.getView().setVisible(true, "aos_submit");
-            this.getView().setEnable(true, "aos_contentpanelflex");// 主界面面板
-        } else if ("结束".equals(AosStatus)) {
-            this.getView().setVisible(false, "aos_submit");
-            this.getView().setEnable(false, "aos_contentpanelflex");// 主界面面板
-            this.getView().setVisible(false, "bar_save");
-            this.getView().setVisible(false, "aos_close");
+        Span span = MmsOtelUtils.getCusSubSpan(tracer, MmsOtelUtils.getMethodPath());
+        try (Scope scope = span.makeCurrent()) {
+            // 数据层
+            Object AosStatus = this.getModel().getValue("aos_status");
+            Object AosUser = this.getModel().getValue("aos_user");
+            String AosUserId = null;
+            if (AosUser instanceof String)
+                AosUserId = (String) AosUser;
+            else if (AosUser instanceof Long)
+                AosUserId = AosUser + "";
+            else
+                AosUserId = ((DynamicObject) AosUser).getString("id");
+            Object CurrentUserId = UserServiceHelper.getCurrentUserId();
+            // Object CurrentUserName = UserServiceHelper.getUserInfoByID((long)
+            // CurrentUserId).get("name");
+            // 图片控制
+            // InitPic();
+            // 锁住需要控制的字段
+            this.getView().setVisible(false, "aos_back");
+            this.getView().setVisible(true, "bar_save");
+            // 当前节点操作人不为当前用户 全锁
+            if (!AosUserId.equals(CurrentUserId.toString())) {
+                this.getView().setEnable(false, "aos_contentpanelflex");// 主界面面板
+                this.getView().setEnable(false, "bar_save");
+                this.getView().setEnable(false, "aos_submit");
+                this.getView().setEnable(false, "aos_close");
+            }
+            // 状态控制
+            Map<String, Object> map = new HashMap<>();
+            if ("编辑确认".equals(AosStatus)) {
+                map.put(ClientProperties.Text, new LocaleString("编辑确认"));
+                this.getView().updateControlMetadata("aos_submit", map);
+                this.getView().setVisible(true, "aos_submit");
+                this.getView().setEnable(true, "aos_contentpanelflex");// 主界面面板
+            } else if ("海外确认".equals(AosStatus)) {
+                map.put(ClientProperties.Text, new LocaleString("海外确认"));
+                this.getView().updateControlMetadata("aos_submit", map);
+                this.getView().setVisible(true, "aos_submit");
+                this.getView().setEnable(true, "aos_contentpanelflex");// 主界面面板
+            } else if ("申请人".equals(AosStatus)) {
+                map.put(ClientProperties.Text, new LocaleString("提交"));
+                this.getView().updateControlMetadata("aos_submit", map);
+                this.getView().setVisible(true, "aos_submit");
+                this.getView().setEnable(true, "aos_contentpanelflex");// 主界面面板
+            } else if ("结束".equals(AosStatus)) {
+                this.getView().setVisible(false, "aos_submit");
+                this.getView().setEnable(false, "aos_contentpanelflex");// 主界面面板
+                this.getView().setVisible(false, "bar_save");
+                this.getView().setVisible(false, "aos_close");
+            }
+        } catch (Exception ex) {
+            MmsOtelUtils.setException(span, ex);
+            throw ex;
+        } finally {
+            MmsOtelUtils.spanClose(span);
         }
     }
 

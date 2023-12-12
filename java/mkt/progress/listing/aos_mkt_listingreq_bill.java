@@ -16,7 +16,11 @@ import common.fnd.FndWebHook;
 import common.sal.sys.basedata.dao.ItemCategoryDao;
 import common.sal.sys.basedata.dao.impl.ItemCategoryDaoImpl;
 import common.sal.util.SalUtil;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
 import kd.bos.bill.AbstractBillPlugIn;
+import kd.bos.context.RequestContext;
 import kd.bos.dataentity.OperateOption;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
@@ -47,12 +51,16 @@ import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.MKTCom;
 import mkt.common.MKTS3PIC;
+import mkt.common.otel.MmsOtelUtils;
 import mkt.progress.ProgressUtil;
 import mkt.progress.design.aos_mkt_designreq_bill;
 import mkt.progress.iface.iteminfo;
 
 public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
         implements ItemClickListener, HyperLinkClickListener, RowClickEventListener {
+    private static final Tracer tracer =
+            MmsOtelUtils.getTracer(aos_mkt_listingreq_bill.class, RequestContext.get());
+
     private final static Log log = LogFactory.getLog("ProductAdjustPriceBill");
     /**
      * 系统管理员
@@ -85,7 +93,8 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
     public void itemClick(ItemClickEvent evt) {
         super.itemClick(evt);
         String Control = evt.getItemKey();
-        try {
+        Span span = MmsOtelUtils.getCusMainSpan(tracer, MmsOtelUtils.getMethodPath());
+        try(Scope scope = span.makeCurrent()) {
             if ("aos_submit".equals(Control)) {
                 DynamicObject dy_main = this.getModel().getDataEntity(true);
                 aos_submit(dy_main, "A");// 提交
@@ -95,8 +104,12 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
                 aos_open();// 打开产品资料变跟单
         } catch (FndError fndError) {
             fndError.show(getView(), FndWebHook.urlMms);
+            MmsOtelUtils.setException(span, fndError);
         } catch (Exception ex) {
             FndError.showex(getView(), ex, FndWebHook.urlMms);
+            MmsOtelUtils.setException(span, ex);
+        } finally {
+            MmsOtelUtils.spanClose(span);
         }
     }
 
@@ -343,21 +356,29 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
      * 提交
      **/
     public void aos_submit(DynamicObject dy_main, String type) throws FndError {
-        SaveControl(dy_main);// 先做数据校验判断是否可以提交
-        String aos_status = dy_main.getString("aos_status");// 根据状态判断当前流程节点
-        switch (aos_status) {
-            case "申请人":
-                SubmitForNew(dy_main);
-                break;
-        }
-        setItemCate(dy_main);
-        // 保存
-        SaveServiceHelper.save(new DynamicObject[]{dy_main});
-        FndHistory.Create(dy_main, "提交", aos_status);
-        // 界面提交，提交后眼状态控制
-        if (type.equals("A")) {
-            this.getView().invokeOperation("refresh");
-            StatusControl();// 提交完成后做新的界面状态控制
+        Span span = MmsOtelUtils.getCusSubSpan(tracer, MmsOtelUtils.getMethodPath());
+        try (Scope scope = span.makeCurrent()) {
+            SaveControl(dy_main);// 先做数据校验判断是否可以提交
+            String aos_status = dy_main.getString("aos_status");// 根据状态判断当前流程节点
+            switch (aos_status) {
+                case "申请人":
+                    SubmitForNew(dy_main);
+                    break;
+            }
+            setItemCate(dy_main);
+            // 保存
+            SaveServiceHelper.save(new DynamicObject[]{dy_main});
+            FndHistory.Create(dy_main, "提交", aos_status);
+            // 界面提交，提交后眼状态控制
+            if (type.equals("A")) {
+                this.getView().invokeOperation("refresh");
+                StatusControl();// 提交完成后做新的界面状态控制
+            }
+        } catch (Exception ex) {
+            MmsOtelUtils.setException(span, ex);
+            throw ex;
+        } finally {
+            MmsOtelUtils.spanClose(span);
         }
     }
 
@@ -365,20 +386,26 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
      * 值校验
      **/
     private static void SaveControl(DynamicObject dy_main) throws FndError {
-        int ErrorCount = 0;
-        String ErrorMessage = "";
-        // 数据层
-        Object aos_type = dy_main.get("aos_type");
-
-        // 校验
-        if (Cux_Common_Utl.IsNull(aos_type)) {
-            ErrorCount++;
-            ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "任务类型必填!");
-        }
-
-        if (ErrorCount > 0) {
-            FndError fndMessage = new FndError(ErrorMessage);
-            throw fndMessage;
+        Span span = MmsOtelUtils.getCusSubSpan(tracer, MmsOtelUtils.getMethodPath());
+        try (Scope scope = span.makeCurrent()) {
+            int ErrorCount = 0;
+            String ErrorMessage = "";
+            // 数据层
+            Object aos_type = dy_main.get("aos_type");
+            // 校验
+            if (Cux_Common_Utl.IsNull(aos_type)) {
+                ErrorCount++;
+                ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "任务类型必填!");
+            }
+            if (ErrorCount > 0) {
+                FndError fndMessage = new FndError(ErrorMessage);
+                throw fndMessage;
+            }
+        } catch (Exception ex) {
+            MmsOtelUtils.setException(span, ex);
+            throw ex;
+        } finally {
+            MmsOtelUtils.spanClose(span);
         }
     }
 
@@ -386,38 +413,41 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
      * 全局状态控制
      **/
     private void StatusControl() {
-        // 数据层
-        Object AosStatus = this.getModel().getValue("aos_status");
-        DynamicObject AosUser = (DynamicObject) this.getModel().getValue("aos_user");
-        Object CurrentUserId = UserServiceHelper.getCurrentUserId();
-        Object CurrentUserName = UserServiceHelper.getUserInfoByID((long) CurrentUserId).get("name");
-
-        // 图片控制
-        // InitPic();
-
-        // 锁住需要控制的字段
-
-        // 当前节点操作人不为当前用户 全锁
-        if (!AosUser.getPkValue().toString().equals(CurrentUserId.toString())
-                && !"程震杰".equals(CurrentUserName.toString()) && !"陈聪".equals(CurrentUserName.toString())) {
-            this.getView().setEnable(false, "titlepanel");// 标题面板
-            this.getView().setEnable(false, "aos_contentpanelflex");// 主界面面板
-            this.getView().setVisible(false, "bar_save");
-            this.getView().setVisible(false, "aos_submit");
-        }
-        // 状态控制
-        if ("申请人".equals(AosStatus)) {
-            this.getView().setVisible(true, "aos_submit");
-            this.getView().setEnable(true, "aos_contentpanelflex");// 主界面面板
-            this.getView().setVisible(true, "bar_save");
-        } else if ("已完成".equals(AosStatus)) {
-            this.getView().setVisible(false, "aos_submit");
-            this.getView().setEnable(false, "aos_contentpanelflex");// 主界面面板
-            this.getView().setVisible(false, "bar_save");
-
-            this.getView().setVisible(false, "aos_import");
-            this.getView().setVisible(false, "aos_refresh");
-
+        Span span = MmsOtelUtils.getCusSubSpan(tracer, MmsOtelUtils.getMethodPath());
+        try (Scope scope = span.makeCurrent()) {
+            // 数据层
+            Object AosStatus = this.getModel().getValue("aos_status");
+            DynamicObject AosUser = (DynamicObject) this.getModel().getValue("aos_user");
+            Object CurrentUserId = UserServiceHelper.getCurrentUserId();
+            Object CurrentUserName = UserServiceHelper.getUserInfoByID((long) CurrentUserId).get("name");
+            // 图片控制
+            // InitPic();
+            // 锁住需要控制的字段
+            // 当前节点操作人不为当前用户 全锁
+            if (!AosUser.getPkValue().toString().equals(CurrentUserId.toString())
+                    && !"程震杰".equals(CurrentUserName.toString()) && !"陈聪".equals(CurrentUserName.toString())) {
+                this.getView().setEnable(false, "titlepanel");// 标题面板
+                this.getView().setEnable(false, "aos_contentpanelflex");// 主界面面板
+                this.getView().setVisible(false, "bar_save");
+                this.getView().setVisible(false, "aos_submit");
+            }
+            // 状态控制
+            if ("申请人".equals(AosStatus)) {
+                this.getView().setVisible(true, "aos_submit");
+                this.getView().setEnable(true, "aos_contentpanelflex");// 主界面面板
+                this.getView().setVisible(true, "bar_save");
+            } else if ("已完成".equals(AosStatus)) {
+                this.getView().setVisible(false, "aos_submit");
+                this.getView().setEnable(false, "aos_contentpanelflex");// 主界面面板
+                this.getView().setVisible(false, "bar_save");
+                this.getView().setVisible(false, "aos_import");
+                this.getView().setVisible(false, "aos_refresh");
+            }
+        } catch (Exception ex) {
+            MmsOtelUtils.setException(span, ex);
+            throw ex;
+        } finally {
+            MmsOtelUtils.spanClose(span);
         }
     }
 
@@ -425,45 +455,52 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
      * 编辑确认状态下提交
      **/
     private static void SubmitForNew(DynamicObject dy_main) throws FndError {
-        // 异常参数
-        FndReturn Retrun = new FndReturn();
-        // 数据层
+        Span span = MmsOtelUtils.getCusSubSpan(tracer, MmsOtelUtils.getMethodPath());
 
-        // 校验
-        if (Retrun.GetErrorCount() > 0) {
-            throw new FndError(Retrun);
-        }
-
-        // 循环每一行
-        DynamicObjectCollection aos_entryentityS = dy_main.getDynamicObjectCollection("aos_entryentity");
-        List<DynamicObject> ListRequire = new ArrayList<DynamicObject>();
-        List<DynamicObject> ListRequirePic = new ArrayList<DynamicObject>();
-        for (DynamicObject aos_entryentity : aos_entryentityS) {
-            Object aos_require = aos_entryentity.get("aos_require");// 文案
-            Object aos_requirepic = aos_entryentity.get("aos_requirepic"); // 图片
-            if (!Cux_Common_Utl.IsNull(aos_require))
-                ListRequire.add(aos_entryentity);
-            if (!Cux_Common_Utl.IsNull(aos_requirepic))
-                ListRequirePic.add(aos_entryentity);
-        }
-
-        if (ListRequire != null && ListRequire.size() > 0) {
-            GenerateListingSon(ListRequire, Retrun, dy_main);
+        try (Scope scope = span.makeCurrent()) {
+            // 异常参数
+            FndReturn Retrun = new FndReturn();
+            // 数据层
+            // 校验
             if (Retrun.GetErrorCount() > 0) {
-                Retrun.AddErrorMessage("文案需求生成Listing优化子表失败!");
                 throw new FndError(Retrun);
             }
-        }
-
-        if (ListRequirePic != null && ListRequirePic.size() > 0) {
-            GenerateDesignReq(ListRequirePic, Retrun, dy_main);
-            if (Retrun.GetErrorCount() > 0) {
-                Retrun.AddErrorMessage("图片需求生成设计需求表失败!");
-                throw new FndError(Retrun);
+            // 循环每一行
+            DynamicObjectCollection aos_entryentityS = dy_main.getDynamicObjectCollection("aos_entryentity");
+            List<DynamicObject> ListRequire = new ArrayList<DynamicObject>();
+            List<DynamicObject> ListRequirePic = new ArrayList<DynamicObject>();
+            for (DynamicObject aos_entryentity : aos_entryentityS) {
+                Object aos_require = aos_entryentity.get("aos_require");// 文案
+                Object aos_requirepic = aos_entryentity.get("aos_requirepic"); // 图片
+                if (!Cux_Common_Utl.IsNull(aos_require))
+                    ListRequire.add(aos_entryentity);
+                if (!Cux_Common_Utl.IsNull(aos_requirepic))
+                    ListRequirePic.add(aos_entryentity);
             }
+
+            if (ListRequire != null && ListRequire.size() > 0) {
+                GenerateListingSon(ListRequire, Retrun, dy_main);
+                if (Retrun.GetErrorCount() > 0) {
+                    Retrun.AddErrorMessage("文案需求生成Listing优化子表失败!");
+                    throw new FndError(Retrun);
+                }
+            }
+
+            if (ListRequirePic != null && ListRequirePic.size() > 0) {
+                GenerateDesignReq(ListRequirePic, Retrun, dy_main);
+                if (Retrun.GetErrorCount() > 0) {
+                    Retrun.AddErrorMessage("图片需求生成设计需求表失败!");
+                    throw new FndError(Retrun);
+                }
+            }
+            dy_main.set("aos_status", "已完成"); // 设置单据流程状态
+            dy_main.set("aos_user", system); // 设置操作人为系统管理员
+        } catch (Exception ex) {
+            MmsOtelUtils.setException(span, ex);
+            throw ex;
+        } finally {
+            MmsOtelUtils.spanClose(span);
         }
-        dy_main.set("aos_status", "已完成"); // 设置单据流程状态
-        dy_main.set("aos_user", system); // 设置操作人为系统管理员
     }
 
     /**
@@ -1111,27 +1148,35 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
      * 创建优化需求表后给物料的大类赋值
      **/
     public static void setItemCate(DynamicObject dy_main) {
-        DynamicObjectCollection dyc_entity = dy_main.getDynamicObjectCollection("aos_entryentity");
-        ItemCategoryDao itemCategoryDao = new ItemCategoryDaoImpl();
-        for (DynamicObject dy_ent : dyc_entity) {
-            Object aos_item = dy_ent.get("aos_itemid");
-            Object itemid;
-            if (aos_item instanceof Long) {
-                itemid = aos_item;
-            } else if (aos_item instanceof DynamicObject) {
-                itemid = ((DynamicObject) aos_item).get("id");
-            } else if (aos_item instanceof EntryProp) {
-                itemid = ((DynamicObject) aos_item).get("id");
-            } else if (aos_item instanceof String) {
-                itemid = aos_item;
-            } else
-                return;
-            String cateNameZH = itemCategoryDao.getItemCateNameZH(itemid);
-            if (Cux_Common_Utl.IsNull(cateNameZH)) {
-                continue;
+        Span span = MmsOtelUtils.getCusSubSpan(tracer, MmsOtelUtils.getMethodPath());
+        try (Scope scope = span.makeCurrent()) {
+            DynamicObjectCollection dyc_entity = dy_main.getDynamicObjectCollection("aos_entryentity");
+            ItemCategoryDao itemCategoryDao = new ItemCategoryDaoImpl();
+            for (DynamicObject dy_ent : dyc_entity) {
+                Object aos_item = dy_ent.get("aos_itemid");
+                Object itemid;
+                if (aos_item instanceof Long) {
+                    itemid = aos_item;
+                } else if (aos_item instanceof DynamicObject) {
+                    itemid = ((DynamicObject) aos_item).get("id");
+                } else if (aos_item instanceof EntryProp) {
+                    itemid = ((DynamicObject) aos_item).get("id");
+                } else if (aos_item instanceof String) {
+                    itemid = aos_item;
+                } else
+                    return;
+                String cateNameZH = itemCategoryDao.getItemCateNameZH(itemid);
+                if (Cux_Common_Utl.IsNull(cateNameZH)) {
+                    continue;
+                }
+                String[] split = cateNameZH.split(",");
+                dy_ent.set("aos_category1", split[0]);
             }
-            String[] split = cateNameZH.split(",");
-            dy_ent.set("aos_category1", split[0]);
+        } catch (Exception ex) {
+            MmsOtelUtils.setException(span, ex);
+            throw ex;
+        } finally {
+            MmsOtelUtils.spanClose(span);
         }
     }
 }
