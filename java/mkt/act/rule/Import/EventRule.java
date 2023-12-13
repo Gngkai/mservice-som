@@ -577,7 +577,7 @@ public class EventRule {
         for (DynamicObject info : itemInfoes) {
             list_filterItem.add(info.getString("id"));
         }
-        map_asin = ActUtil.queryOrgShopItemASIN(orgEntity,shopid,list_filterItem);
+        map_asin = ActUtil.queryOrgShopItemASIN(orgEntity.getPkValue(),shopid,list_filterItem);
     }
 
     /**
