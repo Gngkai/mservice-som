@@ -379,6 +379,9 @@ public class EventRule {
         if (fillAllQty<=0) {
             return 0;
         }
+        if (cateEntry ==null) {
+            return 0;
+        }
         int alreadyFillQty = 0;
         //Asin维度遍历
         for (Map.Entry<String, List<DynamicObject>> asinEntry : cateEntry.entrySet()) {
