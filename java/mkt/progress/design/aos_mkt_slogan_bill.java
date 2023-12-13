@@ -1075,7 +1075,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
                     this.getView().setEnable(true, 5, "aos_slogan");
                 }
             }
-        } else if ("海外翻译".equals(aos_status) || "翻译".equals(aos_status)) {
+        } else if ("翻译".equals(aos_status)) {
             this.getView().setEnable(false, "aos_flexpanelap1");
             this.getView().setEnable(false, 0, "aos_slogan");
             this.getView().setEnable(false, 1, "aos_itemname");
@@ -1122,7 +1122,17 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
                 this.getView().setEnable(true, 2, "aos_itemname");
                 this.getView().setEnable(true, 2, "aos_slogan");
             }
-        } else if ("设计".equals(aos_status)) {
+        }
+        else if ("海外翻译".equals(aos_status))
+        {
+            this.getView().setEnable(false, 0, "aos_itemname");
+            this.getView().setEnable(false, 0, "aos_slogan");
+            this.getView().setEnable(false, 1, "aos_itemname");
+            this.getView().setEnable(false, 1, "aos_slogan");
+            this.getView().setEnable(true, 2, "aos_itemname");
+            this.getView().setEnable(true, 2, "aos_slogan");
+        }
+        else if ("设计".equals(aos_status)) {
             this.getView().setEnable(false, "aos_flexpanelap1");
             this.getView().setEnable(false, "aos_entryentity");
         }
