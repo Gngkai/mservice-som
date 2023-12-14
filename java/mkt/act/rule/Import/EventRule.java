@@ -772,7 +772,7 @@ public class EventRule {
                 builder.add("aos_shop","=",row.getDynamicObject("aos_re_shop").getPkValue());
             }
             if (row.get("aos_re_act")!=null){
-                builder.add("aos_shop","=",row.getDynamicObject("aos_re_act").getPkValue());
+                builder.add("aos_acttype","=",row.getDynamicObject("aos_re_act").getPkValue());
             }
             //同期
             switch (project) {
@@ -807,7 +807,6 @@ public class EventRule {
             DynamicObjectCollection dyc = QueryServiceHelper.query("aos_act_select_plan",
                     "aos_sal_actplanentity.aos_itemnum aos_itemnum,aos_sal_actplanentity.aos_itemnum.number number", builder.toArray());
             for (DynamicObject dy : dyc) {
-                fndLog.add(dy.getString("number")+"  规则单据活动剔除");
                 result.add(dy.getString("aos_itemnum"));
             }
         }
