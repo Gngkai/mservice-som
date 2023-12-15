@@ -611,8 +611,6 @@ public class EventRule {
                 builder.add("material",QFilter.in,itemids);
             }
 
-            builder.add("material",QFilter.not_in,ruleItem);
-
             DynamicObjectCollection cateResults = categoryDao.queryData(str.toString(), builder);
             for (DynamicObject result : cateResults) {
                 cateItem.put(result.getString("material"),result);
