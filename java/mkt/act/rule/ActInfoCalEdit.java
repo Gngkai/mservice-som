@@ -1,6 +1,6 @@
 package mkt.act.rule;
 
-import common.EventRuleCommon;
+import common.sal.EventRuleCommon;
 import common.sal.util.LogUtils;
 import kd.bos.bill.AbstractBillPlugIn;
 import kd.bos.context.OperationContext;
