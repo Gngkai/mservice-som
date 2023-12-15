@@ -106,9 +106,9 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
                 GenerateFuncSummary(aos_orgnumber, dy_main);// 插入功能图翻译台账
             }
 
-            if ("RO".equals(aos_orgnumber) || "PT".equals(aos_orgnumber))
-                // 生成Listing优化销售确认单
-                GenerateListingSalSmall(dy_main);
+//            if ("RO".equals(aos_orgnumber) || "PT".equals(aos_orgnumber))
+//                // 生成Listing优化销售确认单
+//                GenerateListingSalSmall(dy_main);
 
             dy_main.set("aos_submitter", "B");
             dy_main.set("aos_status", "结束");
@@ -135,6 +135,7 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
             Object aos_orgid = dy_main.get("aos_orgid");
             String aos_orgnumber = ((DynamicObject) aos_orgid).getString("number");
             Object aos_type = dy_main.get("aos_type");
+            DynamicObject aos_orgsmall = dy_main.getDynamicObject("aos_orgsmall");
 
             // 校验
             if (ErrorCount > 0) {
@@ -148,6 +149,21 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
 
             if ("功能图翻译".equals(aos_type)) {
                 GenerateFuncSummary(aos_orgnumber, dy_main);// 插入功能图翻译台账
+            }
+
+            if (("IT".equals(aos_orgnumber)||"ES".equals(aos_orgnumber))
+                    && ("老品优化".equals(aos_type) ||"四者一致".equals(aos_type))
+            && FndGlobal.IsNull(aos_orgsmall)) {
+                // 生成Listing优化销售确认单
+                if ("IT".equals(aos_orgnumber)) {
+                    dy_main.set("aos_orgsmall",FndGlobal.getBaseId("RO","bd_country"));
+                }
+
+                if ("ES".equals(aos_orgnumber)) {
+                    dy_main.set("aos_orgsmall",FndGlobal.getBaseId("PT","bd_country"));
+                }
+
+                GenerateListingSalSmall(dy_main);
             }
 
             // 设置功能图节点操作人为 人提交
