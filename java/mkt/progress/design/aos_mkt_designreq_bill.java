@@ -40,6 +40,7 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
+import mkt.common.GlobalMessage;
 import mkt.common.MKTCom;
 import mkt.common.MKTS3PIC;
 import mkt.common.otel.MmsOtelUtils;
@@ -904,6 +905,9 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 			}
 			// 发送消息
 			MKTCom.SendGlobalMessage(MessageId, aos_mkt_designreq, FId + "", AosBillno + "", Message);
+			if ("申请人确认".equals(dy_main.getString("aos_status"))){
+				GlobalMessage.SendMessage(AosBillno + "-设计需求单据待申请人确认", MessageId);
+			}
 		} catch (Exception ex) {
 			MmsOtelUtils.setException(span, ex);
 			throw ex;
