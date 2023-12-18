@@ -817,7 +817,7 @@ public class EventRule {
                         day = row.getInt("aos_frame");
                     }
                     builder.add("aos_sal_actplanentity.aos_enddate", ">=", startdate.minusDays(day).toString());
-                    builder.add("aos_sal_actplanentity.aos_enddate", "<", startdate.toString());
+                    builder.add("aos_sal_actplanentity.aos_l_startdate", "<", startdate.toString());
                     break;
                 }
                 //活动结束日后几天
@@ -827,7 +827,7 @@ public class EventRule {
                         day = row.getInt("aos_frame");
                     }
                     builder.add("aos_sal_actplanentity.aos_enddate", ">=", endDate.toString());
-                    builder.add("aos_sal_actplanentity.aos_enddate", "<", endDate.plusDays(day + 1).toString());
+                    builder.add("aos_sal_actplanentity.aos_l_startdate", "<", endDate.plusDays(day + 1).toString());
 
                     break;
                 }
