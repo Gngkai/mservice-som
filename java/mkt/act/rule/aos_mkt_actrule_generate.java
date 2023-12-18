@@ -22,6 +22,7 @@ import kd.bos.form.control.events.EntryFilterChangedListener;
 import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.control.events.ItemClickListener;
 import kd.bos.form.control.events.RowClickEventListener;
+import kd.bos.form.events.AfterDoOperationEventArgs;
 import kd.bos.form.events.BeforeClosedEvent;
 import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
@@ -81,10 +82,23 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 	}
 
 	@Override
+	public void afterDoOperation(AfterDoOperationEventArgs eventArgs) {
+		super.afterDoOperation(eventArgs);
+		String operateKey = eventArgs.getOperateKey();
+		if (operateKey.equals("open_rule")) {
+			//打开活动库界面修改规则集
+			openActForm();
+		}
+		else if (operateKey.equals("pull_rule")){
+
+		}
+
+	}
+
+	@Override
 	public void itemClick(ItemClickEvent evt) {
 		String Control = evt.getItemKey();
 		try {
-
 			if (Control.equals("aos_generate"))
 				aos_generate();
 			else if (Control.equals("aos_detailimp")) {
@@ -102,10 +116,6 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 			else if ("aos_qtycal".equals(Control)) {
 				// 从新批量设置活动数量
 				batchSetActQty();
-			}
-			else if ("aos_open".equals(Control)){
-				//打开活动库界面修改规则集
-				openActForm();
 			}
 
 		} catch (FndError fndMessage) {
@@ -139,6 +149,17 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 		billShowParameter.setPkId(dy_actType.get("id"));
 		//弹窗子页面和父页面绑定
 		this.getView().showForm(billShowParameter);
+	}
+
+	/**
+	 * 将活动库的数据生成到活动计划中
+	 */
+	private void pullActRule(){
+		QFBuilder builder = new QFBuilder();
+
+
+
+
 	}
 
 	/** 批量打开 **/
