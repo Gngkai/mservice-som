@@ -5,9 +5,11 @@ import common.sal.util.QFBuilder;
 import kd.bos.bill.AbstractBillPlugIn;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
+import kd.bos.entity.datamodel.IDataModel;
 import kd.bos.entity.formula.CalcExprParser;
 import kd.bos.form.CloseCallBack;
 import kd.bos.form.FormShowParameter;
+import kd.bos.form.IFormView;
 import kd.bos.form.ShowType;
 import kd.bos.form.control.Control;
 import kd.bos.form.events.AfterDoOperationEventArgs;
@@ -17,6 +19,8 @@ import kd.bos.form.field.BasedataEdit;
 import kd.bos.form.field.events.BeforeF7SelectEvent;
 import kd.bos.form.field.events.BeforeF7SelectListener;
 import kd.bos.form.operate.FormOperate;
+import kd.bos.form.plugin.AbstractFormPlugin;
+import kd.bos.form.plugin.IFormPlugin;
 import kd.bos.formula.FormulaEngine;
 import kd.bos.list.ListShowParameter;
 import kd.bos.orm.query.QFilter;
@@ -121,13 +125,13 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
         Control control= (Control) evt.getSource();
         String key= control.getKey();
         if (key.equals("aos_rule")) {
-          showParameter(key,Form_key);
+          showParameter(key,Form_key,this);
         }
         else if (key.equals("aos_priceformula")){
-            showParameter(key,Form_key);
+            showParameter(key,Form_key,this);
         }
         else if (key.equals("aos_name")){
-            showParameter(key,"aos_act_type_cate");
+            showParameter(key,"aos_act_type_cate",this);
         }
 
     }
@@ -202,12 +206,13 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
      * 弹窗规则编辑框
      * @param type
      */
-    private void showParameter(String type,String formKey){
-        FormShowParameter showParameter=new FormShowParameter();
+    public static void showParameter(String type, String formKey, AbstractFormPlugin formPlugin){
+        FormShowParameter showParameter = new FormShowParameter();
+        IDataModel model = formPlugin.getView().getModel();
         //活动规则
         if (type.equals("aos_rule")){
             //获取活动规则数据
-            DynamicObjectCollection dyc = this.getModel().getDataEntity(true).getDynamicObjectCollection("aos_entryentity2");
+            DynamicObjectCollection dyc = model.getDataEntity(true).getDynamicObjectCollection("aos_entryentity2");
             if (dyc.size()==0)
                 return;
 
@@ -219,8 +224,8 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
             showParameter.setCustomParam(Key_entity,"price");
         }
         else if (type.equals("aos_name")){
-            int index = this.getModel().getEntryCurrentRowIndex("aos_entryentity1");
-            Object aos_cate = this.getModel().getValue("aos_cate", index);
+            int index = model.getEntryCurrentRowIndex("aos_entryentity1");
+            Object aos_cate = model.getValue("aos_cate", index);
             if (aos_cate==null) {
                 return;
             }
@@ -233,12 +238,12 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
         //类型
         showParameter.getOpenStyle().setShowType(ShowType.Modal);
         //回调函数
-        showParameter.setCloseCallBack(new CloseCallBack(this,type));
+        showParameter.setCloseCallBack(new CloseCallBack(formPlugin,type));
         //弹窗
-        this.getView().showForm(showParameter);
+        formPlugin.getView().showForm(showParameter);
     }
 
-    private void parseFormula (String formula){
+    public static void parseFormula (String formula){
         String[] values = CalcExprParser.getExprVariables(formula);
         Map<String,Object> parameters = new HashMap<>();
         for (String value : values) {

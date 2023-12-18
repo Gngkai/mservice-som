@@ -13,7 +13,10 @@ import kd.bos.bill.AbstractBillPlugIn;
 import kd.bos.bill.BillShowParameter;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
+import kd.bos.entity.datamodel.IDataModel;
+import kd.bos.form.IFormView;
 import kd.bos.form.StyleCss;
+import kd.bos.form.control.Control;
 import kd.bos.form.control.EntryGrid;
 import kd.bos.form.control.events.ContainerOnShowEvent;
 import kd.bos.form.control.events.ContainerOnShowListener;
@@ -24,12 +27,15 @@ import kd.bos.form.control.events.ItemClickListener;
 import kd.bos.form.control.events.RowClickEventListener;
 import kd.bos.form.events.AfterDoOperationEventArgs;
 import kd.bos.form.events.BeforeClosedEvent;
+import kd.bos.form.events.ClosedCallBackEvent;
+import kd.bos.formula.FormulaEngine;
 import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import common.sal.util.QFBuilder;
+import mkt.act.basedata.actType.actTypeForm;
 import mkt.act.rule.allCountries.TrackerVipon;
 import mkt.act.rule.de.DotdDE;
 import mkt.act.rule.de.LDAnd7DDDE;
@@ -56,6 +62,8 @@ import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.util.*;
 
+import static mkt.act.basedata.actType.actTypeForm.Form_key;
+
 public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 		implements ItemClickListener, RowClickEventListener, EntryFilterChangedListener, ContainerOnShowListener {
 	public void registerListener(EventObject e) {
@@ -69,6 +77,7 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 
 		EntryGrid entryGrid = this.getControl("aos_sal_actplanentity");
 		entryGrid.addFilterChangedListener(this);
+		this.addClickListeners(new String[]{"aos_rule","aos_name"});
 	}
 
 	public void afterLoadData(EventObject e) {
@@ -90,7 +99,7 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 			openActForm();
 		}
 		else if (operateKey.equals("pull_rule")){
-
+			pullActRule();
 		}
 
 	}
@@ -116,6 +125,7 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 			else if ("aos_qtycal".equals(Control)) {
 				// 从新批量设置活动数量
 				batchSetActQty();
+
 			}
 
 		} catch (FndError fndMessage) {
@@ -125,6 +135,55 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 		}
 
 	}
+
+	@Override
+	public void click(EventObject evt) {
+		super.click(evt);
+		Control control= (Control) evt.getSource();
+		String key= control.getKey();
+
+		if (key.equals("aos_rule")) {
+			actTypeForm.showParameter(key,Form_key,this);
+		}
+		else if (key.equals("aos_name")){
+			actTypeForm.showParameter(key,"aos_act_type_cate",this);
+		}
+	}
+
+	@Override
+	public void closedCallBack(ClosedCallBackEvent event) {
+		super.closedCallBack(event);
+		String actionId = event.getActionId();
+		Object redata =  event.getReturnData();
+		if (redata==null)
+			return;
+		if (actionId.equals("aos_rule")) {
+			Map<String,String> returnData = (Map<String, String>) redata;
+			String key = returnData.get(actTypeForm.Key_return_k);
+			String name = returnData.get(actTypeForm.Key_return_v);
+			if (FndGlobal.IsNotNull(key)){
+				try {
+					actTypeForm.parseFormula(key);
+					getModel().setValue("aos_rule",name);
+					getModel().setValue("aos_rule_v",key);
+				}
+				catch (Exception e){
+					e.printStackTrace();
+					getView().showTipNotification("表达式输入有误");
+				}
+			}
+			else{
+				getModel().setValue("aos_rule","");
+				getModel().setValue("aos_rule_v","");
+			}
+		}
+		else if (actionId.equals("aos_name")){
+			int index = this.getModel().getEntryCurrentRowIndex("aos_entryentity1");
+			this.getModel().setValue("aos_name",redata.toString(),index);
+		}
+	}
+
+
 
 	/**
 	 * 打开活动库界面
@@ -156,10 +215,69 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 	 */
 	private void pullActRule(){
 		QFBuilder builder = new QFBuilder();
+		Object aos_nationality = getModel().getValue("aos_nationality");
+		//国别不为空，添加过滤
+		if (aos_nationality!=null) {
+			String org = ((DynamicObject) aos_nationality).getString("id");
+			builder.add("aos_org", "=", org);
+		}
+		//渠道不为空，添加过滤
+		Object aos_channel = getModel().getValue("aos_channel");
+		if (aos_channel!=null) {
+			String channel = ((DynamicObject) aos_channel).getString("id");
+			builder.add("aos_channel", "=", channel);
+		}
+		//店铺不为空，添加过滤
+		Object aos_shop = getModel().getValue("aos_shop");
+		if (aos_shop!=null) {
+			String shop = ((DynamicObject) aos_shop).getString("id");
+			builder.add("aos_shop", "=", shop);
+		}
+		//活动类型不为空，添加过滤
+		Object aos_acttype = getModel().getValue("aos_acttype");
+		if (aos_acttype!=null) {
+			String acttype = ((DynamicObject) aos_acttype).getString("id");
+			builder.add("aos_acttype", "=", acttype);
+		}
+		//查询活动库
+		DynamicObject actTypeEntity = BusinessDataServiceHelper.loadSingle("aos_sal_act_type_p", builder.toArray());
+		if (actTypeEntity == null) {
+			getView().showTipNotification("没有找到活动库数据！");
+			return;
+		}
+		//添加品类
+		DynamicObjectCollection dyc_act = this.getModel().getDataEntity(true).getDynamicObjectCollection("aos_entryentity1");
+		dyc_act.removeIf(dy->true);
+		for (DynamicObject row : actTypeEntity.getDynamicObjectCollection("aos_entryentity1")) {
+			DynamicObject newActRow = dyc_act.addNew();
+			newActRow.set("aos_cate",row.get("aos_actrule"));
+			newActRow.set("aos_name",row.get("aos_name"));
+		}
+		//添加活动规则
+		dyc_act = this.getModel().getDataEntity(true).getDynamicObjectCollection("aos_entryentity2");
+		dyc_act.removeIf(dy->true);
+		for (DynamicObject row : actTypeEntity.getDynamicObjectCollection("aos_entryentity2")) {
+			DynamicObject newActRow = dyc_act.addNew();
+			newActRow.set("aos_act_project",row.get("aos_project"));
+			newActRow.set("aos_condite",row.get("aos_condite"));
+			newActRow.set("aos_rule_value",row.get("aos_rule_value"));
+			newActRow.set("aos_rule_day",row.get("aos_rule_day"));
+		}
+		getModel().setValue("aos_rule",actTypeEntity.get("aos_rule"));
+		getModel().setValue("aos_rule_v",actTypeEntity.get("aos_rule_v"));
 
-
-
-
+		//去重规则
+		DynamicObjectCollection dyc_rule = this.getModel().getDataEntity(true).getDynamicObjectCollection("aos_entryentity3");
+		dyc_rule.removeIf(dy->true);
+		for (DynamicObject row : actTypeEntity.getDynamicObjectCollection("aos_entryentity3")) {
+			DynamicObject newActRow = dyc_rule.addNew();
+			newActRow.set("aos_re_project",row.get("aos_re_project"));
+			newActRow.set("aos_frame",row.get("aos_frame"));
+			newActRow.set("aos_re_channel",row.get("aos_re_channel"));
+			newActRow.set("aos_re_shop",row.get("aos_re_shop"));
+			newActRow.set("aos_re_act",row.get("aos_re_act"));
+		}
+		getView().updateView("aos_flexpanelap3");
 	}
 
 	/** 批量打开 **/

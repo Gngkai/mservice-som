@@ -115,7 +115,7 @@ public class EventRule {
         //获取活动规则
         typEntity = BusinessDataServiceHelper.loadSingle(type.getString("id"), "aos_sal_act_type_p");
         //判断公式是否维护了
-        if (FndGlobal.IsNull(typEntity.get("aos_rule_v"))) {
+        if (FndGlobal.IsNull(actPlanEntity.get("aos_rule_v"))) {
             return;
         }
 
@@ -139,7 +139,7 @@ public class EventRule {
      * 执行选品公式，判断物料是否应该剔除
      */
     public void implementFormula(){
-        String ruleValue = typEntity.getString("aos_rule_v");
+        String ruleValue = actPlanEntity.getString("aos_rule_v");
         String[] parameterKey = new String[0];
         if (FndGlobal.IsNotNull(ruleValue)){
           parameterKey = FormulaEngine.extractVariables(ruleValue);
@@ -516,7 +516,7 @@ public class EventRule {
      * 判断活动选品表中的数据是否符合规定
      */
     private void addData(){
-        String ruleValue = typEntity.getString("aos_rule_v");
+        String ruleValue = actPlanEntity.getString("aos_rule_v");
         String[] parameterKey = FormulaEngine.extractVariables(ruleValue);
         Map<String,Object> parameters = new HashMap<>(parameterKey.length);
 
@@ -610,7 +610,7 @@ public class EventRule {
         //先根据活动库中的品类筛选出合适的物料
         ItemCategoryDao categoryDao = new ItemCategoryDaoImpl();
         QFBuilder builder = new QFBuilder();
-        DynamicObjectCollection cateRowEntity = typEntity.getDynamicObjectCollection("aos_entryentity1");
+        DynamicObjectCollection cateRowEntity = actPlanEntity.getDynamicObjectCollection("aos_entryentity1");
 
         //获取多次活动的SKU
         Set<String> ruleItem = getRuleItem();
@@ -781,7 +781,7 @@ public class EventRule {
      * 获取去重规则剔除的物料
      */
     private Set<String>  getRuleItem(){
-        DynamicObjectCollection ruleEntityRows = typEntity.getDynamicObjectCollection("aos_entryentity3");
+        DynamicObjectCollection ruleEntityRows = actPlanEntity.getDynamicObjectCollection("aos_entryentity3");
         Set<String> result = new HashSet<>();
         LocalDate startdate = actPlanEntity.getDate("aos_startdate").toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate endDate = actPlanEntity.getDate("aos_enddate1").toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
@@ -890,7 +890,7 @@ public class EventRule {
      */
     private  void parsingRowRule (){
         //规则单据体
-        DynamicObjectCollection rulEntity = typEntity.getDynamicObjectCollection("aos_entryentity2");
+        DynamicObjectCollection rulEntity = actPlanEntity.getDynamicObjectCollection("aos_entryentity2");
         StringBuilder rule = new StringBuilder();
         for (DynamicObject row : rulEntity) {
             //先拼凑公式
@@ -898,7 +898,7 @@ public class EventRule {
             String seq = row.getString("seq");
             rule.setLength(0);
             //规则类型
-            String project = row.getString("aos_project");
+            String project = row.getString("aos_act_project");
             rule.append(project);
             rule.append(" ");
             //匹配类型
