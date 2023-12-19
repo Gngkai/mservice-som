@@ -1000,26 +1000,29 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
             if (aos_mkt_proguser != null) {
                 aos_mkt_designreq.set("aos_dm", aos_mkt_proguser.get("aos_designeror"));
                 aos_mkt_designreq.set("aos_3der", aos_mkt_proguser.get("aos_3d"));
+                aos_mkt_designreq.set("aos_designer", aos_mkt_proguser.get("aos_designer"));
+                aos_mkt_designreq.set("aos_user", aos_mkt_proguser.get("aos_designer"));
+                MessageId = aos_mkt_proguser.getString("aos_designer");
             }
         }
 
         // 翻译类型设计需求表 按照 营销国别参数表 图片翻译 获取申请人
-        QFilter filter_org = new QFilter("aos_orgid.number", "=", aos_orgnumber);
-        QFilter filter_type = new QFilter("aos_type", "=", "图片翻译");
-        QFilter[] filters = new QFilter[]{filter_org, filter_type};
-        String SelectStr = "aos_condition1";
-        DynamicObject aos_mkt_base_orgvalue = QueryServiceHelper.queryOne("aos_mkt_base_orgvalue", SelectStr, filters);
-        if (aos_mkt_base_orgvalue != null) {
-            Object aos_condition1 = aos_mkt_base_orgvalue.get("aos_condition1");
-            QFilter filter_name = new QFilter("name", "=", aos_condition1);
-            filters = new QFilter[]{filter_name};
-            DynamicObject bos_user = QueryServiceHelper.queryOne("bos_user", "id", filters);
-            if (bos_user != null) {
-                aos_mkt_designreq.set("aos_designer", bos_user.get("id"));
-                aos_mkt_designreq.set("aos_user", bos_user.get("id"));
-                MessageId = bos_user.getString("id");
-            }
-        }
+//        QFilter filter_org = new QFilter("aos_orgid.number", "=", aos_orgnumber);
+//        QFilter filter_type = new QFilter("aos_type", "=", "图片翻译");
+//        QFilter[] filters = new QFilter[]{filter_org, filter_type};
+//        String SelectStr = "aos_condition1";
+//        DynamicObject aos_mkt_base_orgvalue = QueryServiceHelper.queryOne("aos_mkt_base_orgvalue", SelectStr, filters);
+//        if (aos_mkt_base_orgvalue != null) {
+//            Object aos_condition1 = aos_mkt_base_orgvalue.get("aos_condition1");
+//            QFilter filter_name = new QFilter("name", "=", aos_condition1);
+//            filters = new QFilter[]{filter_name};
+//            DynamicObject bos_user = QueryServiceHelper.queryOne("bos_user", "id", filters);
+//            if (bos_user != null) {
+//                aos_mkt_designreq.set("aos_designer", bos_user.get("id"));
+//                aos_mkt_designreq.set("aos_user", bos_user.get("id"));
+//                MessageId = bos_user.getString("id");
+//            }
+
         aos_mkt_designreq_bill.createDesiginBeforeSave(aos_mkt_designreq);
         OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_designreq",
                 new DynamicObject[]{aos_mkt_designreq}, OperateOption.create());
@@ -1118,10 +1121,15 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
         if (AosCategory1 != null & AosCategory2 != null && !AosCategory1.equals("") && !AosCategory2.equals("")) {
             QFilter filter_category1 = new QFilter("aos_category1", "=", AosCategory1);
             QFilter filter_category2 = new QFilter("aos_category2", "=", AosCategory2);
-            String id = "";
+            Object id = "";
             if (aos_orgid != null) {
+                try{
                 DynamicObject dy_org = (DynamicObject) aos_orgid;
                 id = dy_org.getString("id");
+                }catch (Exception ex){
+                    FndMsg.debug("aos_orgid:"+aos_orgid);
+                    id = String.valueOf((long)aos_orgid);
+                }
             }
 
             QFilter filter_ou = new QFilter("aos_orgid", "=", id);
