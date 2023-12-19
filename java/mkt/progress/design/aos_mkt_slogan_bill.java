@@ -1084,39 +1084,15 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
                 if ("DE".equals(aos_lang)) {
                     this.getView().setEnable(true, 2, "aos_itemname");
                     this.getView().setEnable(true, 2, "aos_slogan");
-                    this.getView().setEnable(false, 3, "aos_itemname");
-                    this.getView().setEnable(false, 3, "aos_slogan");
-                    this.getView().setEnable(false, 4, "aos_itemname");
-                    this.getView().setEnable(false, 4, "aos_slogan");
-                    this.getView().setEnable(false, 5, "aos_itemname");
-                    this.getView().setEnable(false, 5, "aos_slogan");
                 } else if ("FR".equals(aos_lang)) {
-                    this.getView().setEnable(false, 2, "aos_itemname");
-                    this.getView().setEnable(false, 2, "aos_slogan");
-                    this.getView().setEnable(true, 3, "aos_itemname");
-                    this.getView().setEnable(true, 3, "aos_slogan");
-                    this.getView().setEnable(false, 4, "aos_itemname");
-                    this.getView().setEnable(false, 4, "aos_slogan");
-                    this.getView().setEnable(false, 5, "aos_itemname");
-                    this.getView().setEnable(false, 5, "aos_slogan");
+                    this.getView().setEnable(true, 2, "aos_itemname");
+                    this.getView().setEnable(true, 2, "aos_slogan");
                 } else if ("IT".equals(aos_lang)) {
-                    this.getView().setEnable(false, 2, "aos_itemname");
-                    this.getView().setEnable(false, 2, "aos_slogan");
-                    this.getView().setEnable(false, 3, "aos_itemname");
-                    this.getView().setEnable(false, 3, "aos_slogan");
-                    this.getView().setEnable(true, 4, "aos_itemname");
-                    this.getView().setEnable(true, 4, "aos_slogan");
-                    this.getView().setEnable(false, 5, "aos_itemname");
-                    this.getView().setEnable(false, 5, "aos_slogan");
+                    this.getView().setEnable(true, 2, "aos_itemname");
+                    this.getView().setEnable(true, 2, "aos_slogan");
                 } else if ("ES".equals(aos_lang)) {
-                    this.getView().setEnable(false, 2, "aos_itemname");
-                    this.getView().setEnable(false, 2, "aos_slogan");
-                    this.getView().setEnable(false, 3, "aos_itemname");
-                    this.getView().setEnable(false, 3, "aos_slogan");
-                    this.getView().setEnable(false, 4, "aos_itemname");
-                    this.getView().setEnable(false, 4, "aos_slogan");
-                    this.getView().setEnable(true, 5, "aos_itemname");
-                    this.getView().setEnable(true, 5, "aos_slogan");
+                    this.getView().setEnable(true, 2, "aos_itemname");
+                    this.getView().setEnable(true, 2, "aos_slogan");
                 }
             } else if ("新增".equals(aos_type)) {
                 this.getView().setEnable(true, 2, "aos_itemname");
