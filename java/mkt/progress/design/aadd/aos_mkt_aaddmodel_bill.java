@@ -439,7 +439,7 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn implements RowCli
 				DynamicObjectCollection targetRowDy = null;
 				//目标单据存在则覆盖
 				if (targetData.containsKey(tab)) {
-					tabEntity.get(Integer.valueOf(tab)).set("aos_tab",sourcEntity.get(Integer.parseInt(tab)).get("aos_tab"));
+					tabEntity.get(Integer.parseInt(tab)).set("aos_tab",sourcEntity.get(Integer.parseInt(tab)).get("aos_tab"));
 					targetRowDy = targetData.get(tab);
 				}
 				//目标单据不存在则新增
@@ -845,42 +845,41 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn implements RowCli
 		}
 		String filterValue = "";
 		boolean resultt = true;
-		if (tabValue.equals("轮播图模块")) {
-			//标题
-			if (cate2Value.equals("TITLE")|| cate2Value.equals("标题")){
-				filterValue = valueSize+"/"+25;
-				resultt = valueSize<=25;
-			}
-		}
-		else if (tabValue.equals("锚点模块")){
-			if (cate2Value.equals("TITLE") || cate2Value.equals("标题")){
-				filterValue = valueSize+"/"+50;
-				resultt = valueSize<=50;
-			}
-			else if (cate2Value.equals("CONTENT") || cate2Value.equals("正文")){
-				filterValue = valueSize+"/"+200;
-				resultt = valueSize<=200;
-			}
-		}
-		else if (tabValue.equals("细节模块")){
-			if (cate2Value.equals("TITLE") || cate2Value.equals("标题")){
-				filterValue = valueSize+"/"+30;
-				resultt = valueSize<=30;
-			}
-			else if (cate2Value.equals("CONTENT") || cate2Value.equals("正文")){
-				filterValue = valueSize+"/"+150;
-				resultt = valueSize<=150;
-			}
-		}
-		else if (tabValue.equals("QA模块")){
-			if (cate2Value.equals("Q")){
-				filterValue = valueSize+"/"+120;
-				resultt = valueSize<=120;
-			}
-			else if (cate2Value.equals("A")){
-				filterValue = valueSize+"/"+250;
-				resultt = valueSize<=250;
-			}
+		switch (tabValue) {
+			case "轮播图模块":
+				//标题
+				if (cate2Value.equals("TITLE") || cate2Value.equals("标题")) {
+					filterValue = valueSize + "/" + 25;
+					resultt = valueSize <= 25;
+				}
+				break;
+			case "锚点模块":
+				if (cate2Value.equals("TITLE") || cate2Value.equals("标题")) {
+					filterValue = valueSize + "/" + 50;
+					resultt = valueSize <= 50;
+				} else if (cate2Value.equals("CONTENT") || cate2Value.equals("正文")) {
+					filterValue = valueSize + "/" + 200;
+					resultt = valueSize <= 200;
+				}
+				break;
+			case "细节模块":
+				if (cate2Value.equals("TITLE") || cate2Value.equals("标题")) {
+					filterValue = valueSize + "/" + 30;
+					resultt = valueSize <= 30;
+				} else if (cate2Value.equals("CONTENT") || cate2Value.equals("正文")) {
+					filterValue = valueSize + "/" + 150;
+					resultt = valueSize <= 150;
+				}
+				break;
+			case "QA模块":
+				if (cate2Value.equals("Q")) {
+					filterValue = valueSize + "/" + 120;
+					resultt = valueSize <= 120;
+				} else if (cate2Value.equals("A")) {
+					filterValue = valueSize + "/" + 250;
+					resultt = valueSize <= 250;
+				}
+				break;
 		}
 
 		this.getModel().setValue(field+"_t",filterValue,lanRow,tabRow);
