@@ -797,7 +797,7 @@ public class aos_mkt_aaddmodel_bill extends AbstractBillPlugIn implements RowCli
 	/**
 	 * 校验敏感词
 	 */
-	private boolean checkTable( int tabRow){
+	public boolean checkTable( int tabRow){
 		DynamicObjectCollection dyc_lan = this.getModel().getEntryEntity("aos_ent_tab").get(tabRow).getDynamicObjectCollection("aos_entryentity");
 		boolean flag = true;
 		for (int i = 0; i < dyc_lan.size(); i++) {
