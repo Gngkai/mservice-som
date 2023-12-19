@@ -26,6 +26,7 @@ import kd.bos.form.events.AfterDoOperationEventArgs;
 import kd.bos.form.events.BeforeDoOperationEventArgs;
 import kd.bos.form.field.TextEdit;
 import kd.bos.form.operate.FormOperate;
+import kd.bos.lang.Lang;
 import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
@@ -289,11 +290,22 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
                 AosCategory2 = category_group[1];
             if (category_length > 2)
                 AosCategory3 = category_group[2];
-            this.getModel().setValue("aos_cname", name);
-            this.getModel().setValue("aos_itemname", name, 0);
-            this.getModel().setValue("aos_category3", AosCategory3);
-            this.getModel().setValue("aos_category2", AosCategory2);
-            this.getModel().setValue("aos_category1", AosCategory1);
+
+            FndMsg.debug(Lang.get());
+            if (Lang.get() ==Lang.zh_CN ){
+                this.getModel().setValue("aos_cname", name);
+                this.getModel().setValue("aos_itemname", name, 0);
+                this.getModel().setValue("aos_category3", AosCategory3);
+                this.getModel().setValue("aos_category2", AosCategory2);
+                this.getModel().setValue("aos_category1", AosCategory1);
+            }
+            else
+            {
+                this.getModel().setValue("aos_itemname_us", name);
+                this.getModel().setValue("aos_category3_us", AosCategory3);
+                this.getModel().setValue("aos_category2_us", AosCategory2);
+                this.getModel().setValue("aos_category1_us", AosCategory1);
+            }
             refreshLine();
         }
     }
