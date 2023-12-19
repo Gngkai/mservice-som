@@ -275,6 +275,7 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
             //this.getModel().setValue("aos_groupid", dynamicObject.getString("aos_group_edit"));
             //this.getModel().setValue("aos_confirmor", dynamicObject.getString("aos_edit_leader"));
             setCate(this.getModel().getDataEntity(true));
+            setItemEntity();
         } catch (Exception exception) {
             logger.error("导入后出现异常:" + DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss") +"--" + SalUtil.getExceptionStr(exception));
         }
@@ -753,19 +754,14 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         String itemnamecn = dy_main.getString("aos_itemnamecn");
         dy_main.set("aos_itemnamecn_s",itemnamecn);
         //设置英文品名
-        if (FndGlobal.IsNotNull(itemnamecn)){
-            dy_main.set("aos_itemnameen",itemnamecn);
+        builder.clear();
+        builder.add("name" ,"=",itemnamecn);
+        DynamicObject dy = BusinessDataServiceHelper.loadSingle("bd_material", "name", builder.toArray());
+        if (dy!=null){
+            dy_main.set("aos_itemnameen",dy.getLocaleString("name").getLocaleValue_en());
         }
-        else{
-            builder.clear();
-            builder.add("name" ,"=",itemnamecn);
-            DynamicObject dy = BusinessDataServiceHelper.loadSingle("bd_material", "name", builder.toArray());
-            if (dy!=null){
-                dy_main.set("aos_itemnameen",dy.getLocaleString("name").getLocaleValue_en());
-            }
-            else
-                dy_main.set("aos_itemnameen","");
-        }
+        else
+            dy_main.set("aos_itemnameen","");
     }
 
     /** 不同的语言环境设置不同的可见性**/
