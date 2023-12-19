@@ -243,7 +243,7 @@ public class aos_mkt_common_redis {
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
 		Date aos_date = calendar.getTime();
-		calendar.add(Calendar.DAY_OF_MONTH, -2);
+		calendar.add(Calendar.DAY_OF_MONTH, 0);
 		Date date_to = calendar.getTime();
 		calendar.add(Calendar.DAY_OF_MONTH, -14);
 		Date date_from = calendar.getTime();
@@ -363,7 +363,7 @@ public class aos_mkt_common_redis {
 		calendar.set(Calendar.MILLISECOND, 0);
 
 		Date aos_date = calendar.getTime();
-		calendar.add(Calendar.DAY_OF_MONTH, -2);
+		calendar.add(Calendar.DAY_OF_MONTH, 0);
 		Date date_to = calendar.getTime();
 		calendar.add(Calendar.DAY_OF_MONTH, -3);
 		Date date_from = calendar.getTime();
@@ -433,7 +433,7 @@ public class aos_mkt_common_redis {
 		calendar.set(Calendar.MILLISECOND, 0);
 
 		Date aos_date = calendar.getTime();
-		calendar.add(Calendar.DAY_OF_MONTH, -2);
+		calendar.add(Calendar.DAY_OF_MONTH, -0);
 		Date date_to = calendar.getTime();
 		calendar.add(Calendar.DAY_OF_MONTH, -7);
 		Date date_from = calendar.getTime();
@@ -479,7 +479,7 @@ public class aos_mkt_common_redis {
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
 		Date aos_date = calendar.getTime();
-		calendar.add(Calendar.DAY_OF_MONTH, -2);
+		calendar.add(Calendar.DAY_OF_MONTH, 0);
 		Date date_to = calendar.getTime();
 		calendar.add(Calendar.DAY_OF_MONTH, -14);
 		Date date_from = calendar.getTime();
@@ -611,7 +611,7 @@ public class aos_mkt_common_redis {
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
 		Date aos_date = calendar.getTime();
-		calendar.add(Calendar.DAY_OF_MONTH, -2);
+		calendar.add(Calendar.DAY_OF_MONTH, 0);
 		Date date_to = calendar.getTime();
 		calendar.add(Calendar.DAY_OF_MONTH, -7);
 		Date date_from = calendar.getTime();
@@ -681,7 +681,7 @@ public class aos_mkt_common_redis {
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
 		Date aos_date = calendar.getTime();
-		calendar.add(Calendar.DAY_OF_MONTH, -2);
+		calendar.add(Calendar.DAY_OF_MONTH, 0);
 		Date date_to = calendar.getTime();
 		calendar.add(Calendar.DAY_OF_MONTH, -3);
 		Date date_from = calendar.getTime();
@@ -741,7 +741,7 @@ public class aos_mkt_common_redis {
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
 		Date date_to = calendar.getTime();
-		calendar.add(Calendar.DAY_OF_MONTH, -2);
+		calendar.add(Calendar.DAY_OF_MONTH, 0);
 		Date date_from = calendar.getTime();
 		SimpleDateFormat writeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);// 日期格式化
 		SimpleDateFormat DF = new SimpleDateFormat("yyyy-MM-dd");
@@ -918,7 +918,7 @@ public class aos_mkt_common_redis {
 		calendar.set(Calendar.MILLISECOND, 0);
 
 		Date aos_date = calendar.getTime();
-		calendar.add(Calendar.DAY_OF_MONTH, -2);
+		calendar.add(Calendar.DAY_OF_MONTH, 0);
 		Date date_to = calendar.getTime();
 		calendar.add(Calendar.DAY_OF_MONTH, -14);
 		Date date_from = calendar.getTime();
@@ -1049,7 +1049,7 @@ public class aos_mkt_common_redis {
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
 		Date aos_date = calendar.getTime();
-		calendar.add(Calendar.DAY_OF_MONTH, -2);
+		calendar.add(Calendar.DAY_OF_MONTH, -0);
 		Date date_to = calendar.getTime();
 		calendar.add(Calendar.DAY_OF_MONTH, -7);
 		Date date_from = calendar.getTime();
@@ -1094,7 +1094,7 @@ public class aos_mkt_common_redis {
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
 		Date aos_date = calendar.getTime();
-		calendar.add(Calendar.DAY_OF_MONTH, -2);
+		calendar.add(Calendar.DAY_OF_MONTH, -0);
 		Date date_to = calendar.getTime();
 		calendar.add(Calendar.DAY_OF_MONTH, -3);
 		Date date_from = calendar.getTime();
@@ -1137,7 +1137,7 @@ public class aos_mkt_common_redis {
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
 		Date aos_date = calendar.getTime();
-		calendar.add(Calendar.DAY_OF_MONTH, -2);
+		calendar.add(Calendar.DAY_OF_MONTH, 0);
 		Date date_to = calendar.getTime();
 		calendar.add(Calendar.DAY_OF_MONTH, -14);
 		Date date_from = calendar.getTime();
