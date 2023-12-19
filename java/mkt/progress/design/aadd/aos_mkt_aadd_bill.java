@@ -49,7 +49,7 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
 
     /**
      * 销售上线提交
-     *
+     *B88F-81D5
      * @throws FndError
      */
     public static void submitForSale(DynamicObject dy_main) throws FndError {
