@@ -64,7 +64,7 @@ public class FormulaResults {
             paramars.clear();
             String itemid = itemInfoe.getString("id");
             //获取该物料的库存
-            Object value = itemSotck.getOrDefault(Long.parseLong(itemid),0);
+            Object value = itemSotck.getOrDefault(itemid,0);
             //添加日志
             fndLog.add(itemInfoe.getString("number")+"  "+rowRuleName.get(key)+" : "+value);
             paramars.put(key,value);
