@@ -55,7 +55,6 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
-import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -88,7 +87,7 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
 
             this.addClickListeners("aos_buttonap");
         } catch (Exception ex) {
-            this.getView().showErrorNotification("registerListener = " + ex.toString());
+            this.getView().showErrorNotification("registerListener = " + ex);
         }
     }
 
@@ -96,28 +95,30 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
     public void itemClick(ItemClickEvent evt) {
         super.itemClick(evt);
         String itemKey = evt.getItemKey();
-        if (itemKey.equals("aos_cal")){
-            try {
-                setUpACategory();
-                this.getView().showSuccessNotification("分类计算成功");
-            }catch (FndError fndError){
-                fndError.printStackTrace();
-                this.getView().showTipNotification(fndError.getErrorMessage());
-            }
-        }
-        else if (itemKey.equals("aos_split")){
-            spiltWord();
-        }
-        else if (itemKey.equals("aos_open")){
-            openView();
-        }
-        else if (itemKey.equals("aos_copy")){
-            DynamicObject aos_orgid = (DynamicObject) this.getModel().getValue("aos_orgid");
-            if (aos_orgid == null)
-                return;
-            FormShowParameter showParameter = FndGlobal.CraeteForm(this, "aos_mkt_point_from", "copyTo", null);
-            showParameter.setCustomParam("org",aos_orgid.getString("id"));
-            getView().showForm(showParameter);
+        switch (itemKey) {
+            case "aos_cal":
+                try {
+                    setUpACategory();
+                    this.getView().showSuccessNotification("分类计算成功");
+                } catch (FndError fndError) {
+                    fndError.printStackTrace();
+                    this.getView().showTipNotification(fndError.getErrorMessage());
+                }
+                break;
+            case "aos_split":
+                spiltWord();
+                break;
+            case "aos_open":
+                openView();
+                break;
+            case "aos_copy":
+                DynamicObject aos_orgid = (DynamicObject) this.getModel().getValue("aos_orgid");
+                if (aos_orgid == null)
+                    return;
+                FormShowParameter showParameter = FndGlobal.CraeteForm(this, "aos_mkt_point_from", "copyTo", null);
+                showParameter.setCustomParam("org", aos_orgid.getString("id"));
+                getView().showForm(showParameter);
+                break;
         }
     }
 
@@ -301,7 +302,7 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
                 showParameter.getListFilterParameter().getQFilters().add(qFilter);
             }
         } catch (Exception ex) {
-            this.getView().showErrorNotification("beforeF7Select = " + ex.toString());
+            this.getView().showErrorNotification("beforeF7Select = " + ex);
         }
     }
 
@@ -508,9 +509,8 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         Object aos_category2 = this.getModel().getValue("aos_category2");
         Object aos_category3 = this.getModel().getValue("aos_category3");
         Object aos_itemnamecn = this.getModel().getValue("aos_itemnamecn");
-        if (aos_category1 != null && aos_category2 != null && aos_category3 != null && aos_itemnamecn != null
-                && aos_category1.toString() != "" && aos_category2.toString() != "" && aos_category3.toString() != ""
-                && aos_itemnamecn.toString() != "") {
+        if (FndGlobal.IsNotNull(aos_category1 ) && FndGlobal.IsNotNull(aos_category2) &&
+                FndGlobal.IsNotNull(aos_category3) && FndGlobal.IsNotNull(aos_itemnamecn)) {
             QFilter filter_category1 = new QFilter("aos_category1", "=", aos_category1);
             QFilter filter_category2 = new QFilter("aos_category2", "=", aos_category2);
             QFilter filter_category3 = new QFilter("aos_category3", "=", aos_category3);
