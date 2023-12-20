@@ -3,11 +3,11 @@ package mkt.common;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.DecimalFormat;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import common.CommonDataSom;
 import common.fnd.FndGlobal;
 import common.fnd.FndLog;
 import common.sal.util.SalUtil;
@@ -18,7 +18,7 @@ import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.dataentity.entity.ILocaleString;
 import kd.bos.dataentity.metadata.dynamicobject.DynamicObjectType;
 import kd.bos.entity.datamodel.events.PropertyChangedArgs;
-import kd.bos.form.control.Control;
+
 import kd.bos.form.control.events.ClickListener;
 import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.control.events.ItemClickListener;
@@ -29,11 +29,8 @@ import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
-import kd.bos.util.ExceptionUtils;
-import kd.fi.bd.util.QFBuilder;
-import kd.scm.pur.opplugin.util.SaveUtil;
-import mkt.synciface.aos_mkt_item_sync;
-import scala.Dynamic;
+
+
 
 public class aos_czj_test_bill extends AbstractBillPlugIn implements ItemClickListener, ClickListener {
 
@@ -49,7 +46,7 @@ public class aos_czj_test_bill extends AbstractBillPlugIn implements ItemClickLi
 		super.itemClick(evt);
 		String Control = evt.getItemKey();
 		if (Control.equals("aos_test")){
-			log.info("迁移开始： {}"+ LocalDateTime.now().toString());
+			log.info("迁移开始： {}",LocalDateTime.now());
 			try {
 				find();
 			}catch (Exception e){
@@ -57,7 +54,48 @@ public class aos_czj_test_bill extends AbstractBillPlugIn implements ItemClickLi
 				e.printStackTrace(new PrintWriter(sw));
 				log.error(sw.toString());
 			}
-			log.info("迁移结束： {}"+ LocalDateTime.now().toString());
+			log.info("迁移结束： {}", LocalDateTime.now());
+		}
+	}
+
+	//同步sku词库
+	public void syncSkuData(){
+		List<DynamicObject> saveList = new ArrayList<>(5000);
+		QFBuilder builder = new QFBuilder();
+		builder.add("aos_orgid","!=","");
+		builder.add("aos_category1","!=","");
+		builder.add("aos_category2","!=","");
+		builder.add("aos_category3","!=","");
+		builder.add("aos_itemnamecn","!=","");
+		for (DynamicObject dy : QueryServiceHelper.query("aos_mkt_point", "id", builder.toArray())) {
+			DynamicObject dy_main = BusinessDataServiceHelper.loadSingle(dy.get("id"), "aos_mkt_point");
+			setItemEntity(dy_main);
+			saveList.add(dy_main);
+			SaveUtils.SaveEntity(saveList,false);
+		}
+		SaveUtils.SaveEntity(saveList,true);
+
+	}
+	//设置sku清单
+	private static void setItemEntity(DynamicObject dy_main){
+		common.sal.util.QFBuilder builder = new common.sal.util.QFBuilder();
+		DynamicObject aos_orgid =  dy_main.getDynamicObject("aos_orgid");
+		if (aos_orgid!=null){
+			builder.add("aos_orgid","=",aos_orgid.getPkValue());
+		}
+		builder.add("aos_category1","=",dy_main.getString("aos_category1"));
+		builder.add("aos_category2","=",dy_main.getString("aos_category2"));
+		builder.add("aos_category3","=",dy_main.getString("aos_category3"));
+		builder.add("aos_itemname","=",dy_main.getString("aos_itemnamecn"));
+		builder.add("aos_itemid","!=","");
+		DynamicObjectCollection dyc_line = dy_main.getDynamicObjectCollection("aos_itementity");
+		dyc_line.removeIf(dy->true);
+
+		DynamicObjectCollection dyc = QueryServiceHelper.query("aos_mkt_keyword", "aos_itemid,aos_itemid.number number", builder.toArray());
+		for (DynamicObject row : dyc) {
+			DynamicObject addNewRow = dyc_line.addNew();
+			addNewRow.set("aos_itemid",row.get("aos_itemid"));
+			addNewRow.set("aos_picture1",CommonDataSom.get_img_url(row.getString("number")));
 		}
 	}
 
@@ -137,9 +175,6 @@ public class aos_czj_test_bill extends AbstractBillPlugIn implements ItemClickLi
 		SaveUtils.SaveEntity(list_save,true);
 
 	}
-
-
-
 
 	/** 同步敏感词库 **/
 	private void aos_test() {
@@ -299,9 +334,6 @@ public class aos_czj_test_bill extends AbstractBillPlugIn implements ItemClickLi
 		}
 		SaveUtils.SaveEntity("aos_mkt_keyword",savEntity,true);
 	}
-
-
-
 
 	public void beforePropertyChanged(PropertyChangedArgs e) {
 		String name = e.getProperty().getName();
