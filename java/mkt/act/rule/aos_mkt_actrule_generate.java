@@ -105,24 +105,28 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 	public void itemClick(ItemClickEvent evt) {
 		String Control = evt.getItemKey();
 		try {
-			if (Control.equals("aos_generate"))
-				aos_generate();
-			else if (Control.equals("aos_detailimp")) {
-				genActPlan();// 明细导入
-			}
-			else if ("aos_batchquery".equals(Control)) {
-				aos_batchquery();
-			}
-			else if ("aos_batchclose".equals(Control)) {
-				aos_batchclose();
-			}
-			else if ("aos_batchopen".equals(Control)) {
-				aos_batchopen();
-			}
-			else if ("aos_qtycal".equals(Control)) {
-				// 从新批量设置活动数量
-				batchSetActQty();
+			switch (Control) {
+				case "aos_generate":
+					aos_generate();
+					break;
+				case "aos_detailimp":
+					genActPlan();// 明细导入
 
+					break;
+				case "aos_batchquery":
+					aos_batchquery();
+					break;
+				case "aos_batchclose":
+					aos_batchclose();
+					break;
+				case "aos_batchopen":
+					aos_batchopen();
+					break;
+				case "aos_qtycal":
+					// 从新批量设置活动数量
+					batchSetActQty();
+
+					break;
 			}
 
 		} catch (FndError fndMessage) {
