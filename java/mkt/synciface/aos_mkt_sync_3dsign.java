@@ -76,10 +76,10 @@ public class aos_mkt_sync_3dsign extends AbstractTask {
                 String itemId = entry.getDynamicObject("aos_itemid").getString("id");
                 HashMap<String, String> data = itemMap.get(itemId);
                 if (FndGlobal.IsNotNull(data)) {
-                    entry.set("aos_itemname", itemMap.get("name"));
-                    entry.set("aos_specification", itemMap.get("aos_specification_cn"));
-                    entry.set("aos_seting1", itemMap.get("aos_seting_cn"));
-                    entry.set("aos_sellingpoint", itemMap.get("aos_sellingpoint"));
+                    entry.set("aos_itemname", data.get("name"));
+                    entry.set("aos_specification", data.get("aos_specification_cn"));
+                    entry.set("aos_seting1", data.get("aos_seting_cn"));
+                    entry.set("aos_sellingpoint", data.get("aos_sellingpoint"));
                     entry.set("aos_is_saleout", ProgressUtil.Is_saleout(itemId));
                     entry.set("aos_orgtext", CommonMktListing.getOrderOrg(itemId));
                 }
