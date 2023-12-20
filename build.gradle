@@ -23,10 +23,22 @@ dependencies {
     implementation fileTree(dir: trd, includes: ['*.jar', '\\*\\*.jar'])
     implementation fileTree(dir: biz, includes: ['*.jar', '\\*\\*.jar'])
     implementation fileTree(dir: cus, includes: ['\\jar\\*.jar'])
+
+    // common
     implementation 'com.aosom.gpaas.common:com-sal:1.0-SNAPSHOT'
     implementation 'com.aosom.gpaas.common:com-scm:1.0-SNAPSHOT'
     implementation 'com.aosom.gpaas.common:com-fms:1.0-SNAPSHOT'
+
+    // 翻译
     implementation 'com.deepl.api:deepl-java:1.0.1'
+
+    // otel
+    implementation group: 'io.opentelemetry', name: 'opentelemetry-api', version: '1.26.0'
+    implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-trace',version: '1.26.0'
+    implementation group: 'io.opentelemetry', name: 'opentelemetry-exporter-otlp',version: '1.26.0'
+    implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk', version: '1.26.0'
+    implementation group: 'io.opentelemetry', name: 'opentelemetry-semconv', version: '1.26.0-alpha'
+
 }
 
 

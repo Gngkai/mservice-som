@@ -26,6 +26,7 @@ import kd.bos.form.events.AfterDoOperationEventArgs;
 import kd.bos.form.events.BeforeDoOperationEventArgs;
 import kd.bos.form.field.TextEdit;
 import kd.bos.form.operate.FormOperate;
+import kd.bos.lang.Lang;
 import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
@@ -289,11 +290,22 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
                 AosCategory2 = category_group[1];
             if (category_length > 2)
                 AosCategory3 = category_group[2];
-            this.getModel().setValue("aos_cname", name);
-            this.getModel().setValue("aos_itemname", name, 0);
-            this.getModel().setValue("aos_category3", AosCategory3);
-            this.getModel().setValue("aos_category2", AosCategory2);
-            this.getModel().setValue("aos_category1", AosCategory1);
+
+            FndMsg.debug(Lang.get());
+            if (Lang.get() ==Lang.zh_CN ){
+                this.getModel().setValue("aos_cname", name);
+                this.getModel().setValue("aos_itemname", name, 0);
+                this.getModel().setValue("aos_category3", AosCategory3);
+                this.getModel().setValue("aos_category2", AosCategory2);
+                this.getModel().setValue("aos_category1", AosCategory1);
+            }
+            else
+            {
+                this.getModel().setValue("aos_itemname_us", name);
+                this.getModel().setValue("aos_category3_us", AosCategory3);
+                this.getModel().setValue("aos_category2_us", AosCategory2);
+                this.getModel().setValue("aos_category1_us", AosCategory1);
+            }
             refreshLine();
         }
     }
@@ -1075,7 +1087,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
                     this.getView().setEnable(true, 5, "aos_slogan");
                 }
             }
-        } else if ("海外翻译".equals(aos_status) || "翻译".equals(aos_status)) {
+        } else if ("翻译".equals(aos_status)) {
             this.getView().setEnable(false, "aos_flexpanelap1");
             this.getView().setEnable(false, 0, "aos_slogan");
             this.getView().setEnable(false, 1, "aos_itemname");
@@ -1084,45 +1096,31 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
                 if ("DE".equals(aos_lang)) {
                     this.getView().setEnable(true, 2, "aos_itemname");
                     this.getView().setEnable(true, 2, "aos_slogan");
-                    this.getView().setEnable(false, 3, "aos_itemname");
-                    this.getView().setEnable(false, 3, "aos_slogan");
-                    this.getView().setEnable(false, 4, "aos_itemname");
-                    this.getView().setEnable(false, 4, "aos_slogan");
-                    this.getView().setEnable(false, 5, "aos_itemname");
-                    this.getView().setEnable(false, 5, "aos_slogan");
                 } else if ("FR".equals(aos_lang)) {
-                    this.getView().setEnable(false, 2, "aos_itemname");
-                    this.getView().setEnable(false, 2, "aos_slogan");
-                    this.getView().setEnable(true, 3, "aos_itemname");
-                    this.getView().setEnable(true, 3, "aos_slogan");
-                    this.getView().setEnable(false, 4, "aos_itemname");
-                    this.getView().setEnable(false, 4, "aos_slogan");
-                    this.getView().setEnable(false, 5, "aos_itemname");
-                    this.getView().setEnable(false, 5, "aos_slogan");
+                    this.getView().setEnable(true, 2, "aos_itemname");
+                    this.getView().setEnable(true, 2, "aos_slogan");
                 } else if ("IT".equals(aos_lang)) {
-                    this.getView().setEnable(false, 2, "aos_itemname");
-                    this.getView().setEnable(false, 2, "aos_slogan");
-                    this.getView().setEnable(false, 3, "aos_itemname");
-                    this.getView().setEnable(false, 3, "aos_slogan");
-                    this.getView().setEnable(true, 4, "aos_itemname");
-                    this.getView().setEnable(true, 4, "aos_slogan");
-                    this.getView().setEnable(false, 5, "aos_itemname");
-                    this.getView().setEnable(false, 5, "aos_slogan");
+                    this.getView().setEnable(true, 2, "aos_itemname");
+                    this.getView().setEnable(true, 2, "aos_slogan");
                 } else if ("ES".equals(aos_lang)) {
-                    this.getView().setEnable(false, 2, "aos_itemname");
-                    this.getView().setEnable(false, 2, "aos_slogan");
-                    this.getView().setEnable(false, 3, "aos_itemname");
-                    this.getView().setEnable(false, 3, "aos_slogan");
-                    this.getView().setEnable(false, 4, "aos_itemname");
-                    this.getView().setEnable(false, 4, "aos_slogan");
-                    this.getView().setEnable(true, 5, "aos_itemname");
-                    this.getView().setEnable(true, 5, "aos_slogan");
+                    this.getView().setEnable(true, 2, "aos_itemname");
+                    this.getView().setEnable(true, 2, "aos_slogan");
                 }
             } else if ("新增".equals(aos_type)) {
                 this.getView().setEnable(true, 2, "aos_itemname");
                 this.getView().setEnable(true, 2, "aos_slogan");
             }
-        } else if ("设计".equals(aos_status)) {
+        }
+        else if ("海外翻译".equals(aos_status))
+        {
+            this.getView().setEnable(false, 0, "aos_itemname");
+            this.getView().setEnable(false, 0, "aos_slogan");
+            this.getView().setEnable(false, 1, "aos_itemname");
+            this.getView().setEnable(false, 1, "aos_slogan");
+            this.getView().setEnable(true, 2, "aos_itemname");
+            this.getView().setEnable(true, 2, "aos_slogan");
+        }
+        else if ("设计".equals(aos_status)) {
             this.getView().setEnable(false, "aos_flexpanelap1");
             this.getView().setEnable(false, "aos_entryentity");
         }

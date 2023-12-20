@@ -99,8 +99,10 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         if (itemKey.equals("aos_cal")){
             try {
                 setUpACategory();
-            } catch (ParseException e) {
-                e.printStackTrace();
+                this.getView().showSuccessNotification("分类计算成功");
+            }catch (FndError fndError){
+                fndError.printStackTrace();
+                this.getView().showTipNotification(fndError.getErrorMessage());
             }
         }
         else if (itemKey.equals("aos_split")){
@@ -408,6 +410,19 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
             }
             getView().showSuccessNotification("Copy To Success");
         }
+    }
+
+    @Override
+    public void beforeClosed(BeforeClosedEvent e) {
+        super.beforeClosed(e);
+        DynamicObject entity = this.getModel().getDataEntity(true);
+        Set<String> fields = new HashSet<>();
+        fields.add("aos_category1_name");
+        fields.add("aos_category2_name");
+        fields.add("aos_category3_name");
+        fields.add("aos_image");
+        fields.add("aos_picture");
+        SalUtil.skipVerifyFieldChanged(entity,entity.getDynamicObjectType(),fields);
     }
 
     //设置sku清单
@@ -765,7 +780,7 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
     /**
      * 计算分类
      */
-    private void setUpACategory() throws ParseException {
+    private void setUpACategory() {
         DynamicObjectCollection linentity = getModel().getDataEntity(true).getDynamicObjectCollection("aos_linentity");
         if (linentity.size()==0)
             return;
@@ -816,6 +831,7 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
                 })
                 .collect(Collectors.toList());
         NumberFormat instance = NumberFormat.getInstance();
+        BigDecimal bd_divisor = new BigDecimal(100);
         for (int index = 0; index < entityRows.size(); index++) {
             //判断搜索
             String search = "";
@@ -829,6 +845,10 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
             String relevance = "";
             DynamicObject dy_row = entityRows.get(index);
             String correlate = dy_row.getLocaleString("aos_correlate").getLocaleValue_zh_CN();
+            if (FndGlobal.IsNull(correlate)) {
+                String seq = dy_row.getString("seq");
+                throw new FndError("第 "+seq+"  相关性为空，请先填写");
+            }
             if (correlate.contains("高")) {
                 relevance = "高相关";
             }
@@ -840,11 +860,16 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
             }
             else {
                 BigDecimal bd_correlate;
-                if (correlate.contains("%")){
-                    bd_correlate = BigDecimal.valueOf(instance.parse(correlate).doubleValue());
-                }
-                else {
-                    bd_correlate = new BigDecimal(correlate);
+                try {
+                    if (correlate.contains("%")) {
+                        bd_correlate = BigDecimal.valueOf(instance.parse(correlate).doubleValue());
+                        bd_correlate = bd_correlate.divide(bd_divisor,4,BigDecimal.ROUND_HALF_UP);
+                    }
+                    else {
+                        bd_correlate = new BigDecimal(correlate);
+                    }
+                } catch (Exception e) {
+                   throw new FndError("第 "+(index+1)+"  相关性填写异常，请先检查");
                 }
                 if (bd_correlate.compareTo(higRelate)>=0){
                     relevance = "高相关";

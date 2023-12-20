@@ -7,7 +7,7 @@ sonar_preview:
   script:
     - sed -i "s,COSMIC_LIBS_BASE_DIR=.*,COSMIC_LIBS_BASE_DIR=/app/cosmic/libs/,g" ./gradle.properties
     - /app/gradle/bin/gradle clean --build-cache copytolib
-    - /app/sonar-scanner/bin/sonar-scanner -Dsonar.qualitygate.wait=true -Dsonar.projectKey=mservice-mkt -Dsonar.projectName=mservice-mkt -Dsonar.java.source=1.8 -Dsonar.sources=java -Dsonar.java.binaries=build/classes -Dsonar.host.url=http://it-sonar.aosom.com
+    - /app/sonar-scanner/bin/sonar-scanner -Dsonar.qualitygate.wait=true -Dsonar.projectKey=mservice-mms -Dsonar.projectName=mservice-mms -Dsonar.java.source=1.8 -Dsonar.sources=java -Dsonar.java.binaries=build/classes -Dsonar.host.url=http://it-sonar.aosom.com
   only:
     refs:
       - merge_requests
