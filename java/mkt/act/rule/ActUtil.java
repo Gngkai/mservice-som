@@ -1022,13 +1022,42 @@ public class ActUtil {
 	}
 
 	public static Map<String, String> queryOrgShopItemASIN(Object orgid, Object shopid, List<String> list_itemid) {
+		Map<String,String> result = new HashMap<>(list_itemid.size());
+
 		QFilter filter_org = new QFilter("aos_orgid", QFilter.equals, orgid);
 		QFilter filter_shop = new QFilter("aos_shopfid", QFilter.equals, shopid);
 		QFilter filter_item = new QFilter("aos_item_code", QFilter.in, list_itemid);
 		QFilter filter_asin = new QFilter("aos_asin", QFilter.not_equals, "");
 		QFilter[] qfs = new QFilter[] { filter_org, filter_shop, filter_item, filter_asin };
-		return QueryServiceHelper.query("aos_sync_invprice", "aos_item_code,aos_asin", qfs).stream().collect(Collectors
-				.toMap(dy -> dy.getString("aos_item_code"), dy -> dy.getString("aos_asin"), (key1, key2) -> key1));
+		//每日价格中的数据
+		Map<String, String> map_inv = QueryServiceHelper.query("aos_sync_invprice", "aos_item_code,aos_asin", qfs)
+				.stream()
+				.collect(Collectors.toMap(
+						dy -> dy.getString("aos_item_code"),
+						dy -> dy.getString("aos_asin"),
+						(key1, key2) -> key2));
+
+
+		//查找店铺维护表中的Asin
+		filter_org = new QFilter("aos_org","=" ,orgid);
+		filter_shop = new QFilter("aos_shop","=",shopid);
+		filter_item = new QFilter("aos_item",QFilter.in,list_itemid);
+		qfs = new QFilter[]{filter_org,filter_shop,filter_item,filter_asin};
+		Map<String, String> map_shop = QueryServiceHelper.query("aos_mkt_shop_price", "aos_item,aos_asin", qfs)
+				.stream()
+				.collect(Collectors.toMap(
+						dy -> dy.getString("aos_item"),
+						dy -> dy.getString("aos_asin"),
+						(key1, key2) -> key2));
+		for (String itemid : list_itemid) {
+			if (map_shop.containsKey(itemid)) {
+				result.put(itemid,map_shop.get(itemid));
+			}
+			else if (map_inv.containsKey(itemid)){
+				result.put(itemid,map_inv.get(itemid));
+			}
+		}
+		return result;
 	}
 
 	/**

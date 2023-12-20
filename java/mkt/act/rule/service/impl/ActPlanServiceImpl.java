@@ -1,10 +1,8 @@
 package mkt.act.rule.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import common.sal.sys.basedata.dao.ItemDao;
-import common.sal.sys.basedata.dao.ShopDao;
-import common.sal.sys.basedata.dao.impl.ItemDaoImpl;
-import common.sal.sys.basedata.dao.impl.ShopImpl;
+
+import common.sal.EventRuleCommon;
 import common.sal.sys.sync.service.AvailableDaysService;
 import common.sal.sys.sync.service.ItemCacheService;
 import common.sal.sys.sync.service.impl.AvailableDaysServiceImpl;
@@ -18,7 +16,6 @@ import mkt.act.dao.ActPlanDao;
 import mkt.act.dao.impl.ActPlanDaoImpl;
 import mkt.act.rule.service.ActPlanService;
 
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -130,96 +127,6 @@ public class ActPlanServiceImpl implements ActPlanService {
 
     @Override
     public void updateActInfo(DynamicObject dataEntity) {
-        DynamicObject aos_nationality = dataEntity.getDynamicObject("aos_nationality");
-        if (aos_nationality == null) {
-            return;
-        }
-        // 获取活动开始日期
-        Date aos_startdate = dataEntity.getDate("aos_startdate");
-        if (aos_startdate == null) {
-            return;
-        }
-        // 获取渠道id
-        long aos_platformid = dataEntity.getLong("aos_channel.id");
-        if (aos_platformid == 0) {
-            return;
-        }
-
-        String aos_shopnum = dataEntity.getString("aos_shop.number");
-        if (aos_shopnum == null || "".equals(aos_shopnum)) {
-            return;
-        }
-        // 获取今天日期
-        Calendar todayCalendar = DateUtil.todayCalendar();
-        long betweenDays = DateUtil.betweenDay(aos_startdate, todayCalendar.getTime());
-
-        Long aos_orgid = aos_nationality.getLong("id");
-
-        DynamicObjectCollection aos_sal_actplanentity = dataEntity.getDynamicObjectCollection("aos_sal_actplanentity");
-        //获取物料id
-        List<String> list_itemid = aos_sal_actplanentity.stream()
-                .map(dy -> dy.getDynamicObject("aos_itemnum").getString("id"))
-                .distinct()
-                .collect(Collectors.toList());
-        ItemDao itemDao = new ItemDaoImpl();
-        String selectFields = "aos_contryentry.aos_seasonseting.number aos_seasonseting,aos_contryentry.aos_contrybrand.name aos_contrybrand";
-        Map<String, DynamicObject> map_itemInfo = itemDao.OrgItemInfo(aos_orgid, list_itemid, selectFields);
-
-        //判断店铺是否是亚马逊主店铺
-        ShopDao shopDao = new ShopImpl();
-        boolean whetherAmazonShop = shopDao.WhetherAmazonShop(dataEntity.getDynamicObject("aos_shop").getPkValue());
-        for (DynamicObject object : aos_sal_actplanentity) {
-            Long aos_itemid = object.getLong("aos_itemnum.id");
-
-            //季节属性,品牌
-            if (map_itemInfo.containsKey(String.valueOf(aos_itemid))){
-                DynamicObject dy_info = map_itemInfo.get(String.valueOf(aos_itemid));
-                object.set("aos_seasonattr",dy_info.get("aos_seasonseting"));
-                object.set("aos_brand",dy_info.get("aos_contrybrand"));
-            }
-
-            Integer itemAgeForAct = itemCacheService.getItemAgeForAct(aos_orgid, aos_itemid);
-            object.set("aos_age", itemAgeForAct);
-
-            int itemOverseaStock = itemCacheService.getItemOverseaStock(aos_orgid, aos_itemid);
-            object.set("aos_currentqty", itemOverseaStock);
-
-            // 线上日均销量
-            BigDecimal onlineAvgSales = itemCacheService.getOnlineAvgSales(aos_orgid, aos_itemid, 7);
-            // 预计活动日库存 = 海外库存数量 - (预计活动日至指制表日天数*日均销量)
-            BigDecimal actDayStock = BigDecimal.valueOf(itemOverseaStock).subtract(onlineAvgSales.multiply(BigDecimal.valueOf(betweenDays)));
-            object.set("aos_preactqty", actDayStock);
-
-            // 预计活动日可售天数
-            int availableDays = availableDaysService.calAvailableDays(aos_orgid, aos_itemid, actDayStock.intValue(), onlineAvgSales, todayCalendar.getTime());
-            object.set("aos_preactavadays", availableDays);
-
-            // 过去7天国别日均销量
-            BigDecimal orgAvgSales = itemCacheService.getAvgSales(aos_orgid, null, null, aos_itemid, 7);
-            object.set("aos_7orgavgqty", orgAvgSales);
-
-            BigDecimal platAvgSales = itemCacheService.getAvgSales(aos_orgid, aos_platformid, null, aos_itemid, 7);
-            object.set("aos_7platavgqty", platAvgSales);
-
-            int platformStockQty = itemCacheService.getPlatformStockQty(aos_orgid, aos_shopnum, aos_itemid);
-            object.set("aos_platqty", platformStockQty);
-
-            //活动可用量 ： ：自有仓物料可用量+当前活动店铺对应平台仓的物料可用量
-            int noPlatformStockQty = itemCacheService.getOwnWarehouseStockQty(aos_orgid, aos_itemid);
-            object.set("aos_nonplatqty", noPlatformStockQty+platformStockQty);
-
-            BigDecimal latestItemCost = itemCacheService.getLatestItemCost(aos_orgid, aos_itemid);
-            object.set("aos_invcostamt", latestItemCost.multiply(BigDecimal.valueOf(itemOverseaStock)));
-
-            //默认推送来的数据全是亚马逊主店铺的
-            if (whetherAmazonShop){
-                String itemAsin = itemCacheService.getItemAsin(aos_orgid, aos_shopnum, aos_itemid);
-                BigDecimal reviewStars = itemCacheService.getAsinReviewStars(aos_orgid, itemAsin);
-                object.set("aos_stars",reviewStars);
-                Integer reviewQty = itemCacheService.getAsinReviewQty(aos_orgid, itemAsin);
-                object.set("aos_reviewqty",reviewQty);
-            }
-
-        }
+        EventRuleCommon.updateActInfo(dataEntity);
     }
 }
