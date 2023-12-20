@@ -3,14 +3,16 @@ package mkt.common;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.DecimalFormat;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import common.CommonDataSom;
 import common.fnd.FndGlobal;
-import common.fnd.FndLog;
-import common.sal.util.SalUtil;
+
+import common.sal.sys.basedata.dao.CountryDao;
+import common.sal.sys.basedata.dao.impl.CountryDaoImpl;
+import common.sal.util.QFBuilder;
 import common.sal.util.SaveUtils;
 import kd.bos.bill.AbstractBillPlugIn;
 import kd.bos.dataentity.entity.DynamicObject;
@@ -18,7 +20,7 @@ import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.dataentity.entity.ILocaleString;
 import kd.bos.dataentity.metadata.dynamicobject.DynamicObjectType;
 import kd.bos.entity.datamodel.events.PropertyChangedArgs;
-import kd.bos.form.control.Control;
+
 import kd.bos.form.control.events.ClickListener;
 import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.control.events.ItemClickListener;
@@ -29,11 +31,8 @@ import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
-import kd.bos.util.ExceptionUtils;
-import kd.fi.bd.util.QFBuilder;
-import kd.scm.pur.opplugin.util.SaveUtil;
-import mkt.synciface.aos_mkt_item_sync;
-import scala.Dynamic;
+
+
 
 public class aos_czj_test_bill extends AbstractBillPlugIn implements ItemClickListener, ClickListener {
 
@@ -49,15 +48,56 @@ public class aos_czj_test_bill extends AbstractBillPlugIn implements ItemClickLi
 		super.itemClick(evt);
 		String Control = evt.getItemKey();
 		if (Control.equals("aos_test")){
-			log.info("迁移开始： {}"+ LocalDateTime.now().toString());
+			log.info("迁移开始： {}",LocalDateTime.now());
 			try {
-				find();
+				syncSkuData();
 			}catch (Exception e){
 				StringWriter sw = new StringWriter();
 				e.printStackTrace(new PrintWriter(sw));
 				log.error(sw.toString());
 			}
-			log.info("迁移结束： {}"+ LocalDateTime.now().toString());
+			log.info("迁移结束： {}", LocalDateTime.now());
+		}
+	}
+
+	//同步sku词库
+	public void syncSkuData(){
+		List<DynamicObject> saveList = new ArrayList<>(5000);
+		QFBuilder builder = new QFBuilder();
+		builder.add("aos_orgid","!=","");
+		builder.add("aos_category1","!=","");
+		builder.add("aos_category2","!=","");
+		builder.add("aos_category3","!=","");
+		builder.add("aos_itemnamecn","!=","");
+		for (DynamicObject dy : QueryServiceHelper.query("aos_mkt_point", "id", builder.toArray())) {
+			DynamicObject dy_main = BusinessDataServiceHelper.loadSingle(dy.get("id"), "aos_mkt_point");
+			setItemEntity(dy_main);
+			saveList.add(dy_main);
+			SaveUtils.SaveEntity(saveList,false);
+		}
+		SaveUtils.SaveEntity(saveList,true);
+
+	}
+	//设置sku清单
+	private static void setItemEntity(DynamicObject dy_main){
+		common.sal.util.QFBuilder builder = new common.sal.util.QFBuilder();
+		DynamicObject aos_orgid =  dy_main.getDynamicObject("aos_orgid");
+		if (aos_orgid!=null){
+			builder.add("aos_orgid","=",aos_orgid.getPkValue());
+		}
+		builder.add("aos_category1","=",dy_main.getString("aos_category1"));
+		builder.add("aos_category2","=",dy_main.getString("aos_category2"));
+		builder.add("aos_category3","=",dy_main.getString("aos_category3"));
+		builder.add("aos_itemname","=",dy_main.getString("aos_itemnamecn"));
+		builder.add("aos_itemid","!=","");
+		DynamicObjectCollection dyc_line = dy_main.getDynamicObjectCollection("aos_itementity");
+		dyc_line.removeIf(dy->true);
+
+		DynamicObjectCollection dyc = QueryServiceHelper.query("aos_mkt_keyword", "aos_itemid,aos_itemid.number number", builder.toArray());
+		for (DynamicObject row : dyc) {
+			DynamicObject addNewRow = dyc_line.addNew();
+			addNewRow.set("aos_itemid",row.get("aos_itemid"));
+			addNewRow.set("aos_picture1",CommonDataSom.get_img_url(row.getString("number")));
 		}
 	}
 
@@ -137,9 +177,6 @@ public class aos_czj_test_bill extends AbstractBillPlugIn implements ItemClickLi
 		SaveUtils.SaveEntity(list_save,true);
 
 	}
-
-
-
 
 	/** 同步敏感词库 **/
 	private void aos_test() {
@@ -245,63 +282,88 @@ public class aos_czj_test_bill extends AbstractBillPlugIn implements ItemClickLi
 				(k1, k2) -> k1));
 	}
 
+	//同步品名关键字库
 	private void syncItemKeyword() {
-		Map<String, String> allItemCategory = getAllItemCategory();
-		String selectFields = "aos_org aos_orgid," +
-				"aos_item aos_itemid," +
-				"aos_item.name aos_itemname";
-		DynamicObjectCollection list = QueryServiceHelper.query("aos_czj_tmp", selectFields, null);
 
-		// 查询关键词库中已有的数据
-		DynamicObjectCollection aos_mkt_keyword = QueryServiceHelper.query("aos_mkt_keyword", "aos_orgid,aos_itemid", null);
-		Set<String> keywordExists = new HashSet<>();
-		for (DynamicObject obj:aos_mkt_keyword) {
-			String aos_orgid = obj.getString("aos_orgid");
-			String aos_itemid = obj.getString("aos_itemid");
-			keywordExists.add(aos_orgid + "~" + aos_itemid);
+		StringJoiner str = new StringJoiner(",");
+		for (int i = 1; i < 8; i++) {
+			str.add("aos_string"+i);
+		}
+		DynamicObjectCollection list = QueryServiceHelper.query("aos_czj_tmp", str.toString(), null);
+
+		//根据国别,类别，属性拆分
+		Map<String,List<String>> splitMap = new HashMap<>();
+		for (DynamicObject row : list) {
+			StringJoiner title = new StringJoiner("/");
+			for (int i = 1; i < 6; i++) {
+				title.add(row.getString("aos_string"+i));
+			}
+			List<String> value = splitMap.computeIfAbsent(title.toString(), k -> new ArrayList<>());
+
+			title = new StringJoiner("/");
+			title.add(row.getString("aos_string"+6));
+			title.add(row.getString("aos_string"+7));
+			if (!value.contains(title.toString())) {
+				value.add(title.toString());
+			}
 		}
 
-		List<DynamicObject> savEntity = new ArrayList<>(list.size());
-		for (DynamicObject obj:list) {
-			String aos_orgid = obj.getString("aos_orgid");
-			String aos_itemid = obj.getString("aos_itemid");
-			String aos_itemname = obj.getString("aos_itemname");
-			String aos_category1 = "";
-			String aos_category2 = "";
-			String aos_category3 = "";
 
-			// 如果SKU关键词库中已存在
-			if (keywordExists.contains(aos_orgid + "~" + aos_itemid)) continue;
+		List<DynamicObject> savEntity = new ArrayList<>(5000);
+		CountryDao countryDao = new CountryDaoImpl();
+		Map<String,String> orgInfo = new HashMap<>();
+		for (Map.Entry<String, List<String>> entry : splitMap.entrySet()) {
+			String[] split = entry.getKey().split("/");
+			//国别
+			String orgid;
+			if (orgInfo.containsKey(split[0])){
+				orgid = orgInfo.get(split[0]);
+			}else {
+				orgid = countryDao.getCountryID(split[0]);
+				orgInfo.put(split[0],orgid);
+			}
+			//查找对应的单据
+			QFBuilder builder = new QFBuilder();
+			builder.add("aos_orgid.number","=",split[0] );
+			builder.add("aos_category1","=",split[1] );
+			builder.add("aos_category2","=",split[2] );
+			builder.add("aos_category3","=",split[3] );
+			builder.add("aos_category1","=",split[1] );
+			builder.add("aos_itemnamecn","=",split[4] );
 
-			String aos_category = allItemCategory.get(aos_itemid);
-			if (aos_category == null) continue;
-			String[] categoryArr = aos_category.split(",");
-			if (categoryArr.length > 0) {
-				aos_category1 =  categoryArr[0];
-			}
-			if (categoryArr.length > 1) {
-				aos_category2 =  categoryArr[1];
-			}
-			if (categoryArr.length > 2) {
-				aos_category3 =  categoryArr[2];
-			}
+			DynamicObjectCollection dyc = QueryServiceHelper.query("aos_mkt_point", "id", builder.toArray());
 
-			// 新建一单
-			DynamicObject itemKeywordObj = BusinessDataServiceHelper.newDynamicObject("aos_mkt_keyword");
-			itemKeywordObj.set("billstatus", "A");
-			itemKeywordObj.set("aos_orgid", aos_orgid);
-			itemKeywordObj.set("aos_itemid", aos_itemid);
-			itemKeywordObj.set("aos_itemname", aos_itemname);
-			itemKeywordObj.set("aos_category1", aos_category1);
-			itemKeywordObj.set("aos_category2", aos_category2);
-			itemKeywordObj.set("aos_category3", aos_category3);
-			savEntity.add(itemKeywordObj);
+			for (DynamicObject dy : dyc) {
+				String id = dy.getString("id");
+
+				DynamicObject pointEntity = BusinessDataServiceHelper.loadSingle(id,"aos_mkt_point");
+
+				//获取已经有的关键词
+				DynamicObjectCollection aos_linentity = pointEntity.getDynamicObjectCollection("aos_linentity");
+				List<String> keyList = new ArrayList<>();
+				for (DynamicObject dy_row : aos_linentity) {
+					String aos_keyword = dy_row.getString("aos_keyword");
+					if (FndGlobal.IsNotNull(aos_keyword)){
+						keyList.add(aos_keyword);
+					}
+				}
+
+				for (String keyInfo : entry.getValue()) {
+					String[] split1 = keyInfo.split("/");
+					if (keyList.contains(split1[0])){
+						continue;
+					}
+					DynamicObject row = aos_linentity.addNew();
+					row.set("aos_keyword",split1[0]);
+					row.set("aos_remake",split1[1]);
+					keyList.add(split1[0]);
+				}
+				savEntity.add(pointEntity);
+			}
+			SaveUtils.SaveEntity("aos_mkt_point",savEntity,false);
 		}
-		SaveUtils.SaveEntity("aos_mkt_keyword",savEntity,true);
+		SaveUtils.SaveEntity("aos_mkt_point",savEntity,true);
 	}
-
-
-
 
 	public void beforePropertyChanged(PropertyChangedArgs e) {
 		String name = e.getProperty().getName();
