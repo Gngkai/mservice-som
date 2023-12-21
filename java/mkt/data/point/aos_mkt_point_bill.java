@@ -284,8 +284,15 @@ public class aos_mkt_point_bill extends AbstractBillPlugIn implements RowClickEv
 					filters_group, null);
 			while (bd_materialgroup2S.hasNext()) {
 				Row bd_materialgroup2 = bd_materialgroup2S.next();
+
 				// 获取数据
-				String category_name = bd_materialgroup2.getString("name").replace(aos_category1 + ",", "");
+				String category_name ;
+				String[] names = bd_materialgroup2.getString("name").split(",");
+				if (names.length > 1) {
+					category_name = names[1];
+				} else {
+					continue;
+				}
 				data2.add(new ComboItem(new LocaleString(category_name), category_name));
 			}
 			bd_materialgroup2S.close();
@@ -304,8 +311,13 @@ public class aos_mkt_point_bill extends AbstractBillPlugIn implements RowClickEv
 				while (bd_materialgroup3S.hasNext()) {
 					Row bd_materialgroup3 = bd_materialgroup3S.next();
 					// 获取数据
-					String category_name = bd_materialgroup3.getString("name").replace(aos_category1 + ",", "")
-							.replace(aos_category2 + ",", "");
+					String category_name;
+					String[] names = bd_materialgroup3.getString("name").split(",");
+					if (names.length > 2) {
+						category_name = names[2];
+					} else {
+						continue;
+					}
 					data3.add(new ComboItem(new LocaleString(category_name), category_name));
 				}
 				bd_materialgroup3S.close();
