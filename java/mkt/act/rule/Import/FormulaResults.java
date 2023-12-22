@@ -15,19 +15,9 @@ import java.util.*;
  * @Description: 活动库解析函数的工具类，即记录每一行公式的执行结果
  */
 public class FormulaResults {
-    //国别
-    DynamicObject orgEntity;
-    //国别下所有的物料，方便后续筛选
-    List<DynamicObject> itemInfoes;
-    //日志
-    FndLog fndLog;
-    //行下拉项
-    Map<String,String> rowRuleName;
-    FormulaResults(DynamicObject orgEntity, List<DynamicObject> itemInfoes, FndLog fndLog, Map<String,String> rowRuleName){
-        this.fndLog = fndLog;
-        this.itemInfoes = itemInfoes;
-        this.orgEntity = orgEntity;
-        this.rowRuleName = rowRuleName;
+    EventRule eventRule;
+    FormulaResults(EventRule eventRule){
+        this.eventRule = eventRule;
     }
     /**
      * 执行公式
@@ -37,12 +27,12 @@ public class FormulaResults {
      */
     public void getFormulaResult (String key,String rule,Map<String,Boolean> result){
         Map<String,Object> paramars = new HashMap<>();
-        for (DynamicObject itemInfoe : itemInfoes)
+        for (DynamicObject itemInfoe : eventRule.itemInfoes)
         {
             paramars.clear();
             String itemid = itemInfoe.getString("id");
             Object value = itemInfoe.getString("aos_contrybrand");
-            fndLog.add(itemInfoe.getString("number")+"  "+rowRuleName.get(key)+" : "+value);
+            eventRule.fndLog.add(itemInfoe.getString("number")+"  "+eventRule.rowRuleName.get(key)+" : "+value);
             paramars.put(key,value);
             result.put(itemid,Boolean.parseBoolean(FormulaEngine.execExcelFormula(rule,paramars).toString()));
         }
@@ -59,14 +49,14 @@ public class FormulaResults {
         //执行公式的参数
         Map<String,Object> paramars = new HashMap<>();
         //遍历物料
-        for (DynamicObject itemInfoe : itemInfoes)
+        for (DynamicObject itemInfoe : eventRule.itemInfoes)
         {
             paramars.clear();
             String itemid = itemInfoe.getString("id");
             //获取该物料的库存
             Object value = itemSotck.getOrDefault(itemid,0);
             //添加日志
-            fndLog.add(itemInfoe.getString("number")+"  "+rowRuleName.get(key)+" : "+value);
+            eventRule.fndLog.add(itemInfoe.getString("number")+"  "+eventRule.rowRuleName.get(key)+" : "+value);
             paramars.put(key,value);
             //执行公式并且将执行结果添加到返回结果里面
             result.put(itemid,Boolean.parseBoolean(FormulaEngine.execExcelFormula(rule,paramars).toString()));
@@ -84,14 +74,14 @@ public class FormulaResults {
         //执行公式的参数
         Map<String,Object> paramars = new HashMap<>();
         //遍历物料
-        for (DynamicObject itemInfoe : itemInfoes)
+        for (DynamicObject itemInfoe : eventRule.itemInfoes)
         {
             paramars.clear();
             String itemid = itemInfoe.getString("id");
             //获取该物料的库存
             Object value = itemSotck.getOrDefault(Long.parseLong(itemid),0);
             //添加日志
-            fndLog.add(itemInfoe.getString("number")+"  "+rowRuleName.get(key)+" : "+value);
+            eventRule.fndLog.add(itemInfoe.getString("number")+"  "+eventRule.rowRuleName.get(key)+" : "+value);
             paramars.put(key,value);
             //执行公式并且将执行结果添加到返回结果里面
             result.put(itemid,Boolean.parseBoolean(FormulaEngine.execExcelFormula(rule,paramars).toString()));
@@ -105,12 +95,12 @@ public class FormulaResults {
      */
     public void getFormulaResultStr(String key,String rule,Map<String,Boolean> result,Map<String,String> itemStatus){
         Map<String,Object> paramars = new HashMap<>();
-        for (DynamicObject itemInfoe : itemInfoes)
+        for (DynamicObject itemInfoe : eventRule.itemInfoes)
         {
             paramars.clear();
             String itemid = itemInfoe.getString("id");
             Object value = itemStatus.getOrDefault(itemid,"0");
-            fndLog.add(itemInfoe.getString("number")+"  "+rowRuleName.get(key)+" : "+value);
+            eventRule.fndLog.add(itemInfoe.getString("number")+"  "+eventRule.rowRuleName.get(key)+" : "+value);
             paramars.put(key,value);
             result.put(itemid,Boolean.parseBoolean(FormulaEngine.execExcelFormula(rule,paramars).toString()));
         }
@@ -123,12 +113,12 @@ public class FormulaResults {
      */
     public void  getFormulaResultBde(String key,String rule,Map<String,Boolean> result,Map<String,BigDecimal> reviewStars){
         Map<String,Object> paramars = new HashMap<>();
-        for (DynamicObject itemInfoe : itemInfoes)
+        for (DynamicObject itemInfoe : eventRule.itemInfoes)
         {
             paramars.clear();
             String itemid = itemInfoe.getString("id");
             Object value = reviewStars.getOrDefault(itemid, BigDecimal.ZERO);
-            fndLog.add(itemInfoe.getString("number")+"  "+rowRuleName.get(key)+" : "+value);
+            eventRule.fndLog.add(itemInfoe.getString("number")+"  "+eventRule.rowRuleName.get(key)+" : "+value);
             paramars.put(key,value);
             result.put(itemid,Boolean.parseBoolean(FormulaEngine.execExcelFormula(rule,paramars).toString()));
         }
@@ -148,15 +138,17 @@ public class FormulaResults {
             festNum.put(row.getString("number"),row.getString("name"));
         }
         Map<String,Object> paramars = new HashMap<>();
-        for (DynamicObject itemInfoe : itemInfoes)
+        for (DynamicObject itemInfoe : eventRule.itemInfoes)
         {
             paramars.clear();
             String itemid = itemInfoe.getString("id");
             String festival = itemInfoe.getString("festival");
             Object value = festNum.getOrDefault(festival,"");
-            fndLog.add(itemInfoe.getString("number")+"  "+rowRuleName.get(key)+" : "+value);
+            eventRule.fndLog.add(itemInfoe.getString("number")+"  "+eventRule.rowRuleName.get(key)+" : "+value);
             paramars.put(key,value);
             result.put(itemid,Boolean.parseBoolean(FormulaEngine.execExcelFormula(rule,paramars).toString()));
         }
     }
+
+
 }
