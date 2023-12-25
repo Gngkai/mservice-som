@@ -706,7 +706,8 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
                 isSealSample = QueryServiceHelper.exists("aos_sealsample",
                         new QFilter("aos_item.id", QCP.equals, aos_itemid.getPkValue())
                                 .and("aos_contractnowb", QCP.equals, AosPoNumber)
-                                .and("aos_islargeseal", QCP.equals, "").toArray());
+                                .and("aos_islargeseal", QCP.equals, "")
+                                .and("aos_largetext", QCP.equals, "").toArray());
                 if (isSealSample) {
                     ErrorCount++;
                     ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "3D建模，必须有大货封样图片!");
@@ -1604,6 +1605,8 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
                     this.getModel().batchCreateNewEntryRow("aos_entryentity4", 1);
                     this.getModel().setValue("aos_orgshort", aos_nationalitynumber, i - 1);
                     this.getModel().setValue("aos_brand", value, i - 1);
+
+
                     // 设置编辑人员
                     DynamicObject aos_mkt_progorguser = QueryServiceHelper.queryOne("aos_mkt_progorguser",
                             "aos_oueditor",
@@ -1651,6 +1654,39 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
                         this.getModel().setValue("aos_filename", ItemNumber + "-" + value + "-" + aos_nationalitynumber,
                                 i - 1);
                 }
+
+
+                // 设置slogan与品名
+                String sloganSelect = "";
+                if ("US,CA,UK".contains(aos_nationalitynumber)) {
+                    sloganSelect = "aos_itemnameen aos_name,aos_sloganen aos_slogan";
+                } else if ("DE".equals(aos_nationalitynumber)) {
+                    sloganSelect = "aos_itemnamede aos_name,aos_slogande aos_slogan";
+                } else if ("IT".equals(aos_nationalitynumber)) {
+                    sloganSelect = "aos_itemnameit aos_name,aos_sloganit aos_slogan";
+                } else if ("FR".equals(aos_nationalitynumber)) {
+                    sloganSelect = "aos_itemnamefr aos_name,aos_sloganfr aos_slogan";
+                } else if ("ES".equals(aos_nationalitynumber)) {
+                    sloganSelect = "aos_itemnamees aos_name,aos_sloganes aos_slogan";
+                }
+
+                String aos_name = "";
+                String aos_slogan = "";
+                DynamicObjectCollection sloganS =
+                        QueryServiceHelper.query("aos_mkt_data_slogan",sloganSelect,
+                                new QFilter("aos_category1",QCP.equals,AosCategory1)
+                                        .and("aos_category2",QCP.equals,AosCategory2)
+                                        .and("aos_category3",QCP.equals,AosCategory3)
+                                        .and("aos_itemnamecn",QCP.equals,bd_material.get("name"))
+                                        .toArray());
+                for (DynamicObject slogan : sloganS) {
+                    aos_name = aos_name + slogan.getString("aos_name") + ";" ;
+                    aos_slogan = aos_slogan + slogan.getString("aos_slogan") + ";";
+                }
+
+                this.getModel().setValue("aos_name", aos_name, i - 1);
+                this.getModel().setValue("aos_slogan", aos_slogan, i - 1);
+
                 i++;
                 if (!aos_contrybrandStr.contains(value))
                     aos_contrybrandStr = aos_contrybrandStr + value + ";";

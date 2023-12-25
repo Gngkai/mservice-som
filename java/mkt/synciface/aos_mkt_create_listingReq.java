@@ -14,6 +14,7 @@ import kd.bos.dataentity.metadata.dynamicobject.DynamicObjectType;
 import kd.bos.entity.EntityMetadataCache;
 import kd.bos.entity.operate.result.OperationResult;
 import kd.bos.exception.KDException;
+import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
@@ -49,7 +50,9 @@ public class aos_mkt_create_listingReq extends AbstractTask {
         QFilter filter_new = new QFilter("aos_newitem","=","0");
         QFilter filter_status = new QFilter("aos_status","=","已完成");
         QFilter filter_req = new QFilter("aos_req","=","0");
-        QFilter [] qfs = new QFilter[]{filter_pho,filter_new,filter_status,filter_req};
+        // 不为手工关闭的拍照需求表
+        QFilter filter_manual = new QFilter("aos_manual_close", QCP.not_equals,true);
+        QFilter [] qfs = new QFilter[]{filter_pho,filter_new,filter_status,filter_req,filter_manual};
         DynamicObject[] dy_photo = BusinessDataServiceHelper.load("aos_mkt_photoreq", "id,billno,aos_req", qfs);
         return dy_photo;
     }
