@@ -210,6 +210,15 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 	private void aos_return() throws FndError {
 		Object aos_laststatus = this.getModel().getValue("aos_laststatus");
 		Object aos_lastuser = this.getModel().getValue("aos_lastuser");
+
+		Object aos_returnreason = this.getModel().getValue("aos_returnreason",0);
+
+		if (FndGlobal.IsNull(aos_returnreason))
+		{
+			throw new FndError("退回时退回原因必填!");
+		}
+
+
 		if (!Cux_Common_Utl.IsNull(aos_laststatus) && !Cux_Common_Utl.IsNull(aos_lastuser)) {
 			this.getModel().setValue("aos_status", this.getModel().getValue("aos_laststatus"));
 			this.getModel().setValue("aos_user", this.getModel().getValue("aos_lastuser"));
@@ -354,9 +363,14 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 			map.put(ClientProperties.Text, new LocaleString("申请人确认"));
 			this.getView().updateControlMetadata("aos_submit", map);
 			this.getView().setVisible(true, "aos_submit");
-			this.getView().setEnable(false, "contentpanelflex");// 主界面面板
+//			this.getView().setEnable(false, "contentpanelflex");// 主界面面板
 			this.getView().setVisible(false, "bar_save");
 			this.getView().setVisible(true, "aos_return");
+
+			this.getView().setEnable(false, "aos_flexpanelap1");
+			this.getView().setEnable(false, "aos_flexpanelap3");
+
+//			aos_returnreason
 		} else if ("结束".equals(AosStatus)) {
 			this.getView().setVisible(false, "aos_submit");
 			this.getView().setVisible(false, "bar_save");
