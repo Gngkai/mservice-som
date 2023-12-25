@@ -982,7 +982,7 @@ class EventRuleUtil {
      */
     public void setRecommendWeight(BigDecimal weight) {
         //先查找销售推荐表中的数据
-        if (recommendItem.size() == 0) {
+        if (recommendItem == null) {
             QFBuilder builder = new QFBuilder();
             builder.add("aos_org", "=", eventRule.orgEntity.getLong("id"));
             builder.add("entryentity.aos_item", "!=", "");
@@ -1004,8 +1004,8 @@ class EventRuleUtil {
             BigDecimal itemWeight = BigDecimal.ZERO;
             if (recommendItem.contains(itemId)) {
                 itemWeight = BigDecimal.valueOf(10).multiply(weight);
-                eventRule.fndLog.add(number + "  推荐分数  " + itemWeight);
             }
+            eventRule.fndLog.add(number + "  周销售清单推荐分数  " + itemWeight);
             itemWeight = eventRule.weightMap.getOrDefault(itemId, BigDecimal.ZERO).add(itemWeight);
             eventRule.weightMap.put(itemId, itemWeight);
         }
@@ -1360,21 +1360,21 @@ class EventRuleUtil {
     }
 
     //升序排序
-    private List<String>  sortAsc(Map<String, BigDecimal> historySalesMap) {
+    public List<String>  sortAsc(Map<String, BigDecimal> historySalesMap) {
         return  historySalesMap
                 .entrySet()
                 .stream()
-                .sorted((e1,e2)->e2.getValue().compareTo(e1.getValue()))
+                .sorted((e1,e2)->-e2.getValue().compareTo(e1.getValue()))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
     }
 
     //降序排序
-    private List<String> sortDesc(Map<String, BigDecimal> historySalesMap) {
+    public List<String> sortDesc(Map<String, BigDecimal> historySalesMap) {
         return  historySalesMap
                 .entrySet()
                 .stream()
-                .sorted((e1,e2)->-e2.getValue().compareTo(e1.getValue()))
+                .sorted((e1,e2)->e2.getValue().compareTo(e1.getValue()))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
     }
@@ -1391,15 +1391,15 @@ class EventRuleUtil {
             String number = itemInfoe.getString("number");
             int index = sortItemList.indexOf(itemId);
             //区间分数
-            BigDecimal itemScore = BigDecimal.ZERO;
+            int itemScore = 0;
             for (Map.Entry<String, Integer> entry : sortWeightMap.entrySet()) {
                 String[] split = entry.getKey().split("/");
                 if (index >= Integer.parseInt(split[0]) && index < Integer.parseInt(split[1])) {
-                    itemScore = BigDecimal.valueOf(entry.getValue()).multiply(weight);
+                    itemScore = entry.getValue();
                     break;
                 }
             }
-            BigDecimal score = weight.multiply(itemScore);
+            BigDecimal score = weight.multiply( new BigDecimal(itemScore));
             StringJoiner str = new StringJoiner(" , ");
             str.add("编码: "+number);
             str.add("区位: "+index);
