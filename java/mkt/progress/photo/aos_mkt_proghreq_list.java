@@ -147,6 +147,7 @@ public class aos_mkt_proghreq_list extends AbstractListPlugin {
 			DynamicObject aos_mkt_photoreq = BusinessDataServiceHelper.loadSingle(id, "aos_mkt_photoreq");
 			aos_mkt_photoreq.set("aos_status", "已完成");
 			aos_mkt_photoreq.set("aos_user", system);
+			aos_mkt_photoreq.set("aos_manual_close", true);
 			OperationServiceHelper.executeOperate("save", "aos_mkt_photoreq", new DynamicObject[] { aos_mkt_photoreq },
 					OperateOption.create());
 			FndHistory fndHistory = new FndHistory();
