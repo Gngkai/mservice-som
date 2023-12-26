@@ -160,7 +160,6 @@ public class EventRule {
            filterItem = implementFormulaSku(parameterKey,selectQty,ruleValue);
         }
 
-
         //将筛选完成的物料填入活动选品表中  选品数
         addData(filterItem);
     }
@@ -519,6 +518,9 @@ public class EventRule {
                     addNewRow.set("aos_category_stat2",split[1]);
                 }
             }
+            if (weightMap!=null && weightMap.containsKey(itemid)){
+                addNewRow.set("aos_sort",weightMap.get(itemid));
+            }
         }
         fndLog.finnalSave();
     }
@@ -587,6 +589,7 @@ public class EventRule {
                 else {
                     row.set("aos_fit","N");
                 }
+
             }
         }
         fndLog.finnalSave();
