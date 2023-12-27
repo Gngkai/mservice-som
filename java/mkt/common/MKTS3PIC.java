@@ -50,7 +50,7 @@ public class MKTS3PIC {
 		try {
 			// 密钥
 			byte[] keyBytes = FndMsg.getStatic("MMS_S3KEY").getBytes(StandardCharsets.UTF_8);
-			// 偏移向量
+			// 偏移向量 TEST
 			IvParameterSpec ivParameterSpec =
 					new IvParameterSpec(FndMsg.getStatic("MMS_S3IV").getBytes(StandardCharsets.UTF_8));
 			// 秘钥规格
