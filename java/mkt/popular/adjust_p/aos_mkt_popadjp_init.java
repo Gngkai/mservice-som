@@ -737,7 +737,7 @@ public class aos_mkt_popadjp_init extends AbstractTask {
 			}
 		}
 		// 下午 美加
-		if (type == 1) {
+		if (type > 0) {
 			if (saveOrgs >= 2) {
 				// 缓存清空
 				cache.remove("saveOrgs");

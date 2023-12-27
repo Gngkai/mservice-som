@@ -548,7 +548,7 @@ public class aos_mkt_popadjpst_init extends AbstractTask {
 			}
 		}
 		// 下午 美加
-		if (type == 1) {
+		if (type > 0) {
 			if (saveOrgs >= 2) {
 				// 发送邮件
 //				String head = "ST初始化数据完成 (美加)";
