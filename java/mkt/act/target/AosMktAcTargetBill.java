@@ -43,7 +43,6 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
      **/
     public final static String system = Cux_Common_Utl.SYSTEM;
 
-    private static final String NUMBERFORMAT = "^(-?[1-9]\\d*\\.?\\d*)|(-?0\\.\\d*[1-9])|(-?[0])|(-?[0]\\.\\d*)$";
 
     /**
      * 进入界面后触发
@@ -207,7 +206,8 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
      */
     private void detailRowChanged(String name, String value) throws FndError {
         int currentRowIndex = this.getModel().getEntryCurrentRowIndex("aos_entryentity1");
-        if (FndGlobal.IsNotNull(value) && !value.matches(NUMBERFORMAT)) {
+        if (FndGlobal.IsNotNull(value)
+                && !value.matches("^(-?[1-9]\\d*\\.?\\d*)|(-?0\\.\\d*[1-9])|(-?[0])|(-?[0]\\.\\d*)$")) {
             this.getModel().setValue(name, null, currentRowIndex);
             throw new FndError("字段格式错误");
         }
@@ -234,7 +234,8 @@ public class AosMktAcTargetBill extends AbstractBillPlugIn {
     private void lineRowChanged(String name, String value) throws FndError {
         int currentRowIndex = this.getModel().getEntryCurrentRowIndex("aos_entryentity");
         // 合计汇总
-        if (FndGlobal.IsNotNull(value) && !value.matches(NUMBERFORMAT)) {
+        if (FndGlobal.IsNotNull(value)
+                && !value.matches("^(-?[1-9]\\d*\\.?\\d*)|(-?0\\.\\d*[1-9])|(-?[0])|(-?[0]\\.\\d*)$")) {
             this.getModel().setValue(name, null, currentRowIndex);
             throw new FndError("字段格式错误");
         }
