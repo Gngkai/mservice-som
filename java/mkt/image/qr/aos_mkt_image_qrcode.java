@@ -56,7 +56,7 @@ public class aos_mkt_image_qrcode {
      *
      * @param source       二维码图片
      * @param imgPath      LOGO图片地址
-     * @param needCompress 是否压缩
+     * @param needCompress 是否压缩 T
      * @throws Exception
      */
     private static void insertImage(BufferedImage source, String imgPath,
