@@ -48,21 +48,6 @@ public class MKTS3PIC {
 	
 	public static String decrypt (String value) {
 		try {
-			// 密钥
-//			byte[] keyBytes = FndMsg.getStatic("MMS_S3KEY").getBytes(StandardCharsets.UTF_8);
-//			// 偏移向量 TEST
-//			IvParameterSpec ivParameterSpec =
-//					new IvParameterSpec(FndMsg.getStatic("MMS_S3IV").getBytes(StandardCharsets.UTF_8));
-//			// 秘钥规格
-//			SecretKeySpec keySpec = new SecretKeySpec(keyBytes, "AES");
-//			Cipher cipher = Cipher.getInstance(FndMsg.getStatic("MMS_S3CIPHER"));
-//			// 初始化
-//			cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivParameterSpec);
-//			byte[] encData = cipher.doFinal(value.getBytes(StandardCharsets.UTF_8));
-//			// base64
-//			Base64.Encoder encoder = Base64.getEncoder();
-//			String encodedText = encoder.encodeToString(encData);
-//			FndMsg.debug(encodedText);
 			return null;
 		} catch (Exception e) {
 			e.printStackTrace();
