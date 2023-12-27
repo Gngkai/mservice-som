@@ -110,7 +110,7 @@ public class aos_mkt_image_qrcode {
         BufferedImage image = aos_mkt_image_qrcode.createImage(content, imgPath,
                 needCompress);
         mkdirs(destPath);
-        String file = new Random().nextInt(99999999) + ".jpg";
+        String file = ".jpg";
         ImageIO.write(image, FORMAT_NAME, new File(destPath + "/" + file));
         return file;
     }
