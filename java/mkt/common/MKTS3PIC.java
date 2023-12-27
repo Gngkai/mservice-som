@@ -6,6 +6,7 @@ import javax.crypto.spec.SecretKeySpec;
 import common.fnd.FndMsg;
 
 import javax.crypto.Cipher;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 public class MKTS3PIC {
@@ -48,23 +49,20 @@ public class MKTS3PIC {
 	public static String decrypt (String value) {
 		try {
 			// 密钥
-			String key = FndMsg.getStatic("MMS_S3KEY");
-			byte[] keyBytes = key.getBytes("utf-8");
+			byte[] keyBytes = FndMsg.getStatic("MMS_S3KEY").getBytes(StandardCharsets.UTF_8);
 			// 偏移向量
-			String iv = FndMsg.getStatic("MMS_S3IV");
-			IvParameterSpec ivParameterSpec = new IvParameterSpec(iv.getBytes("utf-8"));
-			String text = value;
+			IvParameterSpec ivParameterSpec =
+					new IvParameterSpec(FndMsg.getStatic("MMS_S3IV").getBytes(StandardCharsets.UTF_8));
+			// 秘钥规格
 			SecretKeySpec keySpec = new SecretKeySpec(keyBytes, "AES");
-			Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+			Cipher cipher = Cipher.getInstance(FndMsg.getStatic("MMS_S3CIPHER"));
 			// 初始化
 			cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivParameterSpec);
-			byte[] encData = cipher.doFinal(text.getBytes("utf-8"));
+			byte[] encData = cipher.doFinal(value.getBytes(StandardCharsets.UTF_8));
 			// base64
 			Base64.Encoder encoder = Base64.getEncoder();
 			String encodedText = encoder.encodeToString(encData);
-			
 			FndMsg.debug(encodedText);
-			
 			return encodedText;
 		} catch (Exception e) {
 			e.printStackTrace();
