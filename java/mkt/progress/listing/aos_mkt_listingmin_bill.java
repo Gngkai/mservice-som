@@ -1266,6 +1266,18 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
                 throw fndMessage;
             }
 
+
+            String sourceType = dy_main.getString("aos_sourcetype");
+            if ("LISTING".equals(sourceType) && "老品优化".equals(aos_type)){
+                try {
+                    aos_sale = Long.parseLong(dy_main.getDynamicObject("aos_requireby")
+                            .getString("id"));
+                } catch (Exception ex)
+                {
+                    aos_sale = dy_main.getLong("aos_requireby");
+                }
+            }
+
             aos_mkt_listing_sal.set("aos_sale", aos_sale);
             aos_mkt_listing_sal.set("aos_user", aos_sale);
             MessageId = String.valueOf(aos_sale);
