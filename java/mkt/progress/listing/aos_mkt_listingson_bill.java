@@ -545,6 +545,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
                 continue;
             Object LastItemId = 0;
             long aos_sale = 0;
+            long aos_sale1 = 0;
             for (int i = 0; i < EntryList.size(); i++) {
                 DynamicObject aos_entryentity = EntryList.get(i);
                 DynamicObject aos_subentryentity = aos_entryentity.getDynamicObjectCollection("aos_subentryentity")
@@ -581,6 +582,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
                                 SelectStr, filters_category);
                         if (aos_mkt_progorguser != null) {
                             aos_sale = aos_mkt_progorguser.getLong("aos_salehelper");
+                            aos_sale1 = aos_mkt_progorguser.getLong("aos_salehelper");
                         }
                     }
                 }
@@ -594,6 +596,12 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
                 } catch (Exception ex)
                 {
                     aos_sale = dy_main.getLong("aos_requireby");
+                }
+                // 判断申请人是否在表中存在
+                DynamicObject orgUser = QueryServiceHelper.queryOne("aos_mkt_progorguser"
+                        , "id", new QFilter("aos_salehelper", QCP.equals, aos_sale).toArray());
+                if (orgUser == null) {
+                    aos_sale = aos_sale1;
                 }
             }
             aos_mkt_listing_sal.set("aos_sale", aos_sale);
