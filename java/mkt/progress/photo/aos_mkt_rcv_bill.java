@@ -424,13 +424,11 @@ public class aos_mkt_rcv_bill extends AbstractBillPlugIn implements ItemClickLis
 							.and("aos_name", QCP.equals, aos_itemname)
 							.toArray());
 
-			if (cond1||cond2||(cond3 && !cond4)){
+			if (cond1||cond2||(!cond3 && !cond4)){
 				ErrorCount++;
 				ErrorMessage = FndError.AddErrorMessage(ErrorMessage, "无法建模的产品不允许改成工厂简拍!");
 			}
 		}
-
-
 
 		if (ErrorCount > 0) {
 			FndError fndMessage = new FndError(ErrorMessage);

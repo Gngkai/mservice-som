@@ -880,6 +880,8 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 					MessageId = ((DynamicObject) aos_dm).getPkValue().toString();
 					Message = "设计需求表-组长确认";
 				} else if ("老品优化".equals(aos_type)) {
+					dy_main.set("aos_laststatus", dy_main.get("aos_status"));
+					dy_main.set("aos_lastuser", dy_main.get("aos_user"));
 					dy_main.set("aos_status", "申请人确认");
 					dy_main.set("aos_user", aos_requireby);
 					MessageId = ((DynamicObject) aos_requireby).getPkValue().toString();

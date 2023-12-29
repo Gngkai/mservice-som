@@ -51,12 +51,11 @@ import mkt.progress.ProgressUtil;
 import mkt.progress.parameter.errorListing.ErrorListEntity;
 
 public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemClickListener, HyperLinkClickListener {
-    private static final Tracer tracer = MmsOtelUtils.getTracer(aos_mkt_listingson_bill.class, RequestContext.get());
-
     /**
      * 系统管理员
      **/
     public final static String system = Cux_Common_Utl.SYSTEM;
+    private static final Tracer tracer = MmsOtelUtils.getTracer(aos_mkt_listingson_bill.class, RequestContext.get());
 
     /**
      * 回写拍照需求表状态至 视频剪辑
@@ -85,7 +84,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
         OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_photoreq",
                 new DynamicObject[]{aos_mkt_photoreq}, OperateOption.create());
         if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
-            MKTCom.SendGlobalMessage(MessageId, aos_mkt_photoreq + "", operationrst.getSuccessPkIds().get(0) + "",
+            MKTCom.SendGlobalMessage(MessageId, String.valueOf(aos_mkt_photoreq), String.valueOf(operationrst.getSuccessPkIds().get(0)),
                     aos_mkt_photoreq.getString("billno"), "拍照需求表-视频剪辑");
         }
     }
@@ -257,10 +256,10 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
             Object aos_editor = dy_main.get("aos_editor");
             Object ReqFId = dy_main.getPkValue(); // 当前界面主键
             Object billno = dy_main.get("billno");
-            MessageId = aos_editor + "";
+            MessageId = String.valueOf(aos_editor);
             dy_main.set("aos_status", "编辑确认");// 设置单据流程状态
             dy_main.set("aos_user", aos_editor);// 流转给编辑
-            MKTCom.SendGlobalMessage(MessageId, "aos_mkt_listing_son", ReqFId + "", billno + "", Message);
+            MKTCom.SendGlobalMessage(MessageId, "aos_mkt_listing_son", String.valueOf(ReqFId), String.valueOf(billno), Message);
         } catch (Exception ex) {
             MmsOtelUtils.setException(span, ex);
             throw ex;
@@ -388,7 +387,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
 //        FndMsg.debug("Org:" + "US".equals(((DynamicObject)aos_orgid).getString("number")));
 
             if (FndGlobal.IsNotNull(aos_orgid) &&
-                    "US".equals(((DynamicObject)aos_orgid).getString("number"))) {
+                    "US".equals(((DynamicObject) aos_orgid).getString("number"))) {
                 FndMsg.debug("====Into US====");
                 String category = MKTCom.getItemCateNameZH(LastItemId);
                 String[] category_group = category.split(",");
@@ -404,7 +403,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
                 DynamicObject aos_mkt_progorguser =
                         QueryServiceHelper.queryOne("aos_mkt_progorguser",
                                 "aos_oseditor",
-                                (new QFilter("aos_orgid", "=", ((DynamicObject)aos_orgid).getPkValue().toString())
+                                (new QFilter("aos_orgid", "=", ((DynamicObject) aos_orgid).getPkValue().toString())
                                         .and("aos_category1", QCP.equals, AosCategory1)
                                         .and("aos_category2", QCP.equals, AosCategory2)).toArray());
                 if (aos_mkt_progorguser != null) {
@@ -416,7 +415,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
                             dy_main.getString("billno"),
                             "Listing优化需求表-文案处理完成!");
                     GlobalMessage.SendMessage(dy_main.getString("billno") +
-                            "-Listing优化需求表-文案处理完成!",String.valueOf(aos_oseditor));
+                            "-Listing优化需求表-文案处理完成!", String.valueOf(aos_oseditor));
                 }
             }
 
@@ -444,7 +443,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
                     OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_designreq",
                             new DynamicObject[]{aos_mkt_designreq}, OperateOption.create());
                     if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
-                        MKTCom.SendGlobalMessage(MessageId, "aos_mkt_designreq", aos_sourceid + "", aos_orignbill + "",
+                        MKTCom.SendGlobalMessage(MessageId, "aos_mkt_designreq", String.valueOf(aos_sourceid), String.valueOf(aos_orignbill),
                                 "设计确认:翻译");
                     }
                 }
@@ -561,7 +560,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
 
                 if ("0".equals(LastItemId.toString())) {
                     LastItemId = aos_entryentity.getDynamicObject("aos_itemid").getPkValue();
-                    String category = MKTCom.getItemCateNameZH(LastItemId + "");
+                    String category = MKTCom.getItemCateNameZH(String.valueOf(LastItemId));
                     String[] category_group = category.split(",");
                     String AosCategory1 = null;
                     String AosCategory2 = null;
@@ -589,17 +588,18 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
             }
 
             String sourceType = dy_main.getString("aos_sourcetype");
-            if ("LISTING".equals(sourceType) && "老品优化".equals(aos_type)){
+            if ("LISTING".equals(sourceType) && "老品优化".equals(aos_type)) {
                 try {
                     aos_sale = Long.parseLong(dy_main.getDynamicObject("aos_requireby")
                             .getString("id"));
-                } catch (Exception ex)
-                {
+                } catch (Exception ex) {
                     aos_sale = dy_main.getLong("aos_requireby");
                 }
                 // 判断申请人是否在表中存在
                 DynamicObject orgUser = QueryServiceHelper.queryOne("aos_mkt_progorguser"
-                        , "id", new QFilter("aos_salehelper", QCP.equals, aos_sale).toArray());
+                        , "id", new QFilter("aos_salehelper", QCP.equals, aos_sale)
+                                .and("aos_orgid", QCP.equals, org_id.toString())
+                                .toArray());
                 if (orgUser == null) {
                     aos_sale = aos_sale1;
                 }
@@ -607,7 +607,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
             aos_mkt_listing_sal.set("aos_sale", aos_sale);
             aos_mkt_listing_sal.set("aos_user", aos_sale);
 
-            MessageId = aos_sale + "";
+            MessageId = String.valueOf(aos_sale);
             Message = "Listing优化销售确认单-Listing优化子表自动创建";
             OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_listing_sal",
                     new DynamicObject[]{aos_mkt_listing_sal}, OperateOption.create());
@@ -620,8 +620,8 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
             }
 
             if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
-                MKTCom.SendGlobalMessage(MessageId, aos_mkt_listing_sal + "",
-                        operationrst.getSuccessPkIds().get(0) + "", aos_mkt_listing_sal.getString("billno"), Message);
+                MKTCom.SendGlobalMessage(MessageId, String.valueOf(aos_mkt_listing_sal),
+                        String.valueOf(operationrst.getSuccessPkIds().get(0)), aos_mkt_listing_sal.getString("billno"), Message);
                 FndHistory.Create(aos_mkt_listing_sal, aos_mkt_listing_sal.getString("aos_status"),
                         "Listing优化销售确认单-Listing优化子表自动创建");
             }
@@ -809,7 +809,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
                 aos_mkt_listing_min.set("aos_editor", aos_editor);// 英语编辑师
                 aos_mkt_listing_min.set("aos_editormin", aos_oueditor);// 小语种编辑师
                 aos_mkt_listing_min.set("aos_user", aos_oueditor);
-                MessageId = aos_oueditor + "";
+                MessageId = String.valueOf(aos_oueditor);
                 Message = "Listing优化需求表小语种-Listing优化需求子表自动创建";
                 OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_listing_min",
                         new DynamicObject[]{aos_mkt_listing_min}, OperateOption.create());
@@ -822,7 +822,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
 
                 if (operationrst.getValidateResult().getValidateErrors().size() != 0 && MessageFlag) {
                     MKTCom.SendGlobalMessage(MessageId, "aos_mkt_listing_min",
-                            operationrst.getSuccessPkIds().get(0) + "", aos_mkt_listing_min.getString("billno"),
+                            String.valueOf(operationrst.getSuccessPkIds().get(0)), aos_mkt_listing_min.getString("billno"),
                             Message);
                     aos_mkt_listing_min = BusinessDataServiceHelper.loadSingle(operationrst.getSuccessPkIds().get(0),
                             "aos_mkt_listing_min");
@@ -1030,7 +1030,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
                 aos_mkt_listing_min.set("aos_editormin", aos_oueditor);// 小语种编辑师
                 aos_mkt_listing_min.set("aos_user", aos_oueditor);
 
-                MessageId = aos_oueditor + "";
+                MessageId = String.valueOf(aos_oueditor);
                 Message = "Listing优化需求表小语种-Listing优化需求子表自动创建";
 
                 OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_listing_min",
@@ -1046,7 +1046,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
 
                 if (operationrst.getValidateResult().getValidateErrors().size() != 0 && MessageFlag) {
                     MKTCom.SendGlobalMessage(MessageId, "aos_mkt_listing_min",
-                            operationrst.getSuccessPkIds().get(0) + "", aos_mkt_listing_min.getString("billno"),
+                            String.valueOf(operationrst.getSuccessPkIds().get(0)), aos_mkt_listing_min.getString("billno"),
                             Message);
                     aos_mkt_listing_min = BusinessDataServiceHelper.loadSingle(operationrst.getSuccessPkIds().get(0),
                             "aos_mkt_listing_min");
@@ -1152,7 +1152,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
         Span span = MmsOtelUtils.getCusMainSpan(tracer, MmsOtelUtils.getMethodPath());
         super.itemClick(evt);
         String Control = evt.getItemKey();
-        try (Scope scope = span.makeCurrent()){
+        try (Scope scope = span.makeCurrent()) {
             if ("aos_submit".equals(Control)) {
                 DynamicObject dy_main = this.getModel().getDataEntity(true);
                 aos_submit(dy_main, "A");
@@ -1172,8 +1172,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
         } catch (Exception ex) {
             this.getView().showErrorNotification(SalUtil.getExceptionStr(ex));
             MmsOtelUtils.setException(span, ex);
-        }
-        finally {
+        } finally {
             MmsOtelUtils.spanClose(span);
         }
     }
@@ -1281,8 +1280,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
         Object aos_sendate = this.getModel().getValue("aos_sendate");
 
         if (FndGlobal.IsNull(aos_sendate) && FndGlobal.IsNotNull(aos_sendto)
-                && CurrentUserId.toString().equals(((DynamicObject)aos_sendto).getPkValue().toString()))
-        {
+                && CurrentUserId.toString().equals(((DynamicObject) aos_sendto).getPkValue().toString())) {
             this.getModel().setValue("aos_sendate", new Date());
             this.getView().invokeOperation("save");
             this.getView().invokeOperation("refresh");
@@ -1357,7 +1355,7 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
             if (AosUser instanceof String)
                 AosUserId = (String) AosUser;
             else if (AosUser instanceof Long)
-                AosUserId = AosUser + "";
+                AosUserId = String.valueOf(AosUser);
             else
                 AosUserId = ((DynamicObject) AosUser).getString("id");
             Object CurrentUserId = UserServiceHelper.getCurrentUserId();
@@ -1422,13 +1420,13 @@ public class aos_mkt_listingson_bill extends AbstractBillPlugIn implements ItemC
         Object ReqFId = this.getModel().getDataEntity().getPkValue(); // 当前界面主键
         Object billno = this.getModel().getValue("billno");
         Object aos_requireby = this.getModel().getValue("aos_requireby");
-        MessageId = aos_requireby + "";
+        MessageId = String.valueOf(aos_requireby);
         this.getModel().setValue("aos_status", "申请人");// 设置单据流程状态
         this.getModel().setValue("aos_user", aos_requireby);// 流转给编辑
         setListSonUserOrganizate(this.getModel().getDataEntity(true));
         this.getView().invokeOperation("save");
         this.getView().invokeOperation("refresh");
-        MKTCom.SendGlobalMessage(MessageId, "aos_mkt_listing_son", ReqFId + "", billno + "", Message);
+        MKTCom.SendGlobalMessage(MessageId, "aos_mkt_listing_son", String.valueOf(ReqFId), String.valueOf(billno), Message);
         FndHistory.Create(this.getView(), "编辑退回", "编辑退回");
     }
 }

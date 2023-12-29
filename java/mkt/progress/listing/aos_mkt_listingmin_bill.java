@@ -1281,7 +1281,9 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
                 }
                 // 判断申请人是否在表中存在
                 DynamicObject orgUser = QueryServiceHelper.queryOne("aos_mkt_progorguser"
-                        , "id", new QFilter("aos_salehelper", QCP.equals, aos_sale).toArray());
+                        , "id", new QFilter("aos_salehelper", QCP.equals, aos_sale)
+                                .and("aos_orgid", QCP.equals, aos_orgid.toString())
+                                .toArray());
                 if (orgUser == null) {
                     aos_sale = aos_sale1;
                 }
