@@ -521,6 +521,16 @@ public class EventRule {
             if (weightMap!=null && weightMap.containsKey(itemid)){
                 addNewRow.set("aos_sort",weightMap.get(itemid));
             }
+            //设置毛利率
+            if (util.itemActProfit.containsKey(itemid)) {
+                Map<String, BigDecimal> actProInfo = util.itemActProfit.get(itemid);
+                addNewRow.set("aos_profit", actProInfo.getOrDefault("aos_profit",BigDecimal.ZERO));
+                addNewRow.set("aos_item_cost", actProInfo.getOrDefault("aos_item_cost",BigDecimal.ZERO));
+                addNewRow.set("aos_lowest_fee", actProInfo.getOrDefault("aos_lowest_fee",BigDecimal.ZERO));
+                addNewRow.set("aos_plat_rate", actProInfo.getOrDefault("aos_plat_rate",BigDecimal.ZERO));
+                addNewRow.set("aos_vat_amount", actProInfo.getOrDefault("aos_vat_amount",BigDecimal.ZERO));
+                addNewRow.set("aos_excval", actProInfo.getOrDefault("aos_excval",BigDecimal.ZERO));
+            }
         }
         fndLog.finnalSave();
     }
@@ -589,8 +599,20 @@ public class EventRule {
                 else {
                     row.set("aos_fit","N");
                 }
+                //设置毛利率
+                if (util.itemActProfit.containsKey(itemid)) {
+                    Map<String, BigDecimal> actProInfo = util.itemActProfit.get(itemid);
+                    row.set("aos_profit", actProInfo.getOrDefault("aos_profit",BigDecimal.ZERO));
+                    row.set("aos_item_cost", actProInfo.getOrDefault("aos_item_cost",BigDecimal.ZERO));
+                    row.set("aos_lowest_fee", actProInfo.getOrDefault("aos_lowest_fee",BigDecimal.ZERO));
+                    row.set("aos_plat_rate", actProInfo.getOrDefault("aos_plat_rate",BigDecimal.ZERO));
+                    row.set("aos_vat_amount", actProInfo.getOrDefault("aos_vat_amount",BigDecimal.ZERO));
+                    row.set("aos_excval", actProInfo.getOrDefault("aos_excval",BigDecimal.ZERO));
+                }
 
             }
+
+
         }
         fndLog.finnalSave();
     }
