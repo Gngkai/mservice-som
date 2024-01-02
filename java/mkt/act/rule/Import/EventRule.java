@@ -160,7 +160,6 @@ public class EventRule {
            filterItem = implementFormulaSku(parameterKey,selectQty,ruleValue);
         }
 
-
         //将筛选完成的物料填入活动选品表中  选品数
         addData(filterItem);
     }
@@ -184,6 +183,10 @@ public class EventRule {
         for (Map.Entry<String, Integer> entry : cateQty.entrySet()) {
             alreadyFilledCate.put(entry.getKey(),0);
         }
+
+        //判断公式是否为空
+        boolean ruleValueIsNull = FndGlobal.IsNotNull(ruleValue);
+
         //筛选数据
         for (DynamicObject itemInfoe : itemInfoes) {
             String itemId = itemInfoe.getString("id");
@@ -220,7 +223,11 @@ public class EventRule {
                 parameters.put(key,rowResults.get(key).get(itemId));
             }
             //执行公式
-            boolean result = Boolean.parseBoolean(FormulaEngine.execExcelFormula(ruleValue, parameters).toString());
+            boolean result = true;
+            if (ruleValueIsNull){
+              result = Boolean.parseBoolean(FormulaEngine.execExcelFormula(ruleValue, parameters).toString());
+            }
+
             if (result){
                 //正常填入该品类
                 if ("A".equals(fillType)){
@@ -272,6 +279,10 @@ public class EventRule {
         Map<String,Integer> alreadyFilledCate = new HashMap<>();
         //记录每个品类下的帖子ID，以及每个物料是否满足条件
         Map<String,Map<String,List<DynamicObject>>> map_fillInfo = new HashMap<>();
+
+        //判断公式是否为空
+        boolean ruleValueIsNull = FndGlobal.IsNotNull(ruleValue);
+
         //筛选数据
         for (DynamicObject itemInfoe : itemInfoes) {
             String itemId = itemInfoe.getString("id");
@@ -319,7 +330,12 @@ public class EventRule {
                     parameters.put(key,rowResults.get(key).get(itemId));
                 }
                 //执行公式
-                boolean result = Boolean.parseBoolean(FormulaEngine.execExcelFormula(ruleValue, parameters).toString());
+                boolean result = true;
+                if (ruleValueIsNull){
+                    result = Boolean.parseBoolean(FormulaEngine.execExcelFormula(ruleValue, parameters).toString());
+                }
+
+
                 if (result){
                     List<DynamicObject> list = fillData.computeIfAbsent(itemAsin + "/t", k -> new ArrayList<>());
                     list.add(itemInfoe);
@@ -502,6 +518,19 @@ public class EventRule {
                     addNewRow.set("aos_category_stat2",split[1]);
                 }
             }
+            if (weightMap!=null && weightMap.containsKey(itemid)){
+                addNewRow.set("aos_sort",weightMap.get(itemid));
+            }
+            //设置毛利率
+            if (util.itemActProfit.containsKey(itemid)) {
+                Map<String, BigDecimal> actProInfo = util.itemActProfit.get(itemid);
+                addNewRow.set("aos_profit", actProInfo.getOrDefault("aos_profit",BigDecimal.ZERO));
+                addNewRow.set("aos_item_cost", actProInfo.getOrDefault("aos_item_cost",BigDecimal.ZERO));
+                addNewRow.set("aos_lowest_fee", actProInfo.getOrDefault("aos_lowest_fee",BigDecimal.ZERO));
+                addNewRow.set("aos_plat_rate", actProInfo.getOrDefault("aos_plat_rate",BigDecimal.ZERO));
+                addNewRow.set("aos_vat_amount", actProInfo.getOrDefault("aos_vat_amount",BigDecimal.ZERO));
+                addNewRow.set("aos_excval", actProInfo.getOrDefault("aos_excval",BigDecimal.ZERO));
+            }
         }
         fndLog.finnalSave();
     }
@@ -526,6 +555,9 @@ public class EventRule {
 
         //店铺现价
         util.setCurrentPrice();
+
+        //判断规则是否为空
+        boolean ruleIsNull = FndGlobal.IsNotNull(ruleValue);
 
         for (DynamicObject row : dyc) {
             if (row.getDynamicObject("aos_itemnum")==null) {
@@ -554,7 +586,11 @@ public class EventRule {
                     parameters.put(key,rowResults.get(key).get(itemid));
                 }
                 //执行公式
-                boolean result = Boolean.parseBoolean(FormulaEngine.execExcelFormula(ruleValue, parameters).toString());
+                boolean result = true;
+                if (ruleIsNull){
+                    result = Boolean.parseBoolean(FormulaEngine.execExcelFormula(ruleValue, parameters).toString());
+                }
+
                 if (result) {
                     row.set("aos_fit","Y");
                     row.set("aos_price",util.itemCurrentPrice.getOrDefault(itemid,BigDecimal.ZERO));
@@ -563,7 +599,20 @@ public class EventRule {
                 else {
                     row.set("aos_fit","N");
                 }
+                //设置毛利率
+                if (util.itemActProfit.containsKey(itemid)) {
+                    Map<String, BigDecimal> actProInfo = util.itemActProfit.get(itemid);
+                    row.set("aos_profit", actProInfo.getOrDefault("aos_profit",BigDecimal.ZERO));
+                    row.set("aos_item_cost", actProInfo.getOrDefault("aos_item_cost",BigDecimal.ZERO));
+                    row.set("aos_lowest_fee", actProInfo.getOrDefault("aos_lowest_fee",BigDecimal.ZERO));
+                    row.set("aos_plat_rate", actProInfo.getOrDefault("aos_plat_rate",BigDecimal.ZERO));
+                    row.set("aos_vat_amount", actProInfo.getOrDefault("aos_vat_amount",BigDecimal.ZERO));
+                    row.set("aos_excval", actProInfo.getOrDefault("aos_excval",BigDecimal.ZERO));
+                }
+
             }
+
+
         }
         fndLog.finnalSave();
     }
@@ -659,6 +708,9 @@ public class EventRule {
         getActProfit("actProfit",map_actProfit);
         itemInfoes = new ArrayList<>(dyc.size());
         List<String> fillItem = new ArrayList<>(dyc.size());
+
+        //记录ID和物料的对应关系,用于后面优先级排序
+        Map<String,DynamicObject> itemMap = new HashMap<>(dyc.size());
         for (DynamicObject row : dyc) {
             String itemid = row.getString("id");
             String itemNum = row.getString("number");
@@ -711,10 +763,23 @@ public class EventRule {
                 continue;
             }
 
+            itemMap.put(itemid,row);
             fillItem.add(itemid);
             itemInfoes.add(row);
         }
         logger.info("单号： {}  毛利率计算后物料长度：{} ",actPlanEntity.getString("billno"),itemInfoes.size());
+
+        //进行优先级排序
+        List<String> sortItem = setWeight();
+        itemInfoes.clear();
+        for (String itemid : sortItem) {
+            if (itemMap.containsKey(itemid)){
+                DynamicObject itemInfo = itemMap.get(itemid);
+                String number = itemInfo.getString("number");
+                fndLog.add("编码： "+number+" 总分数： "+weightMap.get(itemid));
+                itemInfoes.add(itemMap.get(itemid));
+            }
+        }
 
         //设置物料品类
         builder.clear();
@@ -1360,10 +1425,7 @@ public class EventRule {
      * 计算物料的优先级
      */
     Map<String,BigDecimal> weightMap;
-    public void setWeight(){
-        if (weightMap!=null) {
-            return;
-        }
+    public List<String> setWeight(){
         weightMap = new HashMap<>(itemInfoes.size());
         DynamicObjectCollection weightEntityRows = typEntity.getDynamicObjectCollection("aos_entryentity4");
         for (DynamicObject row : weightEntityRows) {
@@ -1419,6 +1481,8 @@ public class EventRule {
                     break;
             }
         }
+        //根据分数进行降序排序
+        return   util.sortDesc(weightMap);
     }
 
 }
