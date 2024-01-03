@@ -54,11 +54,15 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Author:aosom Description:PPC初始化任务
+ */
 public class aos_mkt_popppc_init extends AbstractTask {
 
-    public static final String URL = "https://open.feishu.cn/open-apis/bot/v2/hook/242e7160-8309-4312-8586-5fe58482d8c5";
-    private static final DistributeSessionlessCache cache = CacheFactory.getCommonCacheFactory()
-            .getDistributeSessionlessCache("mkt_redis");
+    public static final String URL =
+        "https://open.feishu.cn/open-apis/bot/v2/hook/242e7160-8309-4312-8586-5fe58482d8c5";
+    private static final DistributeSessionlessCache cache =
+        CacheFactory.getCommonCacheFactory().getDistributeSessionlessCache("mkt_redis");
     private static final String DB_MKT = "aos.mkt";
     private static final AosomLog logger = AosomLog.init("aos_mkt_popppc_init");
 
@@ -77,7 +81,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
         Date Today = today.getTime();
         QFilter filter_id = new QFilter("aos_orgid.number", "=", aosOuCode);
         QFilter filter_date = new QFilter("aos_date", "=", Today);
-        QFilter[] filters_adj = new QFilter[]{filter_id, filter_date};
+        QFilter[] filters_adj = new QFilter[] {filter_id, filter_date};
         DeleteServiceHelper.delete("aos_mkt_popular_ppc", filters_adj);
         // 初始化数据
         CommonDataSom.init();
@@ -98,7 +102,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
         QFilter qf_time;
 
         DynamicObject dynamicObject = QueryServiceHelper.queryOne("aos_mkt_base_orgvalue", "aos_value",
-                new QFilter[]{new QFilter("aos_type", QCP.equals, "TIME")});
+            new QFilter[] {new QFilter("aos_type", QCP.equals, "TIME")});
         int time = 16;
         if (dynamicObject != null) {
             time = dynamicObject.getBigDecimal("aos_value").intValue();
@@ -110,7 +114,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
         }
         QFilter oversea_flag = new QFilter("aos_is_oversea_ou.number", "=", "Y");// 海外公司
         QFilter oversea_flag2 = new QFilter("aos_isomvalid", "=", true);
-        QFilter[] filters_ou = new QFilter[]{oversea_flag, oversea_flag2, qf_time};
+        QFilter[] filters_ou = new QFilter[] {oversea_flag, oversea_flag2, qf_time};
         DynamicObjectCollection bd_country = QueryServiceHelper.query("bd_country", "id,number", filters_ou);
         for (DynamicObject ou : bd_country) {
             String p_ou_code = ou.getString("number");
@@ -120,8 +124,9 @@ public class aos_mkt_popppc_init extends AbstractTask {
             do_operate(params);
         }
         // 生成销售加回数据
-        if (aos_mkt_pop_common.GetCopyFlag("PPC_ADD", week))
+        if (aos_mkt_pop_common.GetCopyFlag("PPC_ADD", week)) {
             aos_mkt_popadds_init.Run();
+        }
     }
 
     public static void do_operate(Map<String, Object> params) {
@@ -141,8 +146,8 @@ public class aos_mkt_popppc_init extends AbstractTask {
             byte[] serialize_ppcInfo = cache.getByteValue("mkt_ppcinfo"); // PPC系列与组创建日期
             HashMap<String, Map<String, Object>> PPCInfo = SerializationUtils.deserialize(serialize_ppcInfo);
             byte[] serialize_ppcInfoSerial = cache.getByteValue("mkt_ppcinfoSerial"); // PPC系列与组创建日期
-            HashMap<String, Map<String, Object>> PPCInfoSerial = SerializationUtils
-                    .deserialize(serialize_ppcInfoSerial);
+            HashMap<String, Map<String, Object>> PPCInfoSerial =
+                SerializationUtils.deserialize(serialize_ppcInfoSerial);
             byte[] serialize_poporgInfo = cache.getByteValue("mkt_poporginfo"); // 营销国别参数表
             HashMap<String, Map<String, Object>> PopOrgInfo = SerializationUtils.deserialize(serialize_poporgInfo);
             byte[] serialize_SalSummary = cache.getByteValue("mkt_salsummary"); // 预测汇总表
@@ -150,11 +155,10 @@ public class aos_mkt_popppc_init extends AbstractTask {
             byte[] serialize_ppcYester = cache.getByteValue("mkt_ppcyest"); // PPC昨日数据
             HashMap<String, Map<String, Object>> PpcYester = SerializationUtils.deserialize(serialize_ppcYester);
             byte[] serialize_ppcyestSerial = cache.getByteValue("mkt_ppcyestSerial"); // PPC昨日数据系列
-            HashMap<String, Map<String, Object>> PpcYesterSerial = SerializationUtils
-                    .deserialize(serialize_ppcyestSerial);
+            HashMap<String, Map<String, Object>> PpcYesterSerial =
+                SerializationUtils.deserialize(serialize_ppcyestSerial);
             byte[] serialize_DailyPrice = cache.getByteValue("mkt_dailyprice"); // Amazon每日价格
             HashMap<String, Object> DailyPrice = SerializationUtils.deserialize(serialize_DailyPrice);
-
 
             byte[] serialize_skurpt3 = cache.getByteValue("mkt_skurpt3"); // SKU报告3日
             HashMap<String, Map<String, Object>> SkuRpt3 = SerializationUtils.deserialize(serialize_skurpt3);
@@ -167,21 +171,21 @@ public class aos_mkt_popppc_init extends AbstractTask {
             HashMap<String, Map<String, Object>> AdPrice = SerializationUtils.deserialize(serialize_adprice);
 
             byte[] serialize_skurptSerial14 = cache.getByteValue("mkt_skurptSerial14"); // SKU报告系列14日
-            HashMap<String, Map<String, Object>> SkuRpt_Serial14 = SerializationUtils
-                    .deserialize(serialize_skurptSerial14);
+            HashMap<String, Map<String, Object>> SkuRpt_Serial14 =
+                SerializationUtils.deserialize(serialize_skurptSerial14);
             byte[] serialize_skurptSerial7 = cache.getByteValue("mkt_skurptSerial7"); // SKU报告系列7日
-            HashMap<String, Map<String, Object>> SkuRpt_Serial7 = SerializationUtils
-                    .deserialize(serialize_skurptSerial7);
+            HashMap<String, Map<String, Object>> SkuRpt_Serial7 =
+                SerializationUtils.deserialize(serialize_skurptSerial7);
 
             byte[] serialize_skurpt3Serial = cache.getByteValue("mkt_skurpt3Serial"); // SKU报告系列近3日
-            HashMap<String, Map<String, Map<String, Object>>> SkuRpt3Serial = SerializationUtils
-                    .deserialize(serialize_skurpt3Serial);
+            HashMap<String, Map<String, Map<String, Object>>> SkuRpt3Serial =
+                SerializationUtils.deserialize(serialize_skurpt3Serial);
             byte[] serialize_skurptdetailSerial = cache.getByteValue("mkt_skurptDetailSerial"); // SKU报告系列1日
-            HashMap<String, BigDecimal> SkuRptDetailSerial = SerializationUtils
-                    .deserialize(serialize_skurptdetailSerial);
+            HashMap<String, BigDecimal> SkuRptDetailSerial =
+                SerializationUtils.deserialize(serialize_skurptdetailSerial);
             byte[] serialize_SalSummarySerial = cache.getByteValue("mkt_salsummarySerial"); // 预测汇总表
-            HashMap<String, Map<String, Object>> SalSummaryMap = SerializationUtils
-                    .deserialize(serialize_SalSummarySerial);
+            HashMap<String, Map<String, Object>> SalSummaryMap =
+                SerializationUtils.deserialize(serialize_SalSummarySerial);
             byte[] serialize_skurpt3avg = cache.getByteValue("mkt_skurpt3avg"); // SKU报表三日平均
             HashMap<String, Map<String, Object>> SkuRpt3Avg = SerializationUtils.deserialize(serialize_skurpt3avg);
             byte[] serialize_BaseStItem = cache.getByteValue("mkt_basestitem"); // 国别货号滞销类型
@@ -232,7 +236,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
                 QFilter filter_date_from = new QFilter("aos_date", ">=", date_from_str);
                 QFilter filter_date_to = new QFilter("aos_date", "<", date_to_str);
                 QFilter filter_org = new QFilter("aos_orgid", "=", p_org_id);
-                QFilter[] filters = new QFilter[]{filter_date_from, filter_date_to, filter_org};
+                QFilter[] filters = new QFilter[] {filter_date_from, filter_date_to, filter_org};
                 long fid = QueryServiceHelper.queryOne("aos_mkt_popular_ppc", "id", filters).getLong("id");
                 DynamicObject aos_mkt_pop_ppclast = BusinessDataServiceHelper.loadSingle(fid, "aos_mkt_popular_ppc");
                 aos_mkt_popular_ppc.set("aos_orgid", p_org_id);
@@ -247,17 +251,17 @@ public class aos_mkt_popppc_init extends AbstractTask {
                 aos_mkt_popular_ppc.set("aos_date", Today);
                 Object platform_id = FndGlobal.get_import_id("AMAZON", "aos_sal_channel");
                 aos_mkt_popular_ppc.set("aos_channel", platform_id);
-                DynamicObjectCollection aos_entryentityS = aos_mkt_popular_ppc
-                        .getDynamicObjectCollection("aos_entryentity");
-                DynamicObjectCollection aos_entryentityLastS = aos_mkt_pop_ppclast
-                        .getDynamicObjectCollection("aos_entryentity");
+                DynamicObjectCollection aos_entryentityS =
+                    aos_mkt_popular_ppc.getDynamicObjectCollection("aos_entryentity");
+                DynamicObjectCollection aos_entryentityLastS =
+                    aos_mkt_pop_ppclast.getDynamicObjectCollection("aos_entryentity");
                 aos_entryentityS.clear();
                 for (DynamicObject aosEntryentityLast : aos_entryentityLastS) {
                     DynamicObject dyn = aos_entryentityS.addNew();
                     StringComUtils.setValue(aosEntryentityLast, dyn);
                 }
-                SaveServiceHelper.saveOperate("aos_mkt_popular_ppc", new DynamicObject[]{aos_mkt_popular_ppc},
-                        OperateOption.create());
+                SaveServiceHelper.saveOperate("aos_mkt_popular_ppc", new DynamicObject[] {aos_mkt_popular_ppc},
+                    OperateOption.create());
                 return;
             }
             // 获取春夏品 秋冬品开始结束日期 营销日期参数表
@@ -282,29 +286,29 @@ public class aos_mkt_popppc_init extends AbstractTask {
             Map<String, Integer> ProductNo_Map = new HashMap<>();
             Map<String, BigDecimal> ProductNoBid_Map = new HashMap<>();
             // 获取营销国别参数
-            BigDecimal PopOrgAMSaleRate = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "AMSALE_RATE").get("aos_value");// AM营收占比
-            BigDecimal PopOrgAMAffRate = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "AMAFF_RATE").get("aos_value");// AM付费营收占比
-            BigDecimal PopOrgRoist = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "ROIST").get("aos_value");// 国别标准ROI
-            BigDecimal WORST = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "WORST").get("aos_value");// 很差
-            BigDecimal WORRY = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "WORRY").get("aos_value");// 差
-            BigDecimal STANDARD = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "STANDARD").get("aos_value");// 标准
-            BigDecimal WELL = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "WELL").get("aos_value");// 好
-            BigDecimal EXCELLENT = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "EXCELLENT").get("aos_value");// 优
-            BigDecimal PopOrgFirstBid = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "FIRSTBID").get("aos_value");// 国别首次出价均价
-            BigDecimal HIGH1 = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "HIGH1").get("aos_value");// 最高标准1(定价<200)
-            BigDecimal HIGH2 = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "HIGH2").get("aos_value");// 最高标准2(200<=定价<500)
-            BigDecimal HIGH3 = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "HIGH3").get("aos_value");// 最高标准3(定价>=500)
-            BigDecimal EXPOSURE = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "EXPOSURE").get("aos_value");// 国别曝光标准
-            BigDecimal RoiStandard = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "ROISTANDARD").get("aos_value");// 转化率国别标准
-            BigDecimal StandardFix = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "STANDARDFIX").get("aos_value");// 国别标准均价
-            BigDecimal QtyStandard = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "QTYSTANDARD").get("aos_value");// 国别海外库存标准
-            BigDecimal LOWESTBID = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "LOWESTBID").get("aos_value");
+            BigDecimal PopOrgAMSaleRate = (BigDecimal)PopOrgInfo.get(p_org_id + "~" + "AMSALE_RATE").get("aos_value");// AM营收占比
+            BigDecimal PopOrgAMAffRate = (BigDecimal)PopOrgInfo.get(p_org_id + "~" + "AMAFF_RATE").get("aos_value");// AM付费营收占比
+            BigDecimal PopOrgRoist = (BigDecimal)PopOrgInfo.get(p_org_id + "~" + "ROIST").get("aos_value");// 国别标准ROI
+            BigDecimal WORST = (BigDecimal)PopOrgInfo.get(p_org_id + "~" + "WORST").get("aos_value");// 很差
+            BigDecimal WORRY = (BigDecimal)PopOrgInfo.get(p_org_id + "~" + "WORRY").get("aos_value");// 差
+            BigDecimal STANDARD = (BigDecimal)PopOrgInfo.get(p_org_id + "~" + "STANDARD").get("aos_value");// 标准
+            BigDecimal WELL = (BigDecimal)PopOrgInfo.get(p_org_id + "~" + "WELL").get("aos_value");// 好
+            BigDecimal EXCELLENT = (BigDecimal)PopOrgInfo.get(p_org_id + "~" + "EXCELLENT").get("aos_value");// 优
+            BigDecimal PopOrgFirstBid = (BigDecimal)PopOrgInfo.get(p_org_id + "~" + "FIRSTBID").get("aos_value");// 国别首次出价均价
+            BigDecimal HIGH1 = (BigDecimal)PopOrgInfo.get(p_org_id + "~" + "HIGH1").get("aos_value");// 最高标准1(定价<200)
+            BigDecimal HIGH2 = (BigDecimal)PopOrgInfo.get(p_org_id + "~" + "HIGH2").get("aos_value");// 最高标准2(200<=定价<500)
+            BigDecimal HIGH3 = (BigDecimal)PopOrgInfo.get(p_org_id + "~" + "HIGH3").get("aos_value");// 最高标准3(定价>=500)
+            BigDecimal EXPOSURE = (BigDecimal)PopOrgInfo.get(p_org_id + "~" + "EXPOSURE").get("aos_value");// 国别曝光标准
+            BigDecimal RoiStandard = (BigDecimal)PopOrgInfo.get(p_org_id + "~" + "ROISTANDARD").get("aos_value");// 转化率国别标准
+            BigDecimal StandardFix = (BigDecimal)PopOrgInfo.get(p_org_id + "~" + "STANDARDFIX").get("aos_value");// 国别标准均价
+            BigDecimal QtyStandard = (BigDecimal)PopOrgInfo.get(p_org_id + "~" + "QTYSTANDARD").get("aos_value");// 国别海外库存标准
+            BigDecimal LOWESTBID = (BigDecimal)PopOrgInfo.get(p_org_id + "~" + "LOWESTBID").get("aos_value");
             // 国别转化率差标准
             BigDecimal exRateLowSt = getExRateLowSt(p_ou_code, "差");
             BigDecimal exRateWellSt = getExRateLowSt(p_ou_code, "优");
             BigDecimal exRateGoodSt = getExRateLowSt(p_ou_code, "好");
 
-            BigDecimal lowClick = (BigDecimal) PopOrgInfo.get(p_org_id + "~" + "国别低点击标准(7天)").get("aos_value");
+            BigDecimal lowClick = (BigDecimal)PopOrgInfo.get(p_org_id + "~" + "国别低点击标准(7天)").get("aos_value");
 
             Map<String, BigDecimal> orgCpcMap = queryOrgCpc(p_org_id.toString());
             HashMap<String, Object> Act = GenerateAct();
@@ -319,32 +323,32 @@ public class aos_mkt_popppc_init extends AbstractTask {
             Map<String, Integer> orgCateClickMap = genOrgCateClick(p_org_id);// 国别大类点击标准
 
             // 获取昨天的所有差ROI剔除数据
-            DynamicObjectCollection list = QueryServiceHelper.query("aos_mkt_popular_ppc",
-                    "aos_entryentity.aos_itemnumer aos_itemnumer",
-                    new QFilter[]{new QFilter("aos_date", QCP.like, Yester + "%"),
-                            new QFilter("aos_orgid.number", QCP.equals, p_ou_code),
-                            new QFilter("aos_entryentity.aos_roiflag", QCP.equals, true),});
+            DynamicObjectCollection list =
+                QueryServiceHelper.query("aos_mkt_popular_ppc", "aos_entryentity.aos_itemnumer aos_itemnumer",
+                    new QFilter[] {new QFilter("aos_date", QCP.like, Yester + "%"),
+                        new QFilter("aos_orgid.number", QCP.equals, p_ou_code),
+                        new QFilter("aos_entryentity.aos_roiflag", QCP.equals, true),});
             Set<String> roiItemSet = new HashSet<>();
             for (DynamicObject obj : list) {
                 roiItemSet.add(obj.getString("aos_itemnumer"));
             }
             // 获取昨天的所有定价毛利剔除数据
-            DynamicObjectCollection list_pro = QueryServiceHelper.query("aos_mkt_popular_ppc",
-                    "aos_entryentity.aos_itemnumer aos_itemnumer",
-                    new QFilter[]{new QFilter("aos_date", QCP.like, Yester + "%"),
-                            new QFilter("aos_orgid.number", QCP.equals, p_ou_code),
-                            new QFilter("aos_entryentity.aos_groupstatus", QCP.equals, "PRO"),});
+            DynamicObjectCollection list_pro =
+                QueryServiceHelper.query("aos_mkt_popular_ppc", "aos_entryentity.aos_itemnumer aos_itemnumer",
+                    new QFilter[] {new QFilter("aos_date", QCP.like, Yester + "%"),
+                        new QFilter("aos_orgid.number", QCP.equals, p_ou_code),
+                        new QFilter("aos_entryentity.aos_groupstatus", QCP.equals, "PRO"),});
             Set<String> proItemSet = new HashSet<>();
             for (DynamicObject obj : list_pro) {
                 proItemSet.add(obj.getString("aos_itemnumer"));
             }
 
             // 获取昨天的所有可用组
-            DynamicObjectCollection lastAva = QueryServiceHelper.query("aos_mkt_popular_ppc",
-                    "aos_entryentity.aos_itemnumer aos_itemnumer",
-                    new QFilter[]{new QFilter("aos_date", QCP.like, Yester + "%"),
-                            new QFilter("aos_orgid.number", QCP.equals, p_ou_code),
-                            new QFilter("aos_entryentity.aos_groupstatus", QCP.equals, "AVAILABLE"),});
+            DynamicObjectCollection lastAva =
+                QueryServiceHelper.query("aos_mkt_popular_ppc", "aos_entryentity.aos_itemnumer aos_itemnumer",
+                    new QFilter[] {new QFilter("aos_date", QCP.like, Yester + "%"),
+                        new QFilter("aos_orgid.number", QCP.equals, p_ou_code),
+                        new QFilter("aos_entryentity.aos_groupstatus", QCP.equals, "AVAILABLE"),});
             Set<String> lastAvaSet = new HashSet<>();
             for (DynamicObject obj : lastAva) {
                 lastAvaSet.add(obj.getString("aos_itemnumer"));
@@ -353,8 +357,8 @@ public class aos_mkt_popppc_init extends AbstractTask {
             // 最近一次上线日期
             Map<String, Date> onlineDate = new HashMap<>();
             DynamicObjectCollection dyns = QueryServiceHelper.query("aos_mkt_sp_date",
-                    "aos_entryentity.aos_itemstr aos_itemstr," + "aos_entryentity.aos_online aos_online",
-                    new QFilter[]{new QFilter("aos_orgid", QCP.equals, p_org_id)});
+                "aos_entryentity.aos_itemstr aos_itemstr," + "aos_entryentity.aos_online aos_online",
+                new QFilter[] {new QFilter("aos_orgid", QCP.equals, p_org_id)});
             for (DynamicObject d : dyns) {
                 String aos_itemstr = d.getString("aos_itemstr");
                 Date aos_online = d.getDate("aos_online");
@@ -363,42 +367,41 @@ public class aos_mkt_popppc_init extends AbstractTask {
 
             // 获取项鑫报告数据
             DynamicObjectCollection list_rpt = QueryServiceHelper.query("aos_mkt_tmp", "aos_group",
-                    new QFilter[]{new QFilter("aos_orgid.number", QCP.equals, p_ou_code)});
+                new QFilter[] {new QFilter("aos_orgid.number", QCP.equals, p_ou_code)});
             Set<String> rptSet = new HashSet<>();
             for (DynamicObject obj : list_rpt) {
                 rptSet.add(obj.getString("aos_group"));
             }
             // 营销出价调整幅度参数表
             String SelectColumn = "aos_roi," + "aos_roitype," + "aos_exposure," + "aos_exposurerate," + "aos_avadays,"
-                    + "aos_avadaysvalue," + "aos_costrate," + "aos_costratevalue," + "aos_rate,aos_level,"
-                    + "aos_roi3,aos_roitype3";
+                + "aos_avadaysvalue," + "aos_costrate," + "aos_costratevalue," + "aos_rate,aos_level,"
+                + "aos_roi3,aos_roitype3";
             DataSet aos_mkt_bsadjrateS = QueryServiceHelper.queryDataSet("aos_mkt_popppc_init." + p_ou_code,
-                    "aos_mkt_bsadjrate", SelectColumn, null, "aos_level");
+                "aos_mkt_bsadjrate", SelectColumn, null, "aos_level");
             // 营销预算调整系数表 到国别维度
             QFilter filter_org = new QFilter("aos_orgid", "=", p_org_id);
-            QFilter[] filters_adjpara = new QFilter[]{filter_org};
+            QFilter[] filters_adjpara = new QFilter[] {filter_org};
             SelectColumn = "aos_ratefrom,aos_rateto,aos_roi,aos_adjratio";
             DataSet aos_mkt_bsadjparaS = QueryServiceHelper.queryDataSet("aos_mkt_popppc_init." + p_ou_code,
-                    "aos_mkt_bsadjpara", SelectColumn, filters_adjpara, null);
+                "aos_mkt_bsadjpara", SelectColumn, filters_adjpara, null);
             // 每日价格
             HashMap<String, String> mkt_productinfo = generateProductInfo();
             // 循环国别物料
             QFilter filter_ou = new QFilter("aos_contryentry.aos_nationality.number", "=", p_ou_code);
             QFilter filter_type = new QFilter("aos_protype", "=", "N");
-            QFilter[] filters = new QFilter[]{filter_ou, filter_type};
+            QFilter[] filters = new QFilter[] {filter_ou, filter_type};
             String SelectField = "id,aos_productno," + "number," + "aos_cn_name,"
-                    + "aos_contryentry.aos_nationality.id aos_orgid,"
-                    + "aos_contryentry.aos_nationality.number aos_orgnumber,"
-                    + "aos_contryentry.aos_seasonseting.number aos_seasonseting,"
-                    + "aos_contryentry.aos_seasonseting.name aos_season,"
-                    + "aos_contryentry.aos_seasonseting.id aos_seasonid,"
-                    + "aos_contryentry.aos_contryentrystatus aos_contryentrystatus,"
-                    + "aos_contryentry.aos_festivalseting.number aos_festivalseting,"
-                    + "aos_contryentry.aos_firstindate aos_firstindate,"
-                    + "aos_contryentry.aos_is_saleout aos_is_saleout," + "aos_isrepliceold," + "aos_oldnumber,"
-                    + "aos_contryentry.aos_onshelfreplace aos_onshelfreplace";
-            DynamicObjectCollection bd_materialS = QueryServiceHelper.query("bd_material", SelectField, filters,
-                    "aos_productno");
+                + "aos_contryentry.aos_nationality.id aos_orgid,"
+                + "aos_contryentry.aos_nationality.number aos_orgnumber,"
+                + "aos_contryentry.aos_seasonseting.number aos_seasonseting,"
+                + "aos_contryentry.aos_seasonseting.name aos_season,"
+                + "aos_contryentry.aos_seasonseting.id aos_seasonid,"
+                + "aos_contryentry.aos_contryentrystatus aos_contryentrystatus,"
+                + "aos_contryentry.aos_festivalseting.number aos_festivalseting,"
+                + "aos_contryentry.aos_firstindate aos_firstindate," + "aos_contryentry.aos_is_saleout aos_is_saleout,"
+                + "aos_isrepliceold," + "aos_oldnumber," + "aos_contryentry.aos_onshelfreplace aos_onshelfreplace";
+            DynamicObjectCollection bd_materialS =
+                QueryServiceHelper.query("bd_material", SelectField, filters, "aos_productno");
             DynamicObject aos_mkt_popular_ppc = BusinessDataServiceHelper.newDynamicObject("aos_mkt_popular_ppc");
             aos_mkt_popular_ppc.set("aos_orgid", p_org_id);
             aos_mkt_popular_ppc.set("billstatus", "A");
@@ -409,8 +412,8 @@ public class aos_mkt_popppc_init extends AbstractTask {
             aos_mkt_popular_ppc.set("aos_date", Today);
             Object platform_id = FndGlobal.get_import_id("AMAZON", "aos_sal_channel");
             aos_mkt_popular_ppc.set("aos_channel", platform_id);
-            DynamicObjectCollection aos_entryentityS = aos_mkt_popular_ppc
-                    .getDynamicObjectCollection("aos_entryentity");
+            DynamicObjectCollection aos_entryentityS =
+                aos_mkt_popular_ppc.getDynamicObjectCollection("aos_entryentity");
             Set<String> eliminateItemSet = getEliminateItem(p_org_id.toString());
             // 初始化历史记录
             FndLog log = FndLog.init("MKT_PPC数据源初始化", p_ou_code.toString() + year + month + day);
@@ -423,8 +426,9 @@ public class aos_mkt_popppc_init extends AbstractTask {
             for (Map.Entry<String, List<String>> entry : map_wareHoseDateToItem.entrySet()) {
                 // 先全设置物料为断货
                 for (String itemID : entry.getValue()) {
-                    if (!map_itemToOutage.containsKey(itemID))
+                    if (!map_itemToOutage.containsKey(itemID)) {
                         map_itemToOutage.put(itemID, false);
+                    }
                 }
                 // 判断是否存在不断货
                 Judge30DaysStock(p_org_id, entry.getKey(), entry.getValue(), map_itemToOutage);
@@ -450,10 +454,9 @@ public class aos_mkt_popppc_init extends AbstractTask {
                     aos_productno = rptPro.get(aos_itemnumer);
                 }
 
-
-                int aos_shp_day = (int) aos_shpday_map.get(orgid_str);// 备货天数
-                int aos_freight_day = (int) aos_clearday_map.get(orgid_str);// 海运天数
-                int aos_clear_day = (int) aos_freightday_map.get(orgid_str);// 清关天数
+                int aos_shp_day = (int)aos_shpday_map.get(orgid_str);// 备货天数
+                int aos_freight_day = (int)aos_clearday_map.get(orgid_str);// 海运天数
+                int aos_clear_day = (int)aos_freightday_map.get(orgid_str);// 清关天数
                 Boolean aos_is_saleout = bd_material.getBoolean("aos_is_saleout");
 
                 if (eliminateItemSet.contains(String.valueOf(item_id))) {
@@ -467,8 +470,9 @@ public class aos_mkt_popppc_init extends AbstractTask {
                 }
 
                 String BseStItem = null;
-                if (BaseStItem.get(org_id + "~" + item_id) != null)
+                if (BaseStItem.get(org_id + "~" + item_id) != null) {
                     BseStItem = String.valueOf(BaseStItem.get(org_id + "~" + item_id));
+                }
                 // 获取AMAZON店铺货号 如果没有则跳过
 
                 // 获取老货号
@@ -477,10 +481,11 @@ public class aos_mkt_popppc_init extends AbstractTask {
                 Boolean aosOnShelfReplace = bd_material.getBoolean("aos_onshelfreplace");
 
                 String aos_shopsku;
-                if (aosIsRepliceOld && FndGlobal.IsNotNull(aosOldNumber) && aosOnShelfReplace)
+                if (aosIsRepliceOld && FndGlobal.IsNotNull(aosOldNumber) && aosOnShelfReplace) {
                     aos_shopsku = mkt_productinfo.get(p_ou_code + "~" + aosOldNumber);
-                else
+                } else {
                     aos_shopsku = mkt_productinfo.get(p_ou_code + "~" + aos_itemnumer);
+                }
 
                 if (FndGlobal.IsNull(aos_shopsku)) {
                     log.add(aos_itemnumer + "AMAZON店铺货号不存在");
@@ -491,12 +496,14 @@ public class aos_mkt_popppc_init extends AbstractTask {
                 String aos_cn_name = bd_material.getString("aos_cn_name");
                 String aos_season = bd_material.getString("aos_season");
                 Object aos_seasonid = bd_material.get("aos_seasonid");
-                if (aos_seasonpro == null)
+                if (aos_seasonpro == null) {
                     aos_seasonpro = "";
+                }
                 String aos_itemstatus = bd_material.getString("aos_contryentrystatus");
                 String aos_festivalseting = bd_material.getString("aos_festivalseting");
-                if (aos_festivalseting == null)
+                if (aos_festivalseting == null) {
                     aos_festivalseting = "";
+                }
                 if (aos_seasonid == null) {
                     log.add(aos_itemnumer + "季节属性不存在");
                     continue;
@@ -504,8 +511,9 @@ public class aos_mkt_popppc_init extends AbstractTask {
 
                 Object aos_age = item_maxage_map.getOrDefault(org_id + "~" + item_id, 0);
                 Object item_overseaqty = item_overseaqty_map.getOrDefault(org_id + "~" + item_id, 0);
-                if ("C".equals(aos_itemstatus) && (int) item_overseaqty == 0)
+                if ("C".equals(aos_itemstatus) && (int)item_overseaqty == 0) {
                     continue;// 终止状态且无海外库存 跳过
+                }
                 Object item_intransqty = item_intransqty_map.getOrDefault(org_id + "~" + item_id, 0);
 
                 // 产品号不存在 跳过
@@ -515,8 +523,9 @@ public class aos_mkt_popppc_init extends AbstractTask {
                 }
 
                 int auto = 0;
-                if (ProductNo_Map.get(aos_productno + "-AUTO") != null)
+                if (ProductNo_Map.get(aos_productno + "-AUTO") != null) {
                     auto = ProductNo_Map.get(aos_productno + "-AUTO");
+                }
                 ProductNo_Map.put(aos_productno + "-AUTO", auto);
 
                 // =====是否新系列新组判断=====
@@ -524,14 +533,12 @@ public class aos_mkt_popppc_init extends AbstractTask {
                 Map<String, Object> PPCInfoSerial_Map = PPCInfoSerial.get(org_id + "~" + aos_productno + "-AUTO");
                 Object aos_makedate = null;
                 Object aos_groupdate = null;
-                if (PPCInfo_Map != null)
-                    aos_groupdate = PPCInfo_Map.get("aos_groupdate");
-                if (PPCInfoSerial_Map != null)
-                    aos_makedate = PPCInfoSerial_Map.get("aos_makedate");
-                if (aos_makedate == null)
-                    aos_makedate = Today;// 新系列
-                if (aos_groupdate == null)
-                    aos_groupdate = Today;// 新组
+                if (PPCInfo_Map != null) {
+                    aos_groupdate = PPCInfo_Map.getOrDefault("aos_groupdate", Today);
+                }
+                if (PPCInfoSerial_Map != null) {
+                    aos_makedate = PPCInfoSerial_Map.getOrDefault("aos_makedate", Today);
+                }
                 // =====结束是否新系列新组判断=====
                 String itemCategoryName = CommonDataSom.getItemCategoryName(String.valueOf(item_id));
                 String aos_category1 = "";
@@ -570,33 +577,32 @@ public class aos_mkt_popppc_init extends AbstractTask {
                 BigDecimal aos_clicks14Days = BigDecimal.ZERO;// 14天点击
                 int aos_online = 0;
 
-                if (SkuRptMap14 != null
-                        && ((BigDecimal) SkuRptMap14.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0) {
-                    Roi14Days = ((BigDecimal) SkuRptMap14.get("aos_total_sales"))
-                            .divide((BigDecimal) SkuRptMap14.get("aos_spend"), 2, RoundingMode.HALF_UP);
-                    aos_clicks14Days = (BigDecimal) SkuRptMap14.get("aos_clicks");
-                    aos_online = (int) SkuRptMap14.get("aos_online");
+                if (SkuRptMap14 != null && ((BigDecimal)SkuRptMap14.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0) {
+                    Roi14Days = ((BigDecimal)SkuRptMap14.get("aos_total_sales"))
+                        .divide((BigDecimal)SkuRptMap14.get("aos_spend"), 2, RoundingMode.HALF_UP);
+                    aos_clicks14Days = (BigDecimal)SkuRptMap14.get("aos_clicks");
+                    aos_online = (int)SkuRptMap14.get("aos_online");
                 }
 
                 Map<String, Object> SkuRptDetailMap = SkuRptDetail.get(p_org_id + "~" + item_id);// Sku报告1日数据
                 if (!Cux_Common_Utl.IsNull(SkuRptDetailMap)) {
-                    LastSpend = (BigDecimal) SkuRptDetailMap.get("aos_spend");
+                    LastSpend = (BigDecimal)SkuRptDetailMap.get("aos_spend");
                 }
 
                 // =====开始定价毛利剔除判断=====
                 Object FixValue = DailyPrice.getOrDefault(org_id + "~" + item_id, BigDecimal.ZERO);
                 BigDecimal inventoryCost = CostMap.getOrDefault(org_id + "~" + item_id, BigDecimal.ZERO);
                 BigDecimal expressFee = ShipFee.getOrDefault(org_id + "~" + item_id, BigDecimal.ZERO);
-                BigDecimal Profitrate = SalUtil.calProfitrate((BigDecimal) FixValue, aos_vat_amount, aos_am_platform,
-                        inventoryCost, expressFee);
+                BigDecimal Profitrate = SalUtil.calProfitrate((BigDecimal)FixValue, aos_vat_amount, aos_am_platform,
+                    inventoryCost, expressFee);
 
                 log.add(aos_itemnumer + " FixValue =" + FixValue + "\n" + " inventoryCost =" + inventoryCost + "\n"
-                        + " expressFee =" + expressFee + "\n" + " aos_vat_amount =" + aos_vat_amount + "\n"
-                        + " aos_am_platform =" + aos_am_platform + "\n");
+                    + " expressFee =" + expressFee + "\n" + " aos_vat_amount =" + aos_vat_amount + "\n"
+                    + " aos_am_platform =" + aos_am_platform + "\n");
 
                 log.add(aos_itemnumer + "(" + FixValue + " / (1 + " + aos_vat_amount + ") - " + inventoryCost + " - "
-                        + FixValue + " / (1 +  " + aos_vat_amount + ") * " + aos_am_platform + " - " + expressFee
-                        + " / (1 + " + aos_vat_amount + "+)) / (" + FixValue + " / (1 + " + aos_vat_amount + "+))");
+                    + FixValue + " / (1 +  " + aos_vat_amount + ") * " + aos_am_platform + " - " + expressFee
+                    + " / (1 + " + aos_vat_amount + "+)) / (" + FixValue + " / (1 + " + aos_vat_amount + "+))");
 
                 // 上次出价
                 Object aos_lastbid = BigDecimal.ZERO;
@@ -609,10 +615,10 @@ public class aos_mkt_popppc_init extends AbstractTask {
                 Map<String, Object> SkuRptMap = SkuRpt.get(org_id + "~" + item_id);// Sku报告7日
                 BigDecimal Roi7Days = BigDecimal.ZERO;// 7天ROI
                 BigDecimal Spend7Days;// 7天ROI
-                if (SkuRptMap != null && ((BigDecimal) SkuRptMap.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0) {
-                    Spend7Days = (BigDecimal) SkuRptMap.get("aos_spend");
-                    Roi7Days = ((BigDecimal) SkuRptMap.get("aos_total_sales")).divide(Spend7Days, 2,
-                            RoundingMode.HALF_UP);
+                if (SkuRptMap != null && ((BigDecimal)SkuRptMap.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0) {
+                    Spend7Days = (BigDecimal)SkuRptMap.get("aos_spend");
+                    Roi7Days =
+                        ((BigDecimal)SkuRptMap.get("aos_total_sales")).divide(Spend7Days, 2, RoundingMode.HALF_UP);
                 }
                 // 7日转化率
                 BigDecimal aos_rpt_roi = BigDecimal.ZERO;
@@ -620,18 +626,19 @@ public class aos_mkt_popppc_init extends AbstractTask {
 
                 Map<String, Object> SkuRptSerialMap = SkuRpt_Serial14.get(org_id + "~" + aos_productno + "-AUTO");// Sku报告
                 if (SkuRptSerialMap != null
-                        && ((BigDecimal) SkuRptSerialMap.get("aos_clicks")).compareTo(BigDecimal.ZERO) != 0) {
-                    aos_clicks = (BigDecimal) SkuRptSerialMap.get("aos_clicks");
-                    aos_rpt_roi = ((BigDecimal) SkuRptSerialMap.get("aos_total_order")).divide(aos_clicks, 3,
-                            RoundingMode.HALF_UP);
+                    && ((BigDecimal)SkuRptSerialMap.get("aos_clicks")).compareTo(BigDecimal.ZERO) != 0) {
+                    aos_clicks = (BigDecimal)SkuRptSerialMap.get("aos_clicks");
+                    aos_rpt_roi = ((BigDecimal)SkuRptSerialMap.get("aos_total_order")).divide(aos_clicks, 3,
+                        RoundingMode.HALF_UP);
                 }
 
                 Map<String, Object> DayMap = new HashMap<>();
                 int availableDays = InStockAvailableDays.calInstockSalDaysForDayMin(orgid_str, itemid_str, DayMap);// 可售天数
 
                 String saleAdd = "false";
-                if (map_itemToAdd.containsKey(aos_itemnumer))
+                if (map_itemToAdd.containsKey(aos_itemnumer)) {
                     saleAdd = map_itemToAdd.get(aos_itemnumer);
+                }
 
                 Object aos_activity = Act.get(p_org_id + "~" + item_id);
                 boolean actFlag = aos_activity != null && aos_activity.toString().contains("7DD");
@@ -674,15 +681,15 @@ public class aos_mkt_popppc_init extends AbstractTask {
                 if (olFlag) {
 
                     // 剔除海外库存
-                    if ((int) item_overseaqty <= QtyStandard.intValue() && !aos_itemstatus.equals("E")
-                            && !aos_itemstatus.equals("A") && (int) item_intransqty == 0) {
+                    if ((int)item_overseaqty <= QtyStandard.intValue() && !"E".equals(aos_itemstatus)
+                        && !"A".equals(aos_itemstatus) && (int)item_intransqty == 0) {
                         log.add(aos_itemnumer + "海外库存剔除 国别库存标准 =" + item_overseaqty + "<=" + QtyStandard);
                         log.add(aos_itemnumer + "海外库存剔除 在途 =" + item_intransqty);
                         InsertData(aos_entryentityS, insert_map, "LOWQTY");
                         continue;
                     }
                     // 低库存剔除
-                    if ((int) item_overseaqty < SafeQty) {
+                    if ((int)item_overseaqty < SafeQty) {
                         log.add(aos_itemnumer + "低库存剔除 海外库存小于安全库存 =" + item_overseaqty + "<" + SafeQty);
                         InsertData(aos_entryentityS, insert_map, "LOWQTY");
                         continue;
@@ -696,34 +703,33 @@ public class aos_mkt_popppc_init extends AbstractTask {
                     // 判断是否是必推货号
                     boolean mustFlag = !mustSet.contains(itemid_str);
                     if (mustFlag) {
-                        if ((int) item_overseaqty < 10
-                                && ("其它节日装饰".equals(aos_category2) || "圣诞装饰".equals(aos_category2))) {
+                        if ((int)item_overseaqty < 10
+                            && ("其它节日装饰".equals(aos_category2) || "圣诞装饰".equals(aos_category2))) {
                             log.add(aos_itemnumer + "节日品 低库存小于10剔除  =" + item_overseaqty);
                             InsertData(aos_entryentityS, insert_map, "LOWQTY");
                             continue;
                         }
                         // 其它节日装饰 中类 万圣 过季品剔除
-//						if ("其它节日装饰".equals(aos_category2)) {
-//							log.add(aos_itemnumer + "其他节日装饰 过季品剔除");
-//							InsertData(aos_entryentityS, insert_map, "SEASON", roiMap);
-//							continue;
-//						}
+                        // if ("其它节日装饰".equals(aos_category2)) {
+                        // log.add(aos_itemnumer + "其他节日装饰 过季品剔除");
+                        // InsertData(aos_entryentityS, insert_map, "SEASON", roiMap);
+                        // continue;
+                        // }
 
-//						if ("圣诞装饰".equals(aos_category2)) {
-//							log.add(aos_itemnumer + "圣诞装饰 过季品剔除");
-//							InsertData(aos_entryentityS, insert_map, "SEASON", roiMap);
-//							continue;
-//						}
+                        // if ("圣诞装饰".equals(aos_category2)) {
+                        // log.add(aos_itemnumer + "圣诞装饰 过季品剔除");
+                        // InsertData(aos_entryentityS, insert_map, "SEASON", roiMap);
+                        // continue;
+                        // }
 
                         // 非节日品剔除预断货 节日品节日2天内剔除 圣诞装饰 这两个中类不做预断货剔除 销量为3日均与7日均的最小值
-                        if ((aos_festivalseting.equals("") || aos_festivalseting.equals("null"))
-                                && !"圣诞装饰".equals(aos_category2) && !"其它节日装饰".equals(aos_category2)) {
+                        if (FndGlobal.IsNotNull(aos_festivalseting) && !"圣诞装饰".equals(aos_category2)
+                            && !"其它节日装饰".equals(aos_category2)) {
 
                             // 剔除过季品
-                            if ((aos_seasonpro != null)
-                                    && (aos_seasonpro.equals("SPRING") || aos_seasonpro.equals("SPRING_SUMMER")
-                                    || aos_seasonpro.equals("SUMMER"))
-                                    && (Today.before(SummerSpringStart) || Today.after(SummerSpringEnd))) {
+                            if (("SPRING".equals(aos_seasonpro) || "SPRING_SUMMER".equals(aos_seasonpro)
+                                || "SUMMER".equals(aos_seasonpro))
+                                && (Today.before(SummerSpringStart) || Today.after(SummerSpringEnd))) {
                                 log.add(aos_itemnumer + "过季品剔除");
                                 InsertData(aos_entryentityS, insert_map, "SEASON");
                                 continue;
@@ -735,27 +741,26 @@ public class aos_mkt_popppc_init extends AbstractTask {
                                 }
                             }
 
-                            if ((aos_seasonpro != null)
-                                    && (aos_seasonpro.equals("AUTUMN_WINTER") || aos_seasonpro.equals("WINTER"))
-                                    && (Today.before(AutumnWinterStart) || Today.after(AutumnWinterEnd))) {
+                            if (("AUTUMN_WINTER".equals(aos_seasonpro) || "WINTER".equals(aos_seasonpro))
+                                && (Today.before(AutumnWinterStart) || Today.after(AutumnWinterEnd))) {
                                 InsertData(aos_entryentityS, insert_map, "SEASON");
                                 log.add(aos_itemnumer + "过季品剔除");
                                 continue;
                             }
 
                             log.add(aos_itemnumer + "非节日品预断货参数数据" + "item_intransqty =" + item_intransqty
-                                    + "item_overseaqty =" + item_overseaqty + " 可售库存天数 =" + availableDays + " 3日销量 ="
-                                    + DayMap.get("for3day") + " 7日销量 =" + DayMap.get("for7day"));
+                                + "item_overseaqty =" + item_overseaqty + " 可售库存天数 =" + availableDays + " 3日销量 ="
+                                + DayMap.get("for3day") + " 7日销量 =" + DayMap.get("for7day"));
 
                             // 季节品 季节品 季末达标 CONTINUE; 剔除
                             boolean isSeasonEnd = false;
                             if ("SPRING".equals(aos_seasonpro) || "SPRING_SUMMER".equals(aos_seasonpro)
-                                    || "SUMMER".equals(aos_seasonpro)) {
+                                || "SUMMER".equals(aos_seasonpro)) {
                                 if (Today.after(summerSpringSeasonEnd)) {
                                     // 季末 判断是否达标
                                     isSeasonEnd = true;
-                                    float SeasonRate = MKTCom.Get_SeasonRate(org_id, item_id, aos_seasonpro,
-                                            item_overseaqty, month);
+                                    float SeasonRate =
+                                        MKTCom.Get_SeasonRate(org_id, item_id, aos_seasonpro, item_overseaqty, month);
                                     if (!MKTCom.Is_SeasonRate(aos_seasonpro, month, SeasonRate)) {
                                         InsertData(aos_entryentityS, insert_map, "OFFSALE");
                                         continue;
@@ -767,8 +772,8 @@ public class aos_mkt_popppc_init extends AbstractTask {
                                 if (Today.after(autumnWinterSeasonEnd)) {
                                     isSeasonEnd = true;
                                     // 季末 判断是否达标
-                                    float SeasonRate = MKTCom.Get_SeasonRate(org_id, item_id, aos_seasonpro,
-                                            item_overseaqty, month);
+                                    float SeasonRate =
+                                        MKTCom.Get_SeasonRate(org_id, item_id, aos_seasonpro, item_overseaqty, month);
                                     if (!MKTCom.Is_SeasonRate(aos_seasonpro, month, SeasonRate)) {
                                         InsertData(aos_entryentityS, insert_map, "OFFSALE");
                                         continue;
@@ -777,21 +782,21 @@ public class aos_mkt_popppc_init extends AbstractTask {
                             }
                             // (海外在库+在途数量)/7日均销量)<30 或 满足销售预断货逻辑 则为营销预断货逻辑 且 不能为季节品季末 且可售天数小于45
                             int itemavadays = map_itemavadays.getOrDefault(p_ou_code + "~" + aos_itemnumer, 0);
-                            if (((availableDays < 30) || ((MKTCom.Is_PreSaleOut(org_id, item_id, (int) item_intransqty,
-                                    aos_shp_day, aos_freight_day, aos_clear_day, availableDays)) && itemavadays < 45))
-                                    && !isSeasonEnd) {
+                            if (((availableDays < 30) || ((MKTCom.Is_PreSaleOut(org_id, item_id, (int)item_intransqty,
+                                aos_shp_day, aos_freight_day, aos_clear_day, availableDays)) && itemavadays < 45))
+                                && !isSeasonEnd) {
                                 InsertData(aos_entryentityS, insert_map, "OFFSALE");
                                 continue;
                             }
                         } else {
-                            if ((aos_festivalseting.equals("HALLOWEEN") || "其它节日装饰".equals(aos_category2))
-                                    && (!(Today.after(HalloweenStart) && Today.before(HalloweenEnd)))) {
+                            if (("HALLOWEEN".equals(aos_festivalseting) || "其它节日装饰".equals(aos_category2))
+                                && (!(Today.after(HalloweenStart) && Today.before(HalloweenEnd)))) {
                                 InsertData(aos_entryentityS, insert_map, "SEASON");
                                 log.add(aos_itemnumer + "节日品剔除");
                                 continue;
                             }
-                            if ((aos_festivalseting.equals("CHRISTMAS") || "圣诞装饰".equals(aos_category2))
-                                    && (!(Today.after(ChristmasStart) && Today.before(ChristmasEnd)))) {
+                            if (("CHRISTMAS".equals(aos_festivalseting) || "圣诞装饰".equals(aos_category2))
+                                && (!(Today.after(ChristmasStart) && Today.before(ChristmasEnd)))) {
                                 InsertData(aos_entryentityS, insert_map, "SEASON");
                                 log.add(aos_itemnumer + "节日品剔除");
                                 continue;
@@ -800,14 +805,14 @@ public class aos_mkt_popppc_init extends AbstractTask {
 
                         // 周24持续剔除
                         if ((week == Calendar.THURSDAY || week == Calendar.TUESDAY)
-                                && roiItemSet.contains(aos_itemnumer)) {
+                            && roiItemSet.contains(aos_itemnumer)) {
                             InsertData(aos_entryentityS, insert_map, "ROI");
                             log.add(aos_itemnumer + "差ROI自动剔除");
                             continue;
                         }
                         // 周24持续剔除
                         if ((week == Calendar.THURSDAY || week == Calendar.TUESDAY)
-                                && proItemSet.contains(aos_itemnumer)) {
+                            && proItemSet.contains(aos_itemnumer)) {
                             InsertData(aos_entryentityS, insert_map, "PRO");
                             log.add(aos_itemnumer + "定价低毛利自动剔除");
                             continue;
@@ -815,29 +820,30 @@ public class aos_mkt_popppc_init extends AbstractTask {
 
                         // =====各类标记=====
                         // 新品
-                        boolean NewFlag = aos_firstindate == null || ((aos_itemstatus.equals("E") || aos_itemstatus.equals("A"))
+                        boolean NewFlag =
+                            aos_firstindate == null || (("E".equals(aos_itemstatus) || "A".equals(aos_itemstatus))
                                 && (aos_firstindate != null) && MKTCom.GetBetweenDays(Today, aos_firstindate) <= 14);
                         // 春夏品
-                        boolean SpringSummerFlag = (aos_seasonpro != null)
-                                && (aos_seasonpro.equals("SPRING") || aos_seasonpro.equals("SPRING_SUMMER")
-                                || aos_seasonpro.equals("SUMMER")
-                                || aos_seasonpro.equals("SPRING-SUMMER-CONVENTIONAL"))
+                        boolean SpringSummerFlag =
+                            ("SPRING".equals(aos_seasonpro) || "SPRING_SUMMER".equals(aos_seasonpro)
+                                || "SUMMER".equals(aos_seasonpro) || "SPRING-SUMMER-CONVENTIONAL".equals(aos_seasonpro))
                                 && (Today.after(SummerSpringUnStart) && Today.before(SummerSpringUnEnd));
                         // 秋冬品
-                        boolean AutumnWinterFlag = (aos_seasonpro != null)
-                                && (aos_seasonpro.equals("AUTUMN_WINTER") || aos_seasonpro.equals("WINTER"))
+                        boolean AutumnWinterFlag =
+                            ("AUTUMN_WINTER".equals(aos_seasonpro) || "WINTER".equals(aos_seasonpro))
                                 && (Today.after(AutumnWinterUnStart) && Today.before(AutumnWinterUnEnd));
                         // 14日在线
-                        boolean Online14Days = aos_online >= 10 && MKTCom.GetBetweenDays(Today, (Date) aos_groupdate) > 14;
+                        boolean Online14Days =
+                            aos_online >= 10 && MKTCom.GetBetweenDays(Today, (Date)aos_groupdate) > 14;
                         // 7日在线
-                        boolean Online7Days = aos_online >= 5 && MKTCom.GetBetweenDays(Today, (Date) aos_groupdate) > 7;
+                        boolean Online7Days = aos_online >= 5 && MKTCom.GetBetweenDays(Today, (Date)aos_groupdate) > 7;
                         // =====开始ROI剔除判断=====
                         boolean ROIFlag = false;
                         String RoiType = null;
                         // a.14 日在线 14天ROI＜4；且7天<8(不包括新品、季节品)
                         if (Online14Days && Roi14Days.compareTo(BigDecimal.valueOf(4)) < 0
-                                && aos_clicks14Days.compareTo(BigDecimal.valueOf(clickStd)) > 0 && !NewFlag
-                                && !SpringSummerFlag && !AutumnWinterFlag) {
+                            && aos_clicks14Days.compareTo(BigDecimal.valueOf(clickStd)) > 0 && !NewFlag
+                            && !SpringSummerFlag && !AutumnWinterFlag) {
                             ROIFlag = true;
                             RoiType = "a";
                         }
@@ -848,7 +854,8 @@ public class aos_mkt_popppc_init extends AbstractTask {
                         }
                         // c.在线7天，不到14天，点击＞国别标准(US300,其它150)，ROI＜4(不包括季节品)
                         if (Online7Days && !Online14Days && Roi14Days.compareTo(BigDecimal.valueOf(4)) < 0
-                                && aos_clicks14Days.compareTo(BigDecimal.valueOf(clickStd)) > 0 && !SpringSummerFlag && !AutumnWinterFlag) {
+                            && aos_clicks14Days.compareTo(BigDecimal.valueOf(clickStd)) > 0 && !SpringSummerFlag
+                            && !AutumnWinterFlag) {
                             ROIFlag = true;
                             RoiType = "c";
                         }
@@ -866,7 +873,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
                         }
                         // e.秋冬品历史剔除 7月ROI> 8 加回
                         if (AutumnWinterFlag && roiItemSet.contains(aos_itemnumer)
-                                && Roi14Days.compareTo(BigDecimal.valueOf(8)) > 0) {
+                            && Roi14Days.compareTo(BigDecimal.valueOf(8)) > 0) {
                             ROIFlag = false;
                             RoiType = "e";
                         }
@@ -910,16 +917,16 @@ public class aos_mkt_popppc_init extends AbstractTask {
                         // 进行差ROI 与差转换不剔除判断
                         // ①季节品：季初，差ROI，差转化；
                         if ((("SPRING".equals(aos_seasonpro) || "SPRING_SUMMER".equals(aos_seasonpro)
-                                || "SUMMER".equals(aos_seasonpro))
-                                && (Today.after(SummerSpringStart) && Today.before(SummerSpringFirst)))
-                                || ((aos_seasonpro.equals("AUTUMN_WINTER") || aos_seasonpro.equals("WINTER"))
+                            || "SUMMER".equals(aos_seasonpro))
+                            && (Today.after(SummerSpringStart) && Today.before(SummerSpringFirst)))
+                            || (("AUTUMN_WINTER".equals(aos_seasonpro) || "WINTER".equals(aos_seasonpro))
                                 && (Today.after(AutumnWinterStart) && Today.before(AutumnWinterFirst)))) {
                             ROIFlag = false;
                             exFlag = false;// 差转换
                         }
                         // ②首次入库≤30天：差ROI、差转化；
                         if (FndGlobal.IsNotNull(aos_firstindate)
-                                && FndDate.GetBetweenDays(Today, aos_firstindate) <= 30) {
+                            && FndDate.GetBetweenDays(Today, aos_firstindate) <= 30) {
                             ROIFlag = false;
                             exFlag = false;// 差转换
                         }
@@ -956,15 +963,15 @@ public class aos_mkt_popppc_init extends AbstractTask {
 
                         // 差转化率剔除
                         if ((aos_rpt_roi.compareTo(exRateLowSt) <= 0 && Roi14Days.compareTo(BigDecimal.valueOf(8)) < 0
-                                && aos_clicks14Days.compareTo(BigDecimal.valueOf(clickStd)) > 0 && exFlag)
-                                && !"圣诞装饰".equals(aos_category2) && !"其它节日装饰".equals(aos_category2)) {
+                            && aos_clicks14Days.compareTo(BigDecimal.valueOf(clickStd)) > 0 && exFlag)
+                            && !"圣诞装饰".equals(aos_category2) && !"其它节日装饰".equals(aos_category2)) {
                             InsertData(aos_entryentityS, insert_map, "差转化率剔除");
                             log.add(aos_itemnumer + " 差转化率自动剔除");
                             continue;
                         }
 
                         // 低定价毛利剔除
-                        boolean ProFlag = !proItemSet.contains(aos_itemnumer) && Profitrate.compareTo(BigDecimal.valueOf(0.08)) < 0;
+                        /* boolean ProFlag = !proItemSet.contains(aos_itemnumer) && Profitrate.compareTo(BigDecimal.valueOf(0.08)) < 0;
                         // a.历史中未剔除 且定价毛利＜8%；；
                         // b.历史剔除 持续剔除 项鑫报告中不存在才处理
                         if (proItemSet.contains(aos_itemnumer) && !rptSet.contains(aos_itemnumer)) {
@@ -991,19 +998,19 @@ public class aos_mkt_popppc_init extends AbstractTask {
                         if (actFlag) {
                             ProFlag = false;
                         }
-
+                        
                         // k.周135 正常剔除 销售加回不剔除
                         if (week != Calendar.TUESDAY && week != Calendar.THURSDAY && "true".equals(saleAdd)) {
                             ProFlag = false;
                         }
-
+                        
                         // k.周24剔除135部分
                         if (week == Calendar.TUESDAY && week == Calendar.THURSDAY) {
                             ProFlag = false;
-                        }
+                        }*/
 
                         // 2023.08.07 不做低毛利剔除
-                        ProFlag = false;
+                        boolean ProFlag = false;
 
                         // 特殊广告不进低毛利剔除
                         if (ProFlag && !"true".equals(saleAdd)) {
@@ -1013,13 +1020,11 @@ public class aos_mkt_popppc_init extends AbstractTask {
                         }
                     } else {
                         // 必推货号 判断预断货
-                        if ((aos_festivalseting.equals("") || aos_festivalseting.equals("null"))
-                                && !"圣诞装饰".equals(aos_category2)) {
+                        if (FndGlobal.IsNotNull(aos_festivalseting) && !"圣诞装饰".equals(aos_category2)) {
                             // (海外在库+在途数量)/7日均销量)<30 或 满足销售预断货逻辑 则为营销预断货逻辑 且 不能为季节品季末 且可售天数小于45
                             int itemavadays = map_itemavadays.getOrDefault(p_ou_code + "~" + aos_itemnumer, 0);
-                            if (((availableDays < 30)
-                                    || ((MKTCom.Is_PreSaleOut(org_id, item_id, (int) item_intransqty, aos_shp_day,
-                                    aos_freight_day, aos_clear_day, availableDays)) && itemavadays < 45))) {
+                            if (((availableDays < 30) || ((MKTCom.Is_PreSaleOut(org_id, item_id, (int)item_intransqty,
+                                aos_shp_day, aos_freight_day, aos_clear_day, availableDays)) && itemavadays < 45))) {
                                 InsertData(aos_entryentityS, insert_map, "OFFSALE");
                                 continue;
                             }
@@ -1058,14 +1063,15 @@ public class aos_mkt_popppc_init extends AbstractTask {
                 aos_entryentity.set("aos_rpt_roi", aos_rpt_roi);
 
                 if (FndGlobal.IsNotNull(onlineDate.get(aos_itemnumer))
-                        && MKTCom.GetBetweenDays(Today, onlineDate.get(aos_itemnumer)) < 14)
+                    && MKTCom.GetBetweenDays(Today, onlineDate.get(aos_itemnumer)) < 14) {
                     aos_entryentity.set("aos_offline", "Y");
-                else
+                } else {
                     aos_entryentity.set("aos_offline", "N");
+                }
 
-                if (aos_activity != null)
+                if (aos_activity != null) {
                     aos_entryentity.set("aos_activity", aos_activity);
-
+                }
                 ProductNo_Map.put(aos_productno + "-AUTO", auto + 1);
             }
 
@@ -1073,35 +1079,38 @@ public class aos_mkt_popppc_init extends AbstractTask {
             Map<String, BigDecimal> NewSerial_Map = new HashMap<>();
             for (DynamicObject aos_entryentity : aos_entryentityS) {
                 // 新系列预算计算 = MAX(广告系列中SKU预测营收*AM营收占比*AM付费营收占比/国别标准ROI，2*广告系列中SKU个数)
-                long org_id = (long) p_org_id;
+                long org_id = (long)p_org_id;
                 long item_id = aos_entryentity.getLong("aos_itemid");
                 Map<String, Object> PPCInfo_Map = PPCInfo.get(org_id + "~" + item_id);
-                if (PPCInfo_Map != null)
+                if (PPCInfo_Map != null) {
                     continue; // 非新品 直接跳过 只需要合计新品
+                }
                 String aos_productno = aos_entryentity.getString("aos_productno");
                 Map<String, Object> Summary = SalSummary.get(org_id + "~" + item_id);
                 if (Summary != null) {
-                    BigDecimal aos_sales = ((BigDecimal) SalSummary.get(org_id + "~" + item_id).get("aos_sales"))
-                            .divide(BigDecimal.valueOf(30), 2, RoundingMode.HALF_UP);// 广告系列中SKU预测营收
+                    BigDecimal aos_sales = ((BigDecimal)SalSummary.get(org_id + "~" + item_id).get("aos_sales"))
+                        .divide(BigDecimal.valueOf(30), 2, RoundingMode.HALF_UP);// 广告系列中SKU预测营收
                     int aos_sche_qty = ProductNo_Map.get(aos_productno);// 广告系列中可用SKU个数
                     BigDecimal budget1 = aos_sales.multiply(PopOrgAMSaleRate).multiply(PopOrgAMAffRate)
-                            .divide(PopOrgRoist, 2, RoundingMode.HALF_UP);
+                        .divide(PopOrgRoist, 2, RoundingMode.HALF_UP);
                     BigDecimal budget2 = BigDecimal.valueOf(aos_sche_qty * 2);
                     BigDecimal NewBudget = max(budget1, budget2);
-                    if (NewSerial_Map.get(aos_productno + "-AUTO") != null)
+                    if (NewSerial_Map.get(aos_productno + "-AUTO") != null) {
                         NewSerial_Map.put(aos_productno + "-AUTO",
-                                NewBudget.add(NewSerial_Map.get(aos_productno + "-AUTO")));
-                    else
+                            NewBudget.add(NewSerial_Map.get(aos_productno + "-AUTO")));
+                    } else {
                         NewSerial_Map.put(aos_productno, NewBudget);
+                    }
                 }
             }
 
             // 循环计算 预算
             for (DynamicObject aos_entryentity : aos_entryentityS) {
                 String aos_groupstatus = aos_entryentity.getString("aos_groupstatus");
-                if (!aos_groupstatus.equals("AVAILABLE"))
+                if (!"AVAILABLE".equals(aos_groupstatus)) {
                     continue;// 剔除不计算出价与预算
-                long org_id = (long) p_org_id;
+                }
+                long org_id = (long)p_org_id;
                 long item_id = aos_entryentity.getLong("aos_itemid");
                 String aos_productno = aos_entryentity.getString("aos_productno");
                 String aos_itemnumer = aos_entryentity.getString("aos_itemnumer");
@@ -1114,15 +1123,15 @@ public class aos_mkt_popppc_init extends AbstractTask {
                 Map<String, Object> PPCInfoSerial_Map = PPCInfoSerial.get(org_id + "~" + aos_productno);
                 Object aos_makedate = null;
                 Object aos_groupdate = null;
-                if (PPCInfo_Map != null)
+                if (PPCInfo_Map != null) {
                     aos_groupdate = PPCInfo_Map.get("aos_groupdate");
-                if (PPCInfoSerial_Map != null)
-                    aos_makedate = PPCInfoSerial_Map.get("aos_makedate");
-                if (aos_makedate == null)
-                    aos_makedate = Today;// 新系列
+                }
                 if (aos_groupdate == null) {
                     aos_groupdate = Today;// 新组
                     IsNewGroupFlag = true;
+                }
+                if (PPCInfoSerial_Map != null) {
+                    aos_makedate = PPCInfoSerial_Map.getOrDefault("aos_makedate", Today);
                 }
 
                 /*
@@ -1143,16 +1152,16 @@ public class aos_mkt_popppc_init extends AbstractTask {
 
                 BigDecimal Roi7Days = BigDecimal.ZERO;// 7天ROI
                 BigDecimal aos_clicks = BigDecimal.ZERO;
-                if (SkuRptMap != null && ((BigDecimal) SkuRptMap.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0) {
-                    aos_clicks = (BigDecimal) SkuRptMap.get("aos_clicks");
-                    Roi7Days = ((BigDecimal) SkuRptMap.get("aos_total_sales"))
-                            .divide((BigDecimal) SkuRptMap.get("aos_spend"), 2, RoundingMode.HALF_UP);
+                if (SkuRptMap != null && ((BigDecimal)SkuRptMap.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0) {
+                    aos_clicks = (BigDecimal)SkuRptMap.get("aos_clicks");
+                    Roi7Days = ((BigDecimal)SkuRptMap.get("aos_total_sales"))
+                        .divide((BigDecimal)SkuRptMap.get("aos_spend"), 2, RoundingMode.HALF_UP);
                 }
                 BigDecimal Roi3Days = BigDecimal.ZERO;// 3天ROI
-                if (SkuRptMap3 != null && ((BigDecimal) SkuRptMap3.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0)
-                    Roi3Days = ((BigDecimal) SkuRptMap3.get("aos_total_sales"))
-                            .divide((BigDecimal) SkuRptMap3.get("aos_spend"), 2, RoundingMode.HALF_UP);
-
+                if (SkuRptMap3 != null && ((BigDecimal)SkuRptMap3.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0) {
+                    Roi3Days = ((BigDecimal)SkuRptMap3.get("aos_total_sales"))
+                        .divide((BigDecimal)SkuRptMap3.get("aos_spend"), 2, RoundingMode.HALF_UP);
+                }
                 BigDecimal CostRate = BigDecimal.ZERO; // 花出率 =报告中花费/预算
                 // 系列花出率 = 前一天花出/预算
                 BigDecimal LastSpendObj = SkuRptDetailSerial.get(p_org_id + "~" + aos_productno);// Sku报告1日数据
@@ -1161,13 +1170,16 @@ public class aos_mkt_popppc_init extends AbstractTask {
                     LastSpend = LastSpendObj;
                 }
                 if (PpcYesterSerial_Map != null) {
-                    BigDecimal LastBudget = (BigDecimal) PpcYesterSerial_Map.get("aos_budget");// 昨日预算
-                    if (LastBudget.compareTo(BigDecimal.ZERO) != 0)
+                    BigDecimal LastBudget = (BigDecimal)PpcYesterSerial_Map.get("aos_budget");// 昨日预算
+                    if (LastBudget.compareTo(BigDecimal.ZERO) != 0) {
                         CostRate = LastSpend.divide(LastBudget, 2, RoundingMode.HALF_UP);
+                    }
                 }
-                if (get_between_days(Today, (Date) aos_makedate) <= 3)
-                    // 全新系列3天内花出率最低为1
+                if (get_between_days(Today, (Date)aos_makedate) <= 3)
+                // 全新系列3天内花出率最低为1
+                {
                     CostRate = max(CostRate, BigDecimal.valueOf(1));
+                }
 
                 /*
                  * BigDecimal ExpouseRate = BigDecimal.ZERO; // 曝光 if (SkuRptDetailMap != null)
@@ -1182,14 +1194,17 @@ public class aos_mkt_popppc_init extends AbstractTask {
                     aos_lastpricedate = PpcYester_Map.get("aos_lastpricedate");// 最近出价调整日期 初始化默认为昨日日期 后面再重新赋值
                     aos_entryentity.set("aos_lastpricedate", aos_lastpricedate);
                     aos_lastbid = PpcYester_Map.get("aos_bid");// 昨日出价
-                    if (aos_lastpricedate == null)
+                    if (aos_lastpricedate == null) {
                         aos_lastpricedate = Today;
+                    }
+
                 }
 
                 Map<String, Object> SkuRpt3AvgMap = SkuRpt3Avg.get(p_org_id + "~" + item_id);
                 BigDecimal Impress3Avg = BigDecimal.ZERO;
-                if (SkuRpt3AvgMap != null)
-                    Impress3Avg = (BigDecimal) SkuRpt3AvgMap.get("aos_impressions");
+                if (SkuRpt3AvgMap != null) {
+                    Impress3Avg = (BigDecimal)SkuRpt3AvgMap.get("aos_impressions");
+                }
 
                 BigDecimal HighValue;// 最高出价 = MIN(市场价，最高标准)
                 BigDecimal AdviceValue = BigDecimal.ZERO;// 建议价 报告中获取
@@ -1198,8 +1213,8 @@ public class aos_mkt_popppc_init extends AbstractTask {
                 // =====计算市场价=====
                 Map<String, Object> AdPriceMap = AdPrice.get(org_id + "~" + aos_itemnumer);// 组
                 if (AdPriceMap != null) {
-                    AdviceValue = (BigDecimal) AdPriceMap.get("aos_bid_suggest");
-                    MaxValue = (BigDecimal) AdPriceMap.get("aos_bid_rangeend");
+                    AdviceValue = (BigDecimal)AdPriceMap.get("aos_bid_suggest");
+                    MaxValue = (BigDecimal)AdPriceMap.get("aos_bid_rangeend");
                 }
 
                 // 如果建议价为空 或为0 取国别cpc
@@ -1207,8 +1222,8 @@ public class aos_mkt_popppc_init extends AbstractTask {
                     String aos_category1 = aos_entryentity.getString("aos_category1");
                     String aos_category2 = aos_entryentity.getString("aos_category2");
                     String aos_category3 = aos_entryentity.getString("aos_category3");
-                    AdviceValue = orgCpcMap.getOrDefault(aos_category1 + aos_category2 + aos_category3,
-                            BigDecimal.ZERO);
+                    AdviceValue =
+                        orgCpcMap.getOrDefault(aos_category1 + aos_category2 + aos_category3, BigDecimal.ZERO);
                 }
                 Object FixValue = DailyPrice.get(org_id + "~" + item_id); // 定价 Amazon每日价格
                 BigDecimal HighStandard = GetHighStandard(FixValue, HIGH1, HIGH2, HIGH3);// 最高标准 根据国别定价筛选
@@ -1240,16 +1255,16 @@ public class aos_mkt_popppc_init extends AbstractTask {
                     aos_entryentity.set("aos_lastpricedate", aos_lastpricedate);
                     log.add(aos_itemnumer + "出价1 =" + aos_bid);
                 } else if (PpcYester_Map != null
-                        && !PpcYester_Map.get("aos_groupstatus").toString().equals("AVAILABLE")) {
+                    && !"AVAILABLE".equals(PpcYester_Map.get("aos_groupstatus").toString())) {
                     // 1.1.首次出价/2 前一次为空 或 前一次不可用
                     aos_bid = PopOrgFirstBid.divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
                     aos_lastpricedate = Today;// 判断为首次时需要调整出价日期
                     aos_entryentity.set("aos_lastpricedate", aos_lastpricedate);
                     log.add(aos_itemnumer + "出价1.1 =" + aos_bid);
-                } else if ((get_between_days(Today, (Date) aos_lastpricedate) >= 3)
-                        && (get_between_days(Today, (Date) aos_groupdate) > 7)) {
+                } else if ((get_between_days(Today, (Date)aos_lastpricedate) >= 3)
+                    && (get_between_days(Today, (Date)aos_groupdate) > 7)) {
                     // 3.出价3天内不调整 今天与最近出价日期做判断 且 不为 首次建组日后7天内
-                    BigDecimal LastBid = (BigDecimal) aos_lastbid;// 上次出价 昨日出价缓存中获取
+                    BigDecimal LastBid = (BigDecimal)aos_lastbid;// 上次出价 昨日出价缓存中获取
                     Map<String, Object> GetAdjustRateMap = new HashMap<>();
                     GetAdjustRateMap.put("Roi3Days", Roi3Days);
                     GetAdjustRateMap.put("Roi7Days", Roi7Days);
@@ -1269,24 +1284,25 @@ public class aos_mkt_popppc_init extends AbstractTask {
                     GetAdjustRateMap.put("lowClick", lowClick);
                     GetAdjustRateMap.put("aos_clicks", aos_clicks);
 
-                    Map<String, Object> AdjustRateMap = GetAdjustRate(GetAdjustRateMap, aos_mkt_bsadjrateS, log,
-                            aos_itemnumer);
-                    BigDecimal AdjustRate = (BigDecimal) AdjustRateMap.get("AdjustRate");// 调整幅度 出价调整幅度参数表中获取
-                    int aos_level = (int) AdjustRateMap.get("aos_level");
+                    Map<String, Object> AdjustRateMap =
+                        GetAdjustRate(GetAdjustRateMap, aos_mkt_bsadjrateS, log, aos_itemnumer);
+                    BigDecimal AdjustRate = (BigDecimal)AdjustRateMap.get("AdjustRate");// 调整幅度 出价调整幅度参数表中获取
+                    int aos_level = (int)AdjustRateMap.get("aos_level");
 
                     log.add(aos_itemnumer + "调整幅度 =" + AdjustRate);
                     log.add(aos_itemnumer + "优先级 =" + aos_level);
                     log.add(aos_itemnumer + "上次出价 =" + LastBid);
                     // 计算出价逻辑 本次出价=上次出价*(1+调整幅度) 如果优先级为1则本次出价=MAX(/*建议价*0.7*/国别首次出价均价,上次出价*(1+调整幅度))
-                    if (aos_level != 1)
+                    if (aos_level != 1) {
                         aos_bid = LastBid.multiply(AdjustRate.add(BigDecimal.valueOf(1)));
-                    else
+                    } else {
                         aos_bid = max(PopOrgFirstBid.multiply(BigDecimal.valueOf(0.5)),
-                                LastBid.multiply(AdjustRate.add(BigDecimal.valueOf(1.15))));
+                            LastBid.multiply(AdjustRate.add(BigDecimal.valueOf(1.15))));
+                    }
                     log.add(aos_itemnumer + "出价4 =" + aos_bid);
                 } else {
                     // 4.其他情况下不调整出价与出价日期 为昨日信息
-                    aos_bid = (BigDecimal) aos_lastbid;// 本次出价=上次出价
+                    aos_bid = (BigDecimal)aos_lastbid;// 本次出价=上次出价
                     log.add(aos_itemnumer + "出价5 =" + aos_bid);
                 }
                 // =====End计算出价=====
@@ -1304,7 +1320,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
                 aos_bid = min(aos_bid, HighValue);// 计算出价不能超过最高出价 第一次计算出价
 
                 // 新品第二次出价 移动至最高出价计算完后判断
-                if (get_between_days(Today, (Date) aos_groupdate) <= 3) {
+                if (get_between_days(Today, (Date)aos_groupdate) <= 3) {
                     // 2.今天为第二次出价
                     // 2.2 根据市场价计算出价 = min(市场价*1.1，最高出价*0.5)
                     BigDecimal Value1 = MarketValue.multiply(BigDecimal.valueOf(1.1));
@@ -1317,16 +1333,18 @@ public class aos_mkt_popppc_init extends AbstractTask {
                 aos_bid = min(aos_bid, HighValue);// 计算出价不能超过最高出价
 
                 // 如果此时出价为0则默认为初始价
-                if (aos_bid.compareTo(BigDecimal.ZERO) == 0)
+                if (aos_bid.compareTo(BigDecimal.ZERO) == 0) {
                     aos_bid = PopOrgFirstBid.multiply(BigDecimal.valueOf(0.5));
+                }
                 // 出价保留两位
                 aos_bid = aos_bid.setScale(2, RoundingMode.HALF_UP);
                 aos_entryentity.set("aos_lastbid", aos_lastbid);
                 aos_entryentity.set("aos_bid", aos_bid);
 
                 try {
-                    if (aos_bid.compareTo((BigDecimal) aos_lastbid) != 0)
+                    if (aos_bid.compareTo((BigDecimal)aos_lastbid) != 0) {
                         aos_entryentity.set("aos_lastpricedate", new Date());
+                    }
                 } catch (Exception ignored) {
                 }
 
@@ -1335,26 +1353,29 @@ public class aos_mkt_popppc_init extends AbstractTask {
                 aos_entryentity.set("aos_marketprice", MarketValue);// 市场价
                 aos_entryentity.set("aos_highvalue", HighValue);// 最高价
                 aos_entryentity.set("aos_fixvalue", FixValue);// 定价
-                if (ProductNoBid_Map.get(aos_productno) != null)
+                if (ProductNoBid_Map.get(aos_productno) != null) {
                     aos_bid = aos_bid.add(ProductNoBid_Map.get(aos_productno));
+                }
                 ProductNoBid_Map.put(aos_productno, aos_bid);
             }
 
             // =====计算 系列预算=====
             for (DynamicObject aos_entryentity : aos_entryentityS) {
                 String aos_groupstatus = aos_entryentity.getString("aos_groupstatus");
-                if (!aos_groupstatus.equals("AVAILABLE"))
+                if (!"AVAILABLE".equals(aos_groupstatus)) {
                     continue;// 剔除不计算出价与预算
+                }
                 BigDecimal aos_budget;// 预算 分新系列
-                long org_id = (long) p_org_id;
+                long org_id = (long)p_org_id;
                 String aos_productno = aos_entryentity.getString("aos_productno");
                 String aos_itemnumer = aos_entryentity.getString("aos_itemnumer");
                 // =====是否新系列新组判断=====
                 boolean IsNewSerialFlag = false;
                 Map<String, Object> PPCInfoSerial_Map = PPCInfoSerial.get(org_id + "~" + aos_productno);
                 Object aos_makedate = null;
-                if (PPCInfoSerial_Map != null)
+                if (PPCInfoSerial_Map != null) {
                     aos_makedate = PPCInfoSerial_Map.get("aos_makedate");
+                }
                 if (aos_makedate == null) {
                     aos_makedate = Today;// 新系列
                     IsNewSerialFlag = true;
@@ -1365,9 +1386,10 @@ public class aos_mkt_popppc_init extends AbstractTask {
                 Map<String, Object> SkuRptMap_Serial = SkuRpt_Serial7.get(org_id + "~" + aos_productno);// Sku报告
 
                 if (SkuRptMap_Serial != null
-                        && ((BigDecimal) SkuRptMap_Serial.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0)
-                    Roi7Days_Serial = ((BigDecimal) SkuRptMap_Serial.get("aos_total_sales"))
-                            .divide((BigDecimal) SkuRptMap_Serial.get("aos_spend"), 2, RoundingMode.HALF_UP);
+                    && ((BigDecimal)SkuRptMap_Serial.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0) {
+                    Roi7Days_Serial = ((BigDecimal)SkuRptMap_Serial.get("aos_total_sales"))
+                        .divide((BigDecimal)SkuRptMap_Serial.get("aos_spend"), 2, RoundingMode.HALF_UP);
+                }
                 BigDecimal RoiLast1Days = BigDecimal.ZERO; // 昨天ROI
                 BigDecimal RoiLast2Days = BigDecimal.ZERO; // 前天ROI
                 BigDecimal RoiLast3Days = BigDecimal.ZERO; // 大前天ROI
@@ -1377,17 +1399,20 @@ public class aos_mkt_popppc_init extends AbstractTask {
                     Map<String, Object> RoiLast2DaysMap = SkuRpt3SerialMap.get(Yester2);
                     Map<String, Object> RoiLast3DaysMap = SkuRpt3SerialMap.get(Yester3);
                     if (RoiLast1DaysMap != null
-                            && ((BigDecimal) RoiLast1DaysMap.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0)
-                        RoiLast1Days = ((BigDecimal) RoiLast1DaysMap.get("aos_total_sales"))
-                                .divide((BigDecimal) RoiLast1DaysMap.get("aos_spend"), 2, RoundingMode.HALF_UP);
+                        && ((BigDecimal)RoiLast1DaysMap.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0) {
+                        RoiLast1Days = ((BigDecimal)RoiLast1DaysMap.get("aos_total_sales"))
+                            .divide((BigDecimal)RoiLast1DaysMap.get("aos_spend"), 2, RoundingMode.HALF_UP);
+                    }
                     if (RoiLast2DaysMap != null
-                            && ((BigDecimal) RoiLast2DaysMap.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0)
-                        RoiLast2Days = ((BigDecimal) RoiLast2DaysMap.get("aos_total_sales"))
-                                .divide((BigDecimal) RoiLast2DaysMap.get("aos_spend"), 2, RoundingMode.HALF_UP);
+                        && ((BigDecimal)RoiLast2DaysMap.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0) {
+                        RoiLast2Days = ((BigDecimal)RoiLast2DaysMap.get("aos_total_sales"))
+                            .divide((BigDecimal)RoiLast2DaysMap.get("aos_spend"), 2, RoundingMode.HALF_UP);
+                    }
                     if (RoiLast3DaysMap != null
-                            && ((BigDecimal) RoiLast3DaysMap.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0)
-                        RoiLast3Days = ((BigDecimal) RoiLast3DaysMap.get("aos_total_sales"))
-                                .divide((BigDecimal) RoiLast3DaysMap.get("aos_spend"), 2, RoundingMode.HALF_UP);
+                        && ((BigDecimal)RoiLast3DaysMap.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0) {
+                        RoiLast3Days = ((BigDecimal)RoiLast3DaysMap.get("aos_total_sales"))
+                            .divide((BigDecimal)RoiLast3DaysMap.get("aos_spend"), 2, RoundingMode.HALF_UP);
+                    }
                 }
                 BigDecimal CostRate = BigDecimal.ZERO; // 花出率 =报告中花费/预算
 
@@ -1398,26 +1423,29 @@ public class aos_mkt_popppc_init extends AbstractTask {
                     LastSpend = LastSpendObj;
                 }
                 if (PpcYesterSerial_Map != null) {
-                    BigDecimal LastBudget = (BigDecimal) PpcYesterSerial_Map.get("aos_budget");// 昨日预算
+                    BigDecimal LastBudget = (BigDecimal)PpcYesterSerial_Map.get("aos_budget");// 昨日预算
                     log.add(aos_itemnumer + "预算3 昨日花出 =" + LastSpend);
                     log.add(aos_itemnumer + "预算3 昨日预算 =" + LastBudget);
-                    if (LastBudget.compareTo(BigDecimal.ZERO) != 0)
+                    if (LastBudget.compareTo(BigDecimal.ZERO) != 0) {
                         CostRate = LastSpend.divide(LastBudget, 2, RoundingMode.HALF_UP);
+                    }
                 }
-                if (get_between_days(Today, (Date) aos_makedate) <= 3)
-                    // 全新系列3天内花出率最低为1
+                if (get_between_days(Today, (Date)aos_makedate) <= 3)
+                // 全新系列3天内花出率最低为1
+                {
                     CostRate = max(CostRate, BigDecimal.valueOf(1));
+                }
                 if (IsNewSerialFlag) {
                     // a.新系列 预算=新系列预算
                     BigDecimal NewBudget = BigDecimal.ZERO;// 新系列预算
                     // 新系列预算计算 = MAX(广告系列中SKU预测营收*AM营收占比*AM付费营收占比/国别标准ROI，2*广告系列中SKU个数)
                     Map<String, Object> Summary = SalSummaryMap.get(org_id + "~" + aos_productno);//
                     if (Summary != null) {
-                        BigDecimal aos_sales = ((BigDecimal) Summary.get("aos_sales")).divide(BigDecimal.valueOf(30), 2,
-                                RoundingMode.HALF_UP);// 广告系列中SKU预测营收
+                        BigDecimal aos_sales = ((BigDecimal)Summary.get("aos_sales")).divide(BigDecimal.valueOf(30), 2,
+                            RoundingMode.HALF_UP);// 广告系列中SKU预测营收
                         int aos_sche_qty = ProductNo_Map.get(aos_productno);// 广告系列中可用SKU个数
                         BigDecimal budget1 = aos_sales.multiply(PopOrgAMSaleRate).multiply(PopOrgAMAffRate)
-                                .divide(PopOrgRoist, 2, RoundingMode.HALF_UP);
+                            .divide(PopOrgRoist, 2, RoundingMode.HALF_UP);
                         BigDecimal budget2 = BigDecimal.valueOf(aos_sche_qty * 2);
                         NewBudget = max(budget1, budget2);
                         log.add(aos_itemnumer + "新系列budget1 =" + budget1);
@@ -1431,23 +1459,23 @@ public class aos_mkt_popppc_init extends AbstractTask {
                     }
                     aos_budget = NewBudget;
                     log.add(aos_itemnumer + "预算1 =" + aos_budget);
-                } else if ((Roi7Days_Serial.compareTo(PopOrgRoist) < 0)
-                        && (((RoiLast1Days.compareTo(PopOrgRoist) >= 0) && (RoiLast2Days.compareTo(PopOrgRoist) >= 0))
-                        || ((RoiLast1Days.compareTo(PopOrgRoist) >= 0)
-                        && (RoiLast3Days.compareTo(PopOrgRoist) >= 0))
-                        || ((RoiLast2Days.compareTo(PopOrgRoist) >= 0)
-                        && (RoiLast3Days.compareTo(PopOrgRoist) >= 0)))) {
+                } else if ((Roi7Days_Serial.compareTo(PopOrgRoist) < 0) && (((RoiLast1Days.compareTo(PopOrgRoist) >= 0)
+                    && (RoiLast2Days.compareTo(PopOrgRoist) >= 0))
+                    || ((RoiLast1Days.compareTo(PopOrgRoist) >= 0) && (RoiLast3Days.compareTo(PopOrgRoist) >= 0))
+                    || ((RoiLast2Days.compareTo(PopOrgRoist) >= 0) && (RoiLast3Days.compareTo(PopOrgRoist) >= 0)))) {
                     // b.当7天ROI＜国别标准时，前3天ROI中任意2天ROI≥国别标准ROI，则预算维持上次设置金额
                     BigDecimal Lastbudget = BigDecimal.ZERO;
-                    if (PpcYesterSerial_Map != null)
-                        Lastbudget = (BigDecimal) PpcYesterSerial_Map.get("aos_budget");// 上次设置金额
+                    if (PpcYesterSerial_Map != null) {
+                        Lastbudget = (BigDecimal)PpcYesterSerial_Map.get("aos_budget");// 上次设置金额
+                    }
                     aos_budget = Lastbudget;
                     log.add(aos_itemnumer + "预算2 =" + aos_budget);
                 } else {
                     // c.计算预算
                     BigDecimal Lastbudget = BigDecimal.ZERO;
-                    if (PpcYesterSerial_Map != null)
-                        Lastbudget = (BigDecimal) PpcYesterSerial_Map.get("aos_budget");// 昨日设置金额
+                    if (PpcYesterSerial_Map != null) {
+                        Lastbudget = (BigDecimal)PpcYesterSerial_Map.get("aos_budget");// 昨日设置金额
+                    }
                     Map<String, Object> GetBudgetRateMap = new HashMap<>();
                     String RoiType = GetRoiType(PopOrgRoist, WORST, WORRY, STANDARD, WELL, EXCELLENT, Roi7Days_Serial);
                     GetBudgetRateMap.put("CostRate", CostRate);// 花出率
@@ -1455,10 +1483,12 @@ public class aos_mkt_popppc_init extends AbstractTask {
                     BigDecimal BudgetRate = GetBudgetRate(GetBudgetRateMap, aos_mkt_bsadjparaS);// 花出率获取对应预算调整系数
                     BigDecimal NewSerial = BigDecimal.ZERO;
                     BigDecimal aos_bid = BigDecimal.ZERO;
-                    if (ProductNoBid_Map.get(aos_productno) != null)
+                    if (ProductNoBid_Map.get(aos_productno) != null) {
                         aos_bid = ProductNoBid_Map.get(aos_productno);
-                    if (NewSerial_Map.get(aos_productno) != null)
+                    }
+                    if (NewSerial_Map.get(aos_productno) != null) {
                         NewSerial = NewSerial_Map.get(aos_productno);
+                    }
                     BigDecimal budget1 = Lastbudget.multiply(BudgetRate).add(NewSerial);
                     BigDecimal budget2 = aos_bid.multiply(BigDecimal.valueOf(20));
                     aos_budget = max(budget1, budget2);
@@ -1479,48 +1509,51 @@ public class aos_mkt_popppc_init extends AbstractTask {
             aos_mkt_bsadjrateS.close();// 关闭Dataset
             aos_mkt_bsadjparaS.close();
             // 保存正式表
-            OperationResult operationrst = SaveServiceHelper.saveOperate("aos_mkt_popular_ppc", new DynamicObject[]{aos_mkt_popular_ppc},
-                    OperateOption.create());
+            OperationResult operationrst = SaveServiceHelper.saveOperate("aos_mkt_popular_ppc",
+                new DynamicObject[] {aos_mkt_popular_ppc}, OperateOption.create());
             Object fid = operationrst.getSuccessPkIds().get(0);
 
             // 重新剔除后 对于置顶位置出价
 
             for (DynamicObject aos_entryentity : aos_entryentityS) {
                 String aos_groupstatus = aos_entryentity.getString("aos_groupstatus");
-                if (!aos_groupstatus.equals("AVAILABLE")) {
+                if (!"AVAILABLE".equals(aos_groupstatus)) {
                     aos_entryentity.set("aos_budget", 0);
                     aos_entryentity.set("aos_bid", 0);
                     aos_entryentity.set("aos_budget_ori", 0);
                     aos_entryentity.set("aos_bid_ori", 0);
                     continue;
                 }
-                long org_id = (long) p_org_id;
+                long org_id = (long)p_org_id;
                 long item_id = aos_entryentity.getLong("aos_itemid");
                 String aos_productno = aos_entryentity.getString("aos_productno");
                 // 出价逻辑结束后 对于置顶位置出价
                 BigDecimal aos_topprice = BigDecimal.ZERO;
                 Map<String, Object> SkuRptMap14 = SkuRpt14.get(org_id + "~" + item_id);// Sku报告
                 BigDecimal Roi14Days = BigDecimal.ZERO;// 系列SKU平均店铺14天转化率
-                if (SkuRptMap14 != null && ((BigDecimal) SkuRptMap14.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0)
-                    Roi14Days = ((BigDecimal) SkuRptMap14.get("aos_total_sales"))
-                            .divide((BigDecimal) SkuRptMap14.get("aos_spend"), 2, RoundingMode.HALF_UP);
+                if (SkuRptMap14 != null && ((BigDecimal)SkuRptMap14.get("aos_spend")).compareTo(BigDecimal.ZERO) != 0) {
+                    Roi14Days = ((BigDecimal)SkuRptMap14.get("aos_total_sales"))
+                        .divide((BigDecimal)SkuRptMap14.get("aos_spend"), 2, RoundingMode.HALF_UP);
+                }
                 int aos_sche_qty = ProductNo_Map.get(aos_productno);// 广告系列中可用SKU个数 用于计算平均
                 BigDecimal SerialAvaFix = GetSerialAvaFix(aos_productno, fid).divide(BigDecimal.valueOf(aos_sche_qty),
-                        2, RoundingMode.HALF_UP);
+                    2, RoundingMode.HALF_UP);
                 log.add("置顶位置出价 " + "Roi14Days =" + Roi14Days);
                 log.add("置顶位置出价 " + "RoiStandard =" + RoiStandard);
                 log.add("置顶位置出价 " + "SerialAvaFix =" + SerialAvaFix);
                 log.add("置顶位置出价 " + "StandardFix =" + StandardFix);
                 log.add("置顶位置出价 " + "aos_sche_qty =" + aos_sche_qty);
 
-                if (Roi14Days.compareTo(RoiStandard) > 0 && SerialAvaFix.compareTo(StandardFix) > 0)
+                if (Roi14Days.compareTo(RoiStandard) > 0 && SerialAvaFix.compareTo(StandardFix) > 0) {
                     aos_topprice = BigDecimal.valueOf(0.2);
+                }
 
                 Map<String, Object> SkuRpt3AvgMap = SkuRpt3Avg.get(p_org_id + "~" + item_id);
                 // 曝光3天平均
                 BigDecimal Impress3Avg = BigDecimal.ZERO;
-                if (SkuRpt3AvgMap != null)
-                    Impress3Avg = (BigDecimal) SkuRpt3AvgMap.get("aos_impressions");
+                if (SkuRpt3AvgMap != null) {
+                    Impress3Avg = (BigDecimal)SkuRpt3AvgMap.get("aos_impressions");
+                }
 
                 // 曝光点击率7天
                 BigDecimal aos_exprate = BigDecimal.ZERO;
@@ -1532,23 +1565,24 @@ public class aos_mkt_popppc_init extends AbstractTask {
 
                 Map<String, Object> SkuRptSerialMap = SkuRpt_Serial14.get(org_id + "~" + aos_productno);// Sku报告
                 if (SkuRptSerialMap != null
-                        && ((BigDecimal) SkuRptSerialMap.get("aos_clicks")).compareTo(BigDecimal.ZERO) != 0) {
-                    aos_clicks = (BigDecimal) SkuRptSerialMap.get("aos_clicks");
-                    aos_rpt_roi = ((BigDecimal) SkuRptSerialMap.get("aos_total_order")).divide(aos_clicks, 3,
-                            RoundingMode.HALF_UP);
+                    && ((BigDecimal)SkuRptSerialMap.get("aos_clicks")).compareTo(BigDecimal.ZERO) != 0) {
+                    aos_clicks = (BigDecimal)SkuRptSerialMap.get("aos_clicks");
+                    aos_rpt_roi = ((BigDecimal)SkuRptSerialMap.get("aos_total_order")).divide(aos_clicks, 3,
+                        RoundingMode.HALF_UP);
                 }
 
                 // 7天订单转化率
                 Map<String, Object> SkuRptMap = SkuRpt.get(org_id + "~" + item_id);// Sku报告
                 if (SkuRptMap != null) {
-                    aos_avgexp = (BigDecimal) SkuRptMap.get("aos_impressions");
-                    aos_clicks = (BigDecimal) SkuRptMap.get("aos_clicks");
-                    if (aos_avgexp.compareTo(BigDecimal.ZERO) != 0)
+                    aos_avgexp = (BigDecimal)SkuRptMap.get("aos_impressions");
+                    aos_clicks = (BigDecimal)SkuRptMap.get("aos_clicks");
+                    if (aos_avgexp.compareTo(BigDecimal.ZERO) != 0) {
                         aos_exprate = aos_clicks.divide(aos_avgexp, 6, RoundingMode.HALF_UP);
+                    }
                 }
 
                 if (Impress3Avg.compareTo(EXPOSURE.multiply(BigDecimal.valueOf(3))) > 0
-                        && aos_exprate.compareTo(BigDecimal.valueOf(0.002)) > 0) {
+                    && aos_exprate.compareTo(BigDecimal.valueOf(0.002)) > 0) {
                     aos_topprice = BigDecimal.valueOf(0.2);
                 }
 
@@ -1607,12 +1641,12 @@ public class aos_mkt_popppc_init extends AbstractTask {
                 }
             }
             // 保存日期参数表
-            OperationServiceHelper.executeOperate("save", "aos_mkt_sp_date", new DynamicObject[]{aos_mkt_sp_date},
-                    OperateOption.create());
+            OperationServiceHelper.executeOperate("save", "aos_mkt_sp_date", new DynamicObject[] {aos_mkt_sp_date},
+                OperateOption.create());
 
             // 保存正式表
             OperationServiceHelper.executeOperate("save", "aos_mkt_popular_ppc",
-                    new DynamicObject[]{aos_mkt_popular_ppc}, OperateOption.create());
+                new DynamicObject[] {aos_mkt_popular_ppc}, OperateOption.create());
             // 保存日志表
             log.finnalSave();
 
@@ -1630,14 +1664,14 @@ public class aos_mkt_popppc_init extends AbstractTask {
 
     private static Map<String, Integer> genOrgCateClick(Object p_org_id) {
         DynamicObjectCollection list = QueryServiceHelper.query("aos_base_cateclick", "aos_category1,aos_click",
-                new QFilter("aos_orgid", QCP.equals, p_org_id).toArray());
-        return list.stream().collect(Collectors.toMap(obj -> obj.getString("aos_category1"),
-                obj -> obj.getInt("aos_click"), (k1, k2) -> k1));
+            new QFilter("aos_orgid", QCP.equals, p_org_id).toArray());
+        return list.stream().collect(
+            Collectors.toMap(obj -> obj.getString("aos_category1"), obj -> obj.getInt("aos_click"), (k1, k2) -> k1));
     }
 
     public static BigDecimal getExRateLowSt(Object p_ou_code, String level) {
         DynamicObject aos_mkt_ratestd = QueryServiceHelper.queryOne("aos_mkt_ratestd", "aos_" + p_ou_code,
-                new QFilter("aos_project", QCP.equals, level).toArray());
+            new QFilter("aos_project", QCP.equals, level).toArray());
         return aos_mkt_ratestd.getBigDecimal(0);
     }
 
@@ -1645,33 +1679,28 @@ public class aos_mkt_popppc_init extends AbstractTask {
         HashMap<String, String> ProductInfo = new HashMap<>();
         QFilter filter_ama = new QFilter("aos_platformfid.number", "=", "AMAZON");
         QFilter filter_mainshop = new QFilter("aos_shopfid.aos_is_mainshop", "=", true);
-        QFilter[] filters = new QFilter[]{filter_ama, filter_mainshop};
-        String SelectColumn = "aos_orgid.number aos_orgid," + "aos_item_code.number aos_itemid,"
-                + "aos_shopsku aos_productid";
+        QFilter[] filters = new QFilter[] {filter_ama, filter_mainshop};
+        String SelectColumn =
+            "aos_orgid.number aos_orgid," + "aos_item_code.number aos_itemid," + "aos_shopsku aos_productid";
         DynamicObjectCollection bd_materialS = QueryServiceHelper.query("aos_sync_invprice", SelectColumn, filters);
         for (DynamicObject bd_material : bd_materialS) {
             ProductInfo.put(bd_material.getString("aos_orgid") + "~" + bd_material.getString("aos_itemid"),
-                    bd_material.getString("aos_productid"));
+                bd_material.getString("aos_productid"));
         }
         return ProductInfo;
     }
 
     /**
      * SKU推广报告
-     *
-     * @return
      */
     public static HashMap<String, String> getRptPro(Object p_org_id) {
         HashMap<String, String> rptPro = new HashMap<>();
         DynamicObjectCollection skuRptS = QueryServiceHelper.query("aos_base_skupoprpt",
-                "aos_entryentity.aos_ad_sku aos_ad_sku," +
-                        "aos_entryentity.aos_cam_name aos_cam_name",
-                new QFilter("aos_orgid", QCP.equals, p_org_id)
-                        .and("aos_entryentity.aos_cam_name", QCP.like, "GJ-%")
-                        .toArray());
+            "aos_entryentity.aos_ad_sku aos_ad_sku," + "aos_entryentity.aos_cam_name aos_cam_name",
+            new QFilter("aos_orgid", QCP.equals, p_org_id).and("aos_entryentity.aos_cam_name", QCP.like, "GJ-%")
+                .toArray());
         for (DynamicObject skuRpt : skuRptS) {
-            rptPro.put(skuRpt.getString("aos_ad_sku"),
-                    skuRpt.getString("aos_cam_name").replace("-AUTO", ""));
+            rptPro.put(skuRpt.getString("aos_ad_sku"), skuRpt.getString("aos_cam_name").replace("-AUTO", ""));
         }
         return rptPro;
     }
@@ -1680,9 +1709,9 @@ public class aos_mkt_popppc_init extends AbstractTask {
      * 平台上架信息
      **/
     private static Set<String> GenerateOnlineSkuSet(Object p_org_id) {
-        DynamicObjectCollection list = QueryServiceHelper.query("aos_sync_inv_ctl", "aos_item",
-                new QFilter("aos_ou", QCP.equals, p_org_id)
-                        .and("createtime", QCP.less_than, FndDate.add_days(new Date(), -2)).toArray());
+        DynamicObjectCollection list =
+            QueryServiceHelper.query("aos_sync_inv_ctl", "aos_item", new QFilter("aos_ou", QCP.equals, p_org_id)
+                .and("createtime", QCP.less_than, FndDate.add_days(new Date(), -2)).toArray());
         return list.stream().map(obj -> obj.getString("aos_item")).collect(Collectors.toSet());
     }
 
@@ -1690,25 +1719,25 @@ public class aos_mkt_popppc_init extends AbstractTask {
      * 不按季节属性推广品类
      **/
     private static Set<String> GenerateDeseaon() {
-        DynamicObjectCollection list = QueryServiceHelper.query("aos_mkt_deseason",
-                "aos_category1,aos_category2,aos_category3", new QFilter[]{});
+        DynamicObjectCollection list =
+            QueryServiceHelper.query("aos_mkt_deseason", "aos_category1,aos_category2,aos_category3", new QFilter[] {});
         return list.stream().map(obj -> obj.getString("aos_category1") + "~" + obj.getString("aos_category2") + "~"
-                + obj.getString("aos_category3")).collect(Collectors.toSet());
+            + obj.getString("aos_category3")).collect(Collectors.toSet());
     }
 
     // 营销必推货号
     private static Set<String> GenerateMustSet(Object p_org_id) {
         DynamicObjectCollection list = QueryServiceHelper.query("aos_mkt_mktitem", "aos_itemid",
-                new QFilter("aos_orgid", QCP.equals, p_org_id).toArray());
+            new QFilter("aos_orgid", QCP.equals, p_org_id).toArray());
         return list.stream().map(obj -> obj.getString("aos_itemid")).collect(Collectors.toSet());
     }
 
     public static HashMap<String, BigDecimal> GenerateVat(Object p_org_id) {
         HashMap<String, BigDecimal> VatMap = new HashMap<>();
         QFilter filter_org = new QFilter("aos_org.id", "=", p_org_id);
-        QFilter[] filters = new QFilter[]{filter_org};
+        QFilter[] filters = new QFilter[] {filter_org};
         DynamicObject aos_sal_org_cal_p = QueryServiceHelper.queryOne("aos_sal_org_cal_p",
-                "aos_org.number aos_orgnum,aos_vat_amount,aos_am_platform", filters);
+            "aos_org.number aos_orgnum,aos_vat_amount,aos_am_platform", filters);
         VatMap.put("aos_vat_amount", aos_sal_org_cal_p.getBigDecimal("aos_vat_amount"));
         VatMap.put("aos_am_platform", aos_sal_org_cal_p.getBigDecimal("aos_am_platform"));
         return VatMap;
@@ -1720,8 +1749,8 @@ public class aos_mkt_popppc_init extends AbstractTask {
         try {
             String algoKey = "aos_mkt_popular_ppc.IsExists." + aos_productno;
             String sql = " select sum(r.fk_aos_fixvalue) from tk_aos_mkt_popular_ppc_r r" + " where 1=1 "
-                    + " and r.fk_aos_productno = ? " + " and r.fk_aos_groupstatus IN ('AVAILABLE','SAL_ADD') "
-                    + " and r.fid = ? ";
+                + " and r.fk_aos_productno = ? " + " and r.fk_aos_groupstatus IN ('AVAILABLE','SAL_ADD') "
+                + " and r.fid = ? ";
             Object[] params = {aos_productno, fid};
             Productno = DB.queryDataSet(algoKey, DBRoute.of(DB_MKT), sql, params);
             while (Productno.hasNext()) {
@@ -1739,7 +1768,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
     }
 
     private static Map<String, Object> GetAdjustRate(Map<String, Object> GetAdjustRateMap, DataSet aos_mkt_bsadjrateS,
-                                                     FndLog aos_sync_log, String aos_itemnumer) {
+        FndLog aos_sync_log, String aos_itemnumer) {
         Map<String, Object> AdjustRateMap = new HashMap<>();
         BigDecimal AdjustRate = BigDecimal.ZERO;
         Object Roi3Days = GetAdjustRateMap.get("Roi3Days");
@@ -1769,38 +1798,40 @@ public class aos_mkt_popppc_init extends AbstractTask {
             String rule5 = "";
             String aos_roitype = mkt_bsadjrate.getString("aos_roitype");
 
-            if (aos_roitype != null && !aos_roitype.equals("") && !aos_roitype.equals("null")) {
+            if (FndGlobal.IsNotNull(aos_roitype)) {
                 BigDecimal Value = BigDecimal.ZERO;
                 switch (aos_roitype) {
                     case "WORST":
-                        Value = (BigDecimal) WORST;
+                        Value = (BigDecimal)WORST;
                         break;
                     case "WORRY":
-                        Value = (BigDecimal) WORRY;
+                        Value = (BigDecimal)WORRY;
                         break;
                     case "STANDARD":
-                        Value = (BigDecimal) STANDARD;
+                        Value = (BigDecimal)STANDARD;
                         break;
                     case "WELL":
-                        Value = (BigDecimal) WELL;
+                        Value = (BigDecimal)WELL;
                         break;
                     case "EXCELLENT":
-                        Value = (BigDecimal) EXCELLENT;
+                        Value = (BigDecimal)EXCELLENT;
                         break;
                 }
-                BigDecimal RoiValue = Value.add((BigDecimal) PopOrgRoist);// ROI类型 要转化为对应的值
+                BigDecimal RoiValue = Value.add((BigDecimal)PopOrgRoist);// ROI类型 要转化为对应的值
                 rule1 = Roi7Days + mkt_bsadjrate.getString("aos_roi") + RoiValue;
 
             }
 
             String aos_exposure = mkt_bsadjrate.getString("aos_exposure");
-            if (aos_exposure != null && !aos_exposure.equals("") && !aos_exposure.equals("null"))
-                if (!rule1.equals(""))
+            if (FndGlobal.IsNotNull(aos_exposure)) {
+                if (!"".equals(rule1)) {
                     rule2 = "&&" + ExpouseRate + aos_exposure
-                            + mkt_bsadjrate.getBigDecimal("aos_exposurerate").multiply((BigDecimal) EXPOSURE);
-                else
+                        + mkt_bsadjrate.getBigDecimal("aos_exposurerate").multiply((BigDecimal)EXPOSURE);
+                } else {
                     rule2 = ExpouseRate + aos_exposure
-                            + mkt_bsadjrate.getBigDecimal("aos_exposurerate").multiply((BigDecimal) EXPOSURE);
+                        + mkt_bsadjrate.getBigDecimal("aos_exposurerate").multiply((BigDecimal)EXPOSURE);
+                }
+            }
 
             /*
              * String aos_avadays = mkt_bsadjrate.getString("aos_avadays"); if (aos_avadays
@@ -1815,26 +1846,26 @@ public class aos_mkt_popppc_init extends AbstractTask {
              */
 
             String aos_roitype3 = mkt_bsadjrate.getString("aos_roitype3");
-            if (aos_roitype3 != null && !aos_roitype3.equals("") && !aos_roitype3.equals("null")) {
+            if (FndGlobal.IsNotNull(aos_roitype3)) {
                 BigDecimal Value = BigDecimal.ZERO;
                 switch (aos_roitype3) {
                     case "WORST":
-                        Value = (BigDecimal) WORST;
+                        Value = (BigDecimal)WORST;
                         break;
                     case "WORRY":
-                        Value = (BigDecimal) WORRY;
+                        Value = (BigDecimal)WORRY;
                         break;
                     case "STANDARD":
-                        Value = (BigDecimal) STANDARD;
+                        Value = (BigDecimal)STANDARD;
                         break;
                     case "WELL":
-                        Value = (BigDecimal) WELL;
+                        Value = (BigDecimal)WELL;
                         break;
                     case "EXCELLENT":
-                        Value = (BigDecimal) EXCELLENT;
+                        Value = (BigDecimal)EXCELLENT;
                         break;
                 }
-				BigDecimal RoiValue = Value.add((BigDecimal) PopOrgRoist);// ROI类型 要转化为对应的值
+                BigDecimal RoiValue = Value.add((BigDecimal)PopOrgRoist);// ROI类型 要转化为对应的值
                 rule5 = "&&" + Roi3Days + mkt_bsadjrate.getString("aos_roi3") + RoiValue;
             }
 
@@ -1875,27 +1906,29 @@ public class aos_mkt_popppc_init extends AbstractTask {
     }
 
     private static BigDecimal GetHighStandard(Object fixValue, BigDecimal HIGH1, BigDecimal HIGH2, BigDecimal HIGH3) {
-        if (fixValue == null || ((BigDecimal) fixValue).compareTo(BigDecimal.valueOf(200)) < 0)
+        if (fixValue == null || ((BigDecimal)fixValue).compareTo(BigDecimal.valueOf(200)) < 0) {
             return HIGH1;
-        else if (((BigDecimal) fixValue).compareTo(BigDecimal.valueOf(200)) >= 0
-                && ((BigDecimal) fixValue).compareTo(BigDecimal.valueOf(500)) < 0)
+        } else if (((BigDecimal)fixValue).compareTo(BigDecimal.valueOf(200)) >= 0
+            && ((BigDecimal)fixValue).compareTo(BigDecimal.valueOf(500)) < 0) {
             return HIGH2;
-        else
+        } else {
             return HIGH3;
+        }
     }
 
     private static BigDecimal GetBudgetRate(Map<String, Object> GetBudgetRateMap, DataSet aos_mkt_bsadjparaS) {
         BigDecimal BudgetRate = BigDecimal.ZERO;
         Object RoiType = GetBudgetRateMap.get("RoiType");
-        BigDecimal CostRate = (BigDecimal) GetBudgetRateMap.get("CostRate");
+        BigDecimal CostRate = (BigDecimal)GetBudgetRateMap.get("CostRate");
         DataSet mkt_bsadjparaS = aos_mkt_bsadjparaS.copy();
         while (mkt_bsadjparaS.hasNext()) {
             Row mkt_bsadjpara = mkt_bsadjparaS.next();
             String aos_roi = mkt_bsadjpara.getString("aos_roi");
             BigDecimal aos_ratefrom = mkt_bsadjpara.getBigDecimal("aos_ratefrom");
             BigDecimal aos_rateto = mkt_bsadjpara.getBigDecimal("aos_rateto");
-            if (!aos_roi.equals(RoiType.toString()))
+            if (!aos_roi.equals(RoiType.toString())) {
                 continue;
+            }
             boolean condition = CostRate.compareTo(aos_ratefrom) >= 0 && CostRate.compareTo(aos_rateto) <= 0;
             // String rule = CostRate + ">" + aos_ratefrom + "&&" + CostRate + "<=" +
             // aos_rateto;
@@ -1910,21 +1943,23 @@ public class aos_mkt_popppc_init extends AbstractTask {
     }
 
     private static BigDecimal max(BigDecimal Value1, BigDecimal Value2) {
-        if (Value1.compareTo(Value2) > -1)
+        if (Value1.compareTo(Value2) > -1) {
             return Value1;
-        else
+        } else {
             return Value2;
+        }
     }
 
     private static BigDecimal min(BigDecimal Value1, BigDecimal Value2) {
-        if (Value1.compareTo(Value2) > -1)
+        if (Value1.compareTo(Value2) > -1) {
             return Value2;
-        else
+        } else {
             return Value1;
+        }
     }
 
     private static void InsertData(DynamicObjectCollection aos_entryentityS, Map<String, Object> insert_map,
-                                   String Type) {
+        String Type) {
         DynamicObject aos_entryentity = aos_entryentityS.addNew();
         Object item_id = insert_map.get("item_id");
         Object aos_productno = insert_map.get("aos_productno");
@@ -1959,8 +1994,9 @@ public class aos_mkt_popppc_init extends AbstractTask {
         Object aos_firstindate = insert_map.get("aos_firstindate");
         Object aos_rpt_roi = insert_map.get("aos_rpt_roi");
 
-        if (Type.equals("ROI") || Type.equals("PRO"))
+        if ("ROI".equals(Type) || "PRO".equals(Type)) {
             aos_special = false;
+        }
 
         aos_entryentity.set("aos_itemid", item_id);
         aos_entryentity.set("aos_productno", aos_productno + "-AUTO");
@@ -1998,13 +2034,15 @@ public class aos_mkt_popppc_init extends AbstractTask {
         aos_entryentity.set("aos_firstindate", aos_firstindate);
         aos_entryentity.set("aos_rpt_roi", aos_rpt_roi);
 
-        if (FndGlobal.IsNotNull(aos_online) && MKTCom.GetBetweenDays(new Date(), (Date) aos_online) < 14)
+        if (FndGlobal.IsNotNull(aos_online) && MKTCom.GetBetweenDays(new Date(), (Date)aos_online) < 14) {
             aos_entryentity.set("aos_offline", "Y");
-        else
+        } else {
             aos_entryentity.set("aos_offline", "N");
+        }
 
-        if ("ROI".equals(Type))
+        if ("ROI".equals(Type)) {
             aos_entryentity.set("aos_roiflag", true);
+        }
 
     }
 
@@ -2022,33 +2060,35 @@ public class aos_mkt_popppc_init extends AbstractTask {
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
         from_day = cal.getTime();
-        return (int) ((end_day.getTime() - from_day.getTime()) / (1000 * 3600 * 24));
+        return (int)((end_day.getTime() - from_day.getTime()) / (1000 * 3600 * 24));
     }
 
     private static String GetRoiType(BigDecimal popOrgRoist, BigDecimal wORST, BigDecimal wORRY, BigDecimal sTANDARD,
-                                     BigDecimal wELL, BigDecimal eXCELLENT, BigDecimal roi7Days_Serial) {
+        BigDecimal wELL, BigDecimal eXCELLENT, BigDecimal roi7Days_Serial) {
         String RoiType = null;
-        if (roi7Days_Serial.compareTo(popOrgRoist.add(wORST)) < 0)
+        if (roi7Days_Serial.compareTo(popOrgRoist.add(wORST)) < 0) {
             RoiType = "WORST";
-        else if (roi7Days_Serial.compareTo(popOrgRoist.add(wORRY)) >= 0
-                && roi7Days_Serial.compareTo(popOrgRoist.add(sTANDARD)) < 0)
+        } else if (roi7Days_Serial.compareTo(popOrgRoist.add(wORRY)) >= 0
+            && roi7Days_Serial.compareTo(popOrgRoist.add(sTANDARD)) < 0) {
             RoiType = "WORRY";
-        else if (roi7Days_Serial.compareTo(popOrgRoist.add(sTANDARD)) >= 0
-                && roi7Days_Serial.compareTo(popOrgRoist.add(wELL)) < 0)
+        } else if (roi7Days_Serial.compareTo(popOrgRoist.add(sTANDARD)) >= 0
+            && roi7Days_Serial.compareTo(popOrgRoist.add(wELL)) < 0) {
             RoiType = "STANDARD";
-        else if (roi7Days_Serial.compareTo(popOrgRoist.add(wELL)) >= 0
-                && roi7Days_Serial.compareTo(popOrgRoist.add(eXCELLENT)) < 0)
+        } else if (roi7Days_Serial.compareTo(popOrgRoist.add(wELL)) >= 0
+            && roi7Days_Serial.compareTo(popOrgRoist.add(eXCELLENT)) < 0) {
             RoiType = "WELL";
-        else if (roi7Days_Serial.compareTo(popOrgRoist.add(eXCELLENT)) >= 0)
+        } else if (roi7Days_Serial.compareTo(popOrgRoist.add(eXCELLENT)) >= 0) {
             RoiType = "EXCELLENT";
+        }
         return RoiType;
     }
 
     private static Map<String, BigDecimal> queryOrgCpc(String aos_orgid) {
         String selectFileds = "aos_category1," + "aos_category2," + "aos_category3," + "aos_bid";
         DynamicObjectCollection list = QueryServiceHelper.query("aos_mkt_orgcpc", selectFileds,
-                new QFilter[]{new QFilter("aos_orgid", QCP.equals, aos_orgid)});
-        return list.stream().collect(Collectors.toMap(
+            new QFilter[] {new QFilter("aos_orgid", QCP.equals, aos_orgid)});
+        return list.stream()
+            .collect(Collectors.toMap(
                 obj -> obj.getString("aos_category1") + obj.getString("aos_category2") + obj.getString("aos_category3"),
                 obj -> obj.getBigDecimal("aos_bid"), (k1, k2) -> k1));
 
@@ -2091,7 +2131,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
     public static Map<String, BigDecimal> GenerateShipFee() {
         Map<String, BigDecimal> map = new HashMap<>();
         DynamicObjectCollection dyns = QueryServiceHelper.query("aos_quo_skuquery",
-                "aos_orgid.id aos_orgid,aos_lowest_fee,aos_itemid.id aos_itemid", null);
+            "aos_orgid.id aos_orgid,aos_lowest_fee,aos_itemid.id aos_itemid", null);
         for (DynamicObject d : dyns) {
             BigDecimal aos_lowest_fee = d.getBigDecimal("aos_lowest_fee");
             String aos_item_code = d.getString("aos_itemid");
@@ -2104,8 +2144,8 @@ public class aos_mkt_popppc_init extends AbstractTask {
     public static Map<String, BigDecimal> initItemCost() {
         Map<String, BigDecimal> map = new HashMap<>();
         DynamicObjectCollection dyns = QueryServiceHelper.query("aos_sync_invcost",
-                "aos_orgid.id aos_orgid," + "aos_itemid.id aos_itemid," + "aos_item_cost",
-                new QFilter[]{new QFilter("aos_isnew", QCP.equals, true)});
+            "aos_orgid.id aos_orgid," + "aos_itemid.id aos_itemid," + "aos_item_cost",
+            new QFilter[] {new QFilter("aos_isnew", QCP.equals, true)});
         for (DynamicObject d : dyns) {
             BigDecimal aos_item_cost = d.getBigDecimal("aos_item_cost");
             String aos_orgid = d.getString("aos_orgid");
@@ -2129,45 +2169,49 @@ public class aos_mkt_popppc_init extends AbstractTask {
         String date_from_str = writeFormat.format(date_from);
         String date_to_str = writeFormat.format(date_to);
         QFilter filter_date1 = new QFilter("aos_sal_actplanentity.aos_l_startdate", ">=", date_from_str)
-                .and("aos_sal_actplanentity.aos_l_startdate", "<=", date_to_str);
+            .and("aos_sal_actplanentity.aos_l_startdate", "<=", date_to_str);
         QFilter filter_date2 = new QFilter("aos_sal_actplanentity.aos_enddate", ">=", date_from_str)
-                .and("aos_sal_actplanentity.aos_enddate", "<=", date_to_str);
+            .and("aos_sal_actplanentity.aos_enddate", "<=", date_to_str);
         QFilter filter_date3 = new QFilter("aos_sal_actplanentity.aos_l_startdate", "<=", date_from_str)
-                .and("aos_sal_actplanentity.aos_enddate", ">=", date_to_str);
+            .and("aos_sal_actplanentity.aos_enddate", ">=", date_to_str);
         QFilter filter_date = filter_date1.or(filter_date2).or(filter_date3);
         QFilter filter_ama = new QFilter("aos_channel.number", "=", "AMAZON");
-        QFilter[] filters = new QFilter[]{filter_date, filter_ama};
-        String Select = "aos_nationality.id aos_orgid,aos_shop,aos_acttype,aos_sal_actplanentity.aos_itemnum.id aos_itemid,"
+        QFilter[] filters = new QFilter[] {filter_date, filter_ama};
+        String Select =
+            "aos_nationality.id aos_orgid,aos_shop,aos_acttype,aos_sal_actplanentity.aos_itemnum.id aos_itemid,"
                 + "aos_acttype.number aos_acttypeNumber,aos_sal_actplanentity.aos_l_startdate aos_l_startdate,aos_sal_actplanentity.aos_enddate aos_enddate";
         DataSet aos_act_select_planS = QueryServiceHelper.queryDataSet("aos_mkt_popadjs_init.GenerateAct",
-                "aos_act_select_plan", Select, filters, "aos_makedate");
+            "aos_act_select_plan", Select, filters, "aos_makedate");
 
         // 查询店铺活动类型参数
         String selectFields = "aos_org,aos_shop,aos_acttype";
-        DataSet aos_sal_act_type_pS = QueryServiceHelper.queryDataSet("aos_mkt_popadjs_init.GenerateAct",
-                "aos_sal_act_type_p", selectFields,
-                new QFilter[]{new QFilter("aos_assessment.number", QCP.equals, "Y")}, null);
+        DataSet aos_sal_act_type_pS =
+            QueryServiceHelper.queryDataSet("aos_mkt_popadjs_init.GenerateAct", "aos_sal_act_type_p", selectFields,
+                new QFilter[] {new QFilter("aos_assessment.number", QCP.equals, "Y")}, null);
         aos_act_select_planS = aos_act_select_planS.join(aos_sal_act_type_pS, JoinType.INNER).on("aos_orgid", "aos_org")
-                .on("aos_shop", "aos_shop").on("aos_acttype", "aos_acttype")
-                .select("aos_orgid", "aos_itemid", "aos_acttypeNumber", "aos_l_startdate", "aos_enddate").finish();
-        String[] GroupBy = new String[]{"aos_orgid", "aos_itemid", "aos_acttypeNumber", "aos_l_startdate",
-                "aos_enddate"};
+            .on("aos_shop", "aos_shop").on("aos_acttype", "aos_acttype")
+            .select("aos_orgid", "aos_itemid", "aos_acttypeNumber", "aos_l_startdate", "aos_enddate").finish();
+        String[] GroupBy =
+            new String[] {"aos_orgid", "aos_itemid", "aos_acttypeNumber", "aos_l_startdate", "aos_enddate"};
         aos_act_select_planS = aos_act_select_planS.groupBy(GroupBy).finish();
         SimpleDateFormat sim = new SimpleDateFormat("MM-dd");
         while (aos_act_select_planS.hasNext()) {
             Row aos_act_select_plan = aos_act_select_planS.next();
             StringBuilder sign = new StringBuilder();
-            if (aos_act_select_plan.get("aos_acttypeNumber") != null)
+            if (aos_act_select_plan.get("aos_acttypeNumber") != null) {
                 sign.append(aos_act_select_plan.getString("aos_acttypeNumber"));
+            }
             sign.append("(");
-            if (aos_act_select_plan.get("aos_l_startdate") != null)
+            if (aos_act_select_plan.get("aos_l_startdate") != null) {
                 sign.append(sim.format(aos_act_select_plan.getDate("aos_l_startdate")));
+            }
             sign.append("-");
-            if (aos_act_select_plan.get("aos_enddate") != null)
+            if (aos_act_select_plan.get("aos_enddate") != null) {
                 sign.append(sim.format(aos_act_select_plan.getDate("aos_enddate")));
+            }
             sign.append(")");
             Act.put(aos_act_select_plan.getString("aos_orgid") + "~" + aos_act_select_plan.getLong("aos_itemid"),
-                    sign.toString());
+                sign.toString());
         }
         aos_act_select_planS.close();
         return Act;
@@ -2182,25 +2226,25 @@ public class aos_mkt_popppc_init extends AbstractTask {
         QFilter qFilter = new QFilter("aos_orgid", QCP.equals, aos_orgid);
         qFilter.and(new QFilter("aos_date", QCP.like, aos_date + "%"));
         qFilter.and(new QFilter("aos_entryentity.aos_date_l", QCP.like, aos_date1 + "%"));
-        String selectFields = "aos_entryentity.aos_ad_name aos_ad_name,"
-                + "aos_entryentity.aos_impressions aos_impressions";
-        DynamicObjectCollection aos_base_skupoprpt = QueryServiceHelper.query("aos_base_skupoprpt", selectFields,
-                qFilter.toArray());
+        String selectFields =
+            "aos_entryentity.aos_ad_name aos_ad_name," + "aos_entryentity.aos_impressions aos_impressions";
+        DynamicObjectCollection aos_base_skupoprpt =
+            QueryServiceHelper.query("aos_base_skupoprpt", selectFields, qFilter.toArray());
         return aos_base_skupoprpt.stream().collect(Collectors.toMap(obj -> obj.getString("aos_ad_name"),
-                obj -> obj.getBigDecimal("aos_impressions"), (k1, k2) -> k1));
+            obj -> obj.getBigDecimal("aos_impressions"), (k1, k2) -> k1));
     }
 
     // 营销剔除
     private static Set<String> getEliminateItem(String aos_orgid) {
         DynamicObjectCollection list = QueryServiceHelper.query("aos_mkt_dataeliminate", "aos_itemid",
-                new QFilter[]{new QFilter("aos_orgid", QCP.equals, aos_orgid)});
+            new QFilter[] {new QFilter("aos_orgid", QCP.equals, aos_orgid)});
         return list.stream().map(obj -> obj.getString("aos_itemid")).collect(Collectors.toSet());
     }
 
     /**
      * 获取物料事物处理表中 获取国别物料维度的最大入库日期
      *
-     * @param orgid         国别主键
+     * @param orgid 国别主键
      * @param wareHouseDate 入库时间
      * @return 物料的入库时间，同一入库时间下的所有物料
      */
@@ -2212,8 +2256,8 @@ public class aos_mkt_popppc_init extends AbstractTask {
         QFilter filter_date = new QFilter("aos_trans_date", ">=", local_wareHouse.toString());
         String algo = "mkt.popular.ppc.aos_mkt_popppc_init.Query7daysWareHouseItem";
         DataSet ds = QueryServiceHelper.queryDataSet(algo, "aos_sync_inv_trans", "aos_item,aos_trans_date",
-                new QFilter[]{filter_org, filter_date}, null);
-        ds = ds.groupBy(new String[]{"aos_item"}).max("aos_trans_date").finish();
+            new QFilter[] {filter_org, filter_date}, null);
+        ds = ds.groupBy(new String[] {"aos_item"}).max("aos_trans_date").finish();
         // 物料和其最新入库时间
         DynamicObjectCollection dyc_itemAndDate = ORM.create().toPlainDynamicObjectCollection(ds);
         ds.close();
@@ -2227,20 +2271,20 @@ public class aos_mkt_popppc_init extends AbstractTask {
         // (key1, key2) -> key1));
         // 根据入库时间，将物料进行分组
         return dyc_itemAndDate.stream()
-                .collect(Collectors.groupingBy(dy -> sim_day.format(dy.getDate("aos_trans_date")),
-                        Collectors.mapping(dy -> dy.getString("aos_item"), Collectors.toList())));
+            .collect(Collectors.groupingBy(dy -> sim_day.format(dy.getDate("aos_trans_date")),
+                Collectors.mapping(dy -> dy.getString("aos_item"), Collectors.toList())));
     }
 
     /**
      * 判断入库前30是否全断货
      *
-     * @param orgid            orgid
-     * @param wareHouseDate    入库时间
-     * @param list_item        物料id
+     * @param orgid orgid
+     * @param wareHouseDate 入库时间
+     * @param list_item 物料id
      * @param map_itemToOutage 记录物料的断货情况，存在不断货为true，全断货为false
      */
     private static void Judge30DaysStock(Object orgid, String wareHouseDate, List<String> list_item,
-                                         Map<String, Boolean> map_itemToOutage) {
+        Map<String, Boolean> map_itemToOutage) {
         LocalDate local_warehouseDate = LocalDate.parse(wareHouseDate);
         // 判断入库的前30天，是否存在不断货
         QFilter filter_org = new QFilter("aos_entryentity.aos_orgid", "=", orgid);
@@ -2248,11 +2292,10 @@ public class aos_mkt_popppc_init extends AbstractTask {
         QFilter filter_from = new QFilter("aos_date", ">=", local_warehouseDate.minusDays(30).toString());
         QFilter filter_item = new QFilter("aos_entryentity.aos_itemid", QFilter.in, list_item);
         QFilter filter_noShortage = new QFilter("aos_entryentity.aos_flag", "!=", true); // 不缺货
-        QFilter[] qfs = new QFilter[]{filter_org, filter_item, filter_to, filter_from, filter_noShortage};
+        QFilter[] qfs = new QFilter[] {filter_org, filter_item, filter_to, filter_from, filter_noShortage};
         List<String> list_noShortage = QueryServiceHelper
-                .query("aos_sync_offsale_bak", "aos_entryentity.aos_itemid aos_itemid", qfs).stream()
-                .map(dy -> dy.getString("aos_itemid")).filter(FndGlobal::IsNotNull).distinct()
-                .collect(Collectors.toList());
+            .query("aos_sync_offsale_bak", "aos_entryentity.aos_itemid aos_itemid", qfs).stream()
+            .map(dy -> dy.getString("aos_itemid")).filter(FndGlobal::IsNotNull).distinct().collect(Collectors.toList());
         // 将存在不断货的信息修改为true
         for (String noShortageItem : list_noShortage) {
             map_itemToOutage.put(noShortageItem, true);
@@ -2267,12 +2310,12 @@ public class aos_mkt_popppc_init extends AbstractTask {
         LocalDate now = LocalDate.now();
         QFilter qFilter_dateMin = new QFilter("aos_date", ">=", now.minusDays(1).toString());
         QFilter qFilter_dateMax = new QFilter("aos_date", "<", now.toString());
-        QFilter[] qfs = new QFilter[]{filter_org, qFilter_dateMin, qFilter_dateMax};
+        QFilter[] qfs = new QFilter[] {filter_org, qFilter_dateMin, qFilter_dateMax};
         StringJoiner str = new StringJoiner(",");
         str.add("aos_entryentity.aos_itemnumer aos_itemnumer");
         str.add("aos_entryentity.aos_special aos_special");
         return QueryServiceHelper.query("aos_mkt_popular_ppc", str.toString(), qfs).stream()
-                .collect(Collectors.toMap(dy -> dy.getString("aos_itemnumer"), dy -> dy.getString("aos_special")));
+            .collect(Collectors.toMap(dy -> dy.getString("aos_itemnumer"), dy -> dy.getString("aos_special")));
     }
 
     /**
@@ -2284,7 +2327,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
         builder.add("aos_type", "=", "sp");
         builder.add("aos_item", "!=", "");
         return QueryServiceHelper.query("aos_mkt_reject", "aos_item", builder.toArray()).stream()
-                .map(dy -> dy.getString("aos_item")).distinct().collect(Collectors.toList());
+            .map(dy -> dy.getString("aos_item")).distinct().collect(Collectors.toList());
     }
 
     @Override
