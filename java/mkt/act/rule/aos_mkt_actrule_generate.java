@@ -255,7 +255,7 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 		dyc_act.removeIf(dy->true);
 		for (DynamicObject row : actTypeEntity.getDynamicObjectCollection("aos_entryentity1")) {
 			DynamicObject newActRow = dyc_act.addNew();
-			newActRow.set("aos_cate",row.get("aos_actrule"));
+			newActRow.set("aos_cate",row.get("aos_cate"));
 			newActRow.set("aos_name",row.get("aos_name"));
 		}
 		//添加活动规则
