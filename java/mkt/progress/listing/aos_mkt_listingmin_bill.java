@@ -306,6 +306,22 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
                     // 功能图翻译类型 不需要生成
                     if (!"功能图翻译".equals(aos_type))
                         GenerateListingSal(dy_main);// 同时生成销售信息确认单
+
+                    Object aos_orgsmall = dy_main.get("aos_orgsmall");
+                    if (("IT".equals(aos_orgnumber)||"ES".equals(aos_orgnumber))
+                            && ("老品优化".equals(aos_type) ||"四者一致".equals(aos_type))
+                            && FndGlobal.IsNull(aos_orgsmall)) {
+                        // 生成Listing优化销售确认单
+                        if ("IT".equals(aos_orgnumber)) {
+                            dy_main.set("aos_orgsmall",FndGlobal.getBaseId("RO","bd_country"));
+                        }
+
+                        if ("ES".equals(aos_orgnumber)) {
+                            dy_main.set("aos_orgsmall",FndGlobal.getBaseId("PT","bd_country"));
+                        }
+                        GenerateListingSalSmall(dy_main);
+                    }
+
                 } else if ("是".equals(aos_osconfirmlov) && !"是".equals(aos_funconfirm)) {
                     // 2.海外文字确认为是 海外功能图确认不为是
                     ListingStatus = "海外编辑确认";
