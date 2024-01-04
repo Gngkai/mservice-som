@@ -38,7 +38,7 @@ public class ItemKeywordListPlugin extends AbstractTask {
         syncItemStatus();
     }
 
-    private Map<String, String> getAllItemCategory() {
+    private static Map<String, String> getAllItemCategory() {
         QFilter qFilter = new QFilter("standard.number", QCP.equals, "JBFLBZ");
         String selectFields = "material,group.name categoryname";
         DynamicObjectCollection list = QueryServiceHelper.query("bd_materialgroupdetail", selectFields, qFilter.toArray());
@@ -47,15 +47,14 @@ public class ItemKeywordListPlugin extends AbstractTask {
                 obj -> obj.getString("categoryname"),
                 (k1, k2) -> k1));
     }
-    private void syncItemKeyword() {
+    public static void syncItemKeyword() {
         Map<String, String> allItemCategory = getAllItemCategory();
         String selectFields = "aos_contryentry.aos_nationality aos_orgid," +
                 "id aos_itemid," +
                 "name aos_itemname";
-        LocalDate localDate = LocalDate.now().minusDays(1);
-        QFilter filter_date = new QFilter("aos_contryentry.aos_firstshipment",">=",localDate.toString());
-        QFilter filter_org = new QFilter("aos_contryentry.aos_nationality", QCP.is_notnull, null);
         List<QFilter> materialFilter = SalUtil.get_MaterialFilter();
+        QFilter filter_date = new QFilter("aos_contryentry.aos_firstshipment",QFilter.is_notnull,null);
+        QFilter filter_org = new QFilter("aos_contryentry.aos_nationality","!=", "");
         materialFilter.add(filter_date);
         materialFilter.add(filter_org);
 
@@ -70,16 +69,18 @@ public class ItemKeywordListPlugin extends AbstractTask {
             keywordExists.add(aos_orgid + "~" + aos_itemid);
         }
 
+        List<DynamicObject> saveList = new ArrayList<>(5000);
         for (DynamicObject obj:list) {
             String aos_orgid = obj.getString("aos_orgid");
             String aos_itemid = obj.getString("aos_itemid");
+            // 如果SKU关键词库中已存在
+            if (keywordExists.contains(aos_orgid + "~" + aos_itemid)) continue;
+
             String aos_itemname = obj.getString("aos_itemname");
             String aos_category1 = "";
             String aos_category2 = "";
             String aos_category3 = "";
 
-            // 如果SKU关键词库中已存在
-            if (keywordExists.contains(aos_orgid + "~" + aos_itemid)) continue;
 
             String aos_category = allItemCategory.get(aos_itemid);
             if (aos_category == null) continue;
@@ -103,9 +104,10 @@ public class ItemKeywordListPlugin extends AbstractTask {
             itemKeywordObj.set("aos_category1", aos_category1);
             itemKeywordObj.set("aos_category2", aos_category2);
             itemKeywordObj.set("aos_category3", aos_category3);
-            SaveServiceHelper.save(new DynamicObject[]{itemKeywordObj});
-
+            saveList.add(itemKeywordObj);
+            SaveUtils.SaveEntity("aos_mkt_keyword",saveList,false);
         }
+        SaveUtils.SaveEntity("aos_mkt_keyword",saveList,true);
     }
 
     /**
@@ -124,6 +126,7 @@ public class ItemKeywordListPlugin extends AbstractTask {
         Calendar instance = Calendar.getInstance();
         String selectFields = "aos_orgid,aos_category1,aos_category2,aos_category3,aos_itemnamecn,aos_itementity.aos_itemid,aos_itementity.aos_productnum,aos_itementity.aos_picture1,aos_itementity.aos_synctime";
         DynamicObject[] aos_mkt_points = BusinessDataServiceHelper.load("aos_mkt_point", selectFields, null);
+        List<DynamicObject> saveList = new ArrayList<>(5000);
         for (DynamicObject objPoints:aos_mkt_points) {
             // 根据国别+品类+品名获取SKU
             DynamicObject aos_orgid = objPoints.getDynamicObject("aos_orgid");
@@ -158,8 +161,10 @@ public class ItemKeywordListPlugin extends AbstractTask {
                 dynamicObject.set("aos_picture1", "https://cls3.s3.amazonaws.com/" + aos_itemnum + "/1-1.jpg");
                 dynamicObject.set("aos_synctime", instance.getTime());
             }
-            SaveServiceHelper.save(new DynamicObject[]{objPoints});
+            saveList.add(objPoints);
+            SaveUtils.SaveEntity("aos_mkt_point",saveList,false);
         }
+        SaveUtils.SaveEntity("aos_mkt_point",saveList,true);
     }
 
     /**
