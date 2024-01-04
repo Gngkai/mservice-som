@@ -706,21 +706,9 @@ public class aos_mkt_popppc_init extends AbstractTask {
                             InsertData(aos_entryentityS, insert_map, "LOWQTY");
                             continue;
                         }
-                        // 其它节日装饰 中类 万圣 过季品剔除
-                        // if ("其它节日装饰".equals(aos_category2)) {
-                        // log.add(aos_itemnumer + "其他节日装饰 过季品剔除");
-                        // InsertData(aos_entryentityS, insert_map, "SEASON", roiMap);
-                        // continue;
-                        // }
-
-                        // if ("圣诞装饰".equals(aos_category2)) {
-                        // log.add(aos_itemnumer + "圣诞装饰 过季品剔除");
-                        // InsertData(aos_entryentityS, insert_map, "SEASON", roiMap);
-                        // continue;
-                        // }
 
                         // 非节日品剔除预断货 节日品节日2天内剔除 圣诞装饰 这两个中类不做预断货剔除 销量为3日均与7日均的最小值
-                        if (FndGlobal.IsNotNull(aos_festivalseting) && !"圣诞装饰".equals(aos_category2)
+                        if (FndGlobal.IsNull(aos_festivalseting) && !"圣诞装饰".equals(aos_category2)
                             && !"其它节日装饰".equals(aos_category2)) {
 
                             // 剔除过季品
@@ -1017,7 +1005,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
                         }
                     } else {
                         // 必推货号 判断预断货
-                        if (FndGlobal.IsNotNull(aos_festivalseting) && !"圣诞装饰".equals(aos_category2)) {
+                        if (FndGlobal.IsNull(aos_festivalseting) && !"圣诞装饰".equals(aos_category2)) {
                             // (海外在库+在途数量)/7日均销量)<30 或 满足销售预断货逻辑 则为营销预断货逻辑 且 不能为季节品季末 且可售天数小于45
                             int itemavadays = map_itemavadays.getOrDefault(p_ou_code + "~" + aos_itemnumer, 0);
                             if (((availableDays < 30) || ((MKTCom.Is_PreSaleOut(org_id, item_id, (int)item_intransqty,
