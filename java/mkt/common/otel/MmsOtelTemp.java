@@ -15,7 +15,7 @@ import java.util.EventObject;
  * Date:2023/12/6 13:07
  */
 public class MmsOtelTemp extends AbstractFormPlugin {
-    private static final Tracer tracer = MmsOtelUtils.getTracer(mkt.image.test.aos_mkt_bitest_form.class, RequestContext.get());
+    private static final Tracer tracer = MmsOtelUtils.getTracer(MmsOtelTemp.class, RequestContext.get());
 
     public void registerListener(EventObject e) {
         super.registerListener(e);
