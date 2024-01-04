@@ -533,9 +533,21 @@ public class aos_mkt_popppc_init extends AbstractTask {
                 if (PPCInfo_Map != null) {
                     aos_groupdate = PPCInfo_Map.getOrDefault("aos_groupdate", Today);
                 }
+
+                if (aos_groupdate == null)
+                {
+                    aos_groupdate = Today;
+                }
+
                 if (PPCInfoSerial_Map != null) {
                     aos_makedate = PPCInfoSerial_Map.getOrDefault("aos_makedate", Today);
                 }
+
+                if (aos_makedate == null)
+                {
+                    aos_makedate = Today;
+                }
+
                 // =====结束是否新系列新组判断=====
                 String itemCategoryName = CommonDataSom.getItemCategoryName(String.valueOf(item_id));
                 String aos_category1 = "";

@@ -6,6 +6,7 @@ import common.fnd.FndGlobal;
 import common.fnd.FndMsg;
 import common.sal.sys.basedata.dao.ItemDao;
 import common.sal.sys.basedata.dao.impl.ItemDaoImpl;
+import common.sal.util.SalUtil;
 import kd.bos.algo.DataSet;
 import kd.bos.algo.Row;
 import kd.bos.cache.CacheFactory;
@@ -86,6 +87,7 @@ public class aos_mkt_popppc_list extends AbstractListPlugin {
 				aos_exportnew();
 			} catch (ParseException parseException) {
 				parseException.printStackTrace();
+				this.getView().showErrorNotification(SalUtil.getExceptionStr(parseException));
 			}
 		}
 
