@@ -1,14 +1,26 @@
 package mkt.popular.ppc;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+
+import org.apache.commons.lang3.SerializationUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.commons.lang3.time.DateUtils;
+
 import common.CommonDataSom;
-import common.StringComUtils;
-import common.fnd.AosomLog;
-import common.fnd.FndDate;
-import common.fnd.FndGlobal;
-import common.fnd.FndLog;
-import common.fnd.FndWebHook;
 import common.Cux_Common_Utl;
+import common.StringComUtils;
+import common.fnd.*;
 import common.sal.util.InStockAvailableDays;
+import common.sal.util.QFBuilder;
 import common.sal.util.SalUtil;
 import kd.bos.algo.DataSet;
 import kd.bos.algo.JoinType;
@@ -32,27 +44,12 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
-import common.sal.util.QFBuilder;
 import mkt.common.MKTCom;
 import mkt.common.aos_mkt_common_redis;
 import mkt.popular.aos_mkt_pop_common;
 import mkt.popular.adjust_s.aos_mkt_popadds_init;
 import mkt.popular.adjust_s.aos_mkt_popadjs_init;
 import mkt.progress.iface.iteminfo;
-
-import org.apache.commons.lang3.SerializationUtils;
-import org.apache.commons.lang3.time.DateFormatUtils;
-import org.apache.commons.lang3.time.DateUtils;
-
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Author:aosom Description:PPC初始化任务
