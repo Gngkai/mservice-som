@@ -1614,8 +1614,10 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
                 String aos_slogan = "";
                 DynamicObjectCollection sloganS = QueryServiceHelper.query("aos_mkt_data_slogan", sloganSelect,
                     new QFilter("aos_category1", QCP.equals, AosCategory1)
-                        .and("aos_category2", QCP.equals, AosCategory2).and("aos_category3", QCP.equals, AosCategory3)
-                        .and("aos_itemnamecn", QCP.equals, bd_material.get("name")).toArray());
+                        .and("aos_category2", QCP.equals, AosCategory2)
+                            .and("aos_category3", QCP.equals, AosCategory3)
+                        .and("aos_itemnamecn", QCP.equals, bd_material.getString("name")).toArray());
+
                 for (DynamicObject slogan : sloganS) {
                     aos_name = aos_name + slogan.getString("aos_name") + ";";
                     aos_slogan = aos_slogan + slogan.getString("aos_slogan") + ";";
