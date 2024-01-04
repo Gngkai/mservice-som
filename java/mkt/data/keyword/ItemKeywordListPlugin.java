@@ -8,16 +8,12 @@ import kd.bos.context.RequestContext;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.exception.KDException;
-import kd.bos.logging.Log;
-import kd.bos.logging.LogFactory;
 import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
-import kd.bos.servicehelper.operation.SaveServiceHelper;
 import common.sal.util.QFBuilder;
-import org.joda.time.LocalDate;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -27,7 +23,6 @@ import java.util.stream.Collectors;
  * 2022-4-15
  */
 public class ItemKeywordListPlugin extends AbstractTask {
-    private static final Log logger = LogFactory.getLog(ItemKeywordListPlugin.class);
     @Override
     public void execute(RequestContext requestContext, Map<String, Object> map) throws KDException {
         // 同步SKU关键词库
@@ -123,7 +118,6 @@ public class ItemKeywordListPlugin extends AbstractTask {
             pointItemSet.add(aos_orgid + "~" + aos_itemid);
         }
         // 2.查询所有的关键词库中的信息
-        Calendar instance = Calendar.getInstance();
         String selectFields = "aos_orgid,aos_category1,aos_category2,aos_category3,aos_itemnamecn,aos_itementity.aos_itemid,aos_itementity.aos_productnum,aos_itementity.aos_picture1,aos_itementity.aos_synctime";
         DynamicObject[] aos_mkt_points = BusinessDataServiceHelper.load("aos_mkt_point", selectFields, null);
         List<DynamicObject> saveList = new ArrayList<>(5000);
@@ -152,14 +146,11 @@ public class ItemKeywordListPlugin extends AbstractTask {
 
                 if (pointItemSet.contains(aos_orgid.getString("id") + "~" + aos_itemid)) continue;// 如果关键词SKU清单中已存在 不新增
 
-                String aos_productno = obj.getString("aos_itemid.aos_productno");
                 String aos_itemnum = obj.getString("aos_itemnum");
 
                 DynamicObject dynamicObject = aos_itementity.addNew();
                 dynamicObject.set("aos_itemid", aos_itemid);
-                dynamicObject.set("aos_productnum", aos_productno);
                 dynamicObject.set("aos_picture1", "https://cls3.s3.amazonaws.com/" + aos_itemnum + "/1-1.jpg");
-                dynamicObject.set("aos_synctime", instance.getTime());
             }
             saveList.add(objPoints);
             SaveUtils.SaveEntity("aos_mkt_point",saveList,false);
