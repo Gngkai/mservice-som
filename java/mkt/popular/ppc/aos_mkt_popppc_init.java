@@ -534,8 +534,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
                     aos_groupdate = PPCInfo_Map.getOrDefault("aos_groupdate", Today);
                 }
 
-                if (aos_groupdate == null)
-                {
+                if (aos_groupdate == null) {
                     aos_groupdate = Today;
                 }
 
@@ -543,8 +542,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
                     aos_makedate = PPCInfoSerial_Map.getOrDefault("aos_makedate", Today);
                 }
 
-                if (aos_makedate == null)
-                {
+                if (aos_makedate == null) {
                     aos_makedate = Today;
                 }
 
@@ -1129,6 +1127,10 @@ public class aos_mkt_popppc_init extends AbstractTask {
                 }
                 if (PPCInfoSerial_Map != null) {
                     aos_makedate = PPCInfoSerial_Map.getOrDefault("aos_makedate", Today);
+                }
+
+                if (aos_makedate == null) {
+                    aos_makedate = Today;// 新组
                 }
 
                 /*
