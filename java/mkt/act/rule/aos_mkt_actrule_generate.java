@@ -282,6 +282,19 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 			newActRow.set("aos_re_shop",row.get("aos_re_shop"));
 			newActRow.set("aos_re_act",row.get("aos_re_act"));
 		}
+
+		//优先级
+		 dyc_rule = this.getModel().getDataEntity(true).getDynamicObjectCollection("aos_entryentity4");
+		dyc_rule.removeIf(dy->true);
+		for (DynamicObject row : actTypeEntity.getDynamicObjectCollection("aos_entryentity4")) {
+			DynamicObject newActRow = dyc_rule.addNew();
+			newActRow.set("aos_pr_project",row.get("aos_pr_project"));
+			newActRow.set("aos_pr_way",row.get("aos_pr_way"));
+			newActRow.set("aos_pr_weight",row.get("aos_pr_weight"));
+			newActRow.set("aos_pr_day",row.get("aos_pr_day"));
+			newActRow.set("seq",row.get("seq"));
+		}
+
 		getView().updateView("aos_flexpanelap3");
 	}
 

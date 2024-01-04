@@ -1427,7 +1427,7 @@ public class EventRule {
     Map<String,BigDecimal> weightMap;
     public List<String> setWeight(){
         weightMap = new HashMap<>(itemInfoes.size());
-        DynamicObjectCollection weightEntityRows = typEntity.getDynamicObjectCollection("aos_entryentity4");
+        DynamicObjectCollection weightEntityRows = actPlanEntity.getDynamicObjectCollection("aos_entryentity4");
         for (DynamicObject row : weightEntityRows) {
             String project = row.getString("aos_pr_project");
             BigDecimal  prWeight = row.getBigDecimal("aos_pr_weight");
