@@ -11,12 +11,12 @@ import kd.bos.form.plugin.AbstractFormPlugin;
 import java.util.EventObject;
 
 /**
- * Author:aosom
- * Date:2023/12/6 13:07
+ * @author aosom
  */
 public class MmsOtelTemp extends AbstractFormPlugin {
-    private static final Tracer tracer = MmsOtelUtils.getTracer(MmsOtelTemp.class, RequestContext.get());
+    private static final Tracer TRACER = MmsOtelUtils.getTracer(MmsOtelTemp.class, RequestContext.get());
 
+    @Override
     public void registerListener(EventObject e) {
         super.registerListener(e);
         // 给工具栏加监听事件
@@ -24,12 +24,13 @@ public class MmsOtelTemp extends AbstractFormPlugin {
         this.addItemClickListeners("aos_test"); // 提交
     }
 
+    @Override
     public void itemClick(ItemClickEvent evt) {
-        Span span = MmsOtelUtils.getCusMainSpan(tracer, MmsOtelUtils.getMethodPath());
-        try (Scope scope = span.makeCurrent()) {
-            String Control = evt.getItemKey();
-            if (Control.equals("aos_test")) {
-                aos_test();
+        Span span = MmsOtelUtils.getCusMainSpan(TRACER, MmsOtelUtils.getMethodPath());
+        try (Scope ignored = span.makeCurrent()) {
+            String control = evt.getItemKey();
+            if ("aos_test".equals(control)) {
+                aosTest();
             }
         } catch (Exception ex) {
             MmsOtelUtils.setException(span, ex);
@@ -38,9 +39,9 @@ public class MmsOtelTemp extends AbstractFormPlugin {
         }
     }
 
-    private void aos_test() {
-        Span span = MmsOtelUtils.getCusSubSpan(tracer, MmsOtelUtils.getMethodPath());
-        try (Scope scope = span.makeCurrent()) {
+    private void aosTest() {
+        Span span = MmsOtelUtils.getCusSubSpan(TRACER, MmsOtelUtils.getMethodPath());
+        try (Scope ignored = span.makeCurrent()) {
             subTest();
             span.addEvent("主测试");
             span.setStatus(StatusCode.OK);
@@ -52,8 +53,8 @@ public class MmsOtelTemp extends AbstractFormPlugin {
     }
 
     private void subTest() {
-        Span span = MmsOtelUtils.getCusSubSpan(tracer, MmsOtelUtils.getMethodPath());
-        try (Scope scope = span.makeCurrent()) {
+        Span span = MmsOtelUtils.getCusSubSpan(TRACER, MmsOtelUtils.getMethodPath());
+        try (Scope ignored = span.makeCurrent()) {
             detailTest();
             span.addEvent("子测试");
             span.setStatus(StatusCode.OK);
@@ -65,8 +66,8 @@ public class MmsOtelTemp extends AbstractFormPlugin {
     }
 
     private void detailTest() {
-        Span span = MmsOtelUtils.getCusSubSpan(tracer, MmsOtelUtils.getMethodPath());
-        try (Scope scope = span.makeCurrent()) {
+        Span span = MmsOtelUtils.getCusSubSpan(TRACER, MmsOtelUtils.getMethodPath());
+        try (Scope ignored = span.makeCurrent()) {
             span.addEvent("明细测试");
             span.setStatus(StatusCode.OK);
         } catch (Exception ex) {
