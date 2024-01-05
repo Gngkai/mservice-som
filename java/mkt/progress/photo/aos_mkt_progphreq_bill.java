@@ -48,7 +48,7 @@ import mkt.progress.ProgressUtil;
 import mkt.progress.design.aos_mkt_designreq_bill;
 import mkt.progress.design3d.aos_mkt_3design_bill;
 import mkt.progress.iface.iteminfo;
-import mkt.progress.listing.aos_mkt_listingreq_bill;
+import mkt.progress.listing.AosMktListingReqBill;
 import mkt.progress.listing.aos_mkt_listingson_bill;
 
 public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemClickListener, HyperLinkClickListener {
@@ -1130,7 +1130,7 @@ public class aos_mkt_progphreq_bill extends AbstractBillPlugIn implements ItemCl
                     .and("aos_contryentry.aos_contryentrystatus", QCP.not_equals, "C"));
                 if (!exist)
                     continue;// 全球终止不取
-                int osQty = aos_mkt_listingreq_bill.getOsQty(itemid);
+                int osQty = AosMktListingReqBill.getOsQty(itemid);
                 if (osQty < 10)
                     continue;
                 String number = bd.getString("number");

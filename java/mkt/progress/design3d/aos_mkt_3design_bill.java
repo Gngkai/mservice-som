@@ -154,10 +154,10 @@ public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClic
 		SaveControl(dy_main);// 先做数据校验判断是否可以提交
 		String aos_status = dy_main.getString("aos_status");// 根据状态判断当前流程节点
 		switch (aos_status) {
-		case "新建":
-			SubmitForNew(dy_main);
-			DesignSkuList.createEntity(dy_main);
-			break;
+			case "新建":
+				SubmitForNew(dy_main);
+				DesignSkuList.createEntity(dy_main);
+				break;
 		}
 		FndHistory.Create(dy_main, "提交", aos_status);
 		SaveServiceHelper.save(new DynamicObject[] { dy_main });
@@ -227,12 +227,21 @@ public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClic
 							"设计确认3D");
 				}
 			}
-		} else if ("拍照需求表".equals(aos_source)) {
+		}
+		else if ("拍照需求表".equals(aos_source)) {
 			DynamicObject aos_mkt_photoreq = BusinessDataServiceHelper.loadSingle(aos_sourceid, "aos_mkt_photoreq");
 			String aos_status = aos_mkt_photoreq.getString("aos_status");
 
 			String aos_phstate = aos_mkt_photoreq.getString("aos_phstate");
-			if ("工厂简拍".equals(aos_phstate)) {
+			//24-1-3 如果拍照需求表 需求类型是 视频，则到视频更新节点（实际是到 开发采购确认视频，再触发提交）
+			String aos_type = aos_mkt_photoreq.getString("aos_type");
+			if ("视频".equals(aos_type)){
+				aos_mkt_photoreq.set("aos_status", "开发确认:视频");
+				FndHistory.Create(aos_mkt_photoreq, "提交(3d回写),开发确认:视频", aos_status);
+				new aos_mkt_progphreq_bill().aos_submit(aos_mkt_photoreq, "B");
+			}
+			//24-1-3 来样拍照，直接结束
+			else if ("工厂简拍".equals(aos_phstate) || "来样拍照".equals(aos_phstate) ) {
 
 				aos_mkt_progphreq_bill.GenerateDesign(aos_mkt_photoreq);
 
@@ -250,7 +259,8 @@ public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClic
 							new DynamicObject[] { aos_mkt_photolist }, OperateOption.create());
 				}
 
-			} else {
+			}
+			else {
 				aos_mkt_photoreq.set("aos_status", "开发/采购确认图片");
 				Boolean aos_newitem = aos_mkt_photoreq.getBoolean("aos_newitem");
 				Object aos_developer = aos_mkt_photoreq.getDynamicObject("aos_developer").getPkValue();
@@ -284,7 +294,7 @@ public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClic
 
 	/**
 	 * 设计需求表创建3D产品设计单
-	 * 
+	 *
 	 * @param dy_mian 设计需求表单据
 	 **/
 	public static void Generate3Design(List<DynamicObject> list3d, DynamicObject dy_mian) throws FndError {
@@ -535,6 +545,15 @@ public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClic
 			DynamicObjectCollection dyc_deveAtt = aos_mkt_3design.getDynamicObjectCollection("aos_deveatt");
 			for (DynamicObject dy_attr : dyc_attr) {
 				dyc_deveAtt.addNew().set("fbasedataid", dy_attr);
+			}
+		}
+
+		//24-1-3 gk:存在3D需求附件
+		DynamicObjectCollection attaRows = aos_mkt_photoreq.getDynamicObjectCollection("aos_3datta");
+		if (attaRows.size()>0){
+			DynamicObjectCollection designRows = aos_mkt_3design.getDynamicObjectCollection("aos_3datta");
+			for (DynamicObject attaRow : attaRows){
+				designRows.addNew().set("fbasedataid", attaRow);
 			}
 		}
 
