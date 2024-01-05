@@ -40,12 +40,18 @@ public class aos_mkt_bitest_form extends AbstractFormPlugin {
         return n;
     }
 
+    /**
+     * 按钮枚举类
+     */
     public enum controlEnum {
         testControl("aos_test");
 
         private final String name;
 
-        // 构造方法
+        /**
+         * 构造方法
+         * @param name 名称
+         */
         controlEnum(String name) {
             this.name = name;
         }
