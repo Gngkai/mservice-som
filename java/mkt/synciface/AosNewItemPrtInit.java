@@ -35,7 +35,7 @@ public class AosNewItemPrtInit extends AbstractTask {
         today.set(Calendar.MINUTE, 0);
         today.set(Calendar.SECOND, 0);
         today.set(Calendar.MILLISECOND, 0);
-        SimpleDateFormat writeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);// 日期格式化
+        SimpleDateFormat writeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
         String dateStr = writeFormat.format(today.getTime());
         DeleteServiceHelper.delete("aos_newitem_prt", new QFilter("createtime", QCP.large_equals, dateStr).toArray());
         DynamicObjectCollection itemS = QueryServiceHelper.query("bd_material",
