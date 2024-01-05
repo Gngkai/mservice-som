@@ -45,10 +45,8 @@ public class AosMktDesignBill extends AbstractBillPlugIn implements ItemClickLis
         {
             dyMain.set("aos_status", "待优化");
             SaveServiceHelper.saveOperate("aos_mkt_designstd", new DynamicObject[] {dyMain}, OperateOption.create());
-
             this.getView().invokeOperation("refresh");
             this.getView().showSuccessNotification("手动开启成功");
-
         }
     }
 
@@ -93,12 +91,8 @@ public class AosMktDesignBill extends AbstractBillPlugIn implements ItemClickLis
             new QFilter("aos_category3_name", QCP.equals, aosCategory3Name),
             new QFilter("aos_itemnamecn", QCP.equals, aosItemnamecn),
             new QFilter("aos_detail", QCP.equals, aosDetail),};
-        FndMsg.debug("resultValue:" + resultValue);
-        FndMsg.debug("callBackId:" + callBackId);
 
         if ("Yes".equals(resultValue) && "audit".equals(callBackId)) {
-            FndMsg.debug("======== into if ========");
-
             // 如果为是 更新相同品类的摄影 摄像 布景标准库 的进度为待优化
             DynamicObject photoObj =
                 BusinessDataServiceHelper.loadSingle("aos_mkt_photostd", "billstatus,aos_status", qFilters);
@@ -145,18 +139,15 @@ public class AosMktDesignBill extends AbstractBillPlugIn implements ItemClickLis
         try (Scope ignored = span.makeCurrent()) {
             super.itemClick(evt);
             String control = evt.getItemKey();
-            if ("aos_submit".equals(control)) {
-                DynamicObject dyMain = this.getModel().getDataEntity(true);
-                aosSubmit(dyMain);// 提交
-            } else if ("aos_audit".equals(control)) {
-                DynamicObject dyMain = this.getModel().getDataEntity(true);
-                aosAudit(dyMain);// 审核
-            } else if ("aos_manuclose".equals(control)) {
-                DynamicObject dyMain = this.getModel().getDataEntity(true);
-                aosManuclose(dyMain);// 手工关闭
-            } else if ("aos_manuopen".equals(control)) {
-                DynamicObject dyMain = this.getModel().getDataEntity(true);
-                aosManuopen(dyMain);// 手工开启
+            DynamicObject dyMain = this.getModel().getDataEntity(true);
+            if (sign.submit.name.equals(control)) {
+                aosSubmit(dyMain);
+            } else if (sign.audit.name.equals(control)) {
+                aosAudit(dyMain);
+            } else if (sign.manuclose.name.equals(control)) {
+                aosManuclose(dyMain);
+            } else if (sign.manuopen.name.equals(control)) {
+                aosManuopen(dyMain);
             }
         } catch (Exception ex) {
             MmsOtelUtils.setException(span, ex);
@@ -170,7 +161,7 @@ public class AosMktDesignBill extends AbstractBillPlugIn implements ItemClickLis
         super.beforeDoOperation(args);
         FormOperate formOperate = (FormOperate)args.getSource();
         String operatation = formOperate.getOperateKey();
-        if ("save".equals(operatation)) {
+        if (sign.save.name.equals(operatation)) {
             FndMsg.debug("=====save Operation=====");
             // 校验
             DynamicObject aosMktStandard = QueryServiceHelper.queryOne("aos_mkt_designstd", "id",
@@ -184,6 +175,47 @@ public class AosMktDesignBill extends AbstractBillPlugIn implements ItemClickLis
                 this.getView().showErrorNotification("已存在相同的产品类别和品名");
                 args.setCancel(true);
             }
+        }
+    }
+
+    /**
+     * 按钮枚举类
+     */
+    public enum sign {
+        /**
+         * 保存操作
+         */
+        save("save"),
+        /**
+         * 提交按钮
+         */
+        submit("aos_submit"),
+
+        /**
+         * 审核按钮
+         */
+        audit("aos_audit"),
+        /**
+         * 手工关闭
+         */
+        manuclose("aos_manuclose"),
+        /**
+         * 手工打开
+         */
+        manuopen("aos_manuopen");
+
+        /**
+         * 名称
+         */
+        private final String name;
+
+        /**
+         * 构造方法
+         * 
+         * @param name 名称
+         */
+        sign(String name) {
+            this.name = name;
         }
     }
 }
