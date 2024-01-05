@@ -24,7 +24,6 @@ import kd.bos.entity.EntityMetadataCache;
 import kd.bos.entity.datamodel.events.ImportDataEventArgs;
 import kd.bos.entity.datamodel.events.PropertyChangedArgs;
 import kd.bos.entity.operate.result.OperationResult;
-import kd.bos.entity.property.EntryProp;
 import kd.bos.form.ConfirmCallBackListener;
 import kd.bos.form.MessageBoxOptions;
 import kd.bos.form.MessageBoxResult;
@@ -197,8 +196,7 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
         }
 
         // 循环创建
-        for (int i = 0; i < listRequire.size(); i++) {
-            DynamicObject dyn3d_r = listRequire.get(i);
+        for (DynamicObject dyn3d_r : listRequire) {
             // 头信息
             // 根据国别大类中类取对应营销US编辑
             Object ItemId = dyn3d_r.getDynamicObject("aos_itemid").getPkValue();
@@ -395,8 +393,7 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
         Object aos_productid = dy_main.get("aos_productid");
 
         // 循环创建
-        for (int i = 0; i < listRequirePic.size(); i++) {
-            DynamicObject dyn3d_r = listRequirePic.get(i);
+        for (DynamicObject dyn3d_r : listRequirePic) {
             String aos_segment3 = dyn3d_r.getString("aos_segment3");// 产品号
             // 根据国别大类中类取对应营销US编辑
             Object ItemId = dyn3d_r.getDynamicObject("aos_itemid").getPkValue();
@@ -499,8 +496,8 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
             }
 
             DynamicObjectCollection aos_entryentityS = aos_mkt_designreq.getDynamicObjectCollection("aos_entryentity");
-            String aos_contrybrandStr = "";
-            String aos_orgtext = "";
+            StringBuilder aos_contrybrandStr = new StringBuilder();
+            StringBuilder aos_orgtext = new StringBuilder();
             DynamicObject bd_material = BusinessDataServiceHelper.loadSingle(ItemId, "bd_material");
             DynamicObjectCollection aos_contryentryS = bd_material.getDynamicObjectCollection("aos_contryentry");
             // 获取所有国家品牌 字符串拼接 终止
@@ -519,7 +516,7 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
                 if ("C".equals(aos_contryentry.getString("aos_contryentrystatus")) && OsQty < SafeQty) {
                     continue;
                 }
-                aos_orgtext = aos_orgtext + aos_nationalitynumber + ";";
+                aos_orgtext.append(aos_nationalitynumber).append(";");
 
                 Object obj = aos_contryentry.getDynamicObject("aos_contrybrand");
                 if (obj == null) {
@@ -527,8 +524,6 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
                 }
                 String value = aos_nationalitynumber + "~"
                     + aos_contryentry.getDynamicObject("aos_contrybrand").getString("number");
-                // if (!aos_contrybrandStr.contains(value))
-                // aos_contrybrandStr = aos_contrybrandStr + value + ";";
 
                 String bra = aos_contryentry.getDynamicObject("aos_contrybrand").getString("number");
                 if (bra != null) {
@@ -536,12 +531,14 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
                 }
                 if (set_bra.size() > 1) {
                     {
-                        if (aos_contrybrandStr != null && !aos_contrybrandStr.contains(value)) {
-                            aos_contrybrandStr = aos_contrybrandStr + value + ";";
+                        if (!aos_contrybrandStr.toString().contains(value)) {
+                            aos_contrybrandStr.append(value).append(";");
                         }
                     }
                 } else if (set_bra.size() == 1) {
-                    aos_contrybrandStr = bra;
+                    if (bra != null) {
+                        aos_contrybrandStr = new StringBuilder(bra);
+                    }
                 }
             }
             String item_number = bd_material.getString("number");
@@ -549,7 +546,7 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
             String aos_productno = bd_material.getString("aos_productno");
             String aos_itemname = bd_material.getString("name");
             // 获取同产品号物料
-            String aos_broitem = "";
+            StringBuilder aos_broitem = new StringBuilder();
             if (!Cux_Common_Utl.IsNull(aos_productno)) {
                 DynamicObjectCollection bd_materialS = QueryServiceHelper.query("bd_material", "id,number,aos_type",
                     new QFilter("aos_productno", QCP.equals, aos_productno).and("aos_type", QCP.equals, "A").toArray());
@@ -570,7 +567,7 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
                     }
                     String number = bd.getString("number");
                     if (!item_number.equals(number)) {
-                        aos_broitem = aos_broitem + number + ";";
+                        aos_broitem.append(number).append(";");
                     }
                 }
             }
@@ -599,15 +596,15 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
             aos_subentryentity.set("aos_sub_item", ItemId);
             aos_subentryentity.set("aos_segment3", aos_productno);
             aos_subentryentity.set("aos_itemname", aos_itemname);
-            aos_subentryentity.set("aos_brand", aos_contrybrandStr);
+            aos_subentryentity.set("aos_brand", aos_contrybrandStr.toString());
             aos_subentryentity.set("aos_pic", url);
             aos_subentryentity.set("aos_developer", bd_material.get("aos_developer"));// 开发
             aos_subentryentity.set("aos_seting1", bd_material.get("aos_seting_cn"));
             aos_subentryentity.set("aos_seting2", bd_material.get("aos_seting_en"));
             aos_subentryentity.set("aos_spec", bd_material.get("aos_specification_cn"));
             aos_subentryentity.set("aos_url", MKTS3PIC.GetItemPicture(item_number));
-            aos_subentryentity.set("aos_broitem", aos_broitem);
-            aos_subentryentity.set("aos_orgtext", aos_orgtext);
+            aos_subentryentity.set("aos_broitem", aos_broitem.toString());
+            aos_subentryentity.set("aos_orgtext", aos_orgtext.toString());
             StringJoiner productStyle = new StringJoiner(";");
             DynamicObjectCollection item = bd_material.getDynamicObjectCollection("aos_productstyle_new");
             if (item.size() != 0) {
@@ -622,7 +619,7 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
                 aos_subentryentity.set("aos_productstyle_new", productStyle.toString());
             }
             aos_subentryentity.set("aos_shootscenes", bd_material.getString("aos_shootscenes"));
-            mkt.progress.design.aos_mkt_designreq_bill.setEntityValue(aos_mkt_designreq);
+            aos_mkt_designreq_bill.setEntityValue(aos_mkt_designreq);
             aos_mkt_designreq_bill.createDesiginBeforeSave(aos_mkt_designreq);
             OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_designreq",
                 new DynamicObject[] {aos_mkt_designreq}, OperateOption.create());
@@ -682,7 +679,7 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
             }
         } else {
             Object ItemId = aos_itemid.getPkValue();
-            String aos_orgtext = "";
+            StringBuilder aos_orgtext = new StringBuilder();
             DynamicObject bd_material = BusinessDataServiceHelper.loadSingle(ItemId, "bd_material");
             String item_number = bd_material.getString("number");
             String aos_productno = bd_material.getString("aos_productno");
@@ -712,16 +709,16 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
                 if ("H".equals(aos_contryentry.getString("aos_contryentrystatus")) && OsQty < SafeQty) {
                     continue;
                 }
-                aos_orgtext = aos_orgtext + aos_nationalitynumber + ";";
+                aos_orgtext.append(aos_nationalitynumber).append(";");
             }
 
             // 提示：所有国别已终止，且无库存，不建议优化listing
-            if (FndGlobal.IsNull(aos_orgtext) && !aos_iscomb) {
+            if (FndGlobal.IsNull(aos_orgtext.toString()) && !aos_iscomb) {
                 throw new FndError(item_number + "- 所有国别已终止，且无库存，不建议优化listing!");
             }
 
             // 获取同产品号物料
-            String aos_broitem = "";
+            StringBuilder aos_broitem = new StringBuilder();
             if (!Cux_Common_Utl.IsNull(aos_productno)) {
                 DynamicObjectCollection bd_materialS = QueryServiceHelper.query("bd_material", "id,number,aos_type",
                     new QFilter("aos_productno", QCP.equals, aos_productno).and("aos_type", QCP.equals, "A").toArray());
@@ -742,7 +739,7 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
                     }
                     String number = bd.getString("number");
                     if (!item_number.equals(number)) {
-                        aos_broitem = aos_broitem + number + ";";
+                        aos_broitem.append(number).append(";");
                     }
                 }
             }
@@ -750,8 +747,8 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
             // 赋值物料相关
             dy_row.set("aos_segment3", aos_productno);
             dy_row.set("aos_itemname", aos_itemname);
-            dy_row.set("aos_broitem", aos_broitem);
-            dy_row.set("aos_orgtext", aos_orgtext);
+            dy_row.set("aos_broitem", aos_broitem.toString());
+            dy_row.set("aos_orgtext", aos_orgtext.toString());
 
             // 对近期流程进行赋值
             QFilter filter_item = new QFilter("aos_entryentity.aos_itemid", QCP.equals, ItemId);
@@ -819,8 +816,6 @@ public class aos_mkt_listingreq_bill extends AbstractBillPlugIn
                 if (aos_item instanceof Long) {
                     itemid = aos_item;
                 } else if (aos_item instanceof DynamicObject) {
-                    itemid = ((DynamicObject)aos_item).get("id");
-                } else if (aos_item instanceof EntryProp) {
                     itemid = ((DynamicObject)aos_item).get("id");
                 } else if (aos_item instanceof String) {
                     itemid = aos_item;
