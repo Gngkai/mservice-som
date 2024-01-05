@@ -5,6 +5,7 @@ import java.util.*;
 import common.fnd.FndMsg;
 import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.plugin.AbstractFormPlugin;
+import sal.ctl.buybox.BuyBoxInitTask;
 
 /**
  * @author aosom
@@ -32,7 +33,7 @@ public class aos_mkt_bitest_form extends AbstractFormPlugin {
     }
 
     private void aosTest() {
-        FndMsg.debug("printName:" + controlEnum.testControl.name);
+        BuyBoxInitTask.main();
     }
 
     public long add(long x) {

@@ -21,7 +21,7 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import mkt.common.MKTCom;
-import mkt.progress.listing.aos_mkt_listingreq_bill;
+import mkt.progress.listing.AosMktListingReqBill;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -194,12 +194,12 @@ public class aos_mkt_create_listingReq extends AbstractTask {
             tempFile = BusinessDataServiceHelper.loadSingle(d.getDynamicObject("fbasedataid").get("id"), type);
             dy_rowAttribute.addNew().set("fbasedataid", tempFile);
         }
-        aos_mkt_listingreq_bill.setItemCate(dy_req);
+        AosMktListingReqBill.setItemCate(dy_req);
         OperationResult result = SaveServiceHelper.saveOperate("aos_mkt_listing_req", new DynamicObject[]{dy_req}, OperateOption.create());
         if (result.getSuccessPkIds().size()>0){
             DynamicObject dy = BusinessDataServiceHelper.loadSingle(result.getSuccessPkIds().get(0), "aos_mkt_listing_req");
             FndHistory.Create(dy, "提交", "定时任务，拍照需求表生成优化需求表");
-            new aos_mkt_listingreq_bill().aos_submit(dy,"B");
+            new AosMktListingReqBill().aosSubmit(dy,"B");
         }
         dy_photo.set("aos_req",true);
     }

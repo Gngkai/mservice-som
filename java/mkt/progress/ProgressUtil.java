@@ -26,7 +26,7 @@ import mkt.progress.design.aos_mkt_slogan_bill;
 import mkt.progress.design3d.aos_mkt_3design_bill;
 import mkt.progress.iface.iteminfo;
 import mkt.progress.listing.aos_mkt_listingmin_bill;
-import mkt.progress.listing.aos_mkt_listingreq_bill;
+import mkt.progress.listing.AosMktListingReqBill;
 import mkt.progress.listing.aos_mkt_listingson_bill;
 import mkt.progress.photo.aos_mkt_progphreq_bill;
 import mkt.progress.photo.aos_mkt_rcv_bill;
@@ -108,7 +108,7 @@ public class ProgressUtil {
 					else if (billFormId.equals("aos_mkt_listing_son")) // 文案提交
 						new aos_mkt_listingson_bill().aos_submit(dy_main, "B");
 					else if (billFormId.equals("aos_mkt_listing_req")) // 优化需求提交
-						new aos_mkt_listingreq_bill().aos_submit(dy_main, "B");
+						new AosMktListingReqBill().aosSubmit(dy_main, "B");
 					else if (billFormId.equals("aos_mkt_3design")) // 3D产品设计单
 						new aos_mkt_3design_bill().aos_submit(dy_main, "B");
 					else if (billFormId.equals("aos_mkt_designreq")) // 设计需求表

@@ -22,7 +22,7 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
-import mkt.progress.listing.aos_mkt_listingreq_bill;
+import mkt.progress.listing.AosMktListingReqBill;
 
 public class aos_mkt_progphreq_sync extends AbstractTask {
 	/** 系统管理员 **/
@@ -121,14 +121,14 @@ public class aos_mkt_progphreq_sync extends AbstractTask {
 
 
 			if (ListRequire != null && ListRequire.size() > 0) {
-				aos_mkt_listingreq_bill.GenerateListingSon(ListRequire, Retrun, dyn);
+				AosMktListingReqBill.generateListingSon(ListRequire, Retrun, dyn);
 				if (Retrun.GetErrorCount() > 0) {
 					continue;
 				}
 			}
 
 			if (ListRequirePic != null && ListRequirePic.size() > 0) {
-				aos_mkt_listingreq_bill.GenerateDesignReq(ListRequirePic, Retrun, dyn);
+				AosMktListingReqBill.generateDesignReq(ListRequirePic, Retrun, dyn);
 				if (Retrun.GetErrorCount() > 0) {
 					continue;
 				}
@@ -136,7 +136,7 @@ public class aos_mkt_progphreq_sync extends AbstractTask {
 
 			dyn.set("aos_status", "已完成");
 			dyn.set("aos_user", system);
-			aos_mkt_listingreq_bill.setItemCate(dyn);
+			AosMktListingReqBill.setItemCate(dyn);
 			OperationServiceHelper.executeOperate("save", "aos_mkt_listing_req", new DynamicObject[] { dyn },
 					OperateOption.create());
 

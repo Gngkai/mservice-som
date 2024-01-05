@@ -227,7 +227,7 @@ public class ListingReqOpenApiController implements Serializable {
                 }
                 SaveServiceHelper.save(new DynamicObject[]{dy_req});
                 dy_req = BusinessDataServiceHelper.loadSingle(entry.getKey(), "aos_mkt_listing_req");
-                new mkt.progress.listing.aos_mkt_listingreq_bill().aos_submit(dy_req,"B");  //单据提交
+                new mkt.progress.listing.AosMktListingReqBill().aosSubmit(dy_req,"B");  //单据提交
             }
         }
     }

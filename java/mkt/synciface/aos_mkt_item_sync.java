@@ -22,7 +22,7 @@ import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
-import mkt.progress.listing.aos_mkt_listingreq_bill;
+import mkt.progress.listing.AosMktListingReqBill;
 
 /** 工作流定时信息同步 **/
 public class aos_mkt_item_sync extends AbstractTask {
@@ -122,7 +122,7 @@ public class aos_mkt_item_sync extends AbstractTask {
 				// ES图片翻译情况
 				aos_entryentity.set("aos_espic", getPic("ES", fid));
 			}
-			aos_mkt_listingreq_bill.setItemCate(aos_mkt_listing_req);
+			AosMktListingReqBill.setItemCate(aos_mkt_listing_req);
 			SaveServiceHelper.saveOperate("aos_mkt_listing_req", new DynamicObject[] { aos_mkt_listing_req },
 					OperateOption.create());
 		}

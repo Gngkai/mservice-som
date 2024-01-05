@@ -1122,7 +1122,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
                     aos_groupdate = PPCInfo_Map.get("aos_groupdate");
                 }
                 if (aos_groupdate == null) {
-                    aos_groupdate = Today;// 新组
+                    aos_groupdate = Today;
                     IsNewGroupFlag = true;
                 }
                 if (PPCInfoSerial_Map != null) {
@@ -1130,7 +1130,7 @@ public class aos_mkt_popppc_init extends AbstractTask {
                 }
 
                 if (aos_makedate == null) {
-                    aos_makedate = Today;// 新组
+                    aos_makedate = Today;
                 }
 
                 /*
