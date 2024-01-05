@@ -7,8 +7,8 @@ import io.opentelemetry.context.Context;
 import kd.bos.context.RequestContext;
 
 /**
- * Author:aosom
  * Date:2023/12/6 8:51
+ * @author aosom
  */
 public class MmsOtelUtils extends OtelConnUtils {
 

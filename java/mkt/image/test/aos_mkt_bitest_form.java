@@ -49,8 +49,8 @@ public class aos_mkt_bitest_form extends AbstractFormPlugin {
          */
         testControl("aos_test");
 
-        /*
-        按钮名称
+        /**
+         * 按钮名称
          */
         private final String name;
 
