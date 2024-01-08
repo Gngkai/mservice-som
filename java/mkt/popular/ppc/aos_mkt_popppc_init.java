@@ -53,6 +53,7 @@ import mkt.progress.iface.iteminfo;
 
 /**
  * Author:aosom Description:PPC初始化任务
+ * @author aosom
  */
 public class aos_mkt_popppc_init extends AbstractTask {
 

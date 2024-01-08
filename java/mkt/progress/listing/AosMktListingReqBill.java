@@ -51,6 +51,8 @@ import mkt.progress.iface.iteminfo;
 
 /**
  * @author aosom
+ * Listing优化需求表 表单插件
+ * 静态扫描代码优化V1.0-2024.01.05
  */
 public class AosMktListingReqBill extends AbstractBillPlugIn
     implements ItemClickListener, HyperLinkClickListener, RowClickEventListener {
