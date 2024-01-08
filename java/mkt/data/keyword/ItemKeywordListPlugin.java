@@ -19,9 +19,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * lch
+ * @author  lch
  * 2022-4-15
+ * 同步关键词库SKU清单
  */
+
 public class ItemKeywordListPlugin extends AbstractTask {
     @Override
     public void execute(RequestContext requestContext, Map<String, Object> map) throws KDException {
@@ -48,57 +50,64 @@ public class ItemKeywordListPlugin extends AbstractTask {
                 "id aos_itemid," +
                 "name aos_itemname";
         List<QFilter> materialFilter = SalUtil.get_MaterialFilter();
-        QFilter filter_date = new QFilter("aos_contryentry.aos_firstshipment",QFilter.is_notnull,null);
-        QFilter filter_org = new QFilter("aos_contryentry.aos_nationality","!=", "");
-        materialFilter.add(filter_date);
-        materialFilter.add(filter_org);
+        QFilter filterDate = new QFilter("aos_contryentry.aos_firstshipment",QFilter.is_notnull,null);
+        QFilter filterOrg = new QFilter("aos_contryentry.aos_nationality","!=", "");
+        materialFilter.add(filterDate);
+        materialFilter.add(filterOrg);
 
         DynamicObjectCollection list = QueryServiceHelper.query("bd_material", selectFields, materialFilter.toArray(new QFilter[0]));
 
         // 查询关键词库中已有的数据
-        DynamicObjectCollection aos_mkt_keyword = QueryServiceHelper.query("aos_mkt_keyword", "aos_orgid,aos_itemid", null);
+        DynamicObjectCollection keywordRows = QueryServiceHelper.query("aos_mkt_keyword", "aos_orgid,aos_itemid", null);
         Set<String> keywordExists = new HashSet<>();
-        for (DynamicObject obj:aos_mkt_keyword) {
-            String aos_orgid = obj.getString("aos_orgid");
-            String aos_itemid = obj.getString("aos_itemid");
-            keywordExists.add(aos_orgid + "~" + aos_itemid);
+        for (DynamicObject obj:keywordRows) {
+            String orgid = obj.getString("aos_orgid");
+            String itemid = obj.getString("aos_itemid");
+            keywordExists.add(orgid + "~" + itemid);
         }
 
         List<DynamicObject> saveList = new ArrayList<>(5000);
         for (DynamicObject obj:list) {
-            String aos_orgid = obj.getString("aos_orgid");
-            String aos_itemid = obj.getString("aos_itemid");
+            String orgid = obj.getString("aos_orgid");
+            String itemid = obj.getString("aos_itemid");
             // 如果SKU关键词库中已存在
-            if (keywordExists.contains(aos_orgid + "~" + aos_itemid)) continue;
-
-            String aos_itemname = obj.getString("aos_itemname");
-            String aos_category1 = "";
-            String aos_category2 = "";
-            String aos_category3 = "";
+            if (keywordExists.contains(orgid + "~" + itemid))
+            {
+                continue;
+            }
 
 
-            String aos_category = allItemCategory.get(aos_itemid);
-            if (aos_category == null) continue;
-            String[] categoryArr = aos_category.split(",");
+            String itemname = obj.getString("aos_itemname");
+            String category1 = "";
+            String category2 = "";
+            String category3 = "";
+
+
+            String category = allItemCategory.get(itemid);
+            if (category == null) {
+                continue;
+            }
+
+            String[] categoryArr = category.split(",");
             if (categoryArr.length > 0) {
-                aos_category1 =  categoryArr[0];
+                category1 =  categoryArr[0];
             }
             if (categoryArr.length > 1) {
-                aos_category2 =  categoryArr[1];
+                category2 =  categoryArr[1];
             }
             if (categoryArr.length > 2) {
-                aos_category3 =  categoryArr[2];
+                category3 =  categoryArr[2];
             }
 
             // 新建一单
             DynamicObject itemKeywordObj = BusinessDataServiceHelper.newDynamicObject("aos_mkt_keyword");
             itemKeywordObj.set("billstatus", "A");
-            itemKeywordObj.set("aos_orgid", aos_orgid);
-            itemKeywordObj.set("aos_itemid", aos_itemid);
-            itemKeywordObj.set("aos_itemname", aos_itemname);
-            itemKeywordObj.set("aos_category1", aos_category1);
-            itemKeywordObj.set("aos_category2", aos_category2);
-            itemKeywordObj.set("aos_category3", aos_category3);
+            itemKeywordObj.set("aos_orgid", orgid);
+            itemKeywordObj.set("aos_itemid", itemid);
+            itemKeywordObj.set("aos_itemname", itemname);
+            itemKeywordObj.set("aos_category1", category1);
+            itemKeywordObj.set("aos_category2", category2);
+            itemKeywordObj.set("aos_category3", category3);
             saveList.add(itemKeywordObj);
             SaveUtils.SaveEntity("aos_mkt_keyword",saveList,false);
         }
@@ -110,47 +119,49 @@ public class ItemKeywordListPlugin extends AbstractTask {
      */
     private void syncItemList() {
         // 1.查询关键词库中已存在的SKU清单信息
-        DynamicObjectCollection aos_mkt_point = QueryServiceHelper.query("aos_mkt_point", "aos_orgid aos_orgid,aos_itementity.aos_itemid aos_itemid", null);
+        DynamicObjectCollection pointRows = QueryServiceHelper.query("aos_mkt_point", "aos_orgid aos_orgid,aos_itementity.aos_itemid aos_itemid", null);
         Set<String> pointItemSet = new HashSet<>();
-        for (DynamicObject obj:aos_mkt_point) {
-            String aos_orgid = obj.getString("aos_orgid");
-            String aos_itemid = obj.getString("aos_itemid");
-            pointItemSet.add(aos_orgid + "~" + aos_itemid);
+        for (DynamicObject obj:pointRows) {
+            String orgid = obj.getString("aos_orgid");
+            String itemid = obj.getString("aos_itemid");
+            pointItemSet.add(orgid + "~" + itemid);
         }
         // 2.查询所有的关键词库中的信息
         String selectFields = "aos_orgid,aos_category1,aos_category2,aos_category3,aos_itemnamecn,aos_itementity.aos_itemid,aos_itementity.aos_productnum,aos_itementity.aos_picture1,aos_itementity.aos_synctime";
-        DynamicObject[] aos_mkt_points = BusinessDataServiceHelper.load("aos_mkt_point", selectFields, null);
+        DynamicObject[] pointArray = BusinessDataServiceHelper.load("aos_mkt_point", selectFields, null);
         List<DynamicObject> saveList = new ArrayList<>(5000);
-        for (DynamicObject objPoints:aos_mkt_points) {
+        for (DynamicObject objPoints:pointArray) {
             // 根据国别+品类+品名获取SKU
-            DynamicObject aos_orgid = objPoints.getDynamicObject("aos_orgid");
-            if (aos_orgid==null) {
+            DynamicObject orgEntry = objPoints.getDynamicObject("aos_orgid");
+            if (orgEntry==null) {
                 continue;
             }
-            String aos_category1 = objPoints.getString("aos_category1");
-            String aos_category2 = objPoints.getString("aos_category2");
-            String aos_category3 = objPoints.getString("aos_category3");
-            String aos_itemname = objPoints.getString("aos_itemnamecn");
+            String category1 = objPoints.getString("aos_category1");
+            String category2 = objPoints.getString("aos_category2");
+            String category3 = objPoints.getString("aos_category3");
+            String itemname = objPoints.getString("aos_itemnamecn");
 
             // 查询SKU关键词库中的品类+品名符合的SKU
-            DynamicObjectCollection itemList = QueryServiceHelper.query("aos_mkt_keyword", "aos_itemid,aos_itemid.number aos_itemnum,aos_itemid.aos_productno", new QFilter[]{
-                    new QFilter("aos_orgid", QCP.equals, aos_orgid.getString("id")),
-                    new QFilter("aos_category1", QCP.equals, aos_category1),
-                    new QFilter("aos_category2", QCP.equals, aos_category2),
-                    new QFilter("aos_category3", QCP.equals, aos_category3),
-                    new QFilter("aos_itemname", QCP.equals, aos_itemname),
+            DynamicObjectCollection itemList = QueryServiceHelper.query("aos_mkt_keyword", "aos_orgid,aos_itemid,aos_itemid.number aos_itemnum,aos_itemid.aos_productno", new QFilter[]{
+                    new QFilter("aos_orgid", QCP.equals, orgEntry.getString("id")),
+                    new QFilter("aos_category1", QCP.equals, category1),
+                    new QFilter("aos_category2", QCP.equals, category2),
+                    new QFilter("aos_category3", QCP.equals, category3),
+                    new QFilter("aos_itemname", QCP.equals, itemname),
             });
-            DynamicObjectCollection aos_itementity = objPoints.getDynamicObjectCollection("aos_itementity");
+            DynamicObjectCollection itemEntity = objPoints.getDynamicObjectCollection("aos_itementity");
             for (DynamicObject obj:itemList) {
-                String aos_itemid = obj.getString("aos_itemid");
+                String itemid = obj.getString("aos_itemid");
+                // 如果关键词SKU清单中已存在 不新增
+                if (pointItemSet.contains(orgEntry.getString("aos_orgid") + "~" + itemid)) {
+                    continue;
+                }
 
-                if (pointItemSet.contains(aos_orgid.getString("id") + "~" + aos_itemid)) continue;// 如果关键词SKU清单中已存在 不新增
+                String itemnum = obj.getString("aos_itemnum");
 
-                String aos_itemnum = obj.getString("aos_itemnum");
-
-                DynamicObject dynamicObject = aos_itementity.addNew();
-                dynamicObject.set("aos_itemid", aos_itemid);
-                dynamicObject.set("aos_picture1", "https://cls3.s3.amazonaws.com/" + aos_itemnum + "/1-1.jpg");
+                DynamicObject dynamicObject = itemEntity.addNew();
+                dynamicObject.set("aos_itemid",itemid);
+                dynamicObject.set("aos_picture1", "https://cls3.s3.amazonaws.com/" + itemnum + "/1-1.jpg");
             }
             saveList.add(objPoints);
             SaveUtils.SaveEntity("aos_mkt_point",saveList,false);
@@ -172,15 +183,19 @@ public class ItemKeywordListPlugin extends AbstractTask {
                 .collect(Collectors.toList());
 
         QFBuilder builder = new QFBuilder();
-        builder.add("aos_orgid","!=","");
-        builder.add("aos_itemid","!=","");
-        DynamicObject[] mkt_keywords = BusinessDataServiceHelper.load("aos_mkt_keyword", "aos_orgid,aos_itemid,aos_new", builder.toArray());
+        builder.add("aos_orgid",QFilter.is_notnull,null);
+        builder.add("aos_itemid",QFilter.is_notnull,null);
+        DynamicObject[] keywordArray = BusinessDataServiceHelper.load("aos_mkt_keyword", "aos_orgid,aos_itemid,aos_new", builder.toArray());
         List<DynamicObject> updateEntity = new ArrayList<>(5000);
-        for (DynamicObject keyword : mkt_keywords) {
+        for (DynamicObject keyword : keywordArray) {
+            //国别 或者 物料为空 跳过
+            if (keyword.getDynamicObject("aos_orgid")==null || keyword.getDynamicObject("aos_itemid")==null){
+                continue;
+            }
             String orgid = keyword.getDynamicObject("aos_orgid").getString("id");
-            String itemID = keyword.getDynamicObject("aos_itemid").getString("id");
-            String key = orgid+"/"+itemID;
-            if (newItem.contains(key) && keyword.getBoolean("aos_new")){
+            String itemId = keyword.getDynamicObject("aos_itemid").getString("id");
+            String key = itemId+"/"+orgid;
+            if (newItem.contains(key) && !keyword.getBoolean("aos_new")){
                     keyword.set("aos_new",true);
                     updateEntity.add(keyword);
             }
