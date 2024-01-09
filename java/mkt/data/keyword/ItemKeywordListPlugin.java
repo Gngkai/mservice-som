@@ -153,7 +153,7 @@ public class ItemKeywordListPlugin extends AbstractTask {
             for (DynamicObject obj:itemList) {
                 String itemid = obj.getString("aos_itemid");
                 // 如果关键词SKU清单中已存在 不新增
-                if (pointItemSet.contains(orgEntry.getString("aos_orgid") + "~" + itemid)) {
+                if (pointItemSet.contains(orgEntry.getString("id") + "~" + itemid)) {
                     continue;
                 }
 
