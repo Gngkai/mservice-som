@@ -273,6 +273,8 @@ public class EventRule {
         Map<String, Integer> cateQty = new HashMap<>();
         //最大占比的品类
         String maxProportCate = calCateQty(selectQty, cateQty);
+        //备用数据，即最大品类占比下对应的物料，如果其他品类缺少数据，就从中取数补上
+        int backCateSize = cateQty.getOrDefault("maxCate", 0);
         //通过公式筛选的物料，能够填入单据的数据
         Set<DynamicObject> filterItem = new HashSet<>();
         //记录每个品类已经填入数据
@@ -304,11 +306,26 @@ public class EventRule {
                 fndLog.add(itemNum+"   物料品类剔除");
                 continue;
             }
-            //品类已满
-            if (map_fillInfo.size()>= selectQty && !map_fillInfo.containsKey(cate)) {
-                fndLog.add(itemNum+"   品类已满");
+            //物料能够填入的ASIN 数
+            int cateTotalQty = cateQty.get(cate);
+            //物料已经填入的ASIN 数
+            int fillQty = alreadyFilledCate.getOrDefault(cate, 0);
+            //如果填入已满，且不是最大占比的品类，剔除
+            if (fillQty >= cateTotalQty && !cate.equals(maxProportCate)){
+                fndLog.add(itemNum+"   物料品类已满剔除");
                 continue;
             }
+            //如果填入已满，且是最大占比的品类
+            else if (fillQty >= cateTotalQty && cate.equals(maxProportCate)){
+                //判断备用数据是否已经满了
+                cate = "maxCate";
+                fillQty = alreadyFilledCate.getOrDefault(cate, 0);
+                if (fillQty >= backCateSize){
+                    fndLog.add(itemNum+"   物料品类已满剔除");
+                    continue;
+                }
+            }
+
             //已经填入的该品类下的数据
             Map<String, List<DynamicObject>> fillData = map_fillInfo.computeIfAbsent(cate, k -> new HashMap<>());
 
@@ -334,48 +351,53 @@ public class EventRule {
                 if (ruleValueIsNull){
                     result = Boolean.parseBoolean(FormulaEngine.execExcelFormula(ruleValue, parameters).toString());
                 }
-
-
                 if (result){
                     List<DynamicObject> list = fillData.computeIfAbsent(itemAsin + "/t", k -> new ArrayList<>());
                     list.add(itemInfoe);
+                    fillQty++;
+                    alreadyFilledCate.put(cate,fillQty);
                 }
                 else{
-                    List<DynamicObject> list = fillData.computeIfAbsent(itemAsin + "/f", k -> new ArrayList<>());
-                    list.add(itemInfoe);
+                    if (addAll){
+                        List<DynamicObject> list = fillData.computeIfAbsent(itemAsin + "/f", k -> new ArrayList<>());
+                        list.add(itemInfoe);
+                    }
+
                 }
             }
         }
         //记录已经填入的帖子ID
         List<String> fillAsin = new ArrayList<>(selectQty);
-        //筛选完成，将数据填入
-        //类别维度遍历
+        //筛选完成，将数据填入;类别维度遍历
+
         for (Map.Entry<String, Map<String, List<DynamicObject>>> cateEntry : map_fillInfo.entrySet()) {
-            int alradyFillQty;
             //最大的品类,查找全部的数量，用以补充其他品类
-            if (cateEntry.getKey().equals(maxProportCate)) {
-                alradyFillQty = fillData(cateEntry.getValue(), fillAsin, filterItem, addAll, cateQty.getOrDefault(cateEntry.getKey(), 0));
+            if (cateEntry.getKey().equals("maxCate")) {
+                continue;
+            } else {
+               fillData(cateEntry.getValue(), fillAsin, filterItem, addAll, cateQty.getOrDefault(cateEntry.getKey(), 0));
             }
-            else{
-                alradyFillQty = fillData(cateEntry.getValue(), fillAsin, filterItem, addAll, selectQty);
-            }
-            alreadyFilledCate.put(cateEntry.getKey(),alradyFillQty);
         }
 
         //将数量不足的品类 用其他品类数据补上
         for (Map.Entry<String, Integer> entry : cateQty.entrySet()) {
-            //类名
+            //品类名
             String cate = entry.getKey();
+            //如果是备用品类，跳过
+            if (cate.equals("maxCate")) {
+                continue;
+            }
+
             //应该填入的总数
             int cateAllQty = entry.getValue();
             //获取需要继续填入的数
-            int alreadyFillQty = cateAllQty - alreadyFilledCate.getOrDefault(cate, 0);
-            if (alreadyFillQty<=0) {
+            int needFillQty = cateAllQty - alreadyFilledCate.getOrDefault(cate, 0);
+            if (needFillQty<=0) {
                 continue;
             }
-            //先将最多的品类填入
-            alreadyFillQty = alreadyFillQty - fillData(map_fillInfo.get(maxProportCate), fillAsin, filterItem, addAll,alreadyFillQty);
-            alreadyFilledCate.put(cate,cateAllQty - alreadyFillQty);
+            //最多的品类填入
+            int missQty = needFillQty - fillData(map_fillInfo.get("maxCate"), fillAsin, filterItem, addAll,needFillQty);
+            alreadyFilledCate.put(cate,cateAllQty - missQty);
         }
         return filterItem;
     }
@@ -1427,7 +1449,7 @@ public class EventRule {
     Map<String,BigDecimal> weightMap;
     public List<String> setWeight(){
         weightMap = new HashMap<>(itemInfoes.size());
-        DynamicObjectCollection weightEntityRows = typEntity.getDynamicObjectCollection("aos_entryentity4");
+        DynamicObjectCollection weightEntityRows = actPlanEntity.getDynamicObjectCollection("aos_entryentity4");
         for (DynamicObject row : weightEntityRows) {
             String project = row.getString("aos_pr_project");
             BigDecimal  prWeight = row.getBigDecimal("aos_pr_weight");
