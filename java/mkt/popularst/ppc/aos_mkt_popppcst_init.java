@@ -39,7 +39,7 @@ import kd.bos.servicehelper.operation.SaveServiceHelper;
 import mkt.common.AosMktGenerate;
 import mkt.common.MKTCom;
 import mkt.popular.aos_mkt_pop_common;
-import mkt.popular.ppc.aos_mkt_popppc_init;
+import mkt.popular.ppc.AosMktPopPpcInit;
 import mkt.popularst.add_s.aos_mkt_popadds_init;
 import mkt.popularst.adjust_s.aos_mkt_pop_stadd_init;
 import mkt.popularst.adjust_s.aos_mkt_popadjst_init;
@@ -183,9 +183,9 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 		HashMap<String, Map<String, Object>> SkuRptDetailSerial = AosMktGenerate.GenerateSkuRptDetailSerial(p_ou_code);
 		HashMap<String, Map<String, Map<String, Object>>> SkuRpt3Serial = AosMktGenerate
 				.GenerateSkuRpt3SerialObject(p_ou_code);
-		Map<String, BigDecimal> CostMap = aos_mkt_popppc_init.initItemCost();
-		Map<String, BigDecimal> ShipFee = aos_mkt_popppc_init.GenerateShipFee();
-		Map<String, BigDecimal> VatMap = aos_mkt_popppc_init.GenerateVat(p_org_id);
+		Map<String, BigDecimal> CostMap = AosMktPopPpcInit.initItemCost();
+		Map<String, BigDecimal> ShipFee = AosMktPopPpcInit.generateShipFee();
+		Map<String, BigDecimal> VatMap = AosMktPopPpcInit.generateVat(p_org_id);
 		Set<String> manualSet = GenerateManual(p_ou_code);
 		Set<String> weekSet = GenerateWeek(p_ou_code);
 
