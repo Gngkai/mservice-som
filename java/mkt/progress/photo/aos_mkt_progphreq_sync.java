@@ -240,7 +240,7 @@ public class aos_mkt_progphreq_sync extends AbstractTask {
 				OperationServiceHelper.executeOperate("save", "aos_mkt_photoreq", new DynamicObject[] { dyn },
 						OperateOption.create());
 
-				aos_mkt_progphreq_bill.SubmitForNew(dyn);
+				AosMktProgPhReqBill.submitForNew(dyn);
 				FndHistory.Create(dyn, "提交", "新建");
 			}
 		}
