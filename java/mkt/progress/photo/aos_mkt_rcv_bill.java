@@ -980,7 +980,8 @@ public class aos_mkt_rcv_bill extends AbstractBillPlugIn implements ItemClickLis
 		Object CurrentUserName = UserServiceHelper.getUserInfoByID((long) CurrentUserId).get("name");
 		// 当前节点操作人不为当前用户 全锁
 		if (!aos_user.getPkValue().toString().equals(CurrentUserId.toString())
-				&& !"刘中怀".equals(CurrentUserName.toString()) && !"程震杰".equals(CurrentUserName.toString())
+				&& !"刘中怀".equals(CurrentUserName.toString())
+				&& !"营销测试账号".equals(CurrentUserName.toString()) && !"程震杰".equals(CurrentUserName.toString())
 				&& !"陈聪".equals(CurrentUserName.toString()) && !"杨晶晶".equals(CurrentUserName.toString())) {
 			this.getView().setEnable(false, "titlepanel");// 标题面板
 			this.getView().setEnable(false, "contentpanelflex");// 主界面面板
