@@ -116,7 +116,7 @@ public class ProgressUtil {
 					else if (billFormId.equals("aos_mkt_rcv")) // 样品入库通知单
 						new aos_mkt_rcv_bill().aos_submit(dy_main, "B");
 					else if (billFormId.equals("aos_mkt_photoreq"))
-						new AosMktProgPhReqBill().aos_submit(dy_main, "B");
+						new AosMktProgPhReqBill().aosSubmit(dy_main, "B");
 					else if (billFormId.equals("aos_mkt_aadd"))
 						new aos_mkt_aadd_bill().aosSubmit(dy_main, "B");
 					else if (billFormId.equals("aos_mkt_slogan"))

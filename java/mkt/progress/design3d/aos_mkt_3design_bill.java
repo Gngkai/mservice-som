@@ -140,7 +140,7 @@ public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClic
             if ("视频".equals(aos_type)) {
                 aos_mkt_photoreq.set("aos_status", "开发确认:视频");
                 FndHistory.Create(aos_mkt_photoreq, "提交(3d回写),开发确认:视频", aos_status);
-                new AosMktProgPhReqBill().aos_submit(aos_mkt_photoreq, "B");
+                new AosMktProgPhReqBill().aosSubmit(aos_mkt_photoreq, "B");
             }
             // 24-1-3 来样拍照，直接结束
             else if ("工厂简拍".equals(aos_phstate) || "来样拍照".equals(aos_phstate)) {
