@@ -1666,7 +1666,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                 Object orgId = aosNationality.get("id");
                 int osQty = iteminfo.GetItemOsQty(orgId, fid);
                 int safeQty = iteminfo.GetSafeQty(orgId);
-                if ("C".equals(aosNationality.getString("aos_contryentrystatus")) && osQty < safeQty) {
+                if ("C".equals(aosContryentry.getString("aos_contryentrystatus")) && osQty < safeQty) {
                     continue;
                 }
                 aosOrgtext.append(aosNationalitynumber).append(";");
