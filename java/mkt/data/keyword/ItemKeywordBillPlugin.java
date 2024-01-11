@@ -11,7 +11,6 @@ import kd.bos.context.RequestContext;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.dataentity.metadata.IDataEntityProperty;
-import kd.bos.dataentity.metadata.dynamicobject.DynamicObjectType;
 import kd.bos.entity.BadgeInfo;
 import kd.bos.entity.EntityType;
 import kd.bos.entity.datamodel.events.PropertyChangedArgs;
@@ -135,7 +134,7 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
                 && null != closedCallBackEvent.getReturnData()) {
             // 这里返回对象为Object，可强转成相应的其他类型，
             // 单条数据可用String类型传输，返回多条数据可放入map中，也可使用json等方式传输
-            Map<String,List<String>> returnData = (Map<String, List<String>>) closedCallBackEvent.getReturnData();
+            Map<String, List<String>> returnData = (Map<String, List<String>>) closedCallBackEvent.getReturnData();
             copyToData(returnData);
             getView().showSuccessNotification("Copy To Success (●'◡'●)");
         }
@@ -148,7 +147,7 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
             orgFilter = new QFilter("aos_orgid", QCP.equals, aosOrgid.getString("id"));
         }
         List<String> aosItems = returnData.get("itemIdList");
-        QFilter itemFilter =  new QFilter("aos_itemid", QCP.in, aosItems);
+        QFilter itemFilter = new QFilter("aos_itemid", QCP.in, aosItems);
 
         List<String> tabList = returnData.get("tabList");
         StringJoiner selectField = new StringJoiner(",");
@@ -158,12 +157,12 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
         for (String tab : tabList) {
             Map<String, IDataEntityProperty> fields = allEntities.get(tab).getFields();
             for (String field : fields.keySet()) {
-                selectField.add(tab+"."+field);
+                selectField.add(tab + "." + field);
             }
         }
         //查找字段
         DynamicObject[] load = BusinessDataServiceHelper.load("aos_mkt_keyword", selectField.toString(), new QFilter[]{orgFilter, itemFilter});
-        if (load.length==0) {
+        if (load.length == 0) {
             return;
         }
         //开始赋值
@@ -183,7 +182,6 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
         }
         SaveServiceHelper.save(load);
     }
-
 
 
     @Override
@@ -337,9 +335,9 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
     public void beforeClosed(BeforeClosedEvent e) {
         super.beforeClosed(e);
         DynamicObject dataEntity = this.getModel().getDataEntity(true);
-        Set<String> fields= new HashSet<>();
+        Set<String> fields = new HashSet<>();
         fields.add("aos_hyperlinkap");
         fields.add("aos_textfield");
-        SalUtil.skipVerifyFieldChanged(dataEntity,dataEntity.getDynamicObjectType(),fields);
+        SalUtil.skipVerifyFieldChanged(dataEntity, dataEntity.getDynamicObjectType(), fields);
     }
 }

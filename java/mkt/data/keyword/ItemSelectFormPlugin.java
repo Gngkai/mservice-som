@@ -8,7 +8,6 @@ import kd.bos.form.field.MulBasedataEdit;
 import kd.bos.form.field.events.BeforeF7SelectEvent;
 import kd.bos.form.field.events.BeforeF7SelectListener;
 import kd.bos.form.plugin.AbstractFormPlugin;
-import kd.bos.list.ListShowParameter;
 import kd.bos.orm.query.QFilter;
 import org.apache.commons.lang3.StringUtils;
 
@@ -17,10 +16,19 @@ import java.util.stream.Collectors;
 
 /**
  * 选择物料
+ * lch 2022-04-15
+ *
+ * @author aosom
  */
+
+@SuppressWarnings("unused")
 public class ItemSelectFormPlugin extends AbstractFormPlugin implements BeforeF7SelectListener {
     private final static String KEY_OK = "btnok";
     private final static String KEY_CANCEL = "btncancel";
+    private final static String KEY_ITEM = "aos_itemids";
+    private final static String KEY_TAB = "aos_tab";
+    private final static String KEY_PARENT = "aos_mkt_keyword";
+
 
     @Override
     public void registerListener(EventObject e) {
@@ -37,17 +45,17 @@ public class ItemSelectFormPlugin extends AbstractFormPlugin implements BeforeF7
         if (StringUtils.equals(source.getKey(), KEY_OK)) {
             // 获取物料
             List<String> itemIdList = new ArrayList<>();
-            DynamicObjectCollection aos_itemids = (DynamicObjectCollection) this.getModel().getValue("aos_itemids");
-            for (DynamicObject obj:aos_itemids) {
-                DynamicObject aos_itemid = obj.getDynamicObject("fbasedataid");
-                itemIdList.add(aos_itemid.getString("id"));
+            DynamicObjectCollection itemRows = (DynamicObjectCollection) this.getModel().getValue(KEY_ITEM);
+            for (DynamicObject obj : itemRows) {
+                DynamicObject itemEntry = obj.getDynamicObject("fbasedataid");
+                itemIdList.add(itemEntry.getString("id"));
             }
-            String tabValue = getModel().getValue("aos_tab").toString();
+            String tabValue = getModel().getValue(KEY_TAB).toString();
             List<String> tabList = Arrays.stream(tabValue.split(",")).filter(FndGlobal::IsNotNull).collect(Collectors.toList());
 
-            Map<String,List<String>> resultMap = new HashMap<>(2);
-            resultMap.put("itemIdList",itemIdList);
-            resultMap.put("tabList",tabList);
+            Map<String, List<String>> resultMap = new HashMap<>(2);
+            resultMap.put("itemIdList", itemIdList);
+            resultMap.put("tabList", tabList);
             this.getView().returnDataToParent(resultMap);
             this.getView().close();
         } else if (StringUtils.equals(source.getKey(), KEY_CANCEL)) {
@@ -60,13 +68,13 @@ public class ItemSelectFormPlugin extends AbstractFormPlugin implements BeforeF7
     @Override
     public void beforeF7Select(BeforeF7SelectEvent event) {
         String name = event.getProperty().getName();
-        if ("aos_itemids".equals(name)) {
+        if (KEY_ITEM.equals(name)) {
             String entityId = getView().getParentView().getEntityId();
-            if ("aos_mkt_keyword".equals(entityId)){
+            if (KEY_PARENT.equals(entityId)) {
                 Object orgEntity = getView().getParentView().getModel().getValue("aos_orgid");
                 if (orgEntity != null) {
                     String orgId = ((DynamicObject) orgEntity).getString("id");
-                    QFilter filter = new QFilter("aos_contryentry.aos_nationality","=",orgId);
+                    QFilter filter = new QFilter("aos_contryentry.aos_nationality", "=", orgId);
                     event.getCustomQFilters().add(filter);
                 }
             }
