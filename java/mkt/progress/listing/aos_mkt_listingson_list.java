@@ -122,7 +122,7 @@ public class aos_mkt_listingson_list extends AbstractListPlugin {
 				return;
 			}
 			aos_mkt_listing_son.set("aos_user", aos_user);
-			aos_mkt_listingson_bill.setListSonUserOrganizate(aos_mkt_listing_son);
+			AosMktListingSonBill.setListSonUserOrganizate(aos_mkt_listing_son);
 			OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_listing_son",
 					new DynamicObject[] { aos_mkt_listing_son }, OperateOption.create());
 			MKTCom.SendGlobalMessage(((DynamicObject) aos_user).getPkValue() + "",   "aos_mkt_listing_son",

@@ -50,7 +50,7 @@ import mkt.progress.design3d.DesignSkuList;
 import mkt.progress.design3d.aos_mkt_3design_bill;
 import mkt.progress.iface.iteminfo;
 import mkt.progress.iface.parainfo;
-import mkt.progress.listing.aos_mkt_listingson_bill;
+import mkt.progress.listing.AosMktListingSonBill;
 import mkt.progress.parameter.errorListing.ErrorListEntity;
 
 public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemClickListener, HyperLinkClickListener {
@@ -1417,7 +1417,7 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 				if (MessageFlag) {
 					MessageId = AosDesignerId + "";
 					Message = "Listing优化需求表子表-设计需求自动创建";
-					aos_mkt_listingson_bill.setListSonUserOrganizate(dy_main);
+					AosMktListingSonBill.setListSonUserOrganizate(dy_main);
 					OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_listing_son",
 							new DynamicObject[] { aos_mkt_listing_son }, OperateOption.create());
 

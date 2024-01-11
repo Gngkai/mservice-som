@@ -339,7 +339,7 @@ public class AosMktListingReqBill extends AbstractBillPlugIn
             aosEntryentity.set("aos_broitem_r", dyn3dR.get("aos_broitem"));
             aosEntryentity.set("aos_itemname_r", dyn3dR.get("aos_itemname"));
             aosEntryentity.set("aos_orgtext_r", ProgressUtil.getOrderOrg(itemId));
-            aos_mkt_listingson_bill.setListSonUserOrganizate(aosMktListingSon);
+            AosMktListingSonBill.setListSonUserOrganizate(aosMktListingSon);
             OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_listing_son",
                 new DynamicObject[] {aosMktListingSon}, OperateOption.create());
 
