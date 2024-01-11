@@ -31,7 +31,7 @@ import mkt.common.MKTCom;
 import mkt.progress.ProgressUtil;
 import mkt.progress.iface.iteminfo;
 import mkt.progress.photo.AosMktProgPhReqBill;
-import mkt.progress.photo.aos_mkt_rcv_bill;
+import mkt.progress.photo.AosMktRcvBill;
 
 public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClickListener {
 
@@ -54,7 +54,7 @@ public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClic
         }
         String aos_itemid = dy.getString("aos_itemid");
         String ponumber = dy.getString("aos_ponumber");
-        aos_mkt_rcv_bill.openSample(iFormView, aos_itemid, ponumber);
+        AosMktRcvBill.openSample(iFormView, aos_itemid, ponumber);
     }
 
     /** 值校验 **/
