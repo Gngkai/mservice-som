@@ -56,7 +56,7 @@ import mkt.progress.design.aos_mkt_designreq_bill;
 import mkt.progress.design3d.aos_mkt_3design_bill;
 import mkt.progress.iface.iteminfo;
 import mkt.progress.listing.AosMktListingReqBill;
-import mkt.progress.listing.aos_mkt_listingson_bill;
+import mkt.progress.listing.AosMktListingSonBill;
 
 import static mkt.progress.ProgressUtil.Is_saleout;
 
@@ -1624,9 +1624,18 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             DynamicObject bdMaterial = BusinessDataServiceHelper.loadSingle(fid, "bd_material");
             DynamicObjectCollection aosContryentryS = bdMaterial.getDynamicObjectCollection("aos_contryentry");
             String itemNumber = bdMaterial.getString("number");
-            List<DynamicObject> listCountry = aosContryentryS.stream()
-                .sorted(Comparator.comparingInt(dy -> dy.getDynamicObject("aos_nationality").getInt("aos_orderby")))
-                .collect(Collectors.toList());
+            List<DynamicObject> listCountry = aosContryentryS.stream().sorted((dy1, dy2) -> {
+                int d1 = dy1.getDynamicObject("aos_nationality").getInt("aos_orderby");
+                int d2 = dy2.getDynamicObject("aos_nationality").getInt("aos_orderby");
+                if (d1 > d2)
+                {
+                    return 1;
+                }
+                else
+                {
+                    return -1;
+                }
+            }).collect(Collectors.toList());
             // 产品类别
             String category = (String)SalUtil.getCategoryByItemId(String.valueOf(fid)).get("name");
             String[] categoryGroup = category.split(",");
@@ -2357,9 +2366,18 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             DynamicObject bdMaterial = BusinessDataServiceHelper.loadSingle(fid, "bd_material");
             DynamicObjectCollection aosContryentryS = bdMaterial.getDynamicObjectCollection("aos_contryentry");
             String itemNumber = bdMaterial.getString("number");
-            List<DynamicObject> listCountry = aosContryentryS.stream()
-                .sorted(Comparator.comparingInt(dy -> dy.getDynamicObject("aos_nationality").getInt("aos_orderby")))
-                .collect(Collectors.toList());
+            List<DynamicObject> listCountry = aosContryentryS.stream().sorted((dy1, dy2) -> {
+                int d1 = dy1.getDynamicObject("aos_nationality").getInt("aos_orderby");
+                int d2 = dy2.getDynamicObject("aos_nationality").getInt("aos_orderby");
+                if (d1 > d2)
+                {
+                    return 1;
+                }
+                else
+                {
+                    return -1;
+                }
+            }).collect(Collectors.toList());
             String category = (String)SalUtil.getCategoryByItemId(String.valueOf(fid)).get("name");
             String[] categoryGroup = category.split(",");
             String aosCategory1 = null;
@@ -3355,7 +3373,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
         // 消息推送
         messageId = String.valueOf(aosEditor);
         message = "Listing优化需求表子表-拍照需求表:视频-自动创建";
-        aos_mkt_listingson_bill.setListSonUserOrganizate(aosMktListingSon);
+        AosMktListingSonBill.setListSonUserOrganizate(aosMktListingSon);
         OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_listing_son",
             new DynamicObject[] {aosMktListingSon}, OperateOption.create());
         // 修复关联关系

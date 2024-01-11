@@ -286,7 +286,7 @@ public class aos_mkt_listingmin_bill extends AbstractBillPlugIn implements ItemC
                     DynamicObject aos_mkt_listing_son = QueryServiceHelper.queryOne("aos_mkt_listing_son", "aos_sourceid",
                             filters);
                     Object PhotoId = aos_mkt_listing_son.get("aos_sourceid");
-                    aos_mkt_listingson_bill.UpdatePhotoToCut(PhotoId);// 小语种来源子表的来源拍照需求表ID
+                    AosMktListingSonBill.updatePhotoToCut(PhotoId);// 小语种来源子表的来源拍照需求表ID
                 }
             }
             /*
