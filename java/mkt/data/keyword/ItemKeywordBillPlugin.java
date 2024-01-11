@@ -10,11 +10,15 @@ import kd.bos.bill.AbstractBillPlugIn;
 import kd.bos.context.RequestContext;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
+import kd.bos.dataentity.metadata.IDataEntityProperty;
+import kd.bos.dataentity.metadata.dynamicobject.DynamicObjectType;
 import kd.bos.entity.BadgeInfo;
+import kd.bos.entity.EntityType;
 import kd.bos.entity.datamodel.events.PropertyChangedArgs;
 import kd.bos.form.container.TabPage;
 import kd.bos.form.control.Hyperlink;
 import kd.bos.form.control.events.ItemClickEvent;
+import kd.bos.form.events.BeforeClosedEvent;
 import kd.bos.form.events.BeforeDoOperationEventArgs;
 import kd.bos.form.events.ClosedCallBackEvent;
 import kd.bos.form.operate.FormOperate;
@@ -31,9 +35,10 @@ import java.util.*;
 
 /**
  * lch 2022-04-15
- * 
+ *
  * @author aosom
  */
+@SuppressWarnings({"unchecked", "unused"})
 public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
     private static final Tracer TRACER = MmsOtelUtils.getTracer(ItemKeywordBillPlugin.class, RequestContext.get());
 
@@ -54,8 +59,8 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
         try (Scope ignored = span.makeCurrent()) {
             this.getModel().setValue("aos_textfield", "AM链接");
             Hyperlink hyperlink = this.getView().getControl("aos_hyperlinkap");
-            DynamicObject aosOrgid = (DynamicObject)this.getModel().getValue("aos_orgid");
-            DynamicObject aosItemid = (DynamicObject)this.getModel().getValue("aos_itemid");
+            DynamicObject aosOrgid = (DynamicObject) this.getModel().getValue("aos_orgid");
+            DynamicObject aosItemid = (DynamicObject) this.getModel().getValue("aos_itemid");
             Map<String, Object> style = new HashMap<>();
             if (aosOrgid != null && aosItemid != null) {
                 String itemId = aosItemid.getString("id");
@@ -127,42 +132,65 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
     @Override
     public void closedCallBack(ClosedCallBackEvent closedCallBackEvent) {
         if (StringUtils.equals(closedCallBackEvent.getActionId(), "items_select")
-            && null != closedCallBackEvent.getReturnData()) {
+                && null != closedCallBackEvent.getReturnData()) {
             // 这里返回对象为Object，可强转成相应的其他类型，
             // 单条数据可用String类型传输，返回多条数据可放入map中，也可使用json等方式传输
-            Object returnData = closedCallBackEvent.getReturnData();
-            if (returnData instanceof List) {
-                DynamicObject aosOrgid = (DynamicObject)this.getModel().getValue("aos_orgid");
-                @SuppressWarnings("unchecked")
-                List<String> aosItems = (List<String>)returnData;
-
-                DynamicObject[] load = BusinessDataServiceHelper.load("aos_mkt_keyword", "aos_entryentity.aos_mainvoc",
-                    new QFilter[] {new QFilter("aos_orgid", QCP.equals, aosOrgid.getString("id")),
-                        new QFilter("aos_itemid", QCP.in, aosItems)});
-                // 获取界面上所有的关键词
-                List<String> itemKeywordList = new ArrayList<>();
-                DynamicObjectCollection aosEntryentity1 = this.getModel().getEntryEntity("aos_entryentity");
-                for (DynamicObject obj : aosEntryentity1) {
-                    itemKeywordList.add(obj.getString("aos_mainvoc"));
-                }
-                for (DynamicObject obj : load) {
-                    DynamicObjectCollection aosEntryentity = obj.getDynamicObjectCollection("aos_entryentity");
-                    for (String keyword : itemKeywordList) {
-                        DynamicObject dynamicObject = aosEntryentity.addNew();
-                        dynamicObject.set("aos_mainvoc", keyword);
-                    }
-                }
-
-                SaveServiceHelper.save(load);
-            }
+            Map<String,List<String>> returnData = (Map<String, List<String>>) closedCallBackEvent.getReturnData();
+            copyToData(returnData);
+            getView().showSuccessNotification("Copy To Success (●'◡'●)");
         }
     }
+
+    private void copyToData(Map<String, List<String>> returnData) {
+        QFilter orgFilter = null;
+        DynamicObject aosOrgid = (DynamicObject) this.getModel().getValue("aos_orgid");
+        if (aosOrgid != null) {
+            orgFilter = new QFilter("aos_orgid", QCP.equals, aosOrgid.getString("id"));
+        }
+        List<String> aosItems = returnData.get("itemIdList");
+        QFilter itemFilter =  new QFilter("aos_itemid", QCP.in, aosItems);
+
+        List<String> tabList = returnData.get("tabList");
+        StringJoiner selectField = new StringJoiner(",");
+        selectField.add("id");
+        Map<String, EntityType> allEntities = getModel().getDataEntityType().getAllEntities();
+        //添加页签字段
+        for (String tab : tabList) {
+            Map<String, IDataEntityProperty> fields = allEntities.get(tab).getFields();
+            for (String field : fields.keySet()) {
+                selectField.add(tab+"."+field);
+            }
+        }
+        //查找字段
+        DynamicObject[] load = BusinessDataServiceHelper.load("aos_mkt_keyword", selectField.toString(), new QFilter[]{orgFilter, itemFilter});
+        if (load.length==0) {
+            return;
+        }
+        //开始赋值
+        for (String tab : tabList) {
+            //当前界面数据
+            DynamicObjectCollection sourceData = getModel().getDataEntity(true).getDynamicObjectCollection(tab);
+            for (DynamicObject targetEntity : load) {
+                DynamicObjectCollection targetRow = targetEntity.getDynamicObjectCollection(tab);
+                targetRow.clear();
+                for (DynamicObject sourceRow : sourceData) {
+                    DynamicObject newRow = targetRow.addNew();
+                    for (String field : allEntities.get(tab).getFields().keySet()) {
+                        newRow.set(field, sourceRow.get(field));
+                    }
+                }
+            }
+        }
+        SaveServiceHelper.save(load);
+    }
+
+
 
     @Override
     public void beforeDoOperation(BeforeDoOperationEventArgs args) {
         Span span = MmsOtelUtils.getCusSubSpan(TRACER, MmsOtelUtils.getMethodPath());
         try (Scope ignored = span.makeCurrent()) {
-            FormOperate operate = (FormOperate)args.getSource();
+            FormOperate operate = (FormOperate) args.getSource();
             String operateKey = operate.getOperateKey();
             if ("save".equals(operateKey)) {
                 beforeSave();
@@ -175,7 +203,9 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
         }
     }
 
-    /** 初始化事件 **/
+    /**
+     * 初始化事件
+     **/
     @Override
     public void afterLoadData(EventObject e) {
         super.afterLoadData(e);
@@ -193,7 +223,7 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
                 TabPage control = this.getControl("aos_tabpageap3");
                 BadgeInfo badgeInfo = new BadgeInfo();
                 badgeInfo.setBadgeText("!");
-                badgeInfo.setOffset(new String[] {"5px", "5px"});
+                badgeInfo.setOffset(new String[]{"5px", "5px"});
                 control.setBadgeInfo(badgeInfo);
             }
         } catch (Exception ex) {
@@ -203,12 +233,14 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
         }
     }
 
-    // 引入关键词库
+    /**
+     * 引入关键词库
+     */
     private void importItemKeyword() {
         Span span = MmsOtelUtils.getCusSubSpan(TRACER, MmsOtelUtils.getMethodPath());
         try (Scope ignored = span.makeCurrent()) {
             // 1. 国别
-            DynamicObject aosOrgid = (DynamicObject)this.getModel().getValue("aos_orgid");
+            DynamicObject aosOrgid = (DynamicObject) this.getModel().getValue("aos_orgid");
             // 2. 物料
             StringJoiner str = new StringJoiner(",");
 
@@ -250,7 +282,7 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
             str.add("aos_linentity_gw.aos_gw_keyword aos_gw_keyword");
             str.add("aos_linentity_gw.aos_gw_search aos_gw_search");
             DynamicObjectCollection listgw =
-                QueryServiceHelper.query("aos_mkt_point", str.toString(), builder.toArray());
+                    QueryServiceHelper.query("aos_mkt_point", str.toString(), builder.toArray());
             if (FndGlobal.IsNull(listgw) || list.size() == 0) {
                 this.getView().showTipNotification("无官网可用数据!");
                 return;
@@ -272,15 +304,17 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
         }
     }
 
-    // 保存前事件
+    /**
+     * 保存前事件
+     */
     private void beforeSave() {
 
         Span span = MmsOtelUtils.getCusSubSpan(TRACER, MmsOtelUtils.getMethodPath());
         try (Scope ignored = span.makeCurrent()) {
             DynamicObjectCollection sourcEntity =
-                this.getModel().getDataEntity(true).getDynamicObjectCollection("aos_entryentity");
+                    this.getModel().getDataEntity(true).getDynamicObjectCollection("aos_entryentity");
             DynamicObjectCollection copyEntity =
-                this.getModel().getDataEntity(true).getDynamicObjectCollection("aos_entryentity1");
+                    this.getModel().getDataEntity(true).getDynamicObjectCollection("aos_entryentity1");
             copyEntity.removeIf(dy -> true);
             for (DynamicObject sourceRow : sourcEntity) {
                 DynamicObject newRow = copyEntity.addNew();
@@ -299,4 +333,13 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
         }
     }
 
+    @Override
+    public void beforeClosed(BeforeClosedEvent e) {
+        super.beforeClosed(e);
+        DynamicObject dataEntity = this.getModel().getDataEntity(true);
+        Set<String> fields= new HashSet<>();
+        fields.add("aos_hyperlinkap");
+        fields.add("aos_textfield");
+        SalUtil.skipVerifyFieldChanged(dataEntity,dataEntity.getDynamicObjectType(),fields);
+    }
 }
