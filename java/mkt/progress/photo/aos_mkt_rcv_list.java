@@ -160,7 +160,7 @@ public class aos_mkt_rcv_list extends AbstractListPlugin {
 			if (size != 1) {
 				this.getView().showTipNotification("请先选择单条数据查询!");
 			} else {
-				aos_mkt_rcv_bill.querySample(this.getView(), selectedRows.get(0).getPrimaryKeyValue());
+				AosMktRcvBill.querySample(this.getView(), selectedRows.get(0).getPrimaryKeyValue());
 			}
 		} catch (FndError fndMessage) {
 			this.getView().showTipNotification(fndMessage.getErrorMessage());

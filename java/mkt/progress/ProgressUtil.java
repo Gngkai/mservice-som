@@ -29,7 +29,7 @@ import mkt.progress.listing.aos_mkt_listingmin_bill;
 import mkt.progress.listing.AosMktListingReqBill;
 import mkt.progress.listing.aos_mkt_listingson_bill;
 import mkt.progress.photo.AosMktProgPhReqBill;
-import mkt.progress.photo.aos_mkt_rcv_bill;
+import mkt.progress.photo.AosMktRcvBill;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.TreeBidiMap;
 
@@ -114,7 +114,7 @@ public class ProgressUtil {
 					else if (billFormId.equals("aos_mkt_designreq")) // 设计需求表
 						new aos_mkt_designreq_bill().aos_submit(dy_main, "B");
 					else if (billFormId.equals("aos_mkt_rcv")) // 样品入库通知单
-						new aos_mkt_rcv_bill().aos_submit(dy_main, "B");
+						new AosMktRcvBill().aosSubmit(dy_main, "B");
 					else if (billFormId.equals("aos_mkt_photoreq"))
 						new AosMktProgPhReqBill().aosSubmit(dy_main, "B");
 					else if (billFormId.equals("aos_mkt_aadd"))
