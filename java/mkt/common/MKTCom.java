@@ -1,6 +1,9 @@
 package mkt.common;
 
 import common.CommonDataSomQuo;
+import common.fnd.FndGlobal;
+import common.sal.sys.sync.service.ItemCacheService;
+import common.sal.sys.sync.service.impl.ItemCacheServiceImpl;
 import kd.bos.algo.DataSet;
 import kd.bos.algo.JoinDataSet;
 import kd.bos.algo.Row;
@@ -273,6 +276,13 @@ public class MKTCom {
 	 */
 	public static boolean Is_PreSaleOut(long org_id, long item_id, int item_intransqty, int aos_shp_day,
 			int aos_freight_day, int aos_clear_day, int availableDays) {
+		//首先判断物料是否为季节品，如果不是季节品，调用销售的判断逻辑，否则还用之前的逻辑
+		ItemCacheService cacheService = new ItemCacheServiceImpl();
+		String seasonProNum = cacheService.getSeasonProNum(org_id, item_id);
+		//不为季节品
+		if (FndGlobal.IsNull(seasonProNum)) {
+			return cacheService.getIsPreStockOut(String.valueOf(org_id), String.valueOf(item_id));
+		}
 		// TODO 判断预断货逻辑
 		boolean PreSaleOut = false;
 		String orgid_str = Long.toString(org_id);
@@ -285,6 +295,9 @@ public class MKTCom {
 				|| (item_intransqty > 0 && (availableDays - intoTheWarehouseDays - safetyStockDays) <= 0)) {
 			PreSaleOut = true;
 		}
+
+
+
 		return PreSaleOut;
 	}
 
