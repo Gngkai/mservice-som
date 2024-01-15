@@ -18,7 +18,7 @@ import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
-import mkt.progress.listing.aos_mkt_listingmin_bill;
+import mkt.progress.listing.AosMktListingMinBill;
 
 /** 功能图翻译台账生成 设计需求表 定时任务 **/
 public class aos_mkt_design_init extends AbstractTask {
@@ -51,7 +51,7 @@ public class aos_mkt_design_init extends AbstractTask {
 
 				DynamicObject aos_mkt_listing_min = BusinessDataServiceHelper.loadSingle(aos_mkt_funcsumdata.get("aos_sourceid"), "aos_mkt_listing_min");
 
-				String aos_frombill = aos_mkt_listingmin_bill.GenerateDesign(aos_mkt_listing_min,aos_itemid,aos_mkt_funcsumdata.getString("aos_orgid"));
+				String aos_frombill = AosMktListingMinBill.generateDesign(aos_mkt_listing_min,aos_itemid,aos_mkt_funcsumdata.getString("aos_orgid"));
 
 				// 回写功能图翻译台账数据表
 				DynamicObject aos_mkt_funcsumdataSingle = BusinessDataServiceHelper
