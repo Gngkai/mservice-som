@@ -767,28 +767,28 @@ public class AosMktListingSonBill extends AbstractBillPlugIn implements ItemClic
                     throw new FndError(aosCategory1 + "," + aosCategory2 + "小语种编辑师不存在!");
                 }
                 // 英语编辑师
-                mktListingMin.set("aos_editor", aosEditor);
+                aosMktListingMin.set("aos_editor", aosEditor);
                 // 小语种编辑师
-                mktListingMin.set("aos_editormin", aosOueditor);
-                mktListingMin.set("aos_user", aosOueditor);
+                aosMktListingMin.set("aos_editormin", aosOueditor);
+                aosMktListingMin.set("aos_user", aosOueditor);
                 messageId = String.valueOf(aosOueditor);
                 message = "Listing优化需求表小语种-Listing优化需求子表自动创建";
                 OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_listing_min",
-                    new DynamicObject[] {mktListingMin}, OperateOption.create());
+                    new DynamicObject[] {aosMktListingMin}, OperateOption.create());
                 // 修复关联关系
                 try {
-                    ProgressUtil.botp("aos_mkt_listing_min", mktListingMin.get("id"));
+                    ProgressUtil.botp("aos_mkt_listing_min", aosMktListingMin.get("id"));
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
                 if (operationrst.getValidateResult().getValidateErrors().size() != 0 && messageFlag) {
                     MKTCom.SendGlobalMessage(messageId, "aos_mkt_listing_min",
-                        String.valueOf(operationrst.getSuccessPkIds().get(0)), mktListingMin.getString("billno"),
+                        String.valueOf(operationrst.getSuccessPkIds().get(0)), aosMktListingMin.getString("billno"),
                         message);
-                    mktListingMin = BusinessDataServiceHelper.loadSingle(operationrst.getSuccessPkIds().get(0),
+                    aosMktListingMin = BusinessDataServiceHelper.loadSingle(operationrst.getSuccessPkIds().get(0),
                         "aos_mkt_listing_min");
-                    ProgressUtil.botp("aos_mkt_listing_min", mktListingMin.get("id"));
-                    FndHistory.Create(mktListingMin, mktListingMin.getString("aos_status"),
+                    ProgressUtil.botp("aos_mkt_listing_min", aosMktListingMin.get("id"));
+                    FndHistory.Create(aosMktListingMin, aosMktListingMin.getString("aos_status"),
                         "Listing优化需求表小语种-Listing优化需求文案自动创建");
                 }
             }
@@ -964,10 +964,10 @@ public class AosMktListingSonBill extends AbstractBillPlugIn implements ItemClic
                     throw new FndError(aosCategory1 + "," + aosCategory2 + "小语种编辑师不存在!");
                 }
                 // 英语编辑师
-                mktListingMin.set("aos_editor", aosEditor);
+                aosMktListingMin.set("aos_editor", aosEditor);
                 // 小语种编辑师
-                mktListingMin.set("aos_editormin", aosOueditor);
-                mktListingMin.set("aos_user", aosOueditor);
+                aosMktListingMin.set("aos_editormin", aosOueditor);
+                aosMktListingMin.set("aos_user", aosOueditor);
                 messageId = String.valueOf(aosOueditor);
                 message = "Listing优化需求表小语种-Listing优化需求子表自动创建";
                 OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_listing_min",
