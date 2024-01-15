@@ -273,7 +273,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                 }
             }
         } catch (Exception ex) {
-//            MmsOtelUtils.setException(span, ex);
+            FndError.sendMMS(SalUtil.getExceptionStr(ex));
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
