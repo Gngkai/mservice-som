@@ -1,17 +1,11 @@
 package mkt.data.standard;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EventObject;
-import java.util.List;
+import java.util.*;
 
 import common.fnd.FndGlobal;
-import common.fnd.FndHistory;
 import common.fnd.FndMsg;
 import kd.bos.dataentity.OperateOption;
 import kd.bos.entity.operate.result.OperationResult;
-import kd.bos.form.ConfirmCallBackListener;
-import kd.bos.form.MessageBoxOptions;
 import kd.bos.form.control.events.*;
 import kd.bos.form.events.AfterDoOperationEventArgs;
 import kd.bos.form.events.BeforeDoOperationEventArgs;
@@ -19,6 +13,7 @@ import kd.bos.form.events.MessageBoxClosedEvent;
 import kd.bos.form.operate.FormOperate;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
+import mkt.data.com.AosMktDataComAudit;
 import org.apache.commons.lang3.StringUtils;
 import kd.bos.algo.DataSet;
 import kd.bos.algo.Row;
@@ -39,49 +34,53 @@ import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 
-public class aos_mkt_standard_bill extends AbstractBillPlugIn implements ItemClickListener, RowClickEventListener, BeforeF7SelectListener, CellClickListener {
+/**
+ * @author aosom
+ */
+public class aos_mkt_standard_bill extends AbstractBillPlugIn
+    implements ItemClickListener, RowClickEventListener, BeforeF7SelectListener, CellClickListener {
 
-    public final static String DB_MKT = "aos.mkt";// 供应链库
+    public final static String DB_MKT = "aos.mkt";
 
     @Override
     public void registerListener(EventObject e) {
         try {
-            this.addItemClickListeners("tbmain");// 给工具栏加监听事件
-
-            BasedataEdit aos_orgid = this.getControl("aos_orgid");// 根据人员过滤国别
-            aos_orgid.addBeforeF7SelectListener(this);
-
-            EntryGrid aos_salesentity = this.getControl("aos_salesentity");
-            aos_salesentity.addCellClickListener(this); // 单元格点击
-
+            // 给工具栏加监听事件
+            this.addItemClickListeners("tbmain");
+            // 根据人员过滤国别
+            BasedataEdit aosOrgid = this.getControl("aos_orgid");
+            aosOrgid.addBeforeF7SelectListener(this);
+            EntryGrid aosSalesentity = this.getControl("aos_salesentity");
+            aosSalesentity.addCellClickListener(this);
         } catch (Exception ex) {
             this.getView().showErrorNotification("registerListener = " + ex);
         }
     }
 
+    @Override
     public void itemClick(ItemClickEvent evt) {
         super.itemClick(evt);
-        String Control = evt.getItemKey();
-        if ("aos_submit".equals(Control)) {
-            DynamicObject dy_main = this.getModel().getDataEntity(true);
-            aos_submit(dy_main, "A");// 提交
-        } else if ("aos_audit".equals(Control)) {
-            DynamicObject dy_main = this.getModel().getDataEntity(true);
-            aos_audit(dy_main, "A");// 审核
-        } else if ("aos_manuclose".equals(Control)) {
-            DynamicObject dy_main = this.getModel().getDataEntity(true);
-            aos_manuclose(dy_main, "A");// 手工关闭
-        } else if ("aos_manuopen".equals(Control)) {
-            DynamicObject dy_main = this.getModel().getDataEntity(true);
-            aos_manuopen(dy_main, "A");// 手工开启
+        String control = evt.getItemKey();
+        DynamicObject dyMain = this.getModel().getDataEntity(true);
+        if ("aos_submit".equals(control)) {
+            // 提交
+            aos_submit(dyMain, "A");
+        } else if ("aos_audit".equals(control)) {
+            // 审核
+            aos_audit(dyMain, "A");
+        } else if ("aos_manuclose".equals(control)) {
+            // 手工关闭
+            aos_manuclose(dyMain, "A");
+        } else if ("aos_manuopen".equals(control)) {
+            // 手工开启
+            aos_manuopen(dyMain, "A");
         }
     }
 
     private void aos_manuopen(DynamicObject dy_main, String type) {
         {
             dy_main.set("aos_status", "待优化");
-            SaveServiceHelper.saveOperate("aos_mkt_standard",
-                    new DynamicObject[]{dy_main}, OperateOption.create());
+            SaveServiceHelper.saveOperate("aos_mkt_standard", new DynamicObject[] {dy_main}, OperateOption.create());
             if (type.equals("A")) {
                 this.getView().invokeOperation("refresh");
                 this.getView().showSuccessNotification("手动开启成功");
@@ -97,9 +96,8 @@ public class aos_mkt_standard_bill extends AbstractBillPlugIn implements ItemCli
      */
     private void aos_manuclose(DynamicObject dy_main, String type) {
         dy_main.set("aos_status", "手动关闭");
-        SaveServiceHelper.saveOperate("aos_mkt_standard",
-                new DynamicObject[]{dy_main}, OperateOption.create());
-        if (type.equals("A")) {
+        SaveServiceHelper.saveOperate("aos_mkt_standard", new DynamicObject[] {dy_main}, OperateOption.create());
+        if ("A".equals(type)) {
             this.getView().invokeOperation("refresh");
             this.getView().showSuccessNotification("手动关闭成功");
         }
@@ -108,12 +106,13 @@ public class aos_mkt_standard_bill extends AbstractBillPlugIn implements ItemCli
     private void aos_audit(DynamicObject dy_main, String type) {
         dy_main.set("aos_status", "已完成");
         dy_main.set("aos_confirmor", UserServiceHelper.getCurrentUserId());
-        SaveServiceHelper.saveOperate("aos_mkt_standard",
-                new DynamicObject[]{dy_main}, OperateOption.create());
-        if (type.equals("A")) {
+        SaveServiceHelper.saveOperate("aos_mkt_standard", new DynamicObject[] {dy_main}, OperateOption.create());
+        if ("A".equals(type)) {
             this.getView().invokeOperation("refresh");
-            this.getView().showSuccessNotification("审核成功");
-            this.getView().showConfirm("是否调整设计标准库?", MessageBoxOptions.YesNo, new ConfirmCallBackListener("audit", this));
+            Map<String, Object> params = new HashMap<>(16);
+            params.put("bill_type", "aos_mkt_standard");
+            params.put("id", dy_main.getPkValue().toString());
+            AosMktDataComAudit.audit(this, params);
         }
     }
 
@@ -125,9 +124,8 @@ public class aos_mkt_standard_bill extends AbstractBillPlugIn implements ItemCli
      */
     private void aos_submit(DynamicObject dy_main, String type) {
         dy_main.set("aos_status", "待确认");
-        SaveServiceHelper.saveOperate("aos_mkt_standard",
-                new DynamicObject[]{dy_main}, OperateOption.create());
-        if (type.equals("A")) {
+        SaveServiceHelper.saveOperate("aos_mkt_standard", new DynamicObject[] {dy_main}, OperateOption.create());
+        if ("A".equals(type)) {
             this.getView().invokeOperation("refresh");
             this.getView().showSuccessNotification("提交成功");
         }
@@ -135,7 +133,7 @@ public class aos_mkt_standard_bill extends AbstractBillPlugIn implements ItemCli
 
     public void propertyChanged(PropertyChangedArgs e) {
         String name = e.getProperty().getName();
-        if (name.equals("aos_category1") || name.equals("aos_category2") || name.equals("aos_category3")) {
+        if ("aos_category1".equals(name) || "aos_category2".equals(name) || "aos_category3".equals(name)) {
             init_category();
             syncCategory();
         }
@@ -161,19 +159,18 @@ public class aos_mkt_standard_bill extends AbstractBillPlugIn implements ItemCli
         init_org();
     }
 
-    /*
+    /**
      * 初始化国别
      */
     private void init_org() {
         long CurrentUserId = UserServiceHelper.getCurrentUserId();
         DynamicObject aos_mkt_useright = QueryServiceHelper.queryOne("aos_mkt_userights",
-                "entryentity.aos_orgid aos_orgid",
-                new QFilter[]{new QFilter("aos_user", QCP.equals, CurrentUserId)});
+            "entryentity.aos_orgid aos_orgid", new QFilter[] {new QFilter("aos_user", QCP.equals, CurrentUserId)});
         long aos_orgid = aos_mkt_useright.getLong("aos_orgid");
         this.getModel().setValue("aos_orgid", aos_orgid);
     }
 
-    /*
+    /**
      * 初始化类别
      */
     private void init_category() {
@@ -188,11 +185,11 @@ public class aos_mkt_standard_bill extends AbstractBillPlugIn implements ItemCli
         // 大类
         QFilter filter_level = new QFilter("level", "=", "1");
         QFilter filter_divide = new QFilter("name", "!=", "待分类");
-        QFilter[] filters_group = new QFilter[]{filter_level, filter_divide};
+        QFilter[] filters_group = new QFilter[] {filter_level, filter_divide};
         String select_group = "name,level";
-        DataSet bd_materialgroupS = QueryServiceHelper.queryDataSet(
-                this.getClass().getName() + "." + "bd_materialgroupS", "bd_materialgroup", select_group, filters_group,
-                null);
+        DataSet bd_materialgroupS =
+            QueryServiceHelper.queryDataSet(this.getClass().getName() + "." + "bd_materialgroupS", "bd_materialgroup",
+                select_group, filters_group, null);
         while (bd_materialgroupS.hasNext()) {
             Row bd_materialgroup = bd_materialgroupS.next();
             // 获取数据
@@ -208,11 +205,11 @@ public class aos_mkt_standard_bill extends AbstractBillPlugIn implements ItemCli
         } else {
             filter_level = new QFilter("level", "=", "2");
             filter_divide = new QFilter("parent.name", "=", aos_category1);
-            filters_group = new QFilter[]{filter_level, filter_divide};
+            filters_group = new QFilter[] {filter_level, filter_divide};
             select_group = "name,level";
-            DataSet bd_materialgroup2S = QueryServiceHelper.queryDataSet(
-                    this.getClass().getName() + "." + "bd_materialgroup2S", "bd_materialgroup", select_group,
-                    filters_group, null);
+            DataSet bd_materialgroup2S =
+                QueryServiceHelper.queryDataSet(this.getClass().getName() + "." + "bd_materialgroup2S",
+                    "bd_materialgroup", select_group, filters_group, null);
             while (bd_materialgroup2S.hasNext()) {
                 Row bd_materialgroup2 = bd_materialgroup2S.next();
                 // 获取数据
@@ -233,12 +230,12 @@ public class aos_mkt_standard_bill extends AbstractBillPlugIn implements ItemCli
             } else {
                 filter_level = new QFilter("level", "=", "3");
                 filter_divide = new QFilter("parent.name", "=", aos_category1 + "," + aos_category2);
-                filters_group = new QFilter[]{filter_level, filter_divide};
+                filters_group = new QFilter[] {filter_level, filter_divide};
                 select_group = "name,level";
 
-                DataSet bd_materialgroup3S = QueryServiceHelper.queryDataSet(
-                        this.getClass().getName() + "." + "bd_materialgroup3S", "bd_materialgroup", select_group,
-                        filters_group, null);
+                DataSet bd_materialgroup3S =
+                    QueryServiceHelper.queryDataSet(this.getClass().getName() + "." + "bd_materialgroup3S",
+                        "bd_materialgroup", select_group, filters_group, null);
                 while (bd_materialgroup3S.hasNext()) {
                     Row bd_materialgroup3 = bd_materialgroup3S.next();
                     // 获取数据
@@ -265,15 +262,15 @@ public class aos_mkt_standard_bill extends AbstractBillPlugIn implements ItemCli
             // 获取当前人员id
             long CurrentUserId = UserServiceHelper.getCurrentUserId();
             if (StringUtils.equals(name, "aos_orgid")) {
-                DynamicObjectCollection list = QueryServiceHelper.query("aos_mkt_userights",
-                        "entryentity.aos_orgid aos_orgid",
-                        new QFilter[]{new QFilter("aos_user", QCP.equals, CurrentUserId)});
+                DynamicObjectCollection list =
+                    QueryServiceHelper.query("aos_mkt_userights", "entryentity.aos_orgid aos_orgid",
+                        new QFilter[] {new QFilter("aos_user", QCP.equals, CurrentUserId)});
                 List<String> orgList = new ArrayList<>();
                 for (DynamicObject obj : list) {
                     orgList.add(obj.getString("aos_orgid"));
                 }
                 QFilter qFilter = new QFilter("id", QCP.in, orgList);
-                ListShowParameter showParameter = (ListShowParameter) beforeF7SelectEvent.getFormShowParameter();
+                ListShowParameter showParameter = (ListShowParameter)beforeF7SelectEvent.getFormShowParameter();
                 showParameter.getListFilterParameter().getQFilters().add(qFilter);
             }
         } catch (Exception ex) {
@@ -285,7 +282,8 @@ public class aos_mkt_standard_bill extends AbstractBillPlugIn implements ItemCli
     public void cellClick(CellClickEvent arg0) {
         String name = arg0.getFieldKey();
         int row = arg0.getRow();
-        if (name.equals("aos_featuresl") && row != -1 && this.getModel().getValue("aos_featuresl", row).toString().equals(""))
+        if (name.equals("aos_featuresl") && row != -1
+            && this.getModel().getValue("aos_featuresl", row).toString().equals(""))
             this.getModel().setValue("aos_featuresl", "-", row);
     }
 
@@ -295,11 +293,10 @@ public class aos_mkt_standard_bill extends AbstractBillPlugIn implements ItemCli
 
     }
 
-
     @Override
     public void beforeDoOperation(BeforeDoOperationEventArgs args) {
         super.beforeDoOperation(args);
-        FormOperate formOperate = (FormOperate) args.getSource();
+        FormOperate formOperate = (FormOperate)args.getSource();
         String Operatation = formOperate.getOperateKey();
         if ("save".equals(Operatation)) {
             FndMsg.debug("=====save Operation=====");
@@ -311,13 +308,12 @@ public class aos_mkt_standard_bill extends AbstractBillPlugIn implements ItemCli
             }
             // 校验
             DynamicObject aosMktStandard = QueryServiceHelper.queryOne("aos_mkt_standard", "id",
-                    new QFilter("aos_category1", QCP.equals, this.getModel().getValue("aos_category1"))
-                            .and("aos_category2", QCP.equals, this.getModel().getValue("aos_category2"))
-                            .and("aos_category3", QCP.equals, this.getModel().getValue("aos_category3"))
-                            .and("aos_itemnamecn", QCP.equals, this.getModel().getValue("aos_itemnamecn"))
-                            .and("aos_orgid", QCP.equals, ((DynamicObject) aos_orgid).getPkValue())
-                            .and("id", QCP.not_equals, this.getModel().getDataEntity().getPkValue().toString())
-                            .toArray());
+                new QFilter("aos_category1", QCP.equals, this.getModel().getValue("aos_category1"))
+                    .and("aos_category2", QCP.equals, this.getModel().getValue("aos_category2"))
+                    .and("aos_category3", QCP.equals, this.getModel().getValue("aos_category3"))
+                    .and("aos_itemnamecn", QCP.equals, this.getModel().getValue("aos_itemnamecn"))
+                    .and("aos_orgid", QCP.equals, ((DynamicObject)aos_orgid).getPkValue())
+                    .and("id", QCP.not_equals, this.getModel().getDataEntity().getPkValue().toString()).toArray());
             if (FndGlobal.IsNotNull(aosMktStandard)) {
                 this.getView().showErrorNotification("已存在相同的产品类别和品名");
                 args.setCancel(true);
@@ -333,10 +329,6 @@ public class aos_mkt_standard_bill extends AbstractBillPlugIn implements ItemCli
             operationResult.setShowMessage(false);
             this.getView().showTipNotification(operationResult.getMessage());
         }
-        // 审核通过 确认是否调整摄影，摄像，布景等标准库
-        if ("audit".equals(operateKey)) {
-            this.getView().showConfirm("是否调整设计标准库?", MessageBoxOptions.YesNo, new ConfirmCallBackListener("audit", this));
-        }
     }
 
     @Override
@@ -351,24 +343,19 @@ public class aos_mkt_standard_bill extends AbstractBillPlugIn implements ItemCli
         String aos_category3_name = this.getModel().getValue("aos_category3_name").toString();
         String aos_itemnamecn = this.getModel().getValue("aos_itemnamecn").toString();
         String aos_detail = this.getModel().getValue("aos_detail").toString();
-
-        QFilter[] qFilters = new QFilter[]{
-                new QFilter("aos_category1_name", QCP.equals, aos_category1_name),
-                new QFilter("aos_category2_name", QCP.equals, aos_category2_name),
-                new QFilter("aos_category3_name", QCP.equals, aos_category3_name),
-                new QFilter("aos_itemnamecn", QCP.equals, aos_itemnamecn),
-                new QFilter("aos_detail", QCP.equals, aos_detail),
-        };
-
+        QFilter[] qFilters = new QFilter[] {new QFilter("aos_category1_name", QCP.equals, aos_category1_name),
+            new QFilter("aos_category2_name", QCP.equals, aos_category2_name),
+            new QFilter("aos_category3_name", QCP.equals, aos_category3_name),
+            new QFilter("aos_itemnamecn", QCP.equals, aos_itemnamecn),
+            new QFilter("aos_detail", QCP.equals, aos_detail),};
         if ("Yes".equals(resultValue) && "audit".equals(callBackId)) {
             // 如果为是 更新相同品类的摄影 摄像 布景标准库 的进度为待优化
-            DynamicObject photoObj = BusinessDataServiceHelper.loadSingle("aos_mkt_designstd", "billstatus,aos_status", qFilters);
+            DynamicObject photoObj =
+                BusinessDataServiceHelper.loadSingle("aos_mkt_designstd", "billstatus,aos_status", qFilters);
             if (photoObj != null) {
                 photoObj.set("billstatus", "D");
-
                 photoObj.set("aos_status", "待优化");
-
-                SaveServiceHelper.save(new DynamicObject[]{photoObj});
+                SaveServiceHelper.save(new DynamicObject[] {photoObj});
             }
         }
     }

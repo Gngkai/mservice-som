@@ -14,8 +14,11 @@ import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
+import mkt.data.com.AosMktDataComAudit;
 
 import java.util.EventObject;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 布景标准库
@@ -68,7 +71,6 @@ public class AosMktViewBill  extends AbstractBillPlugIn implements ItemClickList
             this.getView().showSuccessNotification("手动关闭成功");
         }
     }
-
     private void aos_audit(DynamicObject dy_main, String type) {
         dy_main.set("aos_status", "已完成");
         dy_main.set("aos_confirmor", UserServiceHelper.getCurrentUserId());
@@ -76,8 +78,10 @@ public class AosMktViewBill  extends AbstractBillPlugIn implements ItemClickList
                 new DynamicObject[]{dy_main}, OperateOption.create());
         if (type.equals("A")) {
             this.getView().invokeOperation("refresh");
-            this.getView().showSuccessNotification("审核成功");
-//            this.getView().showConfirm("是否调整摄影、摄像、布景标准库?", MessageBoxOptions.YesNo, new ConfirmCallBackListener("audit", this));
+            Map<String, Object> params = new HashMap<>(16);
+            params.put("bill_type", "aos_mkt_viewstd");
+            params.put("id", dy_main.getPkValue().toString());
+            AosMktDataComAudit.audit(this, params);
         }
     }
     /**

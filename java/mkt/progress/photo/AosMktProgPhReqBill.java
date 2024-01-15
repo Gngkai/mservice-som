@@ -273,7 +273,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                 }
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+//            MmsOtelUtils.setException(span, ex);
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -435,6 +435,8 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             } catch (Exception ex) {
                 fndError.add("跟单行政组织级别有误!");
             }
+            FndMsg.debug("errorcount:" + fndError.getCount());
+
             if (fndError.getCount() > 0) {
                 throw fndError;
             }
@@ -1627,12 +1629,9 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             List<DynamicObject> listCountry = aosContryentryS.stream().sorted((dy1, dy2) -> {
                 int d1 = dy1.getDynamicObject("aos_nationality").getInt("aos_orderby");
                 int d2 = dy2.getDynamicObject("aos_nationality").getInt("aos_orderby");
-                if (d1 > d2)
-                {
+                if (d1 > d2) {
                     return 1;
-                }
-                else
-                {
+                } else {
                     return -1;
                 }
             }).collect(Collectors.toList());
@@ -1961,6 +1960,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
         String operatation = formOperate.getOperateKey();
         try {
             if (sign.save.name.equals(operatation)) {
+                FndMsg.debug("INTO  SAVE");
                 newControl(this.getModel().getDataEntity(true));
                 syncPhotoList(); // 拍照任务清单同步
                 phstateis();
@@ -2180,7 +2180,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             aosPicdesc1 = dycPhoto.get(0).getString("aos_devsupp");
         }
         // 如果新建状态下 单据编号为空 则需要生成对应的拍照任务清单 并回写单据编号
-        boolean cond = (sign.newStatus.name.equals(aosStatus) && FndGlobal.IsNotNull(aosBillno));
+        boolean cond = (sign.newStatus.name.equals(aosStatus) && FndGlobal.IsNull(aosBillno));
         if (cond) {
             DynamicObject aosMktPhotolist = BusinessDataServiceHelper.newDynamicObject("aos_mkt_photolist");
             aosMktPhotolist.set(AOS_ITEMID, aosItemid);
@@ -2369,12 +2369,9 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             List<DynamicObject> listCountry = aosContryentryS.stream().sorted((dy1, dy2) -> {
                 int d1 = dy1.getDynamicObject("aos_nationality").getInt("aos_orderby");
                 int d2 = dy2.getDynamicObject("aos_nationality").getInt("aos_orderby");
-                if (d1 > d2)
-                {
+                if (d1 > d2) {
                     return 1;
-                }
-                else
-                {
+                } else {
                     return -1;
                 }
             }).collect(Collectors.toList());

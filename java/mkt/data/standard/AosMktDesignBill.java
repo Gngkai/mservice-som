@@ -23,8 +23,11 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.otel.MmsOtelUtils;
+import mkt.data.com.AosMktDataComAudit;
 
 import java.util.EventObject;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author aosom
@@ -66,10 +69,13 @@ public class AosMktDesignBill extends AbstractBillPlugIn implements ItemClickLis
         dyMain.set("aos_confirmor", UserServiceHelper.getCurrentUserId());
         SaveServiceHelper.saveOperate("aos_mkt_designstd", new DynamicObject[] {dyMain}, OperateOption.create());
         this.getView().invokeOperation("refresh");
-        this.getView().showSuccessNotification("审核成功");
-        this.getView().showConfirm("是否调整摄影、摄像、布景标准库?", MessageBoxOptions.YesNo,
-            new ConfirmCallBackListener("audit", this));
-
+//        this.getView().showSuccessNotification("审核成功");
+//        this.getView().showConfirm("是否调整摄影、摄像、布景标准库?", MessageBoxOptions.YesNo,
+//            new ConfirmCallBackListener("audit", this));
+        Map<String, Object> params = new HashMap<>(16);
+        params.put("bill_type", "aos_mkt_designstd");
+        params.put("id", dyMain.getPkValue().toString());
+        AosMktDataComAudit.audit(this, params);
     }
 
     @Override
