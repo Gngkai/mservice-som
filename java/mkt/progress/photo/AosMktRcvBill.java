@@ -312,7 +312,7 @@ public class AosMktRcvBill extends AbstractBillPlugIn implements ItemClickListen
                 if (!(boolean)aosPhotoflag && !aosVedio) {
                     String phStatus = aosMktPhotoreq.getString("aos_status");
                     // 生成不需要拍
-                    aos_mkt_nophoto_bill.create_noPhotoEntity(aosMktPhotoreq);
+                    AosMktNoPhotoUtil.createNoPhotoEntity(aosMktPhotoreq);
                     aosMktPhotoreq.set("aos_status", "不需拍");
                     aosMktPhotoreq.set("aos_user", SYSTEM);
                     aosMktPhotolist.set("aos_phstatus", "不需拍");

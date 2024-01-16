@@ -661,7 +661,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             // 不拍照不拍视频 状态直接调整为不需拍 并进入不拍照任务清单
             if (!(Boolean)aosPhotoFlag && !(Boolean)aosVedioFlag) {
                 // 生成不拍照任务清单
-                aos_mkt_nophoto_bill.create_noPhotoEntity(dyMain);
+                AosMktNoPhotoUtil.createNoPhotoEntity(dyMain);
             } else {
                 // 校验跟单是否为空
                 if (aosFollower == null) {
