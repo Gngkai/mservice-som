@@ -267,7 +267,6 @@ public class AosMktRcvList extends AbstractListPlugin {
     }
 
     private void aosTest() {
-        aos_mkt_progphreq_sync.do_operate(null);
     }
 
     private XSSFWorkbook genWorkBook(Row aosMktRcv, QFilter filterId) {
