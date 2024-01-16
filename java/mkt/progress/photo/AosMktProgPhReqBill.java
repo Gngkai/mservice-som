@@ -3047,6 +3047,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             }
             SaveServiceHelper.saveOperate("aos_mkt_photoreq", new DynamicObject[] {dyMain}, OperateOption.create());
             FndHistory.Create(dyMain, "提交", aosStatus);
+            afterSubmit(dyMain, type);
             if (sign.A.name.equals(type)) {
                 this.getView().invokeOperation("refresh");
                 statusControl();// 提交完成后做新的界面状态控制
@@ -3058,6 +3059,17 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             MmsOtelUtils.spanClose(span);
         }
     }
+
+    public void afterSubmit(DynamicObject mainEntity, String type) {
+        //24-01-16 GK:判断提交后的状态是否为 开发确认:视频
+        String status = mainEntity.getString("aos_status");
+        if ("开发确认:视频".equals(status) ) {
+            //重新查找单据，然后提交
+            mainEntity = BusinessDataServiceHelper.loadSingle(mainEntity.getPkValue(), AOS_MKT_PHOTOREQ);
+            aosSubmit(mainEntity, type);
+        }
+    }
+
 
     /**
      * 视频更新 多人会审 提交
