@@ -922,7 +922,7 @@ public class aos_mkt_aadd_bill extends AbstractBillPlugIn implements HyperLinkCl
             if (category_group.length > 0) {
                 AosCategory1 = category_group[0];
             }
-            String aos_url = "\\\\192.168.70.61\\Marketing_Files图片库\\A+上架资料\\设计高级版A+\\" + AosCategory1 + "\\"
+            String aos_url = "\\\\192.168.70.61\\Marketing_Files\\图片库\\A+上架资料\\设计高级版A+\\" + AosCategory1 + "\\"
                 + bd_material.getString("name") + "-" + bd_material.getString("aos_productno");
             this.getModel().setValue("aos_url", aos_url);
             // 货号信息面板

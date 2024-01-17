@@ -20,22 +20,17 @@ import java.util.*;
 
 /**
  * @author create by gk
- * @date 2023/7/18 17:20
- * @action 3d产品设计单同步数据（出运日期，质检完成日期，大货样封样状态）
+ * @since 2023/7/18 17:20
+ * @version 3d产品设计单同步数据（出运日期，质检完成日期，大货样封样状态）-调度任务类
  */
-public class aos_mkt_sync_3dsign extends AbstractTask {
+public class AosMktSync3dsignTask extends AbstractTask {
     public static void process2() {
         // 初始化物料数据
-        HashMap<String, HashMap<String, String>> itemMap = new HashMap<>();
+        HashMap<String, HashMap<String, String>> itemMap = new HashMap<>(16);
         DynamicObjectCollection itemS = QueryServiceHelper.query("bd_material",
-                "id," +
-                        "aos_developer.name aos_developer," +
-                        "name," +
-                        "aos_specification_cn," +
-                        "aos_seting_cn," +
-                        "aos_sellingpoint",
-                new QFilter("aos_protype", QCP.equals, "N"
-                ).toArray());
+            "id," + "aos_developer.name aos_developer," + "name," + "aos_specification_cn," + "aos_seting_cn,"
+                + "aos_sellingpoint",
+            new QFilter("aos_protype", QCP.equals, "N").toArray());
 
         FndMsg.debug("size1:" + itemS.size());
         for (DynamicObject item : itemS) {
@@ -45,27 +40,25 @@ public class aos_mkt_sync_3dsign extends AbstractTask {
             String specification = item.getString("aos_specification_cn");
             String seting = item.getString("aos_seting_cn");
             String sellPoint = item.getString("aos_sellingpoint");
-            HashMap<String, String> data = itemMap.getOrDefault(itemId, new HashMap<>());
-            data.put("aos_developer", developer);// 现开发人
-            data.put("name", name);// 产品品名
-            data.put("aos_specification_cn", specification);// 产品规格
-            data.put("aos_seting_cn", seting);// 产品属性
-            data.put("aos_sellingpoint", sellPoint);// 产品卖点
+            HashMap<String, String> data = itemMap.getOrDefault(itemId, new HashMap<>(16));
+            // 现开发人
+            data.put("aos_developer", developer);
+            // 产品品名
+            data.put("name", name);
+            // 产品规格
+            data.put("aos_specification_cn", specification);
+            // 产品属性
+            data.put("aos_seting_cn", seting);
+            // 产品卖点
+            data.put("aos_sellingpoint", sellPoint);
             itemMap.put(itemId, data);
         }
 
-        DynamicObject[] designS =
-                BusinessDataServiceHelper
-                        .load("aos_mkt_3design",
-                                "aos_entryentity.aos_itemid," +
-                                        "aos_entryentity.aos_is_saleout," +
-                                        "aos_entryentity.aos_itemname," +
-                                        "aos_entryentity.aos_orgtext," +
-                                        "aos_entryentity.aos_specification," +
-                                        "aos_entryentity.aos_seting1," +
-                                        "aos_entryentity.aos_sellingpoint", new QFilter("aos_status",
-                                        QCP.not_equals,
-                                        "已完成").toArray());
+        DynamicObject[] designS = BusinessDataServiceHelper.load("aos_mkt_3design",
+            "aos_entryentity.aos_itemid," + "aos_entryentity.aos_is_saleout," + "aos_entryentity.aos_itemname,"
+                + "aos_entryentity.aos_orgtext," + "aos_entryentity.aos_specification," + "aos_entryentity.aos_seting1,"
+                + "aos_entryentity.aos_sellingpoint",
+            new QFilter("aos_status", QCP.not_equals, "已完成").toArray());
         FndMsg.debug("size2:" + designS.length);
         List<DynamicObject> updateEntity = new ArrayList<>(designS.length);
         int i = 0;
@@ -93,7 +86,7 @@ public class aos_mkt_sync_3dsign extends AbstractTask {
 
     @Override
     public void execute(RequestContext requestContext, Map<String, Object> map) throws KDException {
-        //查找大货封样的3d产品设计单
+        // 查找大货封样的3d产品设计单
         process1();
         // 刷新物料信息
         process2();
@@ -116,33 +109,36 @@ public class aos_mkt_sync_3dsign extends AbstractTask {
         photoSelect.add("aos_itemid");
         photoSelect.add("aos_ponumber");
 
-        DynamicObject[] designs = BusinessDataServiceHelper.load("aos_mkt_3design", select.toString(), builder.toArray());
-        //记录修改的单据
+        DynamicObject[] designs =
+            BusinessDataServiceHelper.load("aos_mkt_3design", select.toString(), builder.toArray());
+        // 记录修改的单据
         List<DynamicObject> updateEntity = new ArrayList<>(designs.length);
         for (DynamicObject design : designs) {
             String photoBill = design.getString("aos_orignbill");
-            //拍照需求表相关的信息
+            // 拍照需求表相关的信息
             builder.clear();
             builder.add("billno", "=", photoBill);
-            DynamicObject dy_photo = QueryServiceHelper.queryOne("aos_mkt_photoreq", photoSelect.toString(), builder.toArray());
-            if (dy_photo == null) {
+            DynamicObject dyPhoto =
+                QueryServiceHelper.queryOne("aos_mkt_photoreq", photoSelect.toString(), builder.toArray());
+            if (dyPhoto == null) {
                 continue;
             }
-            boolean invalidDate = FndGlobal.IsNull(dy_photo.get("aos_shipdate")) && FndGlobal.IsNull(dy_photo.get("aos_quainscomdate"));
-            //出运日期和质检日期都无效
+            boolean invalidDate =
+                FndGlobal.IsNull(dyPhoto.get("aos_shipdate")) && FndGlobal.IsNull(dyPhoto.get("aos_quainscomdate"));
+            // 出运日期和质检日期都无效
             if (invalidDate) {
-                //查找封样单信息
+                // 查找封样单信息
                 builder.clear();
-                builder.add("aos_item", "=", dy_photo.get("aos_itemid"));
-                builder.add("aos_contractnowb", "=", dy_photo.get("aos_ponumber"));
+                builder.add("aos_item", "=", dyPhoto.get("aos_itemid"));
+                builder.add("aos_contractnowb", "=", dyPhoto.get("aos_ponumber"));
                 builder.add("aos_largegood", QFilter.is_notnull, null);
                 boolean sealsample = QueryServiceHelper.exists("aos_sealsample", builder.toArray());
                 if (!sealsample) {
                     continue;
                 }
             } else {
-                design.set("aos_shipdate", dy_photo.get("aos_shipdate"));
-                design.set("aos_quainscomdate", dy_photo.get("aos_quainscomdate"));
+                design.set("aos_shipdate", dyPhoto.get("aos_shipdate"));
+                design.set("aos_quainscomdate", dyPhoto.get("aos_quainscomdate"));
             }
             design.set("aos_status", "新建");
             design.set("aos_user", design.get("aos_3der"));

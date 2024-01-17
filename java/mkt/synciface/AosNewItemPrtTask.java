@@ -17,16 +17,15 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Date:2024/1/4 14:31
- * 
  * @author aosom
+ * @since 2024/1/4 14:31
+ * @version 每日入库新品报表-调度任务类
  */
-public class AosNewItemPrtInit extends AbstractTask {
+public class AosNewItemPrtTask extends AbstractTask {
     @Override
     public void execute(RequestContext requestContext, Map<String, Object> map) throws KDException {
         process();
     }
-
     private void process() {
         DynamicObjectCollection itemS = QueryServiceHelper.query("bd_material",
             "id itemid," + "aos_contryentry.aos_nationality orgid," + "aos_contryentry.aos_contrybrand brandid,"
