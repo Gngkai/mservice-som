@@ -29,6 +29,7 @@ import mkt.progress.iface.iteminfo;
 
 /**
  * @author aosom
+ * @version 抠图任务清单-表单插件
  */
 public class AosMktPsListBill extends AbstractBillPlugIn implements ItemClickListener {
     public final static String AOS_SUBMIT = "aos_submit";

@@ -15,7 +15,8 @@ import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.QueryServiceHelper;
 
 /**
- * @author aosom 拍照任务清单-列表插件
+ * @author aosom
+ * @version 拍照任务清单-列表插件
  */
 public class AosMktPhotoList extends AbstractListPlugin
     implements ItemClickListener, HyperLinkClickListener, RowClickEventListener {

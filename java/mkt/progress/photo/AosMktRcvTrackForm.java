@@ -14,7 +14,8 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 
 /**
- * @author aosom 批量填写快递单号弹框-动态表单插件
+ * @author aosom
+ * @version 批量填写快递单号弹框-动态表单插件
  */
 public class AosMktRcvTrackForm extends AbstractFormPlugin {
     public final static String BTNOK = "btnok";

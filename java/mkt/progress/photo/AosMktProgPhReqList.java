@@ -37,6 +37,7 @@ import common.fnd.FndHistory;
 
 /**
  * @author create by gk
+ * @version 拍照需求表-列表插件
  */
 public class AosMktProgPhReqList extends AbstractListPlugin {
     public final static String SYSTEM = Cux_Common_Utl.SYSTEM;

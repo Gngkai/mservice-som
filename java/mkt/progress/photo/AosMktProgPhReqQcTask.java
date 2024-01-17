@@ -12,7 +12,8 @@ import common.sal.util.QFBuilder;
 import java.util.Map;
 
 /**
- * @author aosom 拍照需求表质检任务时间刷新-调度任务类
+ * @author aosom
+ * @version 拍照需求表质检任务时间刷新-调度任务类
  */
 public class AosMktProgPhReqQcTask extends AbstractTask {
     @Override

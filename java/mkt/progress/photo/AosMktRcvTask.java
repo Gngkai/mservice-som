@@ -17,7 +17,8 @@ import java.util.Date;
 import java.util.Map;
 
 /**
- * @author aosom 定时任务增加质检完成日期
+ * @author aosom
+ * @version 定时任务增加质检完成日期-调度任务类
  */
 public class AosMktRcvTask extends AbstractTask {
     public final static String AOS_SAL_DIS_CONFIRM = "aos_sal_dis_confirm";

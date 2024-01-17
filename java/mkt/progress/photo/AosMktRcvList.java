@@ -56,6 +56,7 @@ import mkt.progress.iface.parainfo;
 
 /**
  * @author aosom
+ * @version 样品入库通知单-列表插件
  */
 public class AosMktRcvList extends AbstractListPlugin {
 

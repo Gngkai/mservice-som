@@ -10,7 +10,8 @@ import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.QueryServiceHelper;
 
 /**
- * @author aosom 拍照子流程弹框-动态表单插件
+ * @author aosom
+ * @version 拍照子流程弹框-动态表单插件
  */
 public class AosMktPhoSonForm extends AbstractFormPlugin {
     @Override

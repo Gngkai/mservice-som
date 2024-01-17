@@ -30,6 +30,7 @@ import mkt.progress.iface.parainfo;
 
 /**
  * @author aosom
+ * @version Listing优化需求表销售确认单-列表插件
  */
 public class AosMktListingSalList extends AbstractListPlugin {
     public final static String AOS_MKT_LISTING_SAL = "aos_mkt_listing_sal";

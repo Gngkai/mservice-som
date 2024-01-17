@@ -11,7 +11,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * @author aosom 拍照需求货号查询-动态表单插件
+ * @author aosom
+ * @version 拍照需求货号查询-动态表单插件
  */
 public class AosMktProgPhReqForm extends AbstractFormPlugin {
 

@@ -43,6 +43,7 @@ import mkt.progress.iface.iteminfo;
 
 /**
  * @author aosom
+ * @version 样品入库通知单-表单插件
  */
 public class AosMktRcvBill extends AbstractBillPlugIn implements ItemClickListener {
     public final static String SYSTEM = Cux_Common_Utl.SYSTEM;
