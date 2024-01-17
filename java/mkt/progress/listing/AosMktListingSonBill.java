@@ -49,6 +49,7 @@ import mkt.progress.parameter.errorListing.ErrorListEntity;
 
 /**
  * @author aosom
+ * @version Listing优化需求表文案-表单插件
  */
 public class AosMktListingSonBill extends AbstractBillPlugIn implements ItemClickListener, HyperLinkClickListener {
     /**

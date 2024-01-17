@@ -25,7 +25,8 @@ import kd.bos.servicehelper.operation.SaveServiceHelper;
 import mkt.progress.listing.AosMktListingReqBill;
 
 /**
- * @author aosom 拍照清单同步
+ * @author aosom
+ * @version 拍照清单同步-调度任务类
  */
 public class AosMktProgPhReqSyncTask extends AbstractTask {
     /** 系统管理员 **/

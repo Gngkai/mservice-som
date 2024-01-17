@@ -21,6 +21,7 @@ import mkt.progress.ProgressUtil;
 
 /**
  * @author aosom
+ * @version Listing优化需求销售确认单-表单插件
  */
 public class AosMktListingSalBill extends AbstractBillPlugIn implements ItemClickListener {
     /** 系统管理员 **/

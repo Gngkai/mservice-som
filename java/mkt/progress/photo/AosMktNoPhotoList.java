@@ -14,7 +14,8 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 
 /**
- * @author aosom 不拍照任务清单-列表插件
+ * @author aosom
+ * @version 不拍照任务清单-列表插件
  */
 public class AosMktNoPhotoList extends AbstractListPlugin {
     public final static String AOS_SUBMIT = "aos_submit";

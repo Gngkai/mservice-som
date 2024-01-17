@@ -62,6 +62,7 @@ import static mkt.progress.ProgressUtil.Is_saleout;
 
 /**
  * @author aosom
+ * @version 拍照需求表-表单插件
  */
 public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClickListener, HyperLinkClickListener {
     /**

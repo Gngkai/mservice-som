@@ -14,7 +14,8 @@ import kd.bos.servicehelper.operation.OperationServiceHelper;
 import java.util.Date;
 
 /**
- * @author aosom 不拍照任务清单-工具类
+ * @author aosom
+ * @version 不拍照任务清单-工具类
  */
 public class AosMktNoPhotoUtil {
     /** 拍照需求表生成不需拍任务清单 **/

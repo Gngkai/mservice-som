@@ -15,7 +15,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * @author aosom 拍照需求表新增产品风格-调度任务
+ * @author aosom
+ * @version 拍照需求表新增产品风格-调度任务类
  */
 public class AosMktProgPhStyleTask extends AbstractTask {
     @Override

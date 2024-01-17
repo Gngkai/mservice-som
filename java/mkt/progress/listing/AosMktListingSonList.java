@@ -34,6 +34,7 @@ import org.apache.commons.collections4.BidiMap;
 
 /**
  * @author aosom
+ * @version Listing优化需求表文案-列表插件
  */
 public class AosMktListingSonList extends AbstractListPlugin {
 

@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 
 /**
  * @author create by gk
+ * @version Listing优化需求表小语种-列表插件
  */
 public class AosMktListingMinList extends AbstractListPlugin {
     public final static String AOS_MKT_LISTING_MIN = "aos_mkt_listing_min";
