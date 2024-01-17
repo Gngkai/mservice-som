@@ -575,6 +575,8 @@ public class EventRule {
             map_itemInfo.put(infoe.getString("id"),infoe);
         }
 
+        //获取ASIN
+        util.setItemAsin();
         //店铺现价
         util.setCurrentPrice();
 
@@ -593,7 +595,6 @@ public class EventRule {
             }
             if (row.get("aos_enddate")==null){
                 row.set("aos_enddate",enddate);
-
             }
 
             DynamicObject info = map_itemInfo.get(itemid);
