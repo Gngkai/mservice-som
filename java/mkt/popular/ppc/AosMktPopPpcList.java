@@ -43,7 +43,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * @author aosom ppc推广调价列表插件
+ * @author aosom
+ * @version ppc推广调价-列表插件
  */
 public class AosMktPopPpcList extends AbstractListPlugin {
 

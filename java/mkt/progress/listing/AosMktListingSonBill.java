@@ -1124,7 +1124,7 @@ public class AosMktListingSonBill extends AbstractBillPlugIn implements ItemClic
      * 关闭按钮
      */
     private void aosClose() {
-        ConfirmCallBackListener confirmCallBackListener = new ConfirmCallBackListener(sign.close.name, this);
+        ConfirmCallBackListener confirmCallBackListener = new ConfirmCallBackListener(sign.cancel.name, this);
         // 设置页面确认框，参数为：标题，选项框类型，回调监听
         this.getView().showConfirm("您确认关闭此申请单吗？", MessageBoxOptions.YesNo, confirmCallBackListener);
     }

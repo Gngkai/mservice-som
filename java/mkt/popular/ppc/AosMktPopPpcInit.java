@@ -52,7 +52,8 @@ import mkt.popular.adjust_s.aos_mkt_popadjs_init;
 import mkt.progress.iface.iteminfo;
 
 /**
- * @author aosom PPC初始化任务
+ * @author aosom
+ * @version PPC初始化任务-调度任务类
  */
 public class AosMktPopPpcInit extends AbstractTask {
     public static final String URL =
