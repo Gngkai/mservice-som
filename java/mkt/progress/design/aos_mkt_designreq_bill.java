@@ -571,6 +571,8 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 			SaveServiceHelper.save(new DynamicObject[] { dy_main });
 			setEntityValue(dy_main);
 			FndHistory.Create(dy_main, "提交", aos_status);
+			//触发提交后事件
+			afterSubmit(dy_main, type);
 			if (type.equals("A")) {
 				this.getView().invokeOperation("refresh");
 				StatusControl();// 提交完成后做新的界面状态控制
@@ -580,6 +582,23 @@ public class aos_mkt_designreq_bill extends AbstractBillPlugIn implements ItemCl
 			throw ex;
 		} finally {
 			MmsOtelUtils.spanClose(span);
+		}
+	}
+
+	/**
+	 * 提交后事件
+	 *
+	 * @param mainEntity 设计需求表
+	 * @param type       提交类型
+	 */
+	public void afterSubmit(DynamicObject mainEntity, String type) {
+		//24-01-16 GK:判断提交后的状态是否为“申请人确认”且 任务类型 = 新品设计；如果满足则继续往下提交
+		String status = mainEntity.getString("aos_status");
+		String taskType = mainEntity.getString("aos_type");
+		if ("申请人确认".equals(status) && "新品设计".equals(taskType)) {
+			//重新查找单据，然后提交
+			mainEntity = BusinessDataServiceHelper.loadSingle(mainEntity.getPkValue(), aos_mkt_designreq);
+			aos_submit(mainEntity, type);
 		}
 	}
 
