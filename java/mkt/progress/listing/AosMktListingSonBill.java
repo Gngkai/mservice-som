@@ -433,7 +433,7 @@ public class AosMktListingSonBill extends AbstractBillPlugIn implements ItemClic
                     aosMktDesignreq.set("aos_user", messageId);
                     aosMktDesignreq.set("aos_status", "设计确认:翻译");
                     aosMktDesignreq.set("aos_receivedate", new Date());
-                    mkt.progress.design.aos_mkt_designreq_bill.setEntityValue(aosMktDesignreq);
+                    mkt.progress.design.AosMktDesignReqBill.setEntityValue(aosMktDesignreq);
                     FndHistory.Create(aosMktDesignreq, "提交", aosStatus);
                     OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_designreq",
                         new DynamicObject[] {aosMktDesignreq}, OperateOption.create());

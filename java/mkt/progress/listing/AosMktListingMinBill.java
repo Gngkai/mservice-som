@@ -46,7 +46,7 @@ import mkt.common.MKTCom;
 import mkt.common.MKTS3PIC;
 import mkt.common.otel.MmsOtelUtils;
 import mkt.progress.ProgressUtil;
-import mkt.progress.design.aos_mkt_designreq_bill;
+import mkt.progress.design.AosMktDesignReqBill;
 import mkt.progress.iface.iteminfo;
 import mkt.progress.parameter.errorListing.ErrorListEntity;
 
@@ -795,7 +795,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
         aosMktDesignreq.set("aos_sourcebilltype", "aos_mkt_listing_min");
         aosMktDesignreq.set("aos_sourcebillno", dyMain.get("billno"));
         aosMktDesignreq.set("aos_srcentrykey", "aos_entryentity");
-        mkt.progress.design.aos_mkt_designreq_bill.setEntityValue(aosMktDesignreq);
+        mkt.progress.design.AosMktDesignReqBill.setEntityValue(aosMktDesignreq);
         aosMktDesignreq.set("aos_requireby", aosRequireby);
         aosMktDesignreq.set("aos_sourcetype", "LISTING");
         aosMktDesignreq.set("aos_orgid", orgid);
@@ -962,7 +962,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
                 messageId = aosMktProguser.getString("aos_designer");
             }
         }
-        aos_mkt_designreq_bill.createDesiginBeforeSave(aosMktDesignreq);
+        AosMktDesignReqBill.createDesiginBeforeSave(aosMktDesignreq);
         OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_designreq",
             new DynamicObject[] {aosMktDesignreq}, OperateOption.create());
         if (operationrst.isSuccess()) {

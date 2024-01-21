@@ -24,7 +24,7 @@ import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.MKTCom;
 import mkt.common.MKTS3PIC;
 import mkt.progress.ProgressUtil;
-import mkt.progress.design.aos_mkt_designreq_bill;
+import mkt.progress.design.AosMktDesignReqBill;
 import mkt.progress.iface.iteminfo;
 
 /**
@@ -166,7 +166,7 @@ public class AosMktPsListBill extends AbstractBillPlugIn implements ItemClickLis
         aosMktDesignreq.set("aos_user", aosDesigner);
         aosMktDesignreq.set("aos_requireby", aosRequireby);
         aosMktDesignreq.set("aos_sourcetype", "PHOTO");
-        mkt.progress.design.aos_mkt_designreq_bill.setEntityValue(aosMktDesignreq);
+        mkt.progress.design.AosMktDesignReqBill.setEntityValue(aosMktDesignreq);
         try {
             List<DynamicObject> mapList = Cux_Common_Utl.GetUserOrg(aosRequirebyid);
             if (mapList != null) {
@@ -295,7 +295,7 @@ public class AosMktPsListBill extends AbstractBillPlugIn implements ItemClickLis
             aosSubentryentity.set("aos_productstyle_new", productStyle.toString());
         }
         aosSubentryentity.set("aos_shootscenes", bdMaterial.getString("aos_shootscenes"));
-        aos_mkt_designreq_bill.createDesiginBeforeSave(aosMktDesignreq);
+        AosMktDesignReqBill.createDesiginBeforeSave(aosMktDesignreq);
         OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_designreq",
             new DynamicObject[] {aosMktDesignreq}, OperateOption.create());
         if (operationrst.getValidateResult().getValidateErrors().size() != 0) {

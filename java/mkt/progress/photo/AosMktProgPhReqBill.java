@@ -52,7 +52,7 @@ import mkt.common.MKTCom;
 import mkt.common.MKTS3PIC;
 import mkt.common.otel.MmsOtelUtils;
 import mkt.progress.ProgressUtil;
-import mkt.progress.design.aos_mkt_designreq_bill;
+import mkt.progress.design.AosMktDesignReqBill;
 import mkt.progress.design3d.aos_mkt_3design_bill;
 import mkt.progress.iface.iteminfo;
 import mkt.progress.listing.AosMktListingReqBill;
@@ -950,8 +950,9 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             Object aosRequirebyid = ((DynamicObject)aosRequireby).getPkValue();
             boolean aos3dflag = dyn.getBoolean("aos_3dflag");
             String aosPhstate = dyn.getString("aos_phstate");
+            String aosReason = dyn.getString("aos_reason");
             // 判断对应抠图任务清单是否为已完成
-            if (!aos3dflag && !aosPhstate.equals(sign.snapShot.name)) {
+            if (!aos3dflag && !aosPhstate.equals(sign.snapShot.name) && sign.PS.name.equals(aosReason)) {
                 QFilter filterStatus = new QFilter("aos_status", QCP.equals, "已完成");
                 QFilter filterId = new QFilter("aos_sourceid", "=", reqFid);
                 QFilter[] filtersPs = new QFilter[] {filterStatus, filterId};
@@ -1005,7 +1006,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             aosMktDesignreq.set("aos_sourcebilltype", AOS_MKT_PHOTOREQ);
             aosMktDesignreq.set("aos_sourcebillno", aosBillno);
             aosMktDesignreq.set("aos_srcentrykey", "aos_entryentity");
-            mkt.progress.design.aos_mkt_designreq_bill.setEntityValue(aosMktDesignreq);
+            mkt.progress.design.AosMktDesignReqBill.setEntityValue(aosMktDesignreq);
             List<DynamicObject> mapList = Cux_Common_Utl.GetUserOrg(aosRequirebyid);
             if (mapList != null) {
                 if (mapList.get(TWO) != null) {
@@ -1091,8 +1092,8 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
 
             DynamicObjectCollection aosEntryentity6S = dyn.getDynamicObjectCollection("aos_entryentity6");
             for (DynamicObject aosEntryentity6 : aosEntryentity6S) {
-                aosEntryentity.set("aos_desreq",
-                    aosEntryentity6.getString("aos_reqsupp") + "/" + aosEntryentity6.getString("aos_devsupp"));
+                aosEntryentity.set("aos_desreq", aosEntryentity6.getString("aos_reqsupp") + "/"
+                    + aosEntryentity6.getString("aos_devsupp") + aosReason);
             }
 
             DynamicObjectCollection aosSubentryentityS =
@@ -1127,7 +1128,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             }
             aosSubentryentity.set("aos_shootscenes", bdMaterial.getString("aos_shootscenes"));
 
-            aos_mkt_designreq_bill.createDesiginBeforeSave(aosMktDesignreq);
+            AosMktDesignReqBill.createDesiginBeforeSave(aosMktDesignreq);
             OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_designreq",
                 new DynamicObject[] {aosMktDesignreq}, OperateOption.create());
             if (operationrst.isSuccess()) {
@@ -1675,7 +1676,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                     continue;
                 }
                 String value = aosContryentry.getDynamicObject("aos_contrybrand").getString("name");
-                if ("新建".equals(aosStatus) || "视频拍摄".equals(aosStatus)) {
+                if ("新建".equals(aosStatus) || "视频拍摄".equals(aosStatus) || "视频剪辑".equals(aosStatus)) {
                     this.getModel().batchCreateNewEntryRow("aos_entryentity4", 1);
                     this.getModel().setValue("aos_orgshort", aosNationalitynumber, i - 1);
                     this.getModel().setValue("aos_brand", value, i - 1);
@@ -3062,15 +3063,14 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
     }
 
     public void afterSubmit(DynamicObject mainEntity, String type) {
-        //24-01-16 GK:判断提交后的状态是否为 开发确认:视频
+        // 24-01-16 GK:判断提交后的状态是否为 开发确认:视频
         String status = mainEntity.getString("aos_status");
-        if ("开发确认:视频".equals(status) ) {
-            //重新查找单据，然后提交
+        if ("开发确认:视频".equals(status)) {
+            // 重新查找单据，然后提交
             mainEntity = BusinessDataServiceHelper.loadSingle(mainEntity.getPkValue(), AOS_MKT_PHOTOREQ);
             aosSubmit(mainEntity, type);
         }
     }
-
 
     /**
      * 视频更新 多人会审 提交
@@ -3830,6 +3830,10 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
          * A
          */
         A("A"),
+        /**
+         * PS
+         */
+        PS("可PS作图"),
         /**
          * aos_refer
          */
