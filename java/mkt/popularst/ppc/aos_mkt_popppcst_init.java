@@ -38,8 +38,8 @@ import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import mkt.common.AosMktGenerate;
 import mkt.common.MKTCom;
-import mkt.popular.aos_mkt_pop_common;
-import mkt.popular.ppc.AosMktPopPpcInit;
+import mkt.popular.AosMktPopUtil;
+import mkt.popular.ppc.AosMktPopPpcTask;
 import mkt.popularst.add_s.aos_mkt_popadds_init;
 import mkt.popularst.adjust_s.aos_mkt_pop_stadd_init;
 import mkt.popularst.adjust_s.aos_mkt_popadjst_init;
@@ -74,14 +74,14 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 		// 当前工作日
 		int week = Today.get(Calendar.DAY_OF_WEEK);
 		// 判断今日是否执行
-		Boolean CopyFlag = aos_mkt_pop_common.GetCopyFlag("PPC_ST", week);
+		Boolean CopyFlag = AosMktPopUtil.getCopyFlag("PPC_ST", week);
 		// 若今日需要执行则初始化通用计算数据
 		if (CopyFlag)
 			CommonDataSom.init();
 		// 当前整点
 		int p_hour = Today.get(Calendar.HOUR_OF_DAY);
 		// 根据当前整点判断执行的是欧洲与美加
-		QFilter qf_time = aos_mkt_pop_common.getEuOrUsQf(p_hour);
+		QFilter qf_time = AosMktPopUtil.getEuOrUsQf(p_hour);
 		// 获取所有当前整点应执行的销售国别
 		DynamicObjectCollection bd_country = QueryServiceHelper.query("bd_country", "id,number",
 				new QFilter("aos_is_oversea_ou.number", QCP.equals, "Y").and("aos_isomvalid", QCP.equals, true)
@@ -141,7 +141,7 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 		// 当前周
 		int week = date.get(Calendar.DAY_OF_WEEK);
 		// 如果不是执行周期中的日期则复制昨日数据
-		Boolean CopyFlag = aos_mkt_pop_common.GetCopyFlag("PPC_ST", week);
+		Boolean CopyFlag = AosMktPopUtil.getCopyFlag("PPC_ST", week);
 		fndmsg.print("CopyFlag:" + CopyFlag);
 		if (!CopyFlag) {
 			copyLastDayData(p_org_id, aos_billno, aos_poptype, Today, platform_id);
@@ -183,9 +183,9 @@ public class aos_mkt_popppcst_init extends AbstractTask {
 		HashMap<String, Map<String, Object>> SkuRptDetailSerial = AosMktGenerate.GenerateSkuRptDetailSerial(p_ou_code);
 		HashMap<String, Map<String, Map<String, Object>>> SkuRpt3Serial = AosMktGenerate
 				.GenerateSkuRpt3SerialObject(p_ou_code);
-		Map<String, BigDecimal> CostMap = AosMktPopPpcInit.initItemCost();
-		Map<String, BigDecimal> ShipFee = AosMktPopPpcInit.generateShipFee();
-		Map<String, BigDecimal> VatMap = AosMktPopPpcInit.generateVat(p_org_id);
+		Map<String, BigDecimal> CostMap = AosMktPopPpcTask.initItemCost();
+		Map<String, BigDecimal> ShipFee = AosMktPopPpcTask.generateShipFee();
+		Map<String, BigDecimal> VatMap = AosMktPopPpcTask.generateVat(p_org_id);
 		Set<String> manualSet = GenerateManual(p_ou_code);
 		Set<String> weekSet = GenerateWeek(p_ou_code);
 
