@@ -18,6 +18,7 @@ import java.util.Date;
  * @version 不拍照任务清单-工具类
  */
 public class AosMktNoPhotoUtil {
+    public final static String CANPSPIC = "可PS做图";
     /** 拍照需求表生成不需拍任务清单 **/
     public static void createNoPhotoEntity(DynamicObject dyMian) {
         // 生成不拍照任务清单
@@ -76,6 +77,10 @@ public class AosMktNoPhotoUtil {
             new DynamicObject[] {aosMktNophotolist}, OperateOption.create());
         if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
             throw new FndError("不拍照任务清单保存失败!");
+        }
+        // 如果是可PS做图 需要生成设计需求表
+        if (CANPSPIC.equals(aosReason)){
+            AosMktProgPhReqBill.generateDesign(dyMian);
         }
     }
 }

@@ -36,41 +36,123 @@ import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.MKTCom;
 
-public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
-
+/**
+ * @author aosom
+ * @version 品名&Slogan维护表-表单插件
+ */
+public class AosMktSloganBill extends AbstractBillPlugIn {
+    private static final String AOS_CATEGORY2 = "aos_category2";
+    private static final String AOS_CATEGORY3 = "aos_category3";
+    private static final String AOS_CNAME = "aos_cname";
+    private static final String AOS_ITEMNAME = "aos_itemname";
     static String SYSTEM = Cux_Common_Utl.SYSTEM;
+
+    /**
+     * 翻译节点提交
+     *
+     * @throws FndError
+     */
+    public static void SubmitTrans(DynamicObject dy_main) throws FndError {
+        FndError fndError = new FndError();
+
+        Object ReqFId = dy_main.getPkValue();
+        String aos_category1 = dy_main.getString("aos_category1");// 大类
+        String aos_category2 = dy_main.getString("aos_category2");// 中类
+        Object billno = dy_main.get("billno");
+        Boolean aos_main = dy_main.getBoolean("aos_main");
+        Object aos_sourceid = dy_main.get("aos_sourceid");
+        Object aos_lang = dy_main.get("aos_lang");
+        Object aos_designer = dy_main.get("aos_designer");
+        Object messageId;
+        // 校验对应小语种slogan与品名是否填写
+        DynamicObjectCollection aos_entryentityS_O = dy_main.getDynamicObjectCollection("aos_entryentity");
+        for (DynamicObject aos_entryentity : aos_entryentityS_O) {
+            String aos_langr = aos_entryentity.getString("aos_langr");
+            String aos_itemname = aos_entryentity.getString("aos_itemname");
+            String aos_slogan = aos_entryentity.getString("aos_slogan");
+            if (aos_langr.equals(aos_lang)) {
+                if (FndGlobal.IsNull(aos_itemname) || FndGlobal.IsNull(aos_slogan)) {
+                    fndError.add("Slogan与品名必填!");
+                    throw fndError;
+                }
+            }
+        }
+        if (FndGlobal.IsNull(aos_designer)) {
+            DynamicObject aos_mkt_proguser = QueryServiceHelper.queryOne("aos_mkt_proguser", "aos_designer",
+                new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2).toArray());
+            if (FndGlobal.IsNull(aos_mkt_proguser) || FndGlobal.IsNull(aos_mkt_proguser.get("aos_designer"))) {
+                fndError.add("品类设计师不存在!");
+                throw fndError;
+            }
+            aos_designer = aos_mkt_proguser.getLong("aos_designer");// 品类设计师
+            messageId = aos_designer;
+        } else {
+            messageId = ((DynamicObject)aos_designer).getPkValue();
+        }
+
+        if (aos_main) {
+            dy_main.set("aos_designer", aos_designer);
+            dy_main.set("aos_user", aos_designer);
+            dy_main.set("aos_status", "设计");
+            MKTCom.SendGlobalMessage(String.valueOf(messageId), "aos_mkt_slogan", String.valueOf(ReqFId),
+                String.valueOf(billno), "Slogan-设计");
+        } else {
+            dy_main.set("aos_user", SYSTEM);
+            dy_main.set("aos_status", "结束");
+            DynamicObject aos_mkt_slogan = BusinessDataServiceHelper.loadSingle(aos_sourceid, "aos_mkt_slogan");
+            DynamicObjectCollection aos_entryentityS = aos_mkt_slogan.getDynamicObjectCollection("aos_entryentity");
+            for (DynamicObject aos_entryentity : aos_entryentityS) {
+                String aos_langr = aos_entryentity.getString("aos_langr");
+                if (!aos_langr.equals(aos_lang))
+                    continue;
+                aos_entryentity.set("aos_itemname", aos_entryentityS.get(2).get("aos_itemname"));
+                aos_entryentity.set("aos_slogan", aos_entryentityS.get(2).get("aos_slogan"));
+                aos_entryentity.set("aos_width", aos_entryentityS.get(2).get("aos_width"));
+            }
+            Boolean exist = QueryServiceHelper.exists("aos_mkt_slogan",
+                new QFilter("aos_sourceid", QCP.equals, aos_sourceid).and("id", QCP.not_equals, ReqFId)
+                    .and("aos_status", QCP.in, new String[] {"翻译", "海外翻译"}).toArray());
+            if (!exist) {
+                aos_mkt_slogan.set("aos_designer", aos_designer);
+                aos_mkt_slogan.set("aos_user", aos_designer);
+                aos_mkt_slogan.set("aos_status", "设计");
+            }
+            SaveServiceHelper.saveOperate("aos_mkt_slogan", new DynamicObject[] {aos_mkt_slogan},
+                OperateOption.create());
+        }
+    }
 
     @Override
     public void click(EventObject evt) {
-        Control sourceControl = (Control) evt.getSource();
+        Control sourceControl = (Control)evt.getSource();
         String keyName = sourceControl.getKey();
-        if ("aos_category2".equals(keyName)) {
-            Map<String, Object> params = new HashMap<>();
+        if (AOS_CATEGORY2.equals(keyName)) {
+            Map<String, Object> params = new HashMap<>(16);
             params.put("aos_category1", this.getModel().getValue("aos_category1"));
             FndGlobal.OpenForm(this, "aos_mkt_slogan_form", params);
-        } else if ("aos_category3".equals(keyName)) {
-            Map<String, Object> params = new HashMap<>();
+        } else if (AOS_CATEGORY3.equals(keyName)) {
+            Map<String, Object> params = new HashMap<>(16);
             params.put("aos_category2",
-                    this.getModel().getValue("aos_category1") + "," + this.getModel().getValue("aos_category2"));
+                this.getModel().getValue("aos_category1") + "," + this.getModel().getValue("aos_category2"));
             FndGlobal.OpenForm(this, "aos_mkt_slogan_form", params);
-        } else if ("aos_cname".equals(keyName)) {
-            Map<String, Object> params = new HashMap<>();
-            Object aos_category1 = this.getModel().getValue("aos_category1");
-            Object aos_category2 = this.getModel().getValue("aos_category2");
-            Object aos_category3 = this.getModel().getValue("aos_category3");
-            String group = aos_category1 + "," + aos_category2 + "," + aos_category3;
+        } else if (AOS_CNAME.equals(keyName)) {
+            Map<String, Object> params = new HashMap<>(16);
+            Object aosCategory1 = this.getModel().getValue("aos_category1");
+            Object aosCategory2 = this.getModel().getValue("aos_category2");
+            Object aosCategory3 = this.getModel().getValue("aos_category3");
+            String group = aosCategory1 + "," + aosCategory2 + "," + aosCategory3;
             params.put("aos_cname", group);
             FndGlobal.OpenForm(this, "aos_mkt_slogan_form", params);
-        } else if ("aos_itemname".equals(keyName)) {
+        } else if (AOS_ITEMNAME.equals(keyName)) {
             int row = this.getModel().getEntryCurrentRowIndex("aos_entryentity");
-            Object aos_type = this.getModel().getValue("aos_type");
-            FndMsg.debug("row:" + row + "\n" + "aos_type:" + aos_type);
+            Object aosType = this.getModel().getValue("aos_type");
             if (row == 1) {
-                Map<String, Object> params = new HashMap<>();
+                Map<String, Object> params = new HashMap<>(16);
                 params.put("aos_itemname_category1", this.getModel().getValue("aos_category1"));
                 params.put("aos_itemname_category2", this.getModel().getValue("aos_category2"));
                 params.put("aos_itemname_category3", this.getModel().getValue("aos_category3"));
-                params.put("EN", "en_US");// 需要获取英文品名
+                // 需要获取英文品名
+                params.put("EN", "en_US");
                 FndGlobal.OpenForm(this, "aos_mkt_slogan_form", params);
             }
         }
@@ -105,7 +187,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
      * 操作之前事件
      **/
     public void beforeDoOperation(BeforeDoOperationEventArgs args) {
-        FormOperate formOperate = (FormOperate) args.getSource();
+        FormOperate formOperate = (FormOperate)args.getSource();
         String Operatation = formOperate.getOperateKey();
         try {
             if ("save".equals(Operatation)) {
@@ -121,7 +203,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
     }
 
     public void afterDoOperation(AfterDoOperationEventArgs args) {
-        FormOperate formOperate = (FormOperate) args.getSource();
+        FormOperate formOperate = (FormOperate)args.getSource();
         String Operatation = formOperate.getOperateKey();
         try {
             if ("save".equals(Operatation)) {
@@ -160,11 +242,11 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
             this.getModel().setValue("aos_detail", params.get("aos_detail"));
             this.getModel().setValue("aos_type", "优化");
 
-            String group = params.get("aos_category1") + "," + params.get("aos_category2") + ","
-                    + params.get("aos_category3");
+            String group =
+                params.get("aos_category1") + "," + params.get("aos_category2") + "," + params.get("aos_category3");
             DynamicObject bd_materialgroupd = QueryServiceHelper.queryOne("bd_materialgroupdetail",
-                    "material.id itemid,material.number item_number", new QFilter("group.name", QCP.equals, group)
-                            .and("material.name", QCP.equals, params.get("aos_itemnamecn")).toArray());
+                "material.id itemid,material.number item_number", new QFilter("group.name", QCP.equals, group)
+                    .and("material.name", QCP.equals, params.get("aos_itemnamecn")).toArray());
             if (FndGlobal.IsNotNull(bd_materialgroupd)) {
                 this.getModel().setValue("aos_itemid", bd_materialgroupd.getLong("itemid"));
 
@@ -176,9 +258,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
 
         }
 
-
         this.getView().setEnable(false, "aos_entryentity");
-
 
     }
 
@@ -230,11 +310,11 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
                 Object aos_cname = this.getModel().getValue("aos_cname");
                 // 赋值参考SKU
                 if (FndGlobal.IsNotNull(aos_category1) && FndGlobal.IsNotNull(aos_category2)
-                        && FndGlobal.IsNotNull(aos_category3) && FndGlobal.IsNotNull(aos_cname)) {
+                    && FndGlobal.IsNotNull(aos_category3) && FndGlobal.IsNotNull(aos_cname)) {
                     String group = aos_category1 + "," + aos_category2 + "," + aos_category3;
                     DynamicObject bd_materialgroupd = QueryServiceHelper.queryOne("bd_materialgroupdetail",
-                            "material.id itemid", new QFilter("group.name", QCP.equals, group)
-                                    .and("material.name", QCP.equals, aos_cname).toArray());
+                        "material.id itemid", new QFilter("group.name", QCP.equals, group)
+                            .and("material.name", QCP.equals, aos_cname).toArray());
                     if (FndGlobal.IsNotNull(bd_materialgroupd)) {
                         this.getModel().setValue("aos_itemid", bd_materialgroupd.getLong("itemid"));
                     }
@@ -269,16 +349,16 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
         } else {
             this.getView().setVisible(false, "aos_picture");
             this.getView().setVisible(true, "aos_image");
-            String item_number = ((DynamicObject) aos_egsku).getString("number");
-            String itemid = ((DynamicObject) aos_egsku).getString("id");
-            String name = ((DynamicObject) aos_egsku).getString("name");
+            String item_number = ((DynamicObject)aos_egsku).getString("number");
+            String itemid = ((DynamicObject)aos_egsku).getString("id");
+            String name = ((DynamicObject)aos_egsku).getString("name");
 
             String url = "https://cls3.s3.amazonaws.com/" + item_number + "/1-1.jpg";
             Image image = this.getControl("aos_image");
             image.setUrl(url);
             this.getModel().setValue("aos_picture", url);
 
-            String category = (String) SalUtil.getCategoryByItemId(itemid).get("name");
+            String category = (String)SalUtil.getCategoryByItemId(itemid).get("name");
             String[] category_group = category.split(",");
             String AosCategory1 = null;
             String AosCategory2 = null;
@@ -292,15 +372,13 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
                 AosCategory3 = category_group[2];
 
             FndMsg.debug(Lang.get());
-            if (Lang.get() ==Lang.zh_CN ){
+            if (Lang.get() == Lang.zh_CN) {
                 this.getModel().setValue("aos_cname", name);
                 this.getModel().setValue("aos_itemname", name, 0);
                 this.getModel().setValue("aos_category3", AosCategory3);
                 this.getModel().setValue("aos_category2", AosCategory2);
                 this.getModel().setValue("aos_category1", AosCategory1);
-            }
-            else
-            {
+            } else {
                 this.getModel().setValue("aos_itemname_us", name);
                 this.getModel().setValue("aos_category3_us", AosCategory3);
                 this.getModel().setValue("aos_category2_us", AosCategory2);
@@ -328,15 +406,12 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
         String aos_cname = aos_entryentityS.get(0).getString("aos_itemname");
 
         if (FndGlobal.IsNotNull(aos_category1) && FndGlobal.IsNotNull(aos_category2)
-                && FndGlobal.IsNotNull(aos_category3)
-                && FndGlobal.IsNotNull(aos_cname)) {
+            && FndGlobal.IsNotNull(aos_category3) && FndGlobal.IsNotNull(aos_cname)) {
             DynamicObject aos_mkt_data_slogan = QueryServiceHelper.queryOne("aos_mkt_data_slogan",
-                    "aos_itemnamecn,aos_slogancn,aos_itemnameen,aos_sloganen",
-                    new QFilter("aos_category1", QCP.equals, aos_category1)
-                            .and("aos_category2", QCP.equals, aos_category2)
-                            .and("aos_category3", QCP.equals, aos_category3)
-                            .and("aos_itemnamecn", QCP.equals, aos_cname).and("aos_detail", QCP.equals, aos_detail)
-                            .toArray());
+                "aos_itemnamecn,aos_slogancn,aos_itemnameen,aos_sloganen",
+                new QFilter("aos_category1", QCP.equals, aos_category1).and("aos_category2", QCP.equals, aos_category2)
+                    .and("aos_category3", QCP.equals, aos_category3).and("aos_itemnamecn", QCP.equals, aos_cname)
+                    .and("aos_detail", QCP.equals, aos_detail).toArray());
             if (FndGlobal.IsNotNull(aos_mkt_data_slogan)) {
                 this.getModel().setValue("aos_itemname", aos_mkt_data_slogan.get("aos_itemnamecn"), 0);
                 this.getModel().setValue("aos_slogan", aos_mkt_data_slogan.get("aos_slogancn"), 0);
@@ -393,18 +468,18 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
     private void aos_auto() throws FndError {
         FndError fndError = new FndError();
 
-        Boolean aos_main = (Boolean) this.getModel().getValue("aos_main");
+        Boolean aos_main = (Boolean)this.getModel().getValue("aos_main");
         Object ReqFId = this.getModel().getDataEntity().getPkValue();// 当前单据主键
         Object aos_sourceid = this.getModel().getValue("aos_sourceid");
-        String aos_category1 = (String) this.getModel().getValue("aos_category1");// 大类
-        String aos_category2 = (String) this.getModel().getValue("aos_category2");// 中类
+        String aos_category1 = (String)this.getModel().getValue("aos_category1");// 大类
+        String aos_category2 = (String)this.getModel().getValue("aos_category2");// 中类
 
         if (!aos_main) {
             Object aos_designer = this.getModel().getValue("aos_designer");
             if (FndGlobal.IsNull(aos_designer)) {
                 DynamicObject aos_mkt_proguser = QueryServiceHelper.queryOne("aos_mkt_proguser", "aos_designer",
-                        new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2)
-                                .toArray());
+                    new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2)
+                        .toArray());
                 if (FndGlobal.IsNull(aos_mkt_proguser) || FndGlobal.IsNull(aos_mkt_proguser.get("aos_designer"))) {
                     fndError.add("品类设计师不存在!");
                     throw fndError;
@@ -413,15 +488,15 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
             }
             DynamicObject aos_mkt_slogan = BusinessDataServiceHelper.loadSingle(aos_sourceid, "aos_mkt_slogan");
             Boolean exist = QueryServiceHelper.exists("aos_mkt_slogan",
-                    new QFilter("aos_sourceid", QCP.equals, aos_sourceid).and("id", QCP.not_equals, ReqFId)
-                            .and("aos_status", QCP.in, new String[]{"翻译", "海外翻译"}).toArray());
+                new QFilter("aos_sourceid", QCP.equals, aos_sourceid).and("id", QCP.not_equals, ReqFId)
+                    .and("aos_status", QCP.in, new String[] {"翻译", "海外翻译"}).toArray());
             if (!exist) {
                 aos_mkt_slogan.set("aos_designer", aos_designer);
                 aos_mkt_slogan.set("aos_user", aos_designer);
                 aos_mkt_slogan.set("aos_status", "设计");
             }
-            SaveServiceHelper.saveOperate("aos_mkt_slogan", new DynamicObject[]{aos_mkt_slogan},
-                    OperateOption.create());
+            SaveServiceHelper.saveOperate("aos_mkt_slogan", new DynamicObject[] {aos_mkt_slogan},
+                OperateOption.create());
         }
 
         this.getModel().setValue("aos_status", "结束");
@@ -462,7 +537,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
                 this.getView().close();
             }
         }
-        SaveServiceHelper.saveOperate("aos_mkt_slogan", new DynamicObject[]{dy_main}, OperateOption.create());
+        SaveServiceHelper.saveOperate("aos_mkt_slogan", new DynamicObject[] {dy_main}, OperateOption.create());
         FndHistory.Create(dy_main, "点击提交", aos_status);
         if (type.equals("A")) {
             this.getView().invokeOperation("save");
@@ -481,15 +556,14 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
         Object ReqFId = this.getModel().getDataEntity().getPkValue();
         Object billno = this.getModel().getValue("billno");
         Object aos_designer = this.getModel().getValue("aos_designer");
-        String aos_category1 = (String) this.getModel().getValue("aos_category1");// 大类
-        String aos_category2 = (String) this.getModel().getValue("aos_category2");// 中类
-        Boolean aos_main = (Boolean) this.getModel().getValue("aos_main");
+        String aos_category1 = (String)this.getModel().getValue("aos_category1");// 大类
+        String aos_category2 = (String)this.getModel().getValue("aos_category2");// 中类
+        Boolean aos_main = (Boolean)this.getModel().getValue("aos_main");
         Object aos_sourceid = this.getModel().getValue("aos_sourceid");
 
         if (FndGlobal.IsNull(aos_designer)) {
             DynamicObject aos_mkt_proguser = QueryServiceHelper.queryOne("aos_mkt_proguser", "aos_designer",
-                    new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2)
-                            .toArray());
+                new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2).toArray());
             if (FndGlobal.IsNull(aos_mkt_proguser) || FndGlobal.IsNull(aos_mkt_proguser.get("aos_designer"))) {
                 fndError.add("品类设计师不存在!");
                 throw fndError;
@@ -497,7 +571,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
             aos_designer = aos_mkt_proguser.getLong("aos_designer");// 品类设计师
             messageId = aos_designer;
         } else {
-            messageId = ((DynamicObject) aos_designer).getPkValue();
+            messageId = ((DynamicObject)aos_designer).getPkValue();
         }
 
         // 校验对应小语种slogan与品名是否填写
@@ -513,16 +587,14 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
             }
         }
 
-
         if (aos_main) {
             // 直接流转给设计
             this.getModel().setValue("aos_user", aos_designer);
             this.getModel().setValue("aos_status", "设计");
             this.getModel().setValue("aos_osubmit", "人为提交");
-             } else {
+        } else {
             this.getModel().setValue("aos_user", SYSTEM);
             this.getModel().setValue("aos_status", "结束");
-
 
             DynamicObject aos_mkt_slogan = BusinessDataServiceHelper.loadSingle(aos_sourceid, "aos_mkt_slogan");
             DynamicObjectCollection aos_entryentity2S = aos_mkt_slogan.getDynamicObjectCollection("aos_entryentity");
@@ -535,17 +607,16 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
                 aos_entryentity.set("aos_width", aos_entryentityS.get(2).get("aos_width"));
             }
             Boolean exist = QueryServiceHelper.exists("aos_mkt_slogan",
-                    new QFilter("aos_sourceid", QCP.equals, aos_sourceid).and("id", QCP.not_equals, ReqFId)
-                            .and("aos_status", QCP.in, new String[]{"翻译", "海外翻译"}).toArray());
+                new QFilter("aos_sourceid", QCP.equals, aos_sourceid).and("id", QCP.not_equals, ReqFId)
+                    .and("aos_status", QCP.in, new String[] {"翻译", "海外翻译"}).toArray());
             if (!exist) {
                 aos_mkt_slogan.set("aos_designer", aos_designer);
                 aos_mkt_slogan.set("aos_user", aos_designer);
                 aos_mkt_slogan.set("aos_status", "设计");
             }
-            SaveServiceHelper.saveOperate("aos_mkt_slogan", new DynamicObject[]{aos_mkt_slogan},
-                    OperateOption.create());
+            SaveServiceHelper.saveOperate("aos_mkt_slogan", new DynamicObject[] {aos_mkt_slogan},
+                OperateOption.create());
         }
-
 
     }
 
@@ -554,15 +625,15 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
         Object ReqFId = this.getModel().getDataEntity().getPkValue();
         Object billno = this.getModel().getValue("billno");
         this.getModel().setValue("aos_status", "结束");
-        DynamicObject aos_requireby = (DynamicObject) this.getModel().getValue("aos_requireby");
+        DynamicObject aos_requireby = (DynamicObject)this.getModel().getValue("aos_requireby");
         this.getModel().setValue("aos_user", SYSTEM);
         if ("新增".equals(aos_type)) {
             newSlogan();
         } else if ("优化".equals(aos_type)) {
             updateSlogan();
         }
-        MKTCom.SendGlobalMessage(String.valueOf(aos_requireby.getPkValue()), "aos_mkt_listing_min", String.valueOf(ReqFId), String.valueOf(billno),
-                "Slogan-结束");
+        MKTCom.SendGlobalMessage(String.valueOf(aos_requireby.getPkValue()), "aos_mkt_listing_min",
+            String.valueOf(ReqFId), String.valueOf(billno), "Slogan-结束");
     }
 
     private void updateSlogan() {
@@ -576,11 +647,11 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
         DynamicObjectCollection aos_entryentityS = this.getModel().getEntryEntity("aos_entryentity");
         String aos_cname = aos_entryentityS.get(0).getString("aos_itemname");
         DynamicObject aos_mkt_data_slogan = QueryServiceHelper.queryOne("aos_mkt_data_slogan", "id",
-                new QFilter("aos_category1", QCP.equals, aos_category1).and("aos_category2", QCP.equals, aos_category2)
-                        .and("aos_category3", QCP.equals, aos_category3).and("aos_itemnamecn", QCP.equals, aos_cname)
-                        .and("aos_detail", QCP.equals, aos_detail).toArray());
-        DynamicObject slogan = BusinessDataServiceHelper.loadSingle(aos_mkt_data_slogan.get("id"),
-                "aos_mkt_data_slogan");
+            new QFilter("aos_category1", QCP.equals, aos_category1).and("aos_category2", QCP.equals, aos_category2)
+                .and("aos_category3", QCP.equals, aos_category3).and("aos_itemnamecn", QCP.equals, aos_cname)
+                .and("aos_detail", QCP.equals, aos_detail).toArray());
+        DynamicObject slogan =
+            BusinessDataServiceHelper.loadSingle(aos_mkt_data_slogan.get("id"), "aos_mkt_data_slogan");
 
         String aos_itemnamecn = aos_entryentityS.get(0).getString("aos_itemname");
         if (FndGlobal.IsNotNull(aos_itemnamecn))
@@ -630,12 +701,12 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
         if (FndGlobal.IsNotNull(aos_sloganes))
             slogan.set("aos_sloganes", aos_sloganes);
 
-        SaveServiceHelper.saveOperate("aos_mkt_data_slogan", new DynamicObject[]{slogan}, OperateOption.create());
+        SaveServiceHelper.saveOperate("aos_mkt_data_slogan", new DynamicObject[] {slogan}, OperateOption.create());
     }
 
     private void newSlogan() throws FndError {
-        String aos_category1 = (String) this.getModel().getValue("aos_category1");// 大类
-        String aos_category2 = (String) this.getModel().getValue("aos_category2");// 中类
+        String aos_category1 = (String)this.getModel().getValue("aos_category1");// 大类
+        String aos_category2 = (String)this.getModel().getValue("aos_category2");// 中类
         Object aos_detail = this.getModel().getValue("aos_detail");
         DynamicObjectCollection aos_entryentityS = this.getModel().getEntryEntity("aos_entryentity");
         DynamicObject aos_mkt_data_slogan = BusinessDataServiceHelper.newDynamicObject("aos_mkt_data_slogan"); // 品名Slogan库
@@ -647,7 +718,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
         long aos_eng = 0;
         QFilter filter_category1 = new QFilter("aos_category1", "=", aos_category1);
         QFilter filter_category2 = new QFilter("aos_category2", "=", aos_category2);
-        QFilter[] filters_category = new QFilter[]{filter_category1, filter_category2};
+        QFilter[] filters_category = new QFilter[] {filter_category1, filter_category2};
         DynamicObject aos_mkt_proguser = QueryServiceHelper.queryOne("aos_mkt_proguser", "aos_eng", filters_category);
         if (aos_mkt_proguser != null) {
             aos_eng = aos_mkt_proguser.getLong("aos_eng");
@@ -670,83 +741,8 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
         aos_mkt_data_slogan.set("aos_sloganit", aos_entryentityS.get(4).get("aos_slogan"));
         aos_mkt_data_slogan.set("aos_itemnamees", aos_entryentityS.get(5).get("aos_itemname"));
         aos_mkt_data_slogan.set("aos_sloganes", aos_entryentityS.get(5).get("aos_slogan"));
-        SaveServiceHelper.saveOperate("aos_mkt_data_slogan", new DynamicObject[]{aos_mkt_data_slogan},
-                OperateOption.create());
-    }
-
-    /**
-     * 翻译节点提交
-     *
-     * @throws FndError
-     */
-    public static void SubmitTrans(DynamicObject dy_main) throws FndError {
-        FndError fndError = new FndError();
-
-        Object ReqFId = dy_main.getPkValue();
-        String aos_category1 = dy_main.getString("aos_category1");// 大类
-        String aos_category2 = dy_main.getString("aos_category2");// 中类
-        Object billno = dy_main.get("billno");
-        Boolean aos_main = dy_main.getBoolean("aos_main");
-        Object aos_sourceid = dy_main.get("aos_sourceid");
-        Object aos_lang = dy_main.get("aos_lang");
-        Object aos_designer = dy_main.get("aos_designer");
-        Object messageId;
-        // 校验对应小语种slogan与品名是否填写
-        DynamicObjectCollection aos_entryentityS_O =  dy_main.getDynamicObjectCollection("aos_entryentity");
-        for (DynamicObject aos_entryentity : aos_entryentityS_O) {
-            String aos_langr = aos_entryentity.getString("aos_langr");
-            String aos_itemname = aos_entryentity.getString("aos_itemname");
-            String aos_slogan = aos_entryentity.getString("aos_slogan");
-            if (aos_langr.equals(aos_lang)) {
-                if (FndGlobal.IsNull(aos_itemname) || FndGlobal.IsNull(aos_slogan)) {
-                    fndError.add("Slogan与品名必填!");
-                    throw fndError;
-                }
-            }
-        }
-        if (FndGlobal.IsNull(aos_designer)) {
-            DynamicObject aos_mkt_proguser = QueryServiceHelper.queryOne("aos_mkt_proguser", "aos_designer",
-                    new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2)
-                            .toArray());
-            if (FndGlobal.IsNull(aos_mkt_proguser) || FndGlobal.IsNull(aos_mkt_proguser.get("aos_designer"))) {
-                fndError.add("品类设计师不存在!");
-                throw fndError;
-            }
-            aos_designer = aos_mkt_proguser.getLong("aos_designer");// 品类设计师
-            messageId = aos_designer;
-        } else {
-            messageId = ((DynamicObject) aos_designer).getPkValue();
-        }
-
-        if (aos_main) {
-            dy_main.set("aos_designer", aos_designer);
-            dy_main.set("aos_user", aos_designer);
-            dy_main.set("aos_status", "设计");
-            MKTCom.SendGlobalMessage(String.valueOf(messageId), "aos_mkt_slogan", String.valueOf(ReqFId), String.valueOf(billno), "Slogan-设计");
-        } else {
-            dy_main.set("aos_user", SYSTEM);
-            dy_main.set("aos_status", "结束");
-            DynamicObject aos_mkt_slogan = BusinessDataServiceHelper.loadSingle(aos_sourceid, "aos_mkt_slogan");
-            DynamicObjectCollection aos_entryentityS = aos_mkt_slogan.getDynamicObjectCollection("aos_entryentity");
-            for (DynamicObject aos_entryentity : aos_entryentityS) {
-                String aos_langr = aos_entryentity.getString("aos_langr");
-                if (!aos_langr.equals(aos_lang))
-                    continue;
-                aos_entryentity.set("aos_itemname", aos_entryentityS.get(2).get("aos_itemname"));
-                aos_entryentity.set("aos_slogan", aos_entryentityS.get(2).get("aos_slogan"));
-                aos_entryentity.set("aos_width", aos_entryentityS.get(2).get("aos_width"));
-            }
-            Boolean exist = QueryServiceHelper.exists("aos_mkt_slogan",
-                    new QFilter("aos_sourceid", QCP.equals, aos_sourceid).and("id", QCP.not_equals, ReqFId)
-                            .and("aos_status", QCP.in, new String[]{"翻译", "海外翻译"}).toArray());
-            if (!exist) {
-                aos_mkt_slogan.set("aos_designer", aos_designer);
-                aos_mkt_slogan.set("aos_user", aos_designer);
-                aos_mkt_slogan.set("aos_status", "设计");
-            }
-            SaveServiceHelper.saveOperate("aos_mkt_slogan", new DynamicObject[]{aos_mkt_slogan},
-                    OperateOption.create());
-        }
+        SaveServiceHelper.saveOperate("aos_mkt_data_slogan", new DynamicObject[] {aos_mkt_data_slogan},
+            OperateOption.create());
     }
 
     private void SubmitAppl() throws FndError {
@@ -760,7 +756,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
         Object aos_detail = this.getModel().getValue("aos_detail");// 属性细分
         Object ReqFId = this.getModel().getDataEntity().getPkValue();// 当前单据主键
         Object aos_cname = this.getModel().getValue("aos_cname");// CN品名
-        Boolean aos_osconfirm = (Boolean) this.getModel().getValue("aos_osconfirm");// 是否海外确认
+        Boolean aos_osconfirm = (Boolean)this.getModel().getValue("aos_osconfirm");// 是否海外确认
         Object aos_itemid = this.getModel().getValue("aos_itemid");// 参考SKU
         Object billno = this.getModel().getValue("billno");// 单据编号
         Object messageId;
@@ -768,8 +764,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
 
         if (FndGlobal.IsNull(aos_designer)) {
             DynamicObject aos_mkt_proguser = QueryServiceHelper.queryOne("aos_mkt_proguser", "aos_designer",
-                    new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2)
-                            .toArray());
+                new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2).toArray());
             if (FndGlobal.IsNull(aos_mkt_proguser) || FndGlobal.IsNull(aos_mkt_proguser.get("aos_designer"))) {
                 fndError.add("品类设计师不存在!");
                 throw fndError;
@@ -778,13 +773,12 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
             this.getModel().setValue("aos_designer", aos_designer);
         }
 
-
         if ("EN".equals(aos_lang)) {
             this.getModel().setValue("aos_oueditor", UserServiceHelper.getCurrentUserId());
         } else if (!"CN".equals(aos_lang)) {
             DynamicObject aos_mkt_progorguserA = QueryServiceHelper.queryOne("aos_mkt_progorguser", "aos_oueditor",
-                    new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2)
-                            .and("aos_orgid.number", "=", aos_lang).toArray());
+                new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2)
+                    .and("aos_orgid.number", "=", aos_lang).toArray());
             if (FndGlobal.IsNull(aos_mkt_progorguserA) || FndGlobal.IsNull(aos_mkt_progorguserA.get("aos_oueditor"))) {
                 fndError.add("国别编辑不存在!");
                 throw fndError;
@@ -794,22 +788,20 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
 
         if ("新增".equals(aos_type)) {
             DynamicObject exist = QueryServiceHelper.queryOne("aos_mkt_slogan", "billno",
-                    new QFilter("aos_category1", QCP.equals, aos_category1)
-                            .and("aos_category2", QCP.equals, aos_category2)
-                            .and("aos_category3", QCP.equals, aos_category3).and("aos_cname", QCP.equals, aos_cname)
-                            .and("aos_detail", QCP.equals, aos_detail).and("aos_status", QCP.not_equals, "结束")
-                            .and("id", QCP.not_equals, ReqFId).toArray());
+                new QFilter("aos_category1", QCP.equals, aos_category1).and("aos_category2", QCP.equals, aos_category2)
+                    .and("aos_category3", QCP.equals, aos_category3).and("aos_cname", QCP.equals, aos_cname)
+                    .and("aos_detail", QCP.equals, aos_detail).and("aos_status", QCP.not_equals, "结束")
+                    .and("id", QCP.not_equals, ReqFId).toArray());
             if (FndGlobal.IsNotNull(exist)) {
                 fndError.add("已存在任务" + exist.getString("billno") + "!");
                 throw fndError;
             }
         } else if ("优化".equals(aos_type)) {
             DynamicObject exist = QueryServiceHelper.queryOne("aos_mkt_slogan", "billno",
-                    new QFilter("aos_category1", QCP.equals, aos_category1)
-                            .and("aos_category2", QCP.equals, aos_category2)
-                            .and("aos_category3", QCP.equals, aos_category3).and("aos_cname", QCP.equals, aos_cname)
-                            .and("aos_detail", QCP.equals, aos_detail).and("aos_lang", QCP.equals, aos_lang)
-                            .and("aos_status", QCP.not_equals, "结束").and("id", QCP.not_equals, ReqFId).toArray());
+                new QFilter("aos_category1", QCP.equals, aos_category1).and("aos_category2", QCP.equals, aos_category2)
+                    .and("aos_category3", QCP.equals, aos_category3).and("aos_cname", QCP.equals, aos_cname)
+                    .and("aos_detail", QCP.equals, aos_detail).and("aos_lang", QCP.equals, aos_lang)
+                    .and("aos_status", QCP.not_equals, "结束").and("id", QCP.not_equals, ReqFId).toArray());
             if (FndGlobal.IsNotNull(exist)) {
                 fndError.add("已存在任务" + exist.getString("billno") + "!");
                 throw fndError;
@@ -847,11 +839,10 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
 
                 if (aos_osconfirm) {
                     DynamicObject aos_mkt_progorguser = QueryServiceHelper.queryOne("aos_mkt_progorguser",
-                            "aos_oseditor,aos_oueditor",
-                            new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2)
-                                    .and("aos_orgid.number", "=", org).toArray());
+                        "aos_oseditor,aos_oueditor", new QFilter("aos_category1", "=", aos_category1)
+                            .and("aos_category2", "=", aos_category2).and("aos_orgid.number", "=", org).toArray());
                     if (FndGlobal.IsNull(aos_mkt_progorguser)
-                            || FndGlobal.IsNull(aos_mkt_progorguser.get("aos_oseditor"))) {
+                        || FndGlobal.IsNull(aos_mkt_progorguser.get("aos_oseditor"))) {
                         fndError.add("小语种海外编辑不存在!");
                         throw fndError;
                     }
@@ -865,11 +856,10 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
                     aos_mkt_slogan.set("aos_oueditor", aos_oueditor);
                 } else {
                     DynamicObject aos_mkt_progorguser = QueryServiceHelper.queryOne("aos_mkt_progorguser",
-                            "aos_oueditor",
-                            new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2)
-                                    .and("aos_orgid.number", "=", org).toArray());
+                        "aos_oueditor", new QFilter("aos_category1", "=", aos_category1)
+                            .and("aos_category2", "=", aos_category2).and("aos_orgid.number", "=", org).toArray());
                     if (FndGlobal.IsNull(aos_mkt_progorguser)
-                            || FndGlobal.IsNull(aos_mkt_progorguser.get("aos_oueditor"))) {
+                        || FndGlobal.IsNull(aos_mkt_progorguser.get("aos_oueditor"))) {
                         fndError.add("小语种国别编辑不存在!");
                         throw fndError;
                     }
@@ -901,17 +891,18 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
                     }
                 }
                 OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_slogan",
-                        new DynamicObject[]{aos_mkt_slogan}, OperateOption.create());
-                MKTCom.SendGlobalMessage(String.valueOf(messageId), "aos_mkt_slogan", String.valueOf(operationrst.getSuccessPkIds().get(0)),
-                        aos_mkt_slogan.getString("billno"), "Slogan-小语种翻译");
+                    new DynamicObject[] {aos_mkt_slogan}, OperateOption.create());
+                MKTCom.SendGlobalMessage(String.valueOf(messageId), "aos_mkt_slogan",
+                    String.valueOf(operationrst.getSuccessPkIds().get(0)), aos_mkt_slogan.getString("billno"),
+                    "Slogan-小语种翻译");
             }
             this.getModel().setValue("aos_status", "翻译");
             this.getModel().setValue("aos_user", SYSTEM);
         } else if ("EN".equals(aos_lang)) {
             if (FndGlobal.IsNull(aos_designer)) {
                 DynamicObject aos_mkt_proguser = QueryServiceHelper.queryOne("aos_mkt_proguser", "aos_designer",
-                        new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2)
-                                .toArray());
+                    new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2)
+                        .toArray());
                 if (FndGlobal.IsNull(aos_mkt_proguser) || FndGlobal.IsNull(aos_mkt_proguser.get("aos_designer"))) {
                     fndError.add("品类设计师不存在!");
                     throw fndError;
@@ -919,7 +910,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
                 aos_designer = aos_mkt_proguser.getLong("aos_designer");// 品类设计师
                 messageId = aos_designer;
             } else {
-                messageId = ((DynamicObject) aos_designer).getPkValue();
+                messageId = ((DynamicObject)aos_designer).getPkValue();
             }
             this.getModel().setValue("aos_designer", aos_designer);
             this.getModel().setValue("aos_user", aos_designer);
@@ -927,10 +918,10 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
         } else if ("DE/FR/IT/ES".contains(String.valueOf(aos_lang))) {
             if (aos_osconfirm) {
                 DynamicObject aos_mkt_progorguser = QueryServiceHelper.queryOne("aos_mkt_progorguser", "aos_oseditor",
-                        new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2)
-                                .and("aos_orgid.number", "=", aos_lang).toArray());
+                    new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2)
+                        .and("aos_orgid.number", "=", aos_lang).toArray());
                 if (FndGlobal.IsNull(aos_mkt_progorguser)
-                        || FndGlobal.IsNull(aos_mkt_progorguser.get("aos_oseditor"))) {
+                    || FndGlobal.IsNull(aos_mkt_progorguser.get("aos_oseditor"))) {
                     fndError.add("小语种海外编辑不存在!");
                     throw fndError;
                 }
@@ -942,10 +933,10 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
                 this.getModel().setValue("aos_osdate", new Date());
             } else {
                 DynamicObject aos_mkt_progorguser = QueryServiceHelper.queryOne("aos_mkt_progorguser", "aos_oueditor",
-                        new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2)
-                                .and("aos_orgid.number", "=", aos_lang).toArray());
+                    new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2)
+                        .and("aos_orgid.number", "=", aos_lang).toArray());
                 if (FndGlobal.IsNull(aos_mkt_progorguser)
-                        || FndGlobal.IsNull(aos_mkt_progorguser.get("aos_oueditor"))) {
+                    || FndGlobal.IsNull(aos_mkt_progorguser.get("aos_oueditor"))) {
                     fndError.add("小语种国别编辑不存在!");
                     throw fndError;
                 }
@@ -969,22 +960,22 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
         Object aos_lang = this.getModel().getValue("aos_lang");// 语言
         String AosUserId = null;
         if (AosUser instanceof String)
-            AosUserId = (String) AosUser;
+            AosUserId = (String)AosUser;
         else if (AosUser instanceof Long)
             AosUserId = String.valueOf(AosUser);
         else
-            AosUserId = ((DynamicObject) AosUser).getString("id"); // AosUserId 当前节点操作人 String类型
+            AosUserId = ((DynamicObject)AosUser).getString("id"); // AosUserId 当前节点操作人 String类型
         Object CurrentUserId = UserServiceHelper.getCurrentUserId();
-        Object CurrentUserName = UserServiceHelper.getUserInfoByID((long) CurrentUserId).get("name");
+        Object CurrentUserName = UserServiceHelper.getUserInfoByID((long)CurrentUserId).get("name");
 
         // 当前节点操作人不为当前用户 全锁
-//		if (!AosUserId.equals(CurrentUserId.toString()) && !"程震杰".equals(CurrentUserName.toString())
-//				&& !"陈聪".equals(CurrentUserName.toString()) && !"刘中怀".equals(CurrentUserName.toString())) {
-//			this.getView().setEnable(false, "aos_flexpanelap");// 标题面板
-//			this.getView().setEnable(false, "aos_entryentity");// 主界面面板
-//			this.getView().setVisible(false, "bar_save");
-//			this.getView().setVisible(false, "aos_submit");
-//		}
+        // if (!AosUserId.equals(CurrentUserId.toString()) && !"程震杰".equals(CurrentUserName.toString())
+        // && !"陈聪".equals(CurrentUserName.toString()) && !"刘中怀".equals(CurrentUserName.toString())) {
+        // this.getView().setEnable(false, "aos_flexpanelap");// 标题面板
+        // this.getView().setEnable(false, "aos_entryentity");// 主界面面板
+        // this.getView().setVisible(false, "bar_save");
+        // this.getView().setVisible(false, "aos_submit");
+        // }
 
         // 按钮状态控制
         if ("结束".equals(aos_status)) {
@@ -992,7 +983,8 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
             this.getView().setVisible(false, "bar_save");
             this.getView().setEnable(false, "aos_flexpanelap");
             this.getView().setEnable(false, "aos_entryentity");
-        } else this.getView().setVisible("翻译".equals(aos_status), "aos_auto");
+        } else
+            this.getView().setVisible("翻译".equals(aos_status), "aos_auto");
 
         // 字段状态控制
         this.getView().setEnable(false, 0, "aos_itemname");
@@ -1110,17 +1102,14 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
                 this.getView().setEnable(true, 2, "aos_itemname");
                 this.getView().setEnable(true, 2, "aos_slogan");
             }
-        }
-        else if ("海外翻译".equals(aos_status))
-        {
+        } else if ("海外翻译".equals(aos_status)) {
             this.getView().setEnable(false, 0, "aos_itemname");
             this.getView().setEnable(false, 0, "aos_slogan");
             this.getView().setEnable(false, 1, "aos_itemname");
             this.getView().setEnable(false, 1, "aos_slogan");
             this.getView().setEnable(true, 2, "aos_itemname");
             this.getView().setEnable(true, 2, "aos_slogan");
-        }
-        else if ("设计".equals(aos_status)) {
+        } else if ("设计".equals(aos_status)) {
             this.getView().setEnable(false, "aos_flexpanelap1");
             this.getView().setEnable(false, "aos_entryentity");
         }
@@ -1239,22 +1228,20 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn {
             if ("新增".equals(aos_type)) {
                 // 校验唯一性
                 Boolean exists = QueryServiceHelper.exists("aos_mkt_data_slogan",
-                        new QFilter("aos_category1", QCP.equals, aos_category1)
-                                .and("aos_category2", QCP.equals, aos_category2)
-                                .and("aos_category3", QCP.equals, aos_category3)
-                                .and("aos_itemnamecn", QCP.equals, aos_cname).and("aos_detail", QCP.equals, aos_detail)
-                                .toArray());
+                    new QFilter("aos_category1", QCP.equals, aos_category1)
+                        .and("aos_category2", QCP.equals, aos_category2).and("aos_category3", QCP.equals, aos_category3)
+                        .and("aos_itemnamecn", QCP.equals, aos_cname).and("aos_detail", QCP.equals, aos_detail)
+                        .toArray());
                 if (exists) {
                     fndError.add("品名Slogan已存在!");
                 }
             } else if ("优化".equals(aos_type)) {
                 // 校验唯一性
                 Boolean exists = QueryServiceHelper.exists("aos_mkt_data_slogan",
-                        new QFilter("aos_category1", QCP.equals, aos_category1)
-                                .and("aos_category2", QCP.equals, aos_category2)
-                                .and("aos_category3", QCP.equals, aos_category3)
-                                .and("aos_itemnamecn", QCP.equals, aos_cname).and("aos_detail", QCP.equals, aos_detail)
-                                .toArray());
+                    new QFilter("aos_category1", QCP.equals, aos_category1)
+                        .and("aos_category2", QCP.equals, aos_category2).and("aos_category3", QCP.equals, aos_category3)
+                        .and("aos_itemnamecn", QCP.equals, aos_cname).and("aos_detail", QCP.equals, aos_detail)
+                        .toArray());
                 if (!exists) {
                     fndError.add("品名Slogan不存在!");
                 }

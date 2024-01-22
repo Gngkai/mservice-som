@@ -20,9 +20,9 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import common.sal.util.QFBuilder;
 import mkt.common.MKTCom;
+import mkt.progress.design.AosMktDesignReqBill;
+import mkt.progress.design.AosMktSloganBill;
 import mkt.progress.design.aadd.aos_mkt_aadd_bill;
-import mkt.progress.design.aos_mkt_designreq_bill;
-import mkt.progress.design.aos_mkt_slogan_bill;
 import mkt.progress.design3d.aos_mkt_3design_bill;
 import mkt.progress.iface.iteminfo;
 import mkt.progress.listing.AosMktListingMinBill;
@@ -112,7 +112,7 @@ public class ProgressUtil {
 					else if (billFormId.equals("aos_mkt_3design")) // 3D产品设计单
 						new aos_mkt_3design_bill().aos_submit(dy_main, "B");
 					else if (billFormId.equals("aos_mkt_designreq")) // 设计需求表
-						new aos_mkt_designreq_bill().aos_submit(dy_main, "B");
+						new AosMktDesignReqBill().aos_submit(dy_main, "B");
 					else if (billFormId.equals("aos_mkt_rcv")) // 样品入库通知单
 						new AosMktRcvBill().aosSubmit(dy_main, "B");
 					else if (billFormId.equals("aos_mkt_photoreq"))
@@ -120,7 +120,7 @@ public class ProgressUtil {
 					else if (billFormId.equals("aos_mkt_aadd"))
 						new aos_mkt_aadd_bill().aosSubmit(dy_main, "B");
 					else if (billFormId.equals("aos_mkt_slogan"))
-						new aos_mkt_slogan_bill().aos_submit(dy_main, "B");
+						new AosMktSloganBill().aos_submit(dy_main, "B");
 				}
 				// 没有权限
 				else {

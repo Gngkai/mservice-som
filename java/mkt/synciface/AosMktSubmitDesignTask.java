@@ -11,7 +11,7 @@ import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import common.sal.util.QFBuilder;
-import mkt.progress.design.aos_mkt_designreq_bill;
+import mkt.progress.design.AosMktDesignReqBill;
 
 import java.time.LocalDate;
 import java.util.Date;
@@ -54,7 +54,7 @@ public class AosMktSubmitDesignTask extends AbstractTask {
             int differentDays = DateUtil.betweenDay(dateLastNode, dateNow);
             if (differentDays >= 5) {
                 try {
-                    new aos_mkt_designreq_bill().aos_submit(dyMain, "B");
+                    new AosMktDesignReqBill().aos_submit(dyMain, "B");
                 } catch (FndError fndError) {
                     fndLog.add(dyMain.getString("billno") + " : " + fndError.getErrorMessage());
                 }

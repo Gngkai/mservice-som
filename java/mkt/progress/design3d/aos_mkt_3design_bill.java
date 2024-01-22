@@ -121,7 +121,7 @@ public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClic
                 String aos_status = aos_mkt_designreq.getString("aos_status");
                 aos_mkt_designreq.set("aos_user", MessageId);
                 aos_mkt_designreq.set("aos_status", "设计确认3D");
-                mkt.progress.design.aos_mkt_designreq_bill.setEntityValue(aos_mkt_designreq);
+                mkt.progress.design.AosMktDesignReqBill.setEntityValue(aos_mkt_designreq);
                 FndHistory.Create(aos_mkt_designreq, "提交", aos_status);
                 OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_designreq",
                     new DynamicObject[] {aos_mkt_designreq}, OperateOption.create());

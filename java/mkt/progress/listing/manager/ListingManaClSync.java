@@ -82,13 +82,14 @@ public class ListingManaClSync extends AbstractTask {
             List<DynamicObject> aosMktClUrlS = new ArrayList<>();
             for (int i = 0; i < length; i++) {
                 JSONObject jsObj = jsonArr.getJSONObject(i);
+                FndMsg.debug(jsObj);
                 DynamicObject aosMktClUrl = BusinessDataServiceHelper.newDynamicObject("aos_mkt_clurl");
                 aosMktClUrl.set("aos_orgid", orgId);
-                aosMktClUrl.set("aos_platformid", platMap.get(jsObj.getString("platform")));
-                aosMktClUrl.set("aos_shopid", shopMap.get(jsObj.getString("shoP_NAME")));
-                aosMktClUrl.set("aos_itemid", itemMap.get(jsObj.getString("segmenT1")));
-                aosMktClUrl.set("aos_shopsku", jsObj.getString("shelF_SKU"));
-                aosMktClUrl.set("aos_url", jsObj.getString("listinG_URL"));
+                aosMktClUrl.set("aos_platformid", platMap.get(jsObj.getString("PLATFORM")));
+                aosMktClUrl.set("aos_shopid", shopMap.get(jsObj.getString("SHOP_NAME")));
+                aosMktClUrl.set("aos_itemid", itemMap.get(jsObj.getString("SEGMENT1")));
+                aosMktClUrl.set("aos_shopsku", jsObj.getString("SHELF_SKU"));
+                aosMktClUrl.set("aos_url", jsObj.getString("LISTING_URL"));
 
                 aosMktClUrlS.add(aosMktClUrl);
                 if (aosMktClUrlS.size() >= 5000 || i == length - 1) {

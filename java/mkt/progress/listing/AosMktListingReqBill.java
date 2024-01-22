@@ -46,7 +46,7 @@ import mkt.common.MKTCom;
 import mkt.common.MKTS3PIC;
 import mkt.common.otel.MmsOtelUtils;
 import mkt.progress.ProgressUtil;
-import mkt.progress.design.aos_mkt_designreq_bill;
+import mkt.progress.design.AosMktDesignReqBill;
 import mkt.progress.iface.iteminfo;
 
 /**
@@ -622,8 +622,8 @@ public class AosMktListingReqBill extends AbstractBillPlugIn
                 aosSubentryentity.set("aos_productstyle_new", productStyle.toString());
             }
             aosSubentryentity.set("aos_shootscenes", bdMaterial.getString("aos_shootscenes"));
-            aos_mkt_designreq_bill.setEntityValue(aosMktDesignreq);
-            aos_mkt_designreq_bill.createDesiginBeforeSave(aosMktDesignreq);
+            AosMktDesignReqBill.setEntityValue(aosMktDesignreq);
+            AosMktDesignReqBill.createDesiginBeforeSave(aosMktDesignreq);
             OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_designreq",
                 new DynamicObject[] {aosMktDesignreq}, OperateOption.create());
 
