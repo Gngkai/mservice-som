@@ -149,7 +149,7 @@ public class AosMktPopPpcList extends AbstractListPlugin {
         String actionId = closedCallBackEvent.getActionId();
         if (StringUtils.equals(actionId, sign.form.name)) {
             String aosOuCode = (String)((Map<?, ?>)closedCallBackEvent.getReturnData()).get("aos_ou_code");
-            AosMktPopPpcInit.manualitemClick(aosOuCode);
+            AosMktPopPpcTask.manualitemClick(aosOuCode);
             this.getView().invokeOperation("refresh");
             this.getView().showSuccessNotification("已手工提交PPC数据源初始化,请等待,务重复提交!");
         }
@@ -337,7 +337,7 @@ public class AosMktPopPpcList extends AbstractListPlugin {
             HashMap<String, Map<String, Map<String, Object>>> group = initGroup(fid);
             // 获取该国别下，所有的爆品物料编码
             List<String> listSaleOutItems = getSaleItemByOu(aosOrgid);
-            BigDecimal exRateWellSt = AosMktPopPpcInit.getExRateLowSt(pOuCode, "优");
+            BigDecimal exRateWellSt = AosMktPopPpcTask.getExRateLowSt(pOuCode, "优");
             // 竞价策略
             Map<String, String> comp = initSerialGroup(fid, aosOrgid, exRateWellSt);
             // 特殊广告
@@ -713,7 +713,7 @@ public class AosMktPopPpcList extends AbstractListPlugin {
         Map<String, String> portfolio = initSerialRoi(fid, aosOrgid);
         // 特殊广告
         Map<String, String> portid = initportid(aosOrgid);
-        BigDecimal exRateWellSt = AosMktPopPpcInit.getExRateLowSt(pOuCode, "优");
+        BigDecimal exRateWellSt = AosMktPopPpcTask.getExRateLowSt(pOuCode, "优");
         // 竞价策略
         Map<String, String> comp = initSerialGroup(fid, aosOrgid, exRateWellSt);
         // 初始化组数据

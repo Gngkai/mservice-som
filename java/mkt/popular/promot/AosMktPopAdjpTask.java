@@ -1,4 +1,4 @@
-package mkt.popular.adjust_p;
+package mkt.popular.promot;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
@@ -33,8 +33,12 @@ import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import mkt.common.MKTCom;
 
-public class aos_mkt_popadjp_init extends AbstractTask {
-	private static Log logger = LogFactory.getLog(aos_mkt_popadjp_init.class);
+/**
+ * @author aosom
+ * @version 出价调整推广-调度任务类
+ */
+public class AosMktPopAdjpTask extends AbstractTask {
+	private static Log logger = LogFactory.getLog(AosMktPopAdjpTask.class);
 
 	private static final DistributeSessionlessCache cache = CacheFactory.getCommonCacheFactory()
 			.getDistributeSessionlessCache("mkt_redis");

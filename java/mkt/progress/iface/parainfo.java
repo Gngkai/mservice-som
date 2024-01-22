@@ -39,16 +39,15 @@ public class parainfo {
 		// 1.工作流管理员不做任何人员相关权限控制
 		if (!exists) {
 			// 2.只能看到申请人为自己或当前节点操作人为自己的单据 或流经自己的单据
-
 			// 获取历史记录中 流经自己的单据
 			List<Long> list = GetHisList(type, currentUserId);
-
 			QFilter filter_user = new QFilter("aos_user", QCP.equals, currentUserId)
 					.or("aos_requireby", QCP.equals, currentUserId).or("id", QCP.in, list);
 			for (String otherUser : OtherFilter) {
 				filter_user = filter_user.or(otherUser, "=", currentUserId);
 			}
 			qFilters.add(filter_user);
+			qFilters.add(new QFilter("aos_user.number", QCP.not_equals, "SYSTEM"));
 		}
 		// 3.若未点击查看关闭流程(界面缓存参数为空) 则排除已关闭的流程
 		if ("true".equals(iPageCache.get("p_close_flag")))

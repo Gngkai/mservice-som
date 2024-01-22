@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
+import mkt.popular.sale.AosMktPopAdjsTask;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -46,16 +47,15 @@ import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import mkt.common.MKTCom;
 import mkt.common.aos_mkt_common_redis;
-import mkt.popular.aos_mkt_pop_common;
-import mkt.popular.adjust_s.aos_mkt_popadds_init;
-import mkt.popular.adjust_s.aos_mkt_popadjs_init;
+import mkt.popular.AosMktPopUtil;
+import mkt.popular.sale.AosMktPopAddTask;
 import mkt.progress.iface.iteminfo;
 
 /**
  * @author aosom
  * @version PPC初始化任务-调度任务类
  */
-public class AosMktPopPpcInit extends AbstractTask {
+public class AosMktPopPpcTask extends AbstractTask {
     public static final String URL =
         "https://open.feishu.cn/open-apis/bot/v2/hook/242e7160-8309-4312-8586-5fe58482d8c5";
     private static final DistributeSessionlessCache CACHE =
@@ -117,8 +117,8 @@ public class AosMktPopPpcInit extends AbstractTask {
             doOperate(params);
         }
         // 生成销售加回数据
-        if (aos_mkt_pop_common.GetCopyFlag(sign.ppcAdd.name, week)) {
-            aos_mkt_popadds_init.Run();
+        if (AosMktPopUtil.getCopyFlag(sign.ppcAdd.name, week)) {
+            AosMktPopAddTask.run();
         }
     }
 
@@ -233,7 +233,7 @@ public class AosMktPopPpcInit extends AbstractTask {
             String yester3 = dateFormat.format(date.getTime());
             String aosBillno = "SP" + pOuCode + year + month + day;
             // 如果是 2467 则赋值昨日数据 直接退出
-            Boolean copyFlag = aos_mkt_pop_common.GetCopyFlag("PPC_SP", week);
+            Boolean copyFlag = AosMktPopUtil.getCopyFlag("PPC_SP", week);
             if (!copyFlag) {
                 DynamicObject aosMktPopularPpc = BusinessDataServiceHelper.newDynamicObject("aos_mkt_popular_ppc");
                 Calendar calendar = Calendar.getInstance();
@@ -1709,7 +1709,7 @@ public class AosMktPopPpcInit extends AbstractTask {
             // 开始生成 出价调整(销售)
             Map<String, Object> adjs = new HashMap<>(16);
             adjs.put("p_ou_code", pOuCode);
-            aos_mkt_popadjs_init.executerun(adjs);
+            AosMktPopAdjsTask.executerun(adjs);
         } catch (Exception e) {
             String message = e.toString();
             String exceptionStr = SalUtil.getExceptionStr(e);

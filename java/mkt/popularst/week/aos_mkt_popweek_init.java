@@ -27,7 +27,7 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import mkt.common.AosMktGenerate;
-import mkt.popular.aos_mkt_pop_common;
+import mkt.popular.AosMktPopUtil;
 import mkt.popularst.ppc.aos_mkt_popppcst_init;
 
 public class aos_mkt_popweek_init extends AbstractTask {
@@ -43,7 +43,7 @@ public class aos_mkt_popweek_init extends AbstractTask {
 		// CommData.init();
 		Calendar Today = Calendar.getInstance();
 		int week = Today.get(Calendar.DAY_OF_WEEK);
-		Boolean CopyFlag = aos_mkt_pop_common.GetCopyFlag("PPC_ST_WEEK", week);
+		Boolean CopyFlag = AosMktPopUtil.getCopyFlag("PPC_ST_WEEK", week);
 		if (!CopyFlag) {
 			return;// 如果不是周一 直接跳过
 		}
