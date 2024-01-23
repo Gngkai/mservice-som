@@ -54,7 +54,7 @@ public class AosMktSubmitDesignTask extends AbstractTask {
             int differentDays = DateUtil.betweenDay(dateLastNode, dateNow);
             if (differentDays >= 5) {
                 try {
-                    new AosMktDesignReqBill().aos_submit(dyMain, "B");
+                    new AosMktDesignReqBill().aosSubmit(dyMain, "B");
                 } catch (FndError fndError) {
                     fndLog.add(dyMain.getString("billno") + " : " + fndError.getErrorMessage());
                 }

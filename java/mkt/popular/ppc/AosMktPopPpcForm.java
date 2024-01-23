@@ -10,8 +10,9 @@ import kd.bos.form.plugin.AbstractFormPlugin;
 
 /**
  * @author aosom
+ * @deprecated
  */
-public class AoMktPopPpcForm extends AbstractFormPlugin {
+public class AosMktPopPpcForm extends AbstractFormPlugin {
     private static final String BTNOK = "btnok";
     private static final String AOS_ORGID = "aos_orgid";
 

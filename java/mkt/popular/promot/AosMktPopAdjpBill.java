@@ -18,7 +18,7 @@ import kd.bos.form.events.AfterDoOperationEventArgs;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
-import mkt.popular.budget_p.aos_mkt_popbudgetp_init;
+import mkt.popular.budget.AosMktPopBudgetpTask;
 
 /**
  * @author aosom
@@ -60,7 +60,7 @@ public class AosMktPopAdjpBill extends AbstractBillPlugIn implements ItemClickLi
             // 开始生成 出价调整(销售)
             Map<String, Object> budget = new HashMap<>(16);
             budget.put("p_ou_code", pOuCode);
-            aos_mkt_popbudgetp_init.executerun(budget);
+            AosMktPopBudgetpTask.executerun(budget);
         }
         this.getModel().setValue("aos_status", "B");
         this.getView().invokeOperation("save");
