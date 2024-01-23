@@ -180,12 +180,12 @@ public class ProgressUtil {
 		QFilter[] filters_category = new QFilter[] { filter_category1, filter_category2 };
 		DynamicObject aos_mkt_proguser = QueryServiceHelper.queryOne("aos_mkt_proguser", select.toString(),
 				filters_category);
-		List<String> list_transType = Arrays.asList("翻译", "功能图翻译");
-		if (list_transType.contains(type) && orgid != null) {
-			String user = QueryEdit(orgid);
-			if (user != null)
-				aos_mkt_proguser.set("aos_designer", user);
-		}
+//		List<String> list_transType = Arrays.asList("翻译", "功能图翻译");
+//		if (list_transType.contains(type) && orgid != null) {
+//			String user = QueryEdit(orgid);
+//			if (user != null)
+//				aos_mkt_proguser.set("aos_designer", user);
+//		}
 		return aos_mkt_proguser;
 	}
 
