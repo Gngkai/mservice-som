@@ -112,7 +112,7 @@ public class ProgressUtil {
 					else if (billFormId.equals("aos_mkt_3design")) // 3D产品设计单
 						new aos_mkt_3design_bill().aos_submit(dy_main, "B");
 					else if (billFormId.equals("aos_mkt_designreq")) // 设计需求表
-						new AosMktDesignReqBill().aos_submit(dy_main, "B");
+						new AosMktDesignReqBill().aosSubmit(dy_main, "B");
 					else if (billFormId.equals("aos_mkt_rcv")) // 样品入库通知单
 						new AosMktRcvBill().aosSubmit(dy_main, "B");
 					else if (billFormId.equals("aos_mkt_photoreq"))

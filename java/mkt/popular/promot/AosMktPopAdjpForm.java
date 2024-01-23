@@ -29,8 +29,8 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.otel.MmsOtelUtils;
-import mkt.popular.budget_p.aos_mkt_popbudgetp_form;
-import mkt.popular.budget_p.aos_mkt_popbudgetp_init;
+import mkt.popular.budget.AosMktPopBudgetpForm;
+import mkt.popular.budget.AosMktPopBudgetpTask;
 
 /**
  * @author aosom
@@ -51,7 +51,7 @@ public class AosMktPopAdjpForm extends AbstractFormPlugin implements ItemClickLi
     private static final String AOS_DETAILENTRY = "aos_detailentry";
     private static final String B = "B";
 
-    private static final Tracer TRACER = MmsOtelUtils.getTracer(aos_mkt_popbudgetp_form.class, RequestContext.get());
+    private static final Tracer TRACER = MmsOtelUtils.getTracer(AosMktPopAdjpForm.class, RequestContext.get());
 
     private static BigDecimal min(BigDecimal value1, BigDecimal value2) {
         if (value1.compareTo(value2) > -1) {
@@ -114,7 +114,7 @@ public class AosMktPopAdjpForm extends AbstractFormPlugin implements ItemClickLi
                 // 开始生成 预算调整(推广)
                 Map<String, Object> budget = new HashMap<>(16);
                 budget.put("p_ou_code", pOuCode);
-                aos_mkt_popbudgetp_init.executerun(budget);
+                AosMktPopBudgetpTask.executerun(budget);
             }
             this.getView().getParentView().getModel().setValue("aos_status", "B");
             this.getView().getParentView().invokeOperation("save");
