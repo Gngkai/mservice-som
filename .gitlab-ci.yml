@@ -2,12 +2,20 @@ stages:
   - Sonar
   - End
 
+variables:
+  #  GRADLE_EXT_CMD:
+  SONAR_PROJECTKEY: mservice-mms
+  SONAR_PROJECTNAME: mservice-mms
+  SONAR_SOURCES: java
+  SONAR_JAVA_BINARIES: build/classes
+  SONAR_JAVA_SOURCE: "1.8"
+
 sonar_preview:
   stage: Sonar
   script:
-    - sed -i "s,COSMIC_LIBS_BASE_DIR=.*,COSMIC_LIBS_BASE_DIR=/app/cosmic/libs/,g" ./gradle.properties
-    - /app/gradle/bin/gradle clean --build-cache copytolib
-    - /app/sonar-scanner/bin/sonar-scanner -Dsonar.qualitygate.wait=true -Dsonar.projectKey=mservice-mms -Dsonar.projectName=mservice-mms -Dsonar.java.source=1.8 -Dsonar.sources=java -Dsonar.java.binaries=build/classes -Dsonar.host.url=http://it-sonar.aosom.com
+    - /app/scripts/gitlab-ci-scripts/show_env.sh
+    - /app/scripts/gitlab-ci-scripts/build_with_gradle.sh
+    - /app/scripts/gitlab-ci-scripts/sonar_incremental.sh
   only:
     refs:
       - merge_requests
