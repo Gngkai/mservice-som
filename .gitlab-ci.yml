@@ -6,8 +6,8 @@ variables:
   #  GRADLE_EXT_CMD:
   SONAR_PROJECTKEY: mservice-mms
   SONAR_PROJECTNAME: mservice-mms
-  SONAR_SOURCES: java
-  SONAR_JAVA_BINARIES: build/classes
+  SONAR_SOURCES: mservice-mms/java
+  SONAR_JAVA_BINARIES: mservice-mms/build/classes
   SONAR_JAVA_SOURCE: "1.8"
 
 sonar_preview:
