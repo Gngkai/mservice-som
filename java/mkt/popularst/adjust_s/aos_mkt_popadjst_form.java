@@ -27,7 +27,7 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.MKTCom;
-import mkt.popularst.budget.aos_mkt_popbudpst_init;
+import mkt.popularst.budget.AosMktPopBudpstTask;
 
 public class aos_mkt_popadjst_form extends AbstractFormPlugin implements ItemClickListener, RowClickEventListener {
 
@@ -101,7 +101,7 @@ public class aos_mkt_popadjst_form extends AbstractFormPlugin implements ItemCli
 				// 开始生成 预算调整(推广)
 				Map<String, Object> budget = new HashMap<>();
 				budget.put("p_ou_code", p_ou_code);
-				aos_mkt_popbudpst_init.executerun(budget);
+				AosMktPopBudpstTask.executerun(budget);
 			}
 		}
 		this.getView().getParentView().getModel().setValue("aos_status", "B");
