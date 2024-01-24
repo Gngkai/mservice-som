@@ -1,4 +1,4 @@
-package mkt.popularst.adjust_s;
+package mkt.popularst.sale;
 
 import java.util.Arrays;
 import java.util.List;
@@ -22,13 +22,15 @@ import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.MKTCom;
 
-public class aos_mkt_popadjst_list extends AbstractListPlugin {
-
+/**
+ * @author aosom
+ * @version ST加回-列表插件
+ */
+public class AosMktPopAdjstList extends AbstractListPlugin {
 	private final static String KEY_AOS_ASSIGN = "aos_assign_list";
 	private final static String KEY_CANCEL_AOS_ASSIGN = "aos_cancel_assign_list";
-	public final static String SYSTEM = Cux_Common_Utl.SYSTEM; // ID-000000
+	public final static String SYSTEM = Cux_Common_Utl.SYSTEM;
 	private final static String BillID = "aos_mkt_pop_adjst";
-
 	@Override
 	public void setFilter(SetFilterEvent e) {
 		long currentUserId = UserServiceHelper.getCurrentUserId();

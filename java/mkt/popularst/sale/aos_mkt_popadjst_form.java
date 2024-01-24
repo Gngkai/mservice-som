@@ -1,4 +1,4 @@
-package mkt.popularst.adjust_s;
+package mkt.popularst.sale;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;

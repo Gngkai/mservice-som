@@ -1,4 +1,4 @@
-package mkt.popularst.adjust_s;
+package mkt.popularst.sale;
 
 import common.Cux_Common_Utl;
 import kd.bos.algo.DataSet;
