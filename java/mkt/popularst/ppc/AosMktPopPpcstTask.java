@@ -36,8 +36,8 @@ import mkt.common.AosMktGenerate;
 import mkt.common.MKTCom;
 import mkt.popular.AosMktPopUtil;
 import mkt.popularst.add.AosMktPopAddsTask;
-import mkt.popularst.sale.aos_mkt_pop_stadd_init;
-import mkt.popularst.sale.aos_mkt_popadjst_init;
+import mkt.popularst.sale.AosMktPopStaddTask;
+import mkt.popularst.sale.AosMktPopAdjstTask;
 import mkt.popularst.week.AosMktPopWeekTask;
 
 /**
@@ -81,7 +81,7 @@ public class AosMktPopPpcstTask extends AbstractTask {
         // 生成销售周调整ST
         AosMktPopWeekTask.executerun(pHour);
         // 生成ST销售加回
-        aos_mkt_pop_stadd_init.stInit();
+        AosMktPopStaddTask.stInit();
     }
 
     public static void doOperate(Map<String, Object> params) {
@@ -791,7 +791,7 @@ public class AosMktPopPpcstTask extends AbstractTask {
         // 开始生成 出价调整(销售)
         Map<String, Object> adjs = new HashMap<>(16);
         adjs.put("p_ou_code", pOuCode);
-        aos_mkt_popadjst_init.executerun(adjs);
+        AosMktPopAdjstTask.executerun(adjs);
     }
 
     private static void genDataTableSt(DynamicObjectCollection aosEntryentityS, Object fid, Object pOrgId, Date today,
