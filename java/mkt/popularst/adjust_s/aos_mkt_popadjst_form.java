@@ -27,7 +27,7 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.MKTCom;
-import mkt.popularst.budget_p.aos_mkt_popbudpst_init;
+import mkt.popularst.budget.aos_mkt_popbudpst_init;
 
 public class aos_mkt_popadjst_form extends AbstractFormPlugin implements ItemClickListener, RowClickEventListener {
 

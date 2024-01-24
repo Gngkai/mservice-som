@@ -35,7 +35,7 @@ import kd.bos.threads.ThreadPool;
 import kd.bos.threads.ThreadPools;
 import mkt.common.AosMktGenerate;
 import mkt.common.MKTCom;
-import mkt.popularst.adjusts_p.aos_mkt_popadjpst_init;
+import mkt.popularst.promot.aos_mkt_popadjpst_init;
 
 public class aos_mkt_popadjst_init extends AbstractTask {
 

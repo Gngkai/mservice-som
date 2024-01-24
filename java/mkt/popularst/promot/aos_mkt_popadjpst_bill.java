@@ -1,4 +1,4 @@
-package mkt.popularst.adjusts_p;
+package mkt.popularst.promot;
 
 import java.util.EventObject;
 

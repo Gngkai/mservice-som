@@ -1,4 +1,4 @@
-package mkt.popularst.budget_p;
+package mkt.popularst.promot;
 
 import java.util.List;
 import kd.bos.dataentity.OperateOption;
@@ -14,11 +14,12 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 
-public class aos_mkt_popbudpst_list extends AbstractListPlugin {
+public class aos_mkt_popadjpst_list extends AbstractListPlugin {
 
 	private final static String KEY_AOS_ASSIGN = "aos_assign_list";
 	private final static String KEY_CANCEL_AOS_ASSIGN = "aos_cancel_assign_list";
 	public final static String SYSTEM = get_system_id(); // ID-000000
+	private final static String BillID = "aos_mkt_pop_adjpst";
 	
 	public static String get_system_id() {
 		QFilter qf_user = new QFilter("number", "=", "system");
@@ -48,14 +49,11 @@ public class aos_mkt_popbudpst_list extends AbstractListPlugin {
 			String error_message = "";
 			for (int i = 0; i < list.size(); i++) {
 				String para = list.get(i).toString();
-
-				DynamicObject bill = BusinessDataServiceHelper.loadSingle(para, "aos_mkt_pop_budgetst");
+				DynamicObject bill = BusinessDataServiceHelper.loadSingle(para, BillID);
 				DynamicObject aos_makeby = (DynamicObject) bill.get("aos_makeby");
-
 				long makeby_id = Long.valueOf(aos_makeby.getPkValue().toString());
 				String Status = bill.get("billstatus").toString();
 				String billno = bill.get("billno").toString();
-
 				if (!Status.equals("A")) {
 					error_count++;
 					error_message += billno + " 无法认领非新建状态的单据!";
@@ -67,7 +65,7 @@ public class aos_mkt_popbudpst_list extends AbstractListPlugin {
 					error_message += billno + " 只能认领系统创建的单据!";
 				} else {
 					bill.set("aos_makeby", User_id);
-					OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_pop_budgetst",
+					OperationResult operationrst = OperationServiceHelper.executeOperate("save", BillID,
 							new DynamicObject[] { bill }, OperateOption.create());
 					if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
 						error_count++;
@@ -101,7 +99,7 @@ public class aos_mkt_popbudpst_list extends AbstractListPlugin {
 			for (int i = 0; i < list.size(); i++) {
 				String para = list.get(i).toString();
 
-				DynamicObject bill = BusinessDataServiceHelper.loadSingle(para, "aos_mkt_pop_budgetst");
+				DynamicObject bill = BusinessDataServiceHelper.loadSingle(para, BillID);
 				DynamicObject aos_makeby = (DynamicObject) bill.get("aos_makeby");
 				long makeby_id = Long.valueOf(aos_makeby.getPkValue().toString());
 				String Status = bill.get("billstatus").toString();
@@ -118,7 +116,7 @@ public class aos_mkt_popbudpst_list extends AbstractListPlugin {
 					error_message += billno + " 只能取消认领自己认领的单据!";
 				} else {
 					bill.set("aos_makeby", SYSTEM);
-					OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_pop_budgetst",
+					OperationResult operationrst = OperationServiceHelper.executeOperate("save", BillID,
 							new DynamicObject[] { bill }, OperateOption.create());
 					if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
 						error_count++;
@@ -141,4 +139,5 @@ public class aos_mkt_popbudpst_list extends AbstractListPlugin {
 			e.printStackTrace();
 		}
 	}
+    
 }
