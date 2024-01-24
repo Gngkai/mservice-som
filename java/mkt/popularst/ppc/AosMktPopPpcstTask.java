@@ -36,8 +36,8 @@ import mkt.common.AosMktGenerate;
 import mkt.common.MKTCom;
 import mkt.popular.AosMktPopUtil;
 import mkt.popularst.add.AosMktPopAddsTask;
-import mkt.popularst.adjust_s.aos_mkt_pop_stadd_init;
-import mkt.popularst.adjust_s.aos_mkt_popadjst_init;
+import mkt.popularst.sale.aos_mkt_pop_stadd_init;
+import mkt.popularst.sale.aos_mkt_popadjst_init;
 import mkt.popularst.week.AosMktPopWeekTask;
 
 /**
