@@ -107,12 +107,13 @@ public class AosMktPopBudgetpForm extends AbstractFormPlugin implements ItemClic
         Span span = MmsOtelUtils.getCusSubSpan(TRACER, MmsOtelUtils.getMethodPath());
         try (Scope ignore = span.makeCurrent()) {
             int rowCount = this.getModel().getEntryRowCount("aos_entryentity2");
+            Object aosPpcid = this.getView().getParentView().getModel().getValue("aos_ppcid");
             for (int i = 0; i < rowCount; i++) {
                 BigDecimal aosPopbudget = (BigDecimal)this.getModel().getValue("aos_popbudget", i);
                 String aosSaldescription = (String)this.getModel().getValue("aos_saldescription", i);
                 long aosEntryid = (long)this.getModel().getValue("aos_entryid", i);
                 String aosSerialname = (String)this.getModel().getValue("aos_serialname", i);
-                update(aosEntryid, aosPopbudget, aosSaldescription, aosSerialname);
+                update(aosEntryid, aosPopbudget, aosSaldescription, aosSerialname, aosPpcid);
             }
             String selectField =
                 "aos_entryentity.aos_lastspend_r aos_lastspend_r," + "aos_entryentity.aos_lastbudget aos_lastbudget";
@@ -145,14 +146,15 @@ public class AosMktPopBudgetpForm extends AbstractFormPlugin implements ItemClic
         }
     }
 
-    private void update(long aosEntryid, BigDecimal aosAdjprice, String aosDescription, String aosSerialname) {
+    private void update(long aosEntryid, BigDecimal aosAdjprice, String aosDescription, String aosSerialname,
+        Object aosPpcid) {
         String sql = " UPDATE tk_aos_mkt_popb_data_r r " + " SET fk_aos_popbudget = ?," + " fk_aos_saldescription = ? "
             + " WHERE 1=1 " + " and r.FEntryId = ? ";
         Object[] params = {aosAdjprice, aosDescription, aosEntryid};
         DB.execute(DBRoute.of(DB_MKT), sql, params);
         sql = " UPDATE tk_aos_mkt_popular_ppc_r r " + " SET fk_aos_budget = ?" + " WHERE 1=1 "
             + " and r.fk_aos_productno = ? and r.fid = ?  ";
-        Object[] params2 = {aosAdjprice, aosSerialname, aosEntryid};
+        Object[] params2 = {aosAdjprice, aosSerialname, aosPpcid};
         DB.execute(DBRoute.of(DB_MKT), sql, params2);
     }
 

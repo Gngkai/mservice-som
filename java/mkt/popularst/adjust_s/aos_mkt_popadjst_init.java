@@ -35,7 +35,7 @@ import kd.bos.threads.ThreadPool;
 import kd.bos.threads.ThreadPools;
 import mkt.common.AosMktGenerate;
 import mkt.common.MKTCom;
-import mkt.popularst.adjusts_p.aos_mkt_popadjpst_init;
+import mkt.popularst.promot.AosMktPopAdjpstTask;
 
 public class aos_mkt_popadjst_init extends AbstractTask {
 
@@ -415,7 +415,7 @@ public class aos_mkt_popadjst_init extends AbstractTask {
 		if (GroupSizeCount == GroupSize) {
 			Map<String, Object> adjs = new HashMap<>();
 			adjs.put("p_ou_code", p_ou_code);
-			aos_mkt_popadjpst_init.executerun(adjs);
+			AosMktPopAdjpstTask.executerun(adjs);
 		}
 
 	}
