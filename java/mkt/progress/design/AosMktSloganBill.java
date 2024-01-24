@@ -45,80 +45,89 @@ public class AosMktSloganBill extends AbstractBillPlugIn {
     private static final String AOS_CATEGORY3 = "aos_category3";
     private static final String AOS_CNAME = "aos_cname";
     private static final String AOS_ITEMNAME = "aos_itemname";
+    private static final String AOS_DESIGNER = "aos_designer";
+    private static final String SAVE = "save";
+    private static final String TYPE = "TYPE";
+    private static final String AOS_TYPE = "aos_type";
+    private static final String AOS_LANG = "aos_lang";
+    private static final String EN = "EN";
+    private static final String AOS_CATEGORY1 = "aos_category1";
+    private static final String AOS_ITEMID = "aos_itemid";
+    private static final String AOS_DETAIL = "aos_detail";
+    private static final String AOS_SLOGAN = "aos_slogan";
     static String SYSTEM = Cux_Common_Utl.SYSTEM;
 
     /**
      * 翻译节点提交
-     *
-     * @throws FndError
      */
-    public static void SubmitTrans(DynamicObject dy_main) throws FndError {
+    public static void submitTrans(DynamicObject dyMain) throws FndError {
         FndError fndError = new FndError();
-
-        Object ReqFId = dy_main.getPkValue();
-        String aos_category1 = dy_main.getString("aos_category1");// 大类
-        String aos_category2 = dy_main.getString("aos_category2");// 中类
-        Object billno = dy_main.get("billno");
-        Boolean aos_main = dy_main.getBoolean("aos_main");
-        Object aos_sourceid = dy_main.get("aos_sourceid");
-        Object aos_lang = dy_main.get("aos_lang");
-        Object aos_designer = dy_main.get("aos_designer");
+        Object reqFid = dyMain.getPkValue();
+        // 大类
+        String aosCategory1 = dyMain.getString("aos_category1");
+        // 中类
+        String aosCategory2 = dyMain.getString("aos_category2");
+        Object billno = dyMain.get("billno");
+        boolean aosMain = dyMain.getBoolean("aos_main");
+        Object aosSourceid = dyMain.get("aos_sourceid");
+        Object aosLang = dyMain.get("aos_lang");
+        Object aosDesigner = dyMain.get("aos_designer");
         Object messageId;
         // 校验对应小语种slogan与品名是否填写
-        DynamicObjectCollection aos_entryentityS_O = dy_main.getDynamicObjectCollection("aos_entryentity");
-        for (DynamicObject aos_entryentity : aos_entryentityS_O) {
-            String aos_langr = aos_entryentity.getString("aos_langr");
-            String aos_itemname = aos_entryentity.getString("aos_itemname");
-            String aos_slogan = aos_entryentity.getString("aos_slogan");
-            if (aos_langr.equals(aos_lang)) {
-                if (FndGlobal.IsNull(aos_itemname) || FndGlobal.IsNull(aos_slogan)) {
+        DynamicObjectCollection aosEntryentityS0 = dyMain.getDynamicObjectCollection("aos_entryentity");
+        for (DynamicObject aosEntryentity : aosEntryentityS0) {
+            String aosLangr = aosEntryentity.getString("aos_langr");
+            String aosItemname = aosEntryentity.getString("aos_itemname");
+            String aosSlogan = aosEntryentity.getString("aos_slogan");
+            if (aosLangr.equals(aosLang)) {
+                if (FndGlobal.IsNull(aosItemname) || FndGlobal.IsNull(aosSlogan)) {
                     fndError.add("Slogan与品名必填!");
                     throw fndError;
                 }
             }
         }
-        if (FndGlobal.IsNull(aos_designer)) {
-            DynamicObject aos_mkt_proguser = QueryServiceHelper.queryOne("aos_mkt_proguser", "aos_designer",
-                new QFilter("aos_category1", "=", aos_category1).and("aos_category2", "=", aos_category2).toArray());
-            if (FndGlobal.IsNull(aos_mkt_proguser) || FndGlobal.IsNull(aos_mkt_proguser.get("aos_designer"))) {
+        if (FndGlobal.IsNull(aosDesigner)) {
+            DynamicObject aosMktProguser = QueryServiceHelper.queryOne("aos_mkt_proguser", "aos_designer",
+                new QFilter("aos_category1", "=", aosCategory1).and("aos_category2", "=", aosCategory2).toArray());
+            if (FndGlobal.IsNull(aosMktProguser) || FndGlobal.IsNull(aosMktProguser.get(AOS_DESIGNER))) {
                 fndError.add("品类设计师不存在!");
                 throw fndError;
             }
-            aos_designer = aos_mkt_proguser.getLong("aos_designer");// 品类设计师
-            messageId = aos_designer;
+            // 品类设计师
+            aosDesigner = aosMktProguser.getLong("aos_designer");
+            messageId = aosDesigner;
         } else {
-            messageId = ((DynamicObject)aos_designer).getPkValue();
+            messageId = ((DynamicObject)aosDesigner).getPkValue();
         }
-
-        if (aos_main) {
-            dy_main.set("aos_designer", aos_designer);
-            dy_main.set("aos_user", aos_designer);
-            dy_main.set("aos_status", "设计");
-            MKTCom.SendGlobalMessage(String.valueOf(messageId), "aos_mkt_slogan", String.valueOf(ReqFId),
+        if (aosMain) {
+            dyMain.set("aos_designer", aosDesigner);
+            dyMain.set("aos_user", aosDesigner);
+            dyMain.set("aos_status", "设计");
+            MKTCom.SendGlobalMessage(String.valueOf(messageId), "aos_mkt_slogan", String.valueOf(reqFid),
                 String.valueOf(billno), "Slogan-设计");
         } else {
-            dy_main.set("aos_user", SYSTEM);
-            dy_main.set("aos_status", "结束");
-            DynamicObject aos_mkt_slogan = BusinessDataServiceHelper.loadSingle(aos_sourceid, "aos_mkt_slogan");
-            DynamicObjectCollection aos_entryentityS = aos_mkt_slogan.getDynamicObjectCollection("aos_entryentity");
-            for (DynamicObject aos_entryentity : aos_entryentityS) {
-                String aos_langr = aos_entryentity.getString("aos_langr");
-                if (!aos_langr.equals(aos_lang))
+            dyMain.set("aos_user", SYSTEM);
+            dyMain.set("aos_status", "结束");
+            DynamicObject aosMktSlogan = BusinessDataServiceHelper.loadSingle(aosSourceid, "aos_mkt_slogan");
+            DynamicObjectCollection aosEntryentityS = aosMktSlogan.getDynamicObjectCollection("aos_entryentity");
+            for (DynamicObject aosEntryentity : aosEntryentityS) {
+                String aosLangr = aosEntryentity.getString("aos_langr");
+                if (!aosLangr.equals(aosLang)) {
                     continue;
-                aos_entryentity.set("aos_itemname", aos_entryentityS.get(2).get("aos_itemname"));
-                aos_entryentity.set("aos_slogan", aos_entryentityS.get(2).get("aos_slogan"));
-                aos_entryentity.set("aos_width", aos_entryentityS.get(2).get("aos_width"));
+                }
+                aosEntryentity.set("aos_itemname", aosEntryentityS.get(2).get("aos_itemname"));
+                aosEntryentity.set("aos_slogan", aosEntryentityS.get(2).get("aos_slogan"));
+                aosEntryentity.set("aos_width", aosEntryentityS.get(2).get("aos_width"));
             }
-            Boolean exist = QueryServiceHelper.exists("aos_mkt_slogan",
-                new QFilter("aos_sourceid", QCP.equals, aos_sourceid).and("id", QCP.not_equals, ReqFId)
+            boolean exist = QueryServiceHelper.exists("aos_mkt_slogan",
+                new QFilter("aos_sourceid", QCP.equals, aosSourceid).and("id", QCP.not_equals, reqFid)
                     .and("aos_status", QCP.in, new String[] {"翻译", "海外翻译"}).toArray());
             if (!exist) {
-                aos_mkt_slogan.set("aos_designer", aos_designer);
-                aos_mkt_slogan.set("aos_user", aos_designer);
-                aos_mkt_slogan.set("aos_status", "设计");
+                aosMktSlogan.set("aos_designer", aosDesigner);
+                aosMktSlogan.set("aos_user", aosDesigner);
+                aosMktSlogan.set("aos_status", "设计");
             }
-            SaveServiceHelper.saveOperate("aos_mkt_slogan", new DynamicObject[] {aos_mkt_slogan},
-                OperateOption.create());
+            SaveServiceHelper.saveOperate("aos_mkt_slogan", new DynamicObject[] {aosMktSlogan}, OperateOption.create());
         }
     }
 
@@ -145,7 +154,6 @@ public class AosMktSloganBill extends AbstractBillPlugIn {
             FndGlobal.OpenForm(this, "aos_mkt_slogan_form", params);
         } else if (AOS_ITEMNAME.equals(keyName)) {
             int row = this.getModel().getEntryCurrentRowIndex("aos_entryentity");
-            Object aosType = this.getModel().getValue("aos_type");
             if (row == 1) {
                 Map<String, Object> params = new HashMap<>(16);
                 params.put("aos_itemname_category1", this.getModel().getValue("aos_category1"));
@@ -161,36 +169,32 @@ public class AosMktSloganBill extends AbstractBillPlugIn {
     @Override
     public void registerListener(EventObject e) {
         super.registerListener(e);
-
-        TextEdit aos_category2 = this.getControl("aos_category2");
-        aos_category2.addClickListener(this);
-        aos_category2.addItemClickListener(this);
-
-        TextEdit aos_category3 = this.getControl("aos_category3");
-        aos_category3.addClickListener(this);
-        aos_category3.addItemClickListener(this);
-
-        TextEdit aos_cname = this.getControl("aos_cname");
-        aos_cname.addClickListener(this);
-        aos_cname.addItemClickListener(this);
-
-        EntryGrid aos_entryentity = this.getControl("aos_entryentity");
-        aos_entryentity.addClickListener(this);
-        aos_entryentity.addItemClickListener(this);
-
-        TextEdit aos_itemname = this.getControl("aos_itemname");
-        aos_itemname.addClickListener(this);
-        aos_itemname.addItemClickListener(this);
+        TextEdit aosCategory2 = this.getControl("aos_category2");
+        aosCategory2.addClickListener(this);
+        aosCategory2.addItemClickListener(this);
+        TextEdit aosCategory3 = this.getControl("aos_category3");
+        aosCategory3.addClickListener(this);
+        aosCategory3.addItemClickListener(this);
+        TextEdit aosCname = this.getControl("aos_cname");
+        aosCname.addClickListener(this);
+        aosCname.addItemClickListener(this);
+        EntryGrid aosEntryentity = this.getControl("aos_entryentity");
+        aosEntryentity.addClickListener(this);
+        aosEntryentity.addItemClickListener(this);
+        TextEdit aosItemname = this.getControl("aos_itemname");
+        aosItemname.addClickListener(this);
+        aosItemname.addItemClickListener(this);
     }
 
     /**
      * 操作之前事件
      **/
+    @Override
     public void beforeDoOperation(BeforeDoOperationEventArgs args) {
         FormOperate formOperate = (FormOperate)args.getSource();
-        String Operatation = formOperate.getOperateKey();
+        String operatation = formOperate.getOperateKey();
         try {
-            if ("save".equals(Operatation)) {
+            if (SAVE.equals(operatation)) {
                 SaveControl(); // 保存校验
             }
         } catch (FndError fndMessage) {
@@ -202,38 +206,33 @@ public class AosMktSloganBill extends AbstractBillPlugIn {
         }
     }
 
+    @Override
     public void afterDoOperation(AfterDoOperationEventArgs args) {
         FormOperate formOperate = (FormOperate)args.getSource();
-        String Operatation = formOperate.getOperateKey();
+        String operatation = formOperate.getOperateKey();
         try {
-            if ("save".equals(Operatation)) {
+            if (SAVE.equals(operatation)) {
                 args.getOperationResult().setShowMessage(false);
             }
         } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 
-    /**
-     * 初始化事件
-     **/
+    @Override
     public void afterLoadData(EventObject e) {
         super.afterLoadData(e);
         StatusControl();
-        aos_egsku_change();
+        aosEgskuChange();
     }
 
-    /**
-     * 新建事件
-     **/
+    @Override
     public void afterCreateNewData(EventObject e) {
-
         super.afterCreateNewData(e);
         InitDefualt();
-        aos_egsku_change();
-
+        aosEgskuChange();
         Map<String, Object> params = this.getView().getFormShowParameter().getCustomParam("params");
-        if (FndGlobal.IsNotNull(params) && params.containsKey("TYPE")) {
-
+        if (FndGlobal.IsNotNull(params) && params.containsKey(TYPE)) {
             this.getModel().setValue("aos_category1", params.get("aos_category1"));
             this.getModel().setValue("aos_category2", params.get("aos_category2"));
             this.getModel().setValue("aos_category3", params.get("aos_category3"));
@@ -241,42 +240,40 @@ public class AosMktSloganBill extends AbstractBillPlugIn {
             this.getModel().setValue("aos_itemname", params.get("aos_itemnamecn"), 0);
             this.getModel().setValue("aos_detail", params.get("aos_detail"));
             this.getModel().setValue("aos_type", "优化");
-
             String group =
                 params.get("aos_category1") + "," + params.get("aos_category2") + "," + params.get("aos_category3");
-            DynamicObject bd_materialgroupd = QueryServiceHelper.queryOne("bd_materialgroupdetail",
+            DynamicObject bdMaterialgroupd = QueryServiceHelper.queryOne("bd_materialgroupdetail",
                 "material.id itemid,material.number item_number", new QFilter("group.name", QCP.equals, group)
                     .and("material.name", QCP.equals, params.get("aos_itemnamecn")).toArray());
-            if (FndGlobal.IsNotNull(bd_materialgroupd)) {
-                this.getModel().setValue("aos_itemid", bd_materialgroupd.getLong("itemid"));
-
-                String url = "https://cls3.s3.amazonaws.com/" + bd_materialgroupd.getString("item_number") + "/1-1.jpg";
+            if (FndGlobal.IsNotNull(bdMaterialgroupd)) {
+                this.getModel().setValue("aos_itemid", bdMaterialgroupd.getLong("itemid"));
+                String url = "https://cls3.s3.amazonaws.com/" + bdMaterialgroupd.getString("item_number") + "/1-1.jpg";
                 Image image = this.getControl("aos_image");
                 image.setUrl(url);
                 this.getModel().setValue("aos_picture", url);
             }
-
         }
-
         this.getView().setEnable(false, "aos_entryentity");
-
     }
 
     /**
      * 值改变事件
      **/
+    @Override
     public void propertyChanged(PropertyChangedArgs e) {
         try {
             String name = e.getProperty().getName();
-            if (name.equals("aos_type") || name.equals("aos_lang")) {
-                Object aos_status = this.getModel().getValue("aos_status"); // aos_status 流程节点: 申请 翻译 设计 结束
-                Object aos_type = this.getModel().getValue("aos_type");// 优化 新增
-                Object aos_lang = this.getModel().getValue("aos_lang");
-                if (aos_status != null && aos_type != null) {
+            if (AOS_TYPE.equals(name) || AOS_LANG.equals(name)) {
+                // aos_status 流程节点: 申请 翻译 设计 结束
+                Object aosStatus = this.getModel().getValue("aos_status");
+                // 优化 新增
+                Object aosType = this.getModel().getValue("aos_type");
+                Object aosLang = this.getModel().getValue("aos_lang");
+                if (aosStatus != null && aosType != null) {
                     StatusControl();
                 }
-                if (name.equals("aos_lang")) {
-                    if ("EN".equals(aos_lang)) {
+                if (AOS_LANG.equals(name)) {
+                    if (EN.equals(aosLang)) {
                         this.getModel().setValue("aos_osconfirm", false);
                         this.getView().setEnable(false, "aos_osconfirm");
                     } else {
@@ -284,105 +281,104 @@ public class AosMktSloganBill extends AbstractBillPlugIn {
                         this.getView().setEnable(true, "aos_osconfirm");
                     }
                 }
-
-            } else if ("aos_category1".equals(name)) {
-                Object aos_category1 = this.getModel().getValue("aos_category1");
-                if (FndGlobal.IsNull(aos_category1)) {
+            } else if (AOS_CATEGORY1.equals(name)) {
+                Object aosCategory1 = this.getModel().getValue("aos_category1");
+                if (FndGlobal.IsNull(aosCategory1)) {
                     this.getModel().setValue("aos_category2", null);
                     this.getModel().setValue("aos_category3", null);
                     this.getModel().setValue("aos_cname", null);
                 }
-            } else if ("aos_category2".equals(name)) {
-                Object aos_category2 = this.getModel().getValue("aos_category2");
-                if (FndGlobal.IsNull(aos_category2)) {
+            } else if (AOS_CATEGORY2.equals(name)) {
+                Object aosCategory2 = this.getModel().getValue("aos_category2");
+                if (FndGlobal.IsNull(aosCategory2)) {
                     this.getModel().setValue("aos_cname", null);
                     this.getModel().setValue("aos_category3", null);
                 }
-            } else if ("aos_category3".equals(name)) {
-                Object aos_category3 = this.getModel().getValue("aos_category3");
-                if (FndGlobal.IsNull(aos_category3)) {
+            } else if (AOS_CATEGORY3.equals(name)) {
+                Object aosCategory3 = this.getModel().getValue("aos_category3");
+                if (FndGlobal.IsNull(aosCategory3)) {
                     this.getModel().setValue("aos_cname", null);
                 }
-            } else if ("aos_cname".equals(name)) {
-                Object aos_category1 = this.getModel().getValue("aos_category1");
-                Object aos_category2 = this.getModel().getValue("aos_category2");
-                Object aos_category3 = this.getModel().getValue("aos_category3");
-                Object aos_cname = this.getModel().getValue("aos_cname");
+            } else if (AOS_CNAME.equals(name)) {
+                Object aosCategory1 = this.getModel().getValue("aos_category1");
+                Object aosCategory2 = this.getModel().getValue("aos_category2");
+                Object aosCategory3 = this.getModel().getValue("aos_category3");
+                Object aosCname = this.getModel().getValue("aos_cname");
                 // 赋值参考SKU
-                if (FndGlobal.IsNotNull(aos_category1) && FndGlobal.IsNotNull(aos_category2)
-                    && FndGlobal.IsNotNull(aos_category3) && FndGlobal.IsNotNull(aos_cname)) {
-                    String group = aos_category1 + "," + aos_category2 + "," + aos_category3;
-                    DynamicObject bd_materialgroupd = QueryServiceHelper.queryOne("bd_materialgroupdetail",
+                if (FndGlobal.IsNotNull(aosCategory1) && FndGlobal.IsNotNull(aosCategory2)
+                    && FndGlobal.IsNotNull(aosCategory3) && FndGlobal.IsNotNull(aosCname)) {
+                    String group = aosCategory1 + "," + aosCategory2 + "," + aosCategory3;
+                    DynamicObject bdMaterialgroupd = QueryServiceHelper.queryOne("bd_materialgroupdetail",
                         "material.id itemid", new QFilter("group.name", QCP.equals, group)
-                            .and("material.name", QCP.equals, aos_cname).toArray());
-                    if (FndGlobal.IsNotNull(bd_materialgroupd)) {
-                        this.getModel().setValue("aos_itemid", bd_materialgroupd.getLong("itemid"));
+                            .and("material.name", QCP.equals, aosCname).toArray());
+                    if (FndGlobal.IsNotNull(bdMaterialgroupd)) {
+                        this.getModel().setValue("aos_itemid", bdMaterialgroupd.getLong("itemid"));
                     }
                 }
-                if (FndGlobal.IsNull(aos_cname)) {
+                if (FndGlobal.IsNull(aosCname)) {
                     this.getModel().setValue("aos_itemid", null);
                 }
-
                 refreshLine();
-            } else if (name.equals("aos_itemid")) {
-                aos_egsku_change();
-            } else if (name.equals("aos_detail")) {
+            } else if (AOS_ITEMID.equals(name)) {
+                aosEgskuChange();
+            } else if (AOS_DETAIL.equals(name)) {
                 refreshLine();
-            } else if (name.equals("aos_slogan")) {
+            } else if (AOS_SLOGAN.equals(name)) {
                 int row = this.getModel().getEntryCurrentRowIndex("aos_entryentity");
-                Object aos_slogan = this.getModel().getValue("aos_slogan", row);
-                if (FndGlobal.IsNotNull(aos_slogan))
-                    this.getModel().setValue("aos_width", aos_slogan.toString().length() + "/50", row);
-                else
+                Object aosSlogan = this.getModel().getValue("aos_slogan", row);
+                if (FndGlobal.IsNotNull(aosSlogan)) {
+                    this.getModel().setValue("aos_width", aosSlogan.toString().length() + "/50", row);
+                } else {
                     this.getModel().setValue("aos_width", "0/50", row);
+                }
             }
         } catch (Exception ex) {
             this.getView().showErrorNotification("propertyChanged = " + ex);
         }
     }
 
-    private void aos_egsku_change() {
-        Object aos_egsku = this.getModel().getValue("aos_itemid");
-        if (aos_egsku == null) {
+    private void aosEgskuChange() {
+        Object aosEgsku = this.getModel().getValue("aos_itemid");
+        if (aosEgsku == null) {
             this.getView().setVisible(true, "aos_picture");
             this.getView().setVisible(false, "aos_image");
         } else {
             this.getView().setVisible(false, "aos_picture");
             this.getView().setVisible(true, "aos_image");
-            String item_number = ((DynamicObject)aos_egsku).getString("number");
-            String itemid = ((DynamicObject)aos_egsku).getString("id");
-            String name = ((DynamicObject)aos_egsku).getString("name");
-
-            String url = "https://cls3.s3.amazonaws.com/" + item_number + "/1-1.jpg";
+            String itemNumber = ((DynamicObject)aosEgsku).getString("number");
+            String itemid = ((DynamicObject)aosEgsku).getString("id");
+            String name = ((DynamicObject)aosEgsku).getString("name");
+            String url = "https://cls3.s3.amazonaws.com/" + itemNumber + "/1-1.jpg";
             Image image = this.getControl("aos_image");
             image.setUrl(url);
             this.getModel().setValue("aos_picture", url);
-
             String category = (String)SalUtil.getCategoryByItemId(itemid).get("name");
-            String[] category_group = category.split(",");
-            String AosCategory1 = null;
-            String AosCategory2 = null;
-            String AosCategory3 = null;
-            int category_length = category_group.length;
-            if (category_length > 0)
-                AosCategory1 = category_group[0];
-            if (category_length > 1)
-                AosCategory2 = category_group[1];
-            if (category_length > 2)
-                AosCategory3 = category_group[2];
-
+            String[] categoryGroup = category.split(",");
+            String aosCategory1 = null;
+            String aosCategory2 = null;
+            String aosCategory3 = null;
+            int categoryLength = categoryGroup.length;
+            if (categoryLength > 0) {
+                aosCategory1 = categoryGroup[0];
+            }
+            if (categoryLength > 1) {
+                aosCategory2 = categoryGroup[1];
+            }
+            if (categoryLength > 2) {
+                aosCategory3 = categoryGroup[2];
+            }
             FndMsg.debug(Lang.get());
             if (Lang.get() == Lang.zh_CN) {
                 this.getModel().setValue("aos_cname", name);
                 this.getModel().setValue("aos_itemname", name, 0);
-                this.getModel().setValue("aos_category3", AosCategory3);
-                this.getModel().setValue("aos_category2", AosCategory2);
-                this.getModel().setValue("aos_category1", AosCategory1);
+                this.getModel().setValue("aos_category3", aosCategory3);
+                this.getModel().setValue("aos_category2", aosCategory2);
+                this.getModel().setValue("aos_category1", aosCategory1);
             } else {
                 this.getModel().setValue("aos_itemname_us", name);
-                this.getModel().setValue("aos_category3_us", AosCategory3);
-                this.getModel().setValue("aos_category2_us", AosCategory2);
-                this.getModel().setValue("aos_category1_us", AosCategory1);
+                this.getModel().setValue("aos_category3_us", aosCategory3);
+                this.getModel().setValue("aos_category2_us", aosCategory2);
+                this.getModel().setValue("aos_category1_us", aosCategory1);
             }
             refreshLine();
         }
@@ -522,7 +518,7 @@ public class AosMktSloganBill extends AbstractBillPlugIn {
                 SubmitAppl();
                 break;
             case "翻译":
-                SubmitTrans(dy_main);
+                submitTrans(dy_main);
                 break;
             case "设计":
                 SubmitDesign();
