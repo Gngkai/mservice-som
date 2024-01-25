@@ -4,7 +4,6 @@ import java.util.*;
 
 import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.plugin.AbstractFormPlugin;
-import sal.synciface.imp.AosSalImportPriceTask;
 
 /**
  * @author aosom
@@ -32,7 +31,7 @@ public class AosMktTestForm extends AbstractFormPlugin {
     }
 
     private void aosTest() {
-        AosSalImportPriceTask.doOperate();
+//        AosSalImportPriceTask.doOperate();
     }
 
     public long add(long x) {
