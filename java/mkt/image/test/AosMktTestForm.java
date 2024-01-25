@@ -4,12 +4,13 @@ import java.util.*;
 
 import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.plugin.AbstractFormPlugin;
+import sal.synciface.imp.AosSalImportPriceTask;
 
 /**
  * @author aosom
+ * @version 测试表单插件
  */
-public class aos_mkt_bitest_form extends AbstractFormPlugin {
-
+public class AosMktTestForm extends AbstractFormPlugin {
     private long n = 0;
 
     @Override
@@ -17,7 +18,8 @@ public class aos_mkt_bitest_form extends AbstractFormPlugin {
         super.registerListener(e);
         // 给工具栏加监听事件
         this.addItemClickListeners("aos_toolbarap");
-        this.addItemClickListeners("aos_test"); // 提交
+        // 提交
+        this.addItemClickListeners("aos_test");
     }
 
     @Override
@@ -27,10 +29,10 @@ public class aos_mkt_bitest_form extends AbstractFormPlugin {
         if (controlEnum.testControl.name.equals(control)) {
             aosTest();
         }
-
     }
 
     private void aosTest() {
+        AosSalImportPriceTask.doOperate();
     }
 
     public long add(long x) {
@@ -61,5 +63,4 @@ public class aos_mkt_bitest_form extends AbstractFormPlugin {
             this.name = name;
         }
     }
-
 }

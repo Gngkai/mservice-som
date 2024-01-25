@@ -487,8 +487,10 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                 String oriBillNo = dyMain.getString("aos_orignbill");
                 DynamicObject photo = BusinessDataServiceHelper.loadSingle("aos_mkt_photoreq",
                     new QFilter("aos_type", QCP.equals, "视频").and("billno", QCP.equals, oriBillNo).toArray());
-                photo.set("aos_user", photo.get("aos_vedior"));
-                SaveServiceHelper.save(new DynamicObject[] {photo});
+                if (FndGlobal.IsNotNull(photo)) {
+                    photo.set("aos_user", photo.get("aos_vedior"));
+                    SaveServiceHelper.save(new DynamicObject[] {photo});
+                }
             }
 
             // 发送消息
