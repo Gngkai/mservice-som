@@ -45,7 +45,7 @@ import mkt.common.GlobalMessage;
 import mkt.common.MKTCom;
 import mkt.common.otel.MmsOtelUtils;
 import mkt.progress.ProgressUtil;
-import mkt.progress.parameter.errorListing.ErrorListEntity;
+import mkt.progress.parameter.errorlisting.ErrorListEntity;
 
 /**
  * @author aosom

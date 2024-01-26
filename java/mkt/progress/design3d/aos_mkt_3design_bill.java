@@ -29,7 +29,7 @@ import kd.bos.servicehelper.user.UserServiceHelper;
 import common.sal.util.QFBuilder;
 import mkt.common.MKTCom;
 import mkt.progress.ProgressUtil;
-import mkt.progress.iface.iteminfo;
+import mkt.progress.iface.ItemInfoUtil;
 import mkt.progress.photo.AosMktProgPhReqBill;
 import mkt.progress.photo.AosMktRcvBill;
 
@@ -381,8 +381,8 @@ public class aos_mkt_3design_bill extends AbstractBillPlugIn implements ItemClic
             if ("IE".equals(aos_nationalitynumber))
                 continue;
             Object org_id = aos_nationality.get("id"); // ItemId
-            int OsQty = iteminfo.GetItemOsQty(org_id, Item_id);
-            int SafeQty = iteminfo.GetSafeQty(org_id);
+            int OsQty = ItemInfoUtil.getItemOsQty(org_id, Item_id);
+            int SafeQty = ItemInfoUtil.getSafeQty(org_id);
             if ("C".equals(aos_contryentry.getString("aos_contryentrystatus")) && OsQty < SafeQty)
                 continue;
             aos_orgtext = aos_orgtext + aos_nationalitynumber + ";";

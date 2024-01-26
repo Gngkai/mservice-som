@@ -54,7 +54,7 @@ import mkt.common.otel.MmsOtelUtils;
 import mkt.progress.ProgressUtil;
 import mkt.progress.design.AosMktDesignReqBill;
 import mkt.progress.design3d.aos_mkt_3design_bill;
-import mkt.progress.iface.iteminfo;
+import mkt.progress.iface.ItemInfoUtil;
 import mkt.progress.listing.AosMktListingReqBill;
 import mkt.progress.listing.AosMktListingSonBill;
 
@@ -1030,8 +1030,8 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                     continue;
                 }
                 Object orgId = aosNationality.get("id");
-                int osQty = iteminfo.GetItemOsQty(orgId, fid);
-                int safeQty = iteminfo.GetSafeQty(orgId);
+                int osQty = ItemInfoUtil.getItemOsQty(orgId, fid);
+                int safeQty = ItemInfoUtil.getSafeQty(orgId);
                 if ("C".equals(aosContryentry.getString("aos_contryentrystatus")) && osQty < safeQty) {
                     continue;
                 }
@@ -1665,8 +1665,8 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                     continue;
                 }
                 Object orgId = aosNationality.get("id");
-                int osQty = iteminfo.GetItemOsQty(orgId, fid);
-                int safeQty = iteminfo.GetSafeQty(orgId);
+                int osQty = ItemInfoUtil.getItemOsQty(orgId, fid);
+                int safeQty = ItemInfoUtil.getSafeQty(orgId);
                 if ("C".equals(aosContryentry.getString("aos_contryentrystatus")) && osQty < safeQty) {
                     continue;
                 }
@@ -2402,8 +2402,8 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                     continue;
                 }
                 Object orgId = aosNationality.get("id");
-                int osQty = iteminfo.GetItemOsQty(orgId, fid);
-                int safeQty = iteminfo.GetSafeQty(orgId);
+                int osQty = ItemInfoUtil.getItemOsQty(orgId, fid);
+                int safeQty = ItemInfoUtil.getSafeQty(orgId);
                 if ("C".equals(aosContryentry.getString("aos_contryentrystatus")) && osQty < safeQty) {
                     continue;
                 }
@@ -3285,8 +3285,8 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                 continue;
             }
             Object orgId = aosNationality.get("id");
-            int osQty = iteminfo.GetItemOsQty(orgId, itemId);
-            int safeQty = iteminfo.GetSafeQty(orgId);
+            int osQty = ItemInfoUtil.getItemOsQty(orgId, itemId);
+            int safeQty = ItemInfoUtil.getSafeQty(orgId);
             if ("C".equals(aosContryentry.getString("aos_contryentrystatus")) && osQty < safeQty) {
                 continue;
             }

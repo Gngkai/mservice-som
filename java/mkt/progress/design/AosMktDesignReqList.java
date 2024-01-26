@@ -1,4 +1,4 @@
-package mkt.progress.listing;
+package mkt.progress.design;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -8,6 +8,7 @@ import common.Cux_Common_Utl;
 import common.fnd.FndError;
 import common.fnd.FndHistory;
 import common.sal.util.SalUtil;
+import kd.bos.context.RequestContext;
 import kd.bos.dataentity.OperateOption;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.utils.StringUtils;
@@ -23,8 +24,10 @@ import kd.bos.form.events.AfterQueryOfExportEvent;
 import kd.bos.form.events.ClosedCallBackEvent;
 import kd.bos.form.events.SetFilterEvent;
 import kd.bos.list.plugin.AbstractListPlugin;
+import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
+import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.MKTCom;
@@ -34,18 +37,19 @@ import org.apache.commons.collections4.BidiMap;
 
 /**
  * @author aosom
- * @version Listing优化需求表文案-列表插件
  */
-public class AosMktListingSonList extends AbstractListPlugin {
-
-    public final static String BATCH_GIVE = "aos_batchgive";
-    public final static String SUBMIT = "aos_submit";
-    public final static String CLOSE = "aos_showclose";
+public class AosMktDesignReqList extends AbstractListPlugin {
+    public final static String AOS_MKT_DESIGNREQ = "aos_mkt_designreq";
+    public final static String AOS_BATCHGIVE = "aos_batchgive";
+    public final static String AOS_SUBMIT = "aos_submit";
+    public final static String AOS_SHOWCLOSE = "aos_showclose";
     public final static String FORM = "form";
 
     private static void fillExportData(DynamicObject[] dycExport) {
         Map<String, List<String>> mapFill = new HashMap<>(16);
-        mapFill.put("编辑确认", Arrays.asList("aos_design_re", "aos_design_su"));
+        mapFill.put("设计", Arrays.asList("aos_design_re", "aos_design_su"));
+        mapFill.put("设计确认:翻译", Arrays.asList("aos_trans_re", "aos_trans_su"));
+        mapFill.put("设计确认3D", Arrays.asList("aos_3d_re", "aos_3d_su"));
         for (DynamicObject dy : dycExport) {
             String name = dy.getDynamicObjectType().getName();
             String id = dy.getString("id");
@@ -54,24 +58,30 @@ public class AosMktListingSonList extends AbstractListPlugin {
             Map<String, DynamicObject> mapOpDy = pair.getSecond();
             for (Map.Entry<String, List<String>> entry : mapFill.entrySet()) {
                 if (mapOpIndex.containsKey(entry.getKey())) {
-                    dy.set(entry.getValue().get(1), mapOpDy.get(entry.getKey()).get("aos_actiondate"));
-                    if (Cux_Common_Utl.IsNull(dy.get("aos_make"))) {
-                        DynamicObject dyUser = BusinessDataServiceHelper
-                            .loadSingle(mapOpDy.get(entry.getKey()).get("aos_actionby"), "bos_user");
-                        dy.set("aos_make", dyUser);
+                    dy.set(entry.getValue().get(1), mapOpDy.get(entry.getKey()).getDate("aos_actiondate"));
+                    // 如果没有 制作设计师，补上设计节点的提交人
+                    if ("设计".equals(entry.getKey())) {
+                        if (Cux_Common_Utl.IsNull(dy.get("aos_designby"))) {
+                            DynamicObject dyUser = BusinessDataServiceHelper
+                                .loadSingle(mapOpDy.get(entry.getKey()).getString("aos_actionby"), "bos_user");
+                            dy.set("aos_designby", dyUser);
+                        }
+                        if (Cux_Common_Utl.IsNull(dy.get("aos_design_date"))) {
+                            dy.set("aos_design_date", mapOpDy.get(entry.getKey()).getDate("aos_actiondate"));
+                        }
                     }
+                    // 前一个节点
                     // 设计节点的前一个节点
                     int index = mapOpIndex.get(entry.getKey()) - 1;
                     if (mapOpIndex.containsValue(index)) {
                         String key = mapOpIndex.getKey(index);
                         dy.set(entry.getValue().get(0), mapOpDy.get(key).getDate("aos_actiondate"));
-                    } else {
+                    }
+                    // 如果没有前一个节点，则把申请日期作为当前节点的收到日期（即上一个节点的提交日期）
+                    else {
                         dy.set(entry.getValue().get(0), dy.getDate("aos_requiredate"));
                     }
                 }
-            }
-            if (mapOpDy.containsKey("海外确认")) {
-                dy.set("aos_over_su", mapOpDy.get("海外确认").getDate("aos_actiondate"));
             }
         }
     }
@@ -79,7 +89,23 @@ public class AosMktListingSonList extends AbstractListPlugin {
     @Override
     public void setFilter(SetFilterEvent e) {
         List<QFilter> qFilters = e.getQFilters();
-        ParaInfoUtil.setRights(qFilters, this.getPageCache(), "aos_editor");
+        // 判断是否不可见拍照功能图制作
+        QFilter filterCode = new QFilter("aos_code", "=", "aos_mkt_design_photoStatus");
+        QFilter filterValue = new QFilter("aos_value", "=", "1");
+        boolean exists = QueryServiceHelper.exists("aos_sync_params", new QFilter[] {filterCode, filterValue});
+        if (exists) {
+            QFilter filterStatus = new QFilter("aos_status", "!=", "拍照功能图制作");
+            qFilters.add(filterStatus);
+        }
+        long currUserId = RequestContext.get().getCurrUserId();
+        // 是销售
+        if (ProgressUtil.JudgeSaleUser(currUserId, ProgressUtil.Dapartment.Sale.getNumber())) {
+            ParaInfoUtil.setRights(qFilters, this.getPageCache(), AOS_MKT_DESIGNREQ);
+        }
+        // 不是销售
+        else {
+            ParaInfoUtil.setRightsForDesign(qFilters, this.getPageCache());
+        }
     }
 
     @Override
@@ -87,12 +113,13 @@ public class AosMktListingSonList extends AbstractListPlugin {
         super.itemClick(evt);
         String itemKey = evt.getItemKey();
         try {
-            if (BATCH_GIVE.equals(itemKey)) {
-                // 批量转办
-                aosOpen();
-            } else if (SUBMIT.equals(itemKey)) {
-                aosSubmit();
-            } else if (CLOSE.equals(itemKey)) {
+            if (AOS_BATCHGIVE.equals(itemKey)) {
+                aosOpen();// 批量转办
+            } else if (AOS_SUBMIT.equals(itemKey)) {
+                {
+                    aosSubmit();
+                }
+            } else if (AOS_SHOWCLOSE.equals(itemKey)) {
                 // 查询关闭流程
                 ParaInfoUtil.showClose(this.getView());
             }
@@ -103,7 +130,6 @@ public class AosMktListingSonList extends AbstractListPlugin {
         }
     }
 
-    /** 批量提交 **/
     private void aosSubmit() {
         try {
             ListSelectedRowCollection selectedRows = this.getSelectedRows();
@@ -157,30 +183,44 @@ public class AosMktListingSonList extends AbstractListPlugin {
             getSelectedRows().stream().map(ListSelectedRow::getPrimaryKeyValue).distinct().collect(Collectors.toList());
         Object currentUserId = UserServiceHelper.getCurrentUserId();
         Object currentUserName = UserServiceHelper.getUserInfoByID((long)currentUserId).get("name");
+        QFilter filter = new QFilter("aos_user.id", QCP.equals, currentUserId);
+        // 判断是否有转办权限
+        QFilter filter2 = new QFilter("aos_give", QCP.equals, true);
+        boolean exists = QueryServiceHelper.exists("aos_mkt_userights", new QFilter[] {filter, filter2});
         for (Object o : list) {
             String id = o.toString();
-            DynamicObject aosMktListingSon = BusinessDataServiceHelper.loadSingle(id, "aos_mkt_listing_son");
-            String aosUserold = aosMktListingSon.getDynamicObject("aos_user").getPkValue().toString();
-            String billno = aosMktListingSon.getString("billno");
-            if (!(String.valueOf(currentUserId)).equals(aosUserold)) {
+            DynamicObject aosMktDesignreq = BusinessDataServiceHelper.loadSingle(id, "aos_mkt_designreq");
+            String aosUserold = aosMktDesignreq.getDynamicObject("aos_user").getPkValue().toString();
+            String billno = aosMktDesignreq.getString("billno");
+            String aosStatus = aosMktDesignreq.getString("aos_status");
+            if (!(String.valueOf(currentUserId)).equals(aosUserold) && !exists) {
                 this.getView().showTipNotification(billno + "只允许转办自己的单据!");
                 return;
             }
-			aosMktListingSon.set("aos_user", aosUser);
-            AosMktListingSonBill.setListSonUserOrganizate(aosMktListingSon);
-            OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_listing_son",
-                new DynamicObject[] {aosMktListingSon}, OperateOption.create());
-            MKTCom.SendGlobalMessage(String.valueOf(((DynamicObject)aosUser).getPkValue()), "aos_mkt_listing_son",
-                String.valueOf(operationrst.getSuccessPkIds().get(0)), billno, currentUserName + "流程转办!");
+            aosMktDesignreq.set("aos_user", aosUser);
+            aosMktDesignreq.set("aos_designby", aosUser);
+            // 设计节点转办时 将设计调整为 转办操作人
+            if ("设计".equals(aosStatus)) {
+                aosMktDesignreq.set("aos_designer", aosUser);
+            }
+            OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_designreq",
+                new DynamicObject[] {aosMktDesignreq}, OperateOption.create());
+            MKTCom.SendGlobalMessage(String.valueOf(((DynamicObject)aosUser).getPkValue()),
+                String.valueOf(aosMktDesignreq), String.valueOf(operationrst.getSuccessPkIds().get(0)), billno,
+                currentUserName + "流程转办!");
             FndHistory fndHistory = new FndHistory();
             fndHistory.SetActionBy(currentUserId);
-            fndHistory.SetFormId("aos_mkt_listing_son");
+            fndHistory.SetFormId("aos_mkt_designreq");
             fndHistory.SetSourceId(id);
+            // 操作动作
             fndHistory.SetActionCode("流程转办");
+            // 操作备注
             fndHistory.SetDesc(currentUserName + "流程转办!");
+            // 插入历史记录;
             Cux_Common_Utl.History(fndHistory);
         }
         this.getView().showSuccessNotification("转办成功");
+        // 刷新列表
         this.getView().invokeOperation("refresh");
     }
 

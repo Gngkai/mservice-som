@@ -25,7 +25,7 @@ import mkt.common.MKTCom;
 import mkt.common.MKTS3PIC;
 import mkt.progress.ProgressUtil;
 import mkt.progress.design.AosMktDesignReqBill;
-import mkt.progress.iface.iteminfo;
+import mkt.progress.iface.ItemInfoUtil;
 
 /**
  * @author aosom
@@ -219,8 +219,8 @@ public class AosMktPsListBill extends AbstractBillPlugIn implements ItemClickLis
                 continue;
             }
             Object orgId = aosNationality.get("id");
-            int osQty = iteminfo.GetItemOsQty(orgId, itemId);
-            int safeQty = iteminfo.GetSafeQty(orgId);
+            int osQty = ItemInfoUtil.getItemOsQty(orgId, itemId);
+            int safeQty = ItemInfoUtil.getSafeQty(orgId);
             if ("C".equals(aosContryentry.getString("aos_contryentrystatus")) && osQty < safeQty) {
                 continue;
             }

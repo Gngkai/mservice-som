@@ -27,7 +27,7 @@ import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.MKTCom;
 import mkt.progress.ProgressUtil;
-import mkt.progress.iface.parainfo;
+import mkt.progress.iface.ParaInfoUtil;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -90,7 +90,7 @@ public class AosMktProgPhReqList extends AbstractListPlugin {
         // 非布景师
         if (!ProgressUtil.JudeMaster()) {
             String[] viewPermiss = new String[] {"aos_whiteph", "aos_actph", "aos_vedior",};
-            parainfo.setRights(qFilters, this.getPageCache(), "aos_mkt_photoreq", viewPermiss);
+            ParaInfoUtil.setRights(qFilters, this.getPageCache(), "aos_mkt_photoreq", viewPermiss);
         }
         IPageCache pageCache = this.getPageCache();
         if (FndGlobal.IsNotNull(pageCache.get(KEY_ITEM))) {

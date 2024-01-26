@@ -19,7 +19,7 @@ import kd.bos.form.events.SetFilterEvent;
 import kd.bos.list.plugin.AbstractListPlugin;
 import kd.bos.orm.query.QFilter;
 import mkt.progress.ProgressUtil;
-import mkt.progress.iface.parainfo;
+import mkt.progress.iface.ParaInfoUtil;
 
 /**
  * @author aosom
@@ -36,7 +36,7 @@ public class AosMktListingReqList extends AbstractListPlugin {
     @Override
     public void setFilter(SetFilterEvent e) {
         List<QFilter> qFilters = e.getQFilters();
-        parainfo.setRights(qFilters, this.getPageCache(), AOS_MKT_LISTING_REQ);
+        ParaInfoUtil.setRights(qFilters, this.getPageCache(), AOS_MKT_LISTING_REQ);
         IPageCache pageCache = this.getPageCache();
         if (FndGlobal.IsNotNull(pageCache.get(KEY_CATE))) {
             String items = pageCache.get(KEY_CATE);
@@ -55,7 +55,7 @@ public class AosMktListingReqList extends AbstractListPlugin {
         String itemKey = evt.getItemKey();
         try {
             if (SHOWCLOSE.equals(itemKey)) {
-                parainfo.showClose(this.getView());
+                ParaInfoUtil.showClose(this.getView());
             } else if (SUBMIT.equals(itemKey)) {
                 aosSubmit();
             } else if (FINDCATE.equals(itemKey)) {

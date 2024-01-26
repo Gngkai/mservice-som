@@ -13,7 +13,7 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.attachment.AttachmentFieldServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
-import mkt.progress.iface.iteminfo;
+import mkt.progress.iface.ItemInfoUtil;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
@@ -70,8 +70,8 @@ public class utils {
             if ("IE".equals(aos_nationalitynumber))
                 continue;
             Object org_id = aos_nationality.get("id"); // ItemId
-            int OsQty = iteminfo.GetItemOsQty(org_id, bd_material.get("id"));
-            int SafeQty = iteminfo.GetSafeQty(org_id);
+            int OsQty = ItemInfoUtil.getItemOsQty(org_id, bd_material.get("id"));
+            int SafeQty = ItemInfoUtil.getSafeQty(org_id);
             //终止、小于安全库存
             if ("C".equals(aos_contryentry.getString("aos_contryentrystatus")) && OsQty < SafeQty)
                 continue;

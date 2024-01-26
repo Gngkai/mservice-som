@@ -39,7 +39,7 @@ import mkt.common.MKTCom;
 import mkt.common.otel.MmsOtelUtils;
 import mkt.progress.ProgressUtil;
 import mkt.progress.design3d.aos_mkt_3design_bill;
-import mkt.progress.iface.iteminfo;
+import mkt.progress.iface.ItemInfoUtil;
 
 /**
  * @author aosom
@@ -81,7 +81,7 @@ public class AosMktRcvBill extends AbstractBillPlugIn implements ItemClickListen
                 throw new FndError("物料为空，获取数据异常");
             }
             // 供应商id
-            long verder = iteminfo.QueryVendorIdByName(dyItem.getPkValue(), aosVendor.toString());
+            long verder = ItemInfoUtil.queryVendorIdByName(dyItem.getPkValue(), aosVendor.toString());
             // 获取跟单
             QFilter filterId = new QFilter("id", "=", verder);
             DynamicObject dy = QueryServiceHelper.queryOne("bd_supplier", "aos_documentary", new QFilter[] {filterId});
