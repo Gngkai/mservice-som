@@ -1,4 +1,4 @@
-package mkt.progress.design.functDiagram;
+package mkt.progress.design.functdiagram;
 
 import common.fnd.FndGlobal;
 import kd.bos.dataentity.entity.DynamicObject;
@@ -11,7 +11,7 @@ import kd.bos.form.plugin.AbstractFormPlugin;
  * @date 2023/7/20 14:32
  * @action 敏感词参数表界面
  */
-public class sensitiveForm extends AbstractFormPlugin {
+public class SensitiveForm extends AbstractFormPlugin {
     @Override
     public void propertyChanged(PropertyChangedArgs e) {
         String name = e.getProperty().getName();

@@ -1,4 +1,4 @@
-package mkt.progress.design.functDiagram;
+package mkt.progress.design.functdiagram;
 
 import common.Cux_Common_Utl;
 import common.fnd.FndGlobal;
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
  * @date 2023/4/21 13:41
  * @action
  */
-public class functTranslateForm extends AbstractFormPlugin {
+public class FunctTranslateForm extends AbstractFormPlugin {
     @Override
     public void afterBindData(EventObject e) {
         super.afterBindData(e);
