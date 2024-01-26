@@ -22,9 +22,9 @@ import common.sal.util.QFBuilder;
 import mkt.common.MKTCom;
 import mkt.progress.design.AosMktDesignReqBill;
 import mkt.progress.design.AosMktSloganBill;
-import mkt.progress.design.aadd.aos_mkt_aadd_bill;
+import mkt.progress.design.aadd.AosMktAaddBill;
 import mkt.progress.design3d.aos_mkt_3design_bill;
-import mkt.progress.iface.iteminfo;
+import mkt.progress.iface.ItemInfoUtil;
 import mkt.progress.listing.AosMktListingMinBill;
 import mkt.progress.listing.AosMktListingReqBill;
 import mkt.progress.listing.AosMktListingSonBill;
@@ -118,7 +118,7 @@ public class ProgressUtil {
 					else if (billFormId.equals("aos_mkt_photoreq"))
 						new AosMktProgPhReqBill().aosSubmit(dy_main, "B");
 					else if (billFormId.equals("aos_mkt_aadd"))
-						new aos_mkt_aadd_bill().aosSubmit(dy_main, "B");
+						new AosMktAaddBill().aosSubmit(dy_main, "B");
 					else if (billFormId.equals("aos_mkt_slogan"))
 						new AosMktSloganBill().aos_submit(dy_main, "B");
 				}
@@ -437,12 +437,12 @@ public class ProgressUtil {
 			if ("IE".equals(aos_nationalitynumber))
 				continue;
 			Object org_id = aos_nationality.get("id"); // ItemId
-			int OsQty = iteminfo.GetItemOsQty(org_id, itemID); // 海外库存
+			int OsQty = ItemInfoUtil.getItemOsQty(org_id, itemID); // 海外库存
 			int onQty = CommonDataSomQuo.get_on_hand_qty(Long.valueOf(org_id.toString()),
 					Long.valueOf(itemID.toString()));
 			OsQty += onQty;
 
-			int SafeQty = iteminfo.GetSafeQty(org_id);
+			int SafeQty = ItemInfoUtil.getSafeQty(org_id);
 			// 当SKU终止，且海外在途+海外库存＜安全库存，且首次入库日期为空时，则自动去掉对应下单国别
 			if ("C".equals(aos_contryentry.getString("aos_contryentrystatus")) && OsQty < SafeQty
 					&& Cux_Common_Utl.IsNull(aos_contryentry.get("aos_firstindate")))

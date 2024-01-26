@@ -21,7 +21,7 @@ import kd.bos.servicehelper.operation.SaveServiceHelper;
 import mkt.common.MKTCom;
 import mkt.common.MKTS3PIC;
 import mkt.progress.ProgressUtil;
-import mkt.progress.iface.iteminfo;
+import mkt.progress.iface.ItemInfoUtil;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -192,8 +192,8 @@ public class AosMktSyncCreateDesignTask extends AbstractTask {
                 continue;
             }
             Object orgId = aosNationality.get("id");
-            int osQty = iteminfo.GetItemOsQty(orgId, aosItem);
-            int safeQty = iteminfo.GetSafeQty(orgId);
+            int osQty = ItemInfoUtil.getItemOsQty(orgId, aosItem);
+            int safeQty = ItemInfoUtil.getSafeQty(orgId);
             int onQty = CommonDataSomQuo.get_on_hand_qty(Long.parseLong(orgId.toString()), Long.parseLong(aosItem));
             osQty += onQty;
             // 安全库存 海外库存

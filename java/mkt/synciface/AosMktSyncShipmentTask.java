@@ -12,7 +12,7 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import mkt.common.MKTCom;
 import mkt.progress.ProgressUtil;
-import mkt.progress.iface.iteminfo;
+import mkt.progress.iface.ItemInfoUtil;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -140,7 +140,7 @@ public class AosMktSyncShipmentTask extends AbstractTask {
                     Object aosPonumber = dyReq.get("aos_ponumber");
                     logRow.add(aosPonumber + " ");
                     Date shipDate = null, overseasdate = null;
-                    DynamicObjectCollection dyc = iteminfo.GetShipDate(item, aosPonumber, "aos_overseasdate");
+                    DynamicObjectCollection dyc = ItemInfoUtil.getShipDate(item, aosPonumber, "aos_overseasdate");
                     if (dyc.size() > 0) {
                         shipDate = dyc.get(0).getDate("aos_shipmentdate");
                         overseasdate = dyc.get(0).getDate("aos_overseasdate");

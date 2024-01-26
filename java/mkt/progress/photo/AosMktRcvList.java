@@ -52,7 +52,7 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
-import mkt.progress.iface.parainfo;
+import mkt.progress.iface.ParaInfoUtil;
 
 /**
  * @author aosom
@@ -97,7 +97,7 @@ public class AosMktRcvList extends AbstractListPlugin {
     @Override
     public void setFilter(SetFilterEvent e) {
         List<QFilter> qFilters = e.getQFilters();
-        parainfo.setRights(qFilters, this.getPageCache(), AOS_MKT_RCV);
+        ParaInfoUtil.setRights(qFilters, this.getPageCache(), AOS_MKT_RCV);
     }
 
     @Override

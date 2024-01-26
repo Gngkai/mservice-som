@@ -27,7 +27,7 @@ import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.MKTCom;
 import mkt.progress.ProgressUtil;
-import mkt.progress.iface.parainfo;
+import mkt.progress.iface.ParaInfoUtil;
 import org.apache.commons.collections4.BidiMap;
 
 import java.io.PrintWriter;
@@ -107,7 +107,7 @@ public class AosMktListingMinList extends AbstractListPlugin {
     public void setFilter(SetFilterEvent e) {
         List<QFilter> qFilters = e.getQFilters();
         String[] otherUser = new String[] {"aos_editor", "aos_editormin"};
-        parainfo.setRights(qFilters, this.getPageCache(), AOS_MKT_LISTING_MIN, otherUser);
+        ParaInfoUtil.setRights(qFilters, this.getPageCache(), AOS_MKT_LISTING_MIN, otherUser);
     }
 
     @Override
@@ -122,7 +122,7 @@ public class AosMktListingMinList extends AbstractListPlugin {
                 aosOpen();
             } else if (AOS_SHOWCLOSE.equals(itemKey)) {
                 // 查询关闭流程
-                parainfo.showClose(this.getView());
+                ParaInfoUtil.showClose(this.getView());
             } else if (AOS_CLOSE.equals(itemKey)) {
                 // 批量关闭
                 aosClose();

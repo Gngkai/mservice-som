@@ -47,8 +47,8 @@ import mkt.common.MKTS3PIC;
 import mkt.common.otel.MmsOtelUtils;
 import mkt.progress.ProgressUtil;
 import mkt.progress.design.AosMktDesignReqBill;
-import mkt.progress.iface.iteminfo;
-import mkt.progress.parameter.errorListing.ErrorListEntity;
+import mkt.progress.iface.ItemInfoUtil;
+import mkt.progress.parameter.errorlisting.ErrorListEntity;
 
 /**
  * @author aosom
@@ -832,11 +832,11 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
                     continue;
                 }
                 Object itemOrgId = aosNationality.get("id");
-                int osQty = iteminfo.GetItemOsQty(itemOrgId, aosItemid);
+                int osQty = ItemInfoUtil.getItemOsQty(itemOrgId, aosItemid);
                 int onQty = CommonDataSomQuo.get_on_hand_qty(Long.parseLong(itemOrgId.toString()),
                     Long.parseLong(aosItemid.toString()));
                 osQty += onQty;
-                int safeQty = iteminfo.GetSafeQty(itemOrgId);
+                int safeQty = ItemInfoUtil.getSafeQty(itemOrgId);
                 if ("C".equals(aosContryentry.getString("aos_contryentrystatus")) && osQty < safeQty) {
                     continue;
                 }

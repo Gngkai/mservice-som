@@ -37,7 +37,7 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.progress.ProgressUtil;
-import mkt.progress.iface.parainfo;
+import mkt.progress.iface.ParaInfoUtil;
 import org.apache.commons.collections4.BidiMap;
 
 public class aos_mkt_3design_list extends AbstractListPlugin {
@@ -80,7 +80,7 @@ public class aos_mkt_3design_list extends AbstractListPlugin {
 	@Override
 	public void setFilter(SetFilterEvent e) {
 		List<QFilter> qFilters = e.getQFilters();
-		parainfo.setRights(qFilters, this.getPageCache(), aos_mkt_3design);
+		ParaInfoUtil.setRights(qFilters, this.getPageCache(), aos_mkt_3design);
 	}
 
 	@Override
@@ -93,7 +93,7 @@ public class aos_mkt_3design_list extends AbstractListPlugin {
 			else if (itemKey.equals("aos_submit")) {
 				aos_submit();
 			} else if ("aos_showclose".equals(itemKey))
-				parainfo.showClose(this.getView());// 查询关闭流程
+				ParaInfoUtil.showClose(this.getView());// 查询关闭流程
 			else if ("aos_querysample".equals(itemKey))
 				querySample();// 查看封样图片
 		} catch (FndError error) {

@@ -47,7 +47,7 @@ import mkt.common.MKTS3PIC;
 import mkt.common.otel.MmsOtelUtils;
 import mkt.progress.ProgressUtil;
 import mkt.progress.design.AosMktDesignReqBill;
-import mkt.progress.iface.iteminfo;
+import mkt.progress.iface.ItemInfoUtil;
 
 /**
  * @author aosom
@@ -513,8 +513,8 @@ public class AosMktListingReqBill extends AbstractBillPlugIn
                 }
 
                 Object orgId = aosNationality.get("id");
-                int osQty = iteminfo.GetItemOsQty(orgId, itemId);
-                int safeQty = iteminfo.GetSafeQty(orgId);
+                int osQty = ItemInfoUtil.getItemOsQty(orgId, itemId);
+                int safeQty = ItemInfoUtil.getSafeQty(orgId);
                 // 安全库存 海外库存
                 if ("C".equals(aosContryentry.getString("aos_contryentrystatus")) && osQty < safeQty) {
                     continue;
@@ -692,8 +692,8 @@ public class AosMktListingReqBill extends AbstractBillPlugIn
                     continue;
                 }
                 Object orgId = aosNationality.get("id");
-                int osQty = iteminfo.GetItemOsQty(orgId, itemId);
-                int safeQty = iteminfo.GetSafeQty(orgId);
+                int osQty = ItemInfoUtil.getItemOsQty(orgId, itemId);
+                int safeQty = ItemInfoUtil.getSafeQty(orgId);
                 // 终止、小于安全库存
                 if ("C".equals(aosContryentry.getString("aos_contryentrystatus")) && osQty < safeQty) {
                     continue;

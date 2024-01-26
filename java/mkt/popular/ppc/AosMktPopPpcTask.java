@@ -49,7 +49,7 @@ import mkt.common.MKTCom;
 import mkt.common.aos_mkt_common_redis;
 import mkt.popular.AosMktPopUtil;
 import mkt.popular.sale.AosMktPopAddTask;
-import mkt.progress.iface.iteminfo;
+import mkt.progress.iface.ItemInfoUtil;
 
 /**
  * @author aosom
@@ -211,7 +211,7 @@ public class AosMktPopPpcTask extends AbstractTask {
             // 获取传入参数 国别
             Object orgId = FndGlobal.get_import_id(pOuCode, "bd_country");
             // 国别安全库存
-            int safeQty = iteminfo.GetSafeQty(orgId);
+            int safeQty = ItemInfoUtil.getSafeQty(orgId);
             // 获取当前日期
             Calendar date = Calendar.getInstance();
             date.set(Calendar.HOUR_OF_DAY, 0);

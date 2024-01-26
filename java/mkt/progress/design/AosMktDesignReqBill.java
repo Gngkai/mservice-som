@@ -44,13 +44,13 @@ import mkt.common.MKTCom;
 import mkt.common.MKTS3PIC;
 import mkt.common.otel.MmsOtelUtils;
 import mkt.progress.ProgressUtil;
-import mkt.progress.design.aadd.aos_mkt_aadd_bill;
+import mkt.progress.design.aadd.AosMktAaddBill;
 import mkt.progress.design3d.DesignSkuList;
 import mkt.progress.design3d.aos_mkt_3design_bill;
-import mkt.progress.iface.iteminfo;
-import mkt.progress.iface.parainfo;
+import mkt.progress.iface.ItemInfoUtil;
+import mkt.progress.iface.ParaInfoUtil;
 import mkt.progress.listing.AosMktListingSonBill;
-import mkt.progress.parameter.errorListing.ErrorListEntity;
+import mkt.progress.parameter.errorlisting.ErrorListEntity;
 
 /**
  * @author aosom
@@ -763,9 +763,9 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                                                 .toArray());
                                 // 存在英语国别制作完成 到05节点 不存在 到04节点
                                 if (exists3) {
-                                    aos_mkt_aadd_bill.generateAddFromDesign(aosItemid, org, "EN_05");
+                                    AosMktAaddBill.generateAddFromDesign(aosItemid, org, "EN_05");
                                 } else {
-                                    aos_mkt_aadd_bill.generateAddFromDesign(aosItemid, org, "EN_04");
+                                    AosMktAaddBill.generateAddFromDesign(aosItemid, org, "EN_04");
                                 }
                             } else if ("DE,FR,IT,ES".contains(org)) {
                                 // 判断同产品号是否有小语种国别制作完成
@@ -777,9 +777,9 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                                             .toArray());
                                 // 存在小语种国别制作完成 到04节点 不存在 到02节点
                                 if (exists3) {
-                                    aos_mkt_aadd_bill.generateAddFromDesign(aosItemid, org, "SM_04");
+                                    AosMktAaddBill.generateAddFromDesign(aosItemid, org, "SM_04");
                                 } else {
-                                    aos_mkt_aadd_bill.generateAddFromDesign(aosItemid, org, "SM_02");
+                                    AosMktAaddBill.generateAddFromDesign(aosItemid, org, "SM_02");
                                 }
                             }
                         }
@@ -1025,7 +1025,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
             String messageId;
             String message;
             // 数据层
-            Object aosDesignerId = parainfo.dynFormat(dyMain.get("aos_designer"));
+            Object aosDesignerId = ParaInfoUtil.dynFormat(dyMain.get("aos_designer"));
             Object billno = dyMain.get("billno");
             Object reqFid = dyMain.getPkValue();
             // 任务类型
@@ -1035,7 +1035,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
             // 紧急程度
             Object aosImportance = dyMain.get("aos_importance");
             // 设计需求表申请人
-            Object aosRequireby = parainfo.dynFormat(dyMain.get("aos_requireby"));
+            Object aosRequireby = ParaInfoUtil.dynFormat(dyMain.get("aos_requireby"));
             List<DynamicObject> mapList = Cux_Common_Utl.GetUserOrg(aosRequireby);
             Object lastItemId = null;
             Object lastOrgNumber = null;
@@ -1216,7 +1216,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
             // 紧急程度
             Object aosImportance = dyMain.get("aos_importance");
             // 国别
-            Object aosOrgid = parainfo.dynFormat(dyMain.get("aos_orgid"));
+            Object aosOrgid = ParaInfoUtil.dynFormat(dyMain.get("aos_orgid"));
 
             Boolean aos3d = null;
             // 循环创建
@@ -2204,8 +2204,8 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                     continue;
                 }
                 Object orgId = aosNationality.get("id");
-                int osQty = iteminfo.GetItemOsQty(orgId, fid);
-                int safeQty = iteminfo.GetSafeQty(orgId);
+                int osQty = ItemInfoUtil.getItemOsQty(orgId, fid);
+                int safeQty = ItemInfoUtil.getSafeQty(orgId);
                 // 安全库存 海外库存
                 if ("C".equals(aosContryentry.getString("aos_contryentrystatus")) && osQty < safeQty) {
                     continue;
