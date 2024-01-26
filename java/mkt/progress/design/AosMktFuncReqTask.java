@@ -24,7 +24,7 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.DBServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import common.sal.util.QFBuilder;
-import mkt.progress.design.functDiagram.functDiagramForm;
+import mkt.progress.design.functdiagram.FunctDiagramBill;
 import mkt.progress.iface.ItemInfoUtil;
 
 /**
@@ -39,8 +39,7 @@ public class AosMktFuncReqTask extends AbstractTask {
     public final static String AOS_CONTRYENTRY = "aos_contryentry";
     public final static String AOS_SUBMATERIALENTRY = "aos_submaterialentry";
     /** 添加图片行 **/
-    static List<String> list_lan = functDiagramForm.list_language;
-
+    static List<String> list_lan = FunctDiagramBill.list_language;
     public static void doOperate() {
         // 获取已存在的产品号
         List<String> createProductNo = generateFuncReq();
