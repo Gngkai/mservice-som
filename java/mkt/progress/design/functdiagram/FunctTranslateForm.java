@@ -16,76 +16,78 @@ import java.util.stream.Collectors;
 
 /**
  * @author create by ?
- * @date 2023/4/21 13:41
- * @action
  */
 public class FunctTranslateForm extends AbstractFormPlugin {
+    private static final String BTNOK = "btnok";
+    private static final String AOS_AADD_MODEL = "aos_aadd_model";
+
     @Override
     public void afterBindData(EventObject e) {
         super.afterBindData(e);
         init();
     }
+
     @Override
     public void registerListener(EventObject e) {
         super.registerListener(e);
         this.addClickListeners("btnok");
     }
+
     @Override
     public void click(EventObject evt) {
         super.click(evt);
-        Control source = (Control) evt.getSource();
+        Control source = (Control)evt.getSource();
         String key = source.getKey();
-        if (key.equals("btnok")){
-            Map<String,Object> map_return = new HashMap<>();
-            //翻译源
-            String aos_source = (String) this.getModel().getValue("aos_source");
-            map_return.put("source",aos_source);
-            //翻译端
-            String aos_terminal = (String) this.getModel().getValue("aos_terminal");
-            List<String> list_terminal = Arrays.stream(aos_terminal.split(","))
-                    .filter(value -> !Cux_Common_Utl.IsNull(value))
-                    .filter(value -> !value.equals(aos_source))
-                    .collect(Collectors.toList());
-            map_return.put("terminal",list_terminal);
-            //图片页
-            String aos_table = (String) this.getModel().getValue("aos_table");
-            List<String> list_table = Arrays.stream(aos_table.split(","))
-                    .filter(value -> !Cux_Common_Utl.IsNull(value))
-                    .collect(Collectors.toList());
-            map_return.put("img",list_table);
-            //回传
-            this.getView().returnDataToParent(map_return);
+        if (BTNOK.equals(key)) {
+            Map<String, Object> mapReturn = new HashMap<>(16);
+            // 翻译源
+            String aosSource = (String)this.getModel().getValue("aos_source");
+            mapReturn.put("source", aosSource);
+            // 翻译端
+            String aosTerminal = (String)this.getModel().getValue("aos_terminal");
+            List<String> listTerminal =
+                Arrays.stream(aosTerminal.split(",")).filter(value -> !Cux_Common_Utl.IsNull(value))
+                    .filter(value -> !value.equals(aosSource)).collect(Collectors.toList());
+            mapReturn.put("terminal", listTerminal);
+            // 图片页
+            String aosTable = (String)this.getModel().getValue("aos_table");
+            List<String> listTable = Arrays.stream(aosTable.split(",")).filter(value -> !Cux_Common_Utl.IsNull(value))
+                .collect(Collectors.toList());
+            mapReturn.put("img", listTable);
+            // 回传
+            this.getView().returnDataToParent(mapReturn);
             this.getView().close();
         }
     }
-    private void init(){
+
+    private void init() {
         ComboEdit comboEdit = this.getControl("aos_terminal");
         List<ComboItem> data = new ArrayList<>();
         FormShowParameter formShowParameter = this.getView().getFormShowParameter();
         List<String> userLan = formShowParameter.getCustomParam("userLan");
         for (String lan : userLan) {
-            data.add(new ComboItem(new LocaleString(lan),lan));
+            data.add(new ComboItem(new LocaleString(lan), lan));
         }
         comboEdit.setComboItems(data);
 
         String entityId = getView().getParentView().getEntityId();
-        //高级A+模块 设置模块信息
-        if (entityId.equals("aos_aadd_model")){
+        // 高级A+模块 设置模块信息
+        if (AOS_AADD_MODEL.equals(entityId)) {
             comboEdit = this.getControl("aos_table");
-            DynamicObjectCollection tabEntityRows = this.getView().getParentView().getModel().getDataEntity(true).getDynamicObjectCollection("aos_ent_tab");
+            DynamicObjectCollection tabEntityRows =
+                this.getView().getParentView().getModel().getDataEntity(true).getDynamicObjectCollection("aos_ent_tab");
             data = new ArrayList<>(tabEntityRows.size());
             for (int i = 0; i < tabEntityRows.size(); i++) {
                 DynamicObject row = tabEntityRows.get(i);
                 LocaleString locale = new LocaleString();
-                String tabName =  row.getString("aos_tab");
-                if (FndGlobal.IsNotNull(tabName)){
-                    tabName = tabName+" ( 页签 "+ (i+1) +" )";
-                }
-                else {
-                    tabName = "页签 "+ (i+1) +"";
+                String tabName = row.getString("aos_tab");
+                if (FndGlobal.IsNotNull(tabName)) {
+                    tabName = tabName + " ( 页签 " + (i + 1) + " )";
+                } else {
+                    tabName = "页签 " + (i + 1);
                 }
                 locale.setLocaleValue_zh_CN(tabName);
-                data.add(new ComboItem(locale,String.valueOf(i)));
+                data.add(new ComboItem(locale, String.valueOf(i)));
 
             }
             comboEdit.setComboItems(data);
