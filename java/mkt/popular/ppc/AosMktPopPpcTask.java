@@ -233,7 +233,7 @@ public class AosMktPopPpcTask extends AbstractTask {
             String yester3 = dateFormat.format(date.getTime());
             String aosBillno = "SP" + pOuCode + year + month + day;
             // 如果是 2467 则赋值昨日数据 直接退出
-            Boolean copyFlag = AosMktPopUtil.getCopyFlag("PPC_SP", week);
+            boolean copyFlag = AosMktPopUtil.getCopyFlag("PPC_SP", week);
             if (!copyFlag) {
                 DynamicObject aosMktPopularPpc = BusinessDataServiceHelper.newDynamicObject("aos_mkt_popular_ppc");
                 Calendar calendar = Calendar.getInstance();
