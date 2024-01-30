@@ -26,7 +26,7 @@ import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.threads.ThreadPools;
 import mkt.common.AosMktGenerate;
 import mkt.common.MKTCom;
-import mkt.common.aos_mkt_common_redis;
+import mkt.common.AosMktCacheUtil;
 import org.apache.commons.lang3.SerializationUtils;
 
 import java.math.BigDecimal;
@@ -55,7 +55,7 @@ public class aos_mkt_actselect_init extends AbstractTask {
     private static void executerun() {
         // 初始化数据
         CommonDataSom.init();
-        aos_mkt_common_redis.init_redis("act");
+        AosMktCacheUtil.initRedis("act");
         // 调用线程池
         // long is_oversea_flag = aos_sal_sche_pub.get_lookup_values("AOS_YES_NO", "Y");
         QFilter oversea_flag = new QFilter("aos_isomvalid", "=", "1").or("number", QCP.equals, "IE");// 是否销售国别为是

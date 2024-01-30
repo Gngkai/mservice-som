@@ -34,7 +34,7 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.threads.ThreadPools;
-import mkt.common.aos_mkt_common_redis;
+import mkt.common.AosMktCacheUtil;
 
 /**
  * @author aosom
@@ -414,7 +414,7 @@ public class AosMktPopBudgetpTask extends AbstractTask {
         public void run() {
             try {
                 CommonDataSom.init();
-                aos_mkt_common_redis.init_redis("ppcbudget_p");
+                AosMktCacheUtil.initRedis("ppcbudget_p");
                 doOperate(params);
             } catch (Exception e) {
                 String message = e.toString();

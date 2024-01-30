@@ -21,7 +21,7 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import mkt.common.MKTCom;
-import mkt.common.aos_mkt_common_redis;
+import mkt.common.AosMktCacheUtil;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -561,7 +561,7 @@ public class AosMktPopAddTask extends AbstractTask {
     @Override
     public void execute(RequestContext ctx, Map<String, Object> param) throws KDException {
         CommonDataSom.init();
-        aos_mkt_common_redis.init_redis("ppc");
+        AosMktCacheUtil.initRedis("ppc");
         run();
     }
 }
