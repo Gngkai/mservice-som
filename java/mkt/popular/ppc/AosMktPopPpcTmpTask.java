@@ -38,7 +38,7 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import mkt.common.MKTCom;
-import mkt.common.aos_mkt_common_redis;
+import mkt.common.AosMktCacheUtil;
 
 /**
  * @author aosom
@@ -50,7 +50,7 @@ public class AosMktPopPpcTmpTask extends AbstractTask {
     private static void executerun() {
         // 初始化数据
         CommonDataSom.init();
-        aos_mkt_common_redis.init_redis("ppc");
+        AosMktCacheUtil.initRedis("ppc");
         Calendar today = Calendar.getInstance();
         int hour = today.get(Calendar.HOUR_OF_DAY);
         QFilter qfTime;

@@ -20,7 +20,7 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.MKTCom;
-import mkt.common.aos_mkt_common_redis;
+import mkt.common.AosMktCacheUtil;
 
 /**
  * @author aosom
@@ -60,7 +60,7 @@ public class AosMktPopAdjsList extends AbstractListPlugin {
 
     private void aosInit() {
         CommonDataSom.init();
-        aos_mkt_common_redis.init_redis("ppc");
+        AosMktCacheUtil.initRedis("ppc");
         Map<String, Object> params = new HashMap<>(16);
         params.put("p_ou_code", "UK");
 		AosMktPopAdjsTask.executerun(params);

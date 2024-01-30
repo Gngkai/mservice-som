@@ -46,7 +46,7 @@ import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import mkt.common.MKTCom;
-import mkt.common.aos_mkt_common_redis;
+import mkt.common.AosMktCacheUtil;
 import mkt.popular.AosMktPopUtil;
 import mkt.popular.sale.AosMktPopAddTask;
 import mkt.progress.iface.ItemInfoUtil;
@@ -79,7 +79,7 @@ public class AosMktPopPpcTask extends AbstractTask {
             new QFilter("aos_orgid.number", "=", aosOuCode).and("aos_date", "=", today.getTime()).toArray());
         // 初始化数据
         CommonDataSom.init();
-        aos_mkt_common_redis.init_redis("ppc");
+        AosMktCacheUtil.initRedis("ppc");
         Map<String, Object> params = new HashMap<>(16);
         params.put("p_ou_code", aosOuCode);
         doOperate(params);
@@ -88,7 +88,7 @@ public class AosMktPopPpcTask extends AbstractTask {
     private static void executerun() {
         // 初始化数据
         CommonDataSom.init();
-        aos_mkt_common_redis.init_redis("ppc");
+        AosMktCacheUtil.initRedis("ppc");
 
         Calendar todayCalendar = Calendar.getInstance();
         int hour = todayCalendar.get(Calendar.HOUR_OF_DAY);

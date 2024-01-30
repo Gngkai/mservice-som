@@ -26,7 +26,7 @@ import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import mkt.common.AosMktGenerate;
 import mkt.common.MKTCom;
-import mkt.common.aos_mkt_common_redis;
+import mkt.common.AosMktCacheUtil;
 import mkt.popular.promot.AosMktPopAdjpTask;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -675,7 +675,7 @@ public class AosMktPopAdjsTask extends AbstractTask {
     public void execute(RequestContext ctx, Map<String, Object> param) throws KDException {
         // 初始化数据
         CommonDataSom.init();
-        aos_mkt_common_redis.init_redis("ppc");
+        AosMktCacheUtil.initRedis("ppc");
         QFilter overseaFlag = new QFilter("aos_is_oversea_ou.number", "=", "Y");
         QFilter overseaFlag2 = new QFilter("aos_isomvalid", "=", true);
         QFilter[] filtersOu = new QFilter[] {overseaFlag, overseaFlag2};
