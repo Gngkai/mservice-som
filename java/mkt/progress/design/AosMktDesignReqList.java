@@ -198,7 +198,6 @@ public class AosMktDesignReqList extends AbstractListPlugin {
                 return;
             }
             aosMktDesignreq.set("aos_user", aosUser);
-            aosMktDesignreq.set("aos_designby", aosUser);
             // 设计节点转办时 将设计调整为 转办操作人
             if ("设计".equals(aosStatus)) {
                 aosMktDesignreq.set("aos_designer", aosUser);
