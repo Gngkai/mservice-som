@@ -31,7 +31,7 @@ public class EventsCalendarReport extends AbstractFormPlugin implements HyperLin
     /**子单据*/
     protected static final String SUBENTRY_KEY = "aos_subentryentity";
     protected static final String QUERY_KEY = "aos_query";
-
+    protected static final String EXPORT_KEY = "export";
     @Override
     public void afterDoOperation(AfterDoOperationEventArgs eventArgs) {
         super.afterDoOperation(eventArgs);
@@ -40,6 +40,10 @@ public class EventsCalendarReport extends AbstractFormPlugin implements HyperLin
         if (QUERY_KEY.equals(operateKey)) {
             query();
         }
+        else if (EXPORT_KEY.equals(operateKey)) {
+            export();
+        }
+
     }
 
     @Override
@@ -47,6 +51,17 @@ public class EventsCalendarReport extends AbstractFormPlugin implements HyperLin
         super.registerListener(e);
         SubEntryGrid subEntryGrid = this.getControl(SUBENTRY_KEY);
         subEntryGrid.addHyperClickListener(this);
+    }
+
+    /**
+     * 导出
+     */
+    public void export(){
+        //构建excel
+    }
+
+    public void setExcelData(){
+
     }
 
     /**
