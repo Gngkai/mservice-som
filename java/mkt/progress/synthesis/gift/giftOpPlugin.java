@@ -45,7 +45,7 @@ public class giftOpPlugin extends AbstractOperationServicePlugIn {
      */
     public static void setFeeInfo(DynamicObject [] EntryRows){
         //当前日期
-        LocalDate toDay = LocalDate.parse("2023-10-24");
+        LocalDate toDay = LocalDate.now();
         for (DynamicObject mainEntry : EntryRows) {
             DynamicObject orgEntry = mainEntry.getDynamicObject("aos_org");
             if (orgEntry == null) {
