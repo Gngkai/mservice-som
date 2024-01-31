@@ -38,7 +38,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn implements RowClickE
                 init_category();
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -140,7 +140,7 @@ public class aos_mkt_slogan_bill extends AbstractBillPlugIn implements RowClickE
                 }
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }

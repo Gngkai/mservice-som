@@ -263,12 +263,13 @@ public class FunctDiagramBill extends AbstractBillPlugIn implements HyperLinkCli
         super.afterDoOperation(eventArgs);
         String operateKey = eventArgs.getOperateKey();
         // 增行
-        int entityIndex = Integer.parseInt(operateKey.substring(operateKey.length() - 1));
         if (INSERT.equals(operateKey.substring(0, operateKey.length() - 1))) {
+            int entityIndex = Integer.parseInt(operateKey.substring(operateKey.length() - 1));
             insertEnity(entityIndex);
         }
         // 删行
         else if (DELETEENTRY.equals(operateKey.substring(0, operateKey.length() - 1))) {
+            int entityIndex = Integer.parseInt(operateKey.substring(operateKey.length() - 1));
             deleteEntity(entityIndex);
         }
         // 编辑

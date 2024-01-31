@@ -28,7 +28,7 @@ public class AosMktPointBill extends AbstractBillPlugIn {
                 autoSetCategoryInfo();
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -47,7 +47,7 @@ public class AosMktPointBill extends AbstractBillPlugIn {
                 this.getModel().setValue("aos_user", null);
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -69,7 +69,7 @@ public class AosMktPointBill extends AbstractBillPlugIn {
                                     .and(new QFilter("aos_category2", QCP.equals, aos_category2))
                     });
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             return null;
         } finally {
             MmsOtelUtils.spanClose(span);

@@ -47,7 +47,7 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
         try (Scope ignored = span.makeCurrent()) {
             setItemUrl();
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -79,7 +79,7 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
             }
             this.getView().updateControlMetadata("aos_hyperlinkap", style);
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -105,7 +105,7 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
                 statusControl();
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -122,7 +122,7 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
                 setItemUrl();
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -195,7 +195,7 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
                 statusControl();
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -225,7 +225,7 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
                 control.setBadgeInfo(badgeInfo);
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -296,7 +296,7 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
                 this.getModel().setValue("aos_gw_search", aosGwSearch, index);
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -325,7 +325,7 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
             }
             getView().updateView("aos_entryentity1");
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }

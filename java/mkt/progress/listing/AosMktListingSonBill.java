@@ -103,7 +103,7 @@ public class AosMktListingSonBill extends AbstractBillPlugIn implements ItemClic
             // 添加数据到 改错任务清单
             setErrorList(dyMain);
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -137,7 +137,7 @@ public class AosMktListingSonBill extends AbstractBillPlugIn implements ItemClic
                 }
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -196,7 +196,7 @@ public class AosMktListingSonBill extends AbstractBillPlugIn implements ItemClic
                 }
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -210,7 +210,7 @@ public class AosMktListingSonBill extends AbstractBillPlugIn implements ItemClic
             dyMain.set("aos_make", currentUserId);
             dyMain.set("aos_status", "海外确认");
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -246,7 +246,7 @@ public class AosMktListingSonBill extends AbstractBillPlugIn implements ItemClic
                 SaveServiceHelper.update(new DynamicObject[] {dyDesign});
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -273,7 +273,7 @@ public class AosMktListingSonBill extends AbstractBillPlugIn implements ItemClic
             MKTCom.SendGlobalMessage(messageId, "aos_mkt_listing_son", String.valueOf(reqFid), String.valueOf(billno),
                 message);
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -296,7 +296,7 @@ public class AosMktListingSonBill extends AbstractBillPlugIn implements ItemClic
                 throw fndError;
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -448,7 +448,7 @@ public class AosMktListingSonBill extends AbstractBillPlugIn implements ItemClic
                 generateListingSal(dyMain);
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -1111,10 +1111,8 @@ public class AosMktListingSonBill extends AbstractBillPlugIn implements ItemClic
             }
         } catch (FndError fndMessage) {
             this.getView().showTipNotification(fndMessage.getErrorMessage());
-            MmsOtelUtils.setException(span, fndMessage);
         } catch (Exception ex) {
             this.getView().showErrorNotification(SalUtil.getExceptionStr(ex));
-            MmsOtelUtils.setException(span, ex);
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -1292,7 +1290,7 @@ public class AosMktListingSonBill extends AbstractBillPlugIn implements ItemClic
                 statusControl();// 提交完成后做新的界面状态控制
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -1350,7 +1348,7 @@ public class AosMktListingSonBill extends AbstractBillPlugIn implements ItemClic
                 this.getView().setVisible(false, "aos_close");
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
