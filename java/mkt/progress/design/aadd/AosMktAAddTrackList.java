@@ -14,6 +14,9 @@ import kd.bos.orm.query.QFilter;
  * @version 高级A+进度表-列表插件
  */
 public class AosMktAaddTrackList extends AbstractListPlugin {
+    /**
+     * US111
+     */
     public final static String AOS_US = "aos_us";
     public final static String AOS_CA = "aos_ca";
     public final static String AOS_UK = "aos_uk";
