@@ -23,7 +23,7 @@ import mkt.common.MKTCom;
 import mkt.progress.design.AosMktDesignReqBill;
 import mkt.progress.design.AosMktSloganBill;
 import mkt.progress.design.aadd.AosMktAaddBill;
-import mkt.progress.design3d.aos_mkt_3design_bill;
+import mkt.progress.design3d.AosMkt3DesignBill;
 import mkt.progress.iface.ItemInfoUtil;
 import mkt.progress.listing.AosMktListingMinBill;
 import mkt.progress.listing.AosMktListingReqBill;
@@ -110,7 +110,7 @@ public class ProgressUtil {
 					else if (billFormId.equals("aos_mkt_listing_req")) // 优化需求提交
 						new AosMktListingReqBill().aosSubmit(dy_main, "B");
 					else if (billFormId.equals("aos_mkt_3design")) // 3D产品设计单
-						new aos_mkt_3design_bill().aos_submit(dy_main, "B");
+						new AosMkt3DesignBill().aos_submit(dy_main, "B");
 					else if (billFormId.equals("aos_mkt_designreq")) // 设计需求表
 						new AosMktDesignReqBill().aosSubmit(dy_main, "B");
 					else if (billFormId.equals("aos_mkt_rcv")) // 样品入库通知单

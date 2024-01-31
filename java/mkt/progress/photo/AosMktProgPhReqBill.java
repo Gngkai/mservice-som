@@ -53,7 +53,7 @@ import mkt.common.MKTS3PIC;
 import mkt.common.otel.MmsOtelUtils;
 import mkt.progress.ProgressUtil;
 import mkt.progress.design.AosMktDesignReqBill;
-import mkt.progress.design3d.aos_mkt_3design_bill;
+import mkt.progress.design3d.AosMkt3DesignBill;
 import mkt.progress.iface.ItemInfoUtil;
 import mkt.progress.listing.AosMktListingReqBill;
 import mkt.progress.listing.AosMktListingSonBill;
@@ -748,7 +748,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             if (aos3dflag) {
                 DynamicObject aosMktPhotoreq = BusinessDataServiceHelper.loadSingle(fid, "aos_mkt_photoreq");
                 // 生成3D确认单
-                aos_mkt_3design_bill.Generate3Design(aosMktPhotoreq);
+                AosMkt3DesignBill.generate3Design(aosMktPhotoreq);
                 status = "3D建模";
                 messageStr = "拍照需求表-3D建模";
                 messageId = String.valueOf(((DynamicObject)aos3d).getPkValue());
@@ -824,7 +824,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             if (aos3dflag) {
                 DynamicObject aosMktPhotoreq = BusinessDataServiceHelper.loadSingle(fid, "aos_mkt_photoreq");
                 // 生成3D确认单
-                aos_mkt_3design_bill.Generate3Design(aosMktPhotoreq);
+                AosMkt3DesignBill.generate3Design(aosMktPhotoreq);
                 status = "3D建模";
                 messageStr = "拍照需求表-3D建模";
                 messageId = String.valueOf(((DynamicObject)aos3d).getPkValue());
@@ -3410,7 +3410,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                     nextUser = dy3d.getString("id");
                 }
                 // 生成对应的 3D产品设计单
-                aos_mkt_3design_bill.Generate3Design(getModel().getDataEntity(true));
+                AosMkt3DesignBill.generate3Design(getModel().getDataEntity(true));
             }
             Object aosSourceid = this.getModel().getValue(AOS_SOURCEID);
             Object aosBillno = this.getModel().getValue(BILLNO);

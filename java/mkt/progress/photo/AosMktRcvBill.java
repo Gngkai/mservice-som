@@ -38,7 +38,7 @@ import common.sal.util.QFBuilder;
 import mkt.common.MKTCom;
 import mkt.common.otel.MmsOtelUtils;
 import mkt.progress.ProgressUtil;
-import mkt.progress.design3d.aos_mkt_3design_bill;
+import mkt.progress.design3d.AosMkt3DesignBill;
 import mkt.progress.iface.ItemInfoUtil;
 
 /**
@@ -666,7 +666,7 @@ public class AosMktRcvBill extends AbstractBillPlugIn implements ItemClickListen
             }
             if (need3dFlag) {
                 // 生成3D确认单
-                aos_mkt_3design_bill.Generate3Design(aosMktPhotoreq);
+                AosMkt3DesignBill.generate3Design(aosMktPhotoreq);
             }
             // 发送消息
             if ((boolean)aosPhotoFlag && (boolean)aosVedioFlag) {

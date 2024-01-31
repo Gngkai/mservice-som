@@ -115,7 +115,7 @@ public class aos_mkt_3design_list extends AbstractListPlugin {
 			if (size != 1) {
 				this.getView().showTipNotification("请先选择单条数据查询!");
 			} else {
-				aos_mkt_3design_bill.openSample(this.getView(), selectedRows.get(0).getPrimaryKeyValue());
+				AosMkt3DesignBill.openSample(this.getView(), selectedRows.get(0).getPrimaryKeyValue());
 			}
 		} catch (FndError fndMessage) {
 			this.getView().showTipNotification(fndMessage.getErrorMessage());

@@ -51,6 +51,7 @@ public class AosMktAaddModelForm extends AbstractFormPlugin {
         }
         // 控制语言
         String lan = parentView.getPageCache().get(AosMktAaddModelBill.KEY_USER);
+        @SuppressWarnings("unchecked")
         List<String> users = (List<String>)SerializationUtils.fromJsonStringToList(lan, String.class);
         for (String userLan : users) {
             String field = AosMktAaddModelBill.judgeLan(userLan);

@@ -437,10 +437,7 @@ public class AosMktAaddModelBill extends AbstractBillPlugIn implements RowClickE
             }
             @SuppressWarnings("unchecked")
             Map<String, Object> data = (Map<String, Object>)returnData.get("data");
-            if (!data.containsKey(TAB)) {
-                return;
-            }
-            if (!data.containsKey(LAN)) {
+            if (!data.containsKey(TAB) || !data.containsKey(LAN)) {
                 return;
             }
             @SuppressWarnings("unchecked")
@@ -480,13 +477,7 @@ public class AosMktAaddModelBill extends AbstractBillPlugIn implements RowClickE
                 this.getView().showSuccessNotification("Copy from Success");
             }
         } else if (actionId.equals(TRANS)) {
-            if (returnData.get(IMG) == null) {
-                return;
-            }
-            if (returnData.get(SOURCE) == null) {
-                return;
-            }
-            if (returnData.get(TERMINAL) == null) {
+            if (returnData.get(IMG) == null || returnData.get(SOURCE) == null || returnData.get(TERMINAL) == null) {
                 return;
             }
             // 翻译前的语言

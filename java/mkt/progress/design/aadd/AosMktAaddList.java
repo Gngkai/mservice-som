@@ -38,7 +38,6 @@ import mkt.progress.iface.ParaInfoUtil;
  * @version 高级A+需求单-列表插件
  */
 public class AosMktAaddList extends AbstractListPlugin {
-    public final static String AOS_MKT_LISTING_MIN = "aos_mkt_listing_min";
     public final static String AOS_SHOWCLOSE = "aos_showclose";
     public final static String AOS_SUBMIT = "aos_submit";
     public final static String AOS_BATCHGIVE = "aos_batchgive";
