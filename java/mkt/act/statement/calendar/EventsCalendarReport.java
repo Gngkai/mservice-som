@@ -72,7 +72,7 @@ public class EventsCalendarReport extends AbstractFormPlugin implements HyperLin
      * 导出
      */
     public void export(){
-        //构建excel
+        //构建
         setExcelData();
     }
 
