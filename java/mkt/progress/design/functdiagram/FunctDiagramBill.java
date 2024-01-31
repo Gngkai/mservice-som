@@ -90,7 +90,7 @@ public class FunctDiagramBill extends AbstractBillPlugIn implements HyperLinkCli
      */
     public static Map<String, String> map_transLan;
 
-    public static List<String> sensitiviteFields;
+    public static List<String> sensitiviteFields = new ArrayList<>();
 
     static {
         list_language = Arrays.asList("中文", "EN", "DE", "FR", "IT", "ES", "PT", "RO", "UK", "US", "CA");
