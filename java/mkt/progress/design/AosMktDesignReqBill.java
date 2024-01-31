@@ -46,7 +46,7 @@ import mkt.common.otel.MmsOtelUtils;
 import mkt.progress.ProgressUtil;
 import mkt.progress.design.aadd.AosMktAaddBill;
 import mkt.progress.design3d.DesignSkuList;
-import mkt.progress.design3d.aos_mkt_3design_bill;
+import mkt.progress.design3d.AosMkt3DesignBill;
 import mkt.progress.iface.ItemInfoUtil;
 import mkt.progress.iface.ParaInfoUtil;
 import mkt.progress.listing.AosMktListingSonBill;
@@ -369,7 +369,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                 }
                 message = "设计需求表-3D建模";
                 // 同时创建3D产品设计单
-                aos_mkt_3design_bill.Generate3Design(list3D, dyMain);
+                AosMkt3DesignBill.generate3Design(list3D, dyMain);
             } else if (cond1) {
                 // 2.是否3D建模=否，功能图翻译语种=空，且任务类型=翻译或者四者一致，流程到结束节点 并生成Listing优化销售确认单
                 generateListingSal(dyMain, "A");
