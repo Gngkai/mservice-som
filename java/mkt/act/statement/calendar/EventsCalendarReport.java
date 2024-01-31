@@ -2,19 +2,34 @@ package mkt.act.statement.calendar;
 
 import common.fnd.FndGlobal;
 import common.sal.util.QFBuilder;
+import common.sal.util.SalUtil;
 import kd.bos.bill.BillShowParameter;
+import kd.bos.cache.CacheFactory;
+import kd.bos.cache.TempFileCache;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.form.StyleCss;
 import kd.bos.form.control.Control;
+import kd.bos.form.control.EntryGrid;
 import kd.bos.form.control.SubEntryGrid;
 import kd.bos.form.events.AfterDoOperationEventArgs;
 import kd.bos.form.events.HyperLinkClickEvent;
 import kd.bos.form.events.HyperLinkClickListener;
+import kd.bos.form.field.FieldEdit;
 import kd.bos.form.plugin.AbstractFormPlugin;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.QueryServiceHelper;
+import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -58,10 +73,101 @@ public class EventsCalendarReport extends AbstractFormPlugin implements HyperLin
      */
     public void export(){
         //构建excel
+        setExcelData();
     }
 
     public void setExcelData(){
+        // 创建excel工作簿
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        // 创建工作表sheet
+        XSSFSheet sheet = workbook.createSheet();
+        sheet.setDefaultColumnWidth(15);
+        //创建父标题
+        EntryGrid entry = this.getControl(ENTRY_KEY);// 单据体
+        List<FieldEdit> s1 = entry.getFieldEdits();
+        List<String> list_key = new ArrayList<>(); // 标识
+        List<String> list_name = new ArrayList<>(); // name
+        for (FieldEdit fiel : s1) {
+            list_key.add(fiel.getKey());
+            list_name.add(fiel.getProperty().getDisplayName().toString());
+        }
+        //下拉框对应的数据
+        BidiMap<String, String> comboMapValue = SalUtil.getComboMapValue("aos_act_select_plan", "aos_seasonattr");
+        BidiMap<String, String> typeMap = SalUtil.getComboMapValue("aos_base_stitem", "aos_type");
 
+        DynamicObjectCollection entryRows = this.getModel().getDataEntity(true).getDynamicObjectCollection(ENTRY_KEY);
+        // 设置标题行
+        XSSFRow headRow = sheet.createRow(0);
+        for (int i = 0; i < list_name.size(); i++) {
+            XSSFCell cell = headRow.createCell(i);
+            cell.setCellValue(list_name.get(i));
+        }
+        // 设置子单据标题行
+        XSSFCell cell = headRow.createCell(list_name.size());
+        cell.setCellValue("店铺");
+        cell = headRow.createCell(list_name.size()+1);
+        cell.setCellValue("活动类型");
+
+        // 设置数据行
+        for (DynamicObject dy : entryRows) {
+            for (DynamicObject subRow : dy.getDynamicObjectCollection(SUBENTRY_KEY)) {
+                XSSFRow dateRow = sheet.createRow(sheet.getLastRowNum() + 1);
+                for (String key : list_key) {
+                    if (key.equals("aos_seasonattr")) {
+                        cell = dateRow.createCell(list_key.indexOf(key));
+                        if (FndGlobal.IsNotNull(dy.getString(key))){
+                            cell.setCellValue(comboMapValue.get(dy.getString(key)));
+                        }
+                    }
+                    else if (key.equals("aos_type")){
+                        cell = dateRow.createCell(list_key.indexOf(key));
+                        String value = dy.getString(key);
+                        if (FndGlobal.IsNotNull(value)){
+                            cell.setCellValue(typeMap.get(value));
+                        }
+                    }
+                    else {
+                        cell = dateRow.createCell(list_key.indexOf(key));
+                        cell.setCellValue(dy.getString(key));
+                    }
+                }
+                dateRow.createCell(list_key.size()).setCellValue(subRow.getString("aos_shop"));
+                dateRow.createCell(list_key.size()+1).setCellValue(subRow.getString("aos_act_type"));
+            }
+        }
+        // 下载
+        downloadXSSFWorkbook(workbook,"活动日历报表");
+    }
+
+    private  void downloadXSSFWorkbook(XSSFWorkbook workbook, String fileName) {
+        ByteArrayOutputStream outputStream = null;
+        InputStream inputStream = null;
+        try {
+            TempFileCache tempfile = CacheFactory.getCommonCacheFactory().getTempFileCache();
+            int timeout = 60 * 10;// 超时时间10分钟
+            outputStream = new ByteArrayOutputStream();
+            workbook.write(outputStream);
+            inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+            String url = tempfile.saveAsUrl(
+                    "引出数据_" + fileName + "_" + DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss") + ".xlsx",
+                    inputStream, timeout);
+            this.getView().download(url);
+        } catch (IOException e) {
+            this.getView().showTipNotification(SalUtil.getExceptionStr(e));
+            e.printStackTrace();
+        } finally {
+            try {
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+            } catch (IOException e) {
+                this.getView().showTipNotification(SalUtil.getExceptionStr(e));
+                e.printStackTrace();
+            }
+        }
     }
 
     /**
