@@ -75,7 +75,7 @@ public class AosMktPopBudgetpForm extends AbstractFormPlugin implements ItemClic
                 aosConfirm();
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -97,7 +97,7 @@ public class AosMktPopBudgetpForm extends AbstractFormPlugin implements ItemClic
             this.getView().setEnable(false, "aos_save");
             this.getView().setEnable(false, "aos_confirm");
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -140,7 +140,7 @@ public class AosMktPopBudgetpForm extends AbstractFormPlugin implements ItemClic
             this.getModel().setValue("aos_currentbid", todayAmt, 0);
             this.getView().showSuccessNotification("保存成功!");
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -173,7 +173,7 @@ public class AosMktPopBudgetpForm extends AbstractFormPlugin implements ItemClic
             }
             this.getView().showSuccessNotification("应用成功!");
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -261,7 +261,7 @@ public class AosMktPopBudgetpForm extends AbstractFormPlugin implements ItemClic
             arrQ.add(filterDesc);
             initData(arrQ);
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -339,7 +339,7 @@ public class AosMktPopBudgetpForm extends AbstractFormPlugin implements ItemClic
             BigDecimal todayAmt = getTodayAmt();
             this.getModel().setValue("aos_currentbid", todayAmt, 0);
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }

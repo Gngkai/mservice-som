@@ -81,7 +81,7 @@ public class AosMktListingReqBill extends AbstractBillPlugIn
                 throw new FndError(errorMessage);
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -134,7 +134,7 @@ public class AosMktListingReqBill extends AbstractBillPlugIn
             dyMain.set("aos_status", "已完成");
             dyMain.set("aos_user", SYSTEM);
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -832,7 +832,7 @@ public class AosMktListingReqBill extends AbstractBillPlugIn
                 dyEnt.set("aos_category1", split[0]);
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -879,10 +879,8 @@ public class AosMktListingReqBill extends AbstractBillPlugIn
             }
         } catch (FndError fndError) {
             fndError.show(getView(), FndWebHook.urlMms);
-            MmsOtelUtils.setException(span, fndError);
         } catch (Exception ex) {
             FndError.showex(getView(), ex, FndWebHook.urlMms);
-            MmsOtelUtils.setException(span, ex);
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -1206,7 +1204,7 @@ public class AosMktListingReqBill extends AbstractBillPlugIn
             }
 
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -1248,7 +1246,7 @@ public class AosMktListingReqBill extends AbstractBillPlugIn
                 this.getView().setVisible(false, "aos_refresh");
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);

@@ -145,7 +145,6 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
             setUser(dyMain);
             setErrorList(dyMain);
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -179,7 +178,6 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                 }
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -235,7 +233,6 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                 }
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -271,7 +268,6 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
             MKTCom.SendGlobalMessage(messageId, AOS_MKT_DESIGNREQ, String.valueOf(fid), String.valueOf(aosBillno),
                 "设计需求表-设计节点");
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -500,7 +496,6 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                 GlobalMessage.SendMessage(aosBillno + "-设计需求单据待申请人确认", messageId);
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -542,7 +537,6 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
             MKTCom.SendGlobalMessage(messageId, AOS_MKT_DESIGNREQ, String.valueOf(fid), String.valueOf(aosBillno),
                 message);
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -615,7 +609,6 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
             MKTCom.SendGlobalMessage(messageId, AOS_MKT_DESIGNREQ, String.valueOf(fid), String.valueOf(aosBillno),
                 message);
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -677,7 +670,6 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
             MKTCom.SendGlobalMessage(messageId, AOS_MKT_DESIGNREQ, String.valueOf(fid), String.valueOf(aosBillno),
                 message);
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -715,7 +707,6 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
             MKTCom.SendGlobalMessage(messageId, AOS_MKT_DESIGNREQ, String.valueOf(fid), String.valueOf(aosBillno),
                 message);
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -819,7 +810,6 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
             dyMain.set("aos_status", "结束");
             dyMain.set("aos_user", SYSTEM);
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -1008,7 +998,6 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
             }
             return aosEditor;
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -1186,7 +1175,6 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                 FndHistory.Create(aosMktListingMin, "来源-设计需求表", dyMain.getString("billno"));
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -1402,9 +1390,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                     FndHistory.Create(aosMktDesigncmp, "来源-设计需求表", dyMain.getString("billno"));
                 }
             }
-
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -1643,7 +1629,6 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                 }
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -1860,7 +1845,6 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                 }
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -1945,10 +1929,8 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
             }
         } catch (FndError fndError) {
             this.getView().showTipNotification(fndError.getErrorMessage());
-            MmsOtelUtils.setException(span, fndError);
         } catch (Exception ex) {
             this.getView().showErrorNotification(SalUtil.getExceptionStr(ex));
-            MmsOtelUtils.setException(span, ex);
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -2370,7 +2352,6 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                 statusControl();
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);

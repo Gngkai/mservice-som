@@ -58,7 +58,7 @@ public class aos_mkt_slogan_datalist extends AbstractListPlugin {
 
             FndGlobal.OpenForm(this, "aos_mkt_slogan", params);
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }

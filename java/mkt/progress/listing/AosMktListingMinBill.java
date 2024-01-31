@@ -94,7 +94,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
                 errorListEntity.save();
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -121,7 +121,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
             dyMain.set("aos_status", "结束");
             dyMain.set("aos_user", SYSTEM);
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -165,7 +165,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
             dyMain.set("aos_status", "结束");
             dyMain.set("aos_user", SYSTEM);
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -183,7 +183,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
             dyMain.set("aos_status", "结束");
             dyMain.set("aos_user", SYSTEM);
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -325,7 +325,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
                 dyMain.set("aos_ecdate", new Date());
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -361,7 +361,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
                 SaveServiceHelper.update(new DynamicObject[] {dyDesign});
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -433,7 +433,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
                 ex.printStackTrace();
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -518,7 +518,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
                     new DynamicObject[] {aosMktFuncsumdata}, OperateOption.create());
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -601,7 +601,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
             MKTCom.SendGlobalMessage(messageId, "aos_mkt_listing_min", String.valueOf(reqFid), String.valueOf(billno),
                 message);
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -757,7 +757,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
             OperationServiceHelper.executeOperate("save", "aos_mkt_listing_min", new DynamicObject[] {dyMain},
                 OperateOption.create());
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -1231,7 +1231,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
                     message);
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -1272,7 +1272,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
                 throw fndError;
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -1443,10 +1443,8 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
             }
         } catch (FndError fndMessage) {
             this.getView().showTipNotification(fndMessage.getErrorMessage());
-            MmsOtelUtils.setException(span, fndMessage);
         } catch (Exception ex) {
             this.getView().showErrorNotification(SalUtil.getExceptionStr(ex));
-            MmsOtelUtils.setException(span, ex);
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -1705,7 +1703,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
                 statusControl();
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);

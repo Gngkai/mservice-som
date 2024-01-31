@@ -91,7 +91,7 @@ public class AosMktRcvBill extends AbstractBillPlugIn implements ItemClickListen
             dyMain.set("aos_status", "退回");
             dyMain.set("aos_user", dy.get("aos_documentary"));
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -119,7 +119,7 @@ public class AosMktRcvBill extends AbstractBillPlugIn implements ItemClickListen
             DynamicObject aosItemId = aosMktRcv.getDynamicObject("aos_itemid");
             openSample(iFormView, aosItemId.getPkValue(), aosPoNumber);
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -148,7 +148,7 @@ public class AosMktRcvBill extends AbstractBillPlugIn implements ItemClickListen
             // 打开封样单
             FndGlobal.OpenBillById(iFormView, AOS_SEALSAMPLE, sampleId);
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -327,7 +327,7 @@ public class AosMktRcvBill extends AbstractBillPlugIn implements ItemClickListen
                     new DynamicObject[] {aosMktPhotolist}, OperateOption.create());
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -680,7 +680,7 @@ public class AosMktRcvBill extends AbstractBillPlugIn implements ItemClickListen
             }
 
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -713,10 +713,8 @@ public class AosMktRcvBill extends AbstractBillPlugIn implements ItemClickListen
             }
         } catch (FndError fndMessage) {
             this.getView().showTipNotification(fndMessage.getErrorMessage());
-            MmsOtelUtils.setException(span, fndMessage);
         } catch (Exception ex) {
             this.getView().showErrorNotification(SalUtil.getExceptionStr(ex));
-            MmsOtelUtils.setException(span, ex);
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -728,7 +726,7 @@ public class AosMktRcvBill extends AbstractBillPlugIn implements ItemClickListen
         try (Scope ignore = span.makeCurrent()) {
             FndHistory.OpenHistory(this.getView());
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -817,7 +815,7 @@ public class AosMktRcvBill extends AbstractBillPlugIn implements ItemClickListen
                 this.getView().invokeOperation("refresh");
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -1006,7 +1004,7 @@ public class AosMktRcvBill extends AbstractBillPlugIn implements ItemClickListen
                 SaveServiceHelper.update(dycPhoto);
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);

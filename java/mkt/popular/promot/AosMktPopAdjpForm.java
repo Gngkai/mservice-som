@@ -93,7 +93,7 @@ public class AosMktPopAdjpForm extends AbstractFormPlugin implements ItemClickLi
                 aosAdjust();
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -124,7 +124,7 @@ public class AosMktPopAdjpForm extends AbstractFormPlugin implements ItemClickLi
             this.getView().setEnable(false, "aos_confirm");
             this.getView().setEnable(false, "aos_apply");
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -148,7 +148,7 @@ public class AosMktPopAdjpForm extends AbstractFormPlugin implements ItemClickLi
             }
             this.getView().showSuccessNotification("保存成功!");
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -190,7 +190,7 @@ public class AosMktPopAdjpForm extends AbstractFormPlugin implements ItemClickLi
             }
             this.getView().showSuccessNotification("建议价应用成功!");
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -240,7 +240,7 @@ public class AosMktPopAdjpForm extends AbstractFormPlugin implements ItemClickLi
             }
             this.getView().showSuccessNotification("应用成功!");
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }
@@ -290,7 +290,7 @@ public class AosMktPopAdjpForm extends AbstractFormPlugin implements ItemClickLi
             arrQ.add(filterSpendto);
             initData(arrQ);
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }

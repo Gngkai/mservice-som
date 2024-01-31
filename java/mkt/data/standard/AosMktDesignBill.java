@@ -156,7 +156,8 @@ public class AosMktDesignBill extends AbstractBillPlugIn implements ItemClickLis
                 aosManuopen(dyMain);
             }
         } catch (Exception ex) {
-            MmsOtelUtils.setException(span, ex);
+            ex.printStackTrace();
+            throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
         }
