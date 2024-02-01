@@ -21,6 +21,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import java.awt.Color;
+import java.awt.geom.Ellipse2D;
+import org.jfree.chart.plot.PlotOrientation;
+
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+
 /**
  * @author aosom
  * @since 2024/2/1 9:35
@@ -67,37 +76,85 @@ public class AosMktTestBill extends AbstractBillPlugIn {
         try {
             if (AOS_CAL.equals(control)) {
                 aosCal();
-                aosTest();
+                aosTest("Keyword Filter0", "Click0", "Expouse0", "aos_htmlap", 800, 600);
+                aosTest("Keyword Filter1", "Click1", "Expouse1", "aos_htmlap1", 400, 350);
+                aosTest("Keyword Filter2", "Click2", "Expouse2", "aos_htmlap2", 400, 350);
+                aosTest("Keyword Filter3", "Click3", "Expouse3", "aos_htmlap3", 400, 350);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void aosTest() throws IOException {
+    private void aosTest2() throws IOException {
+        // 创建样例数据
+        double[][] datapoints = new double[2][4];
+        datapoints[0][1] = -1;
+        datapoints[1][1] = 1;
+        datapoints[0][2] = 2;
+        datapoints[1][2] = -2;
+        datapoints[0][3] = -3;
+        datapoints[1][3] = 3;
+        datapoints[0][0] = 4;
+        datapoints[1][0] = -4;
+        // 创建数据集
         DefaultXYDataset dataset = new DefaultXYDataset();
-        // 生成100个随机数据点
-        double[][] data = generateRandomData(100);
-        dataset.addSeries("Scatter Plot", data);
-        // 创建散点图
-        JFreeChart scatterPlot = ChartFactory.createScatterPlot(
-            // 标题
-            "Scatter Plot Example",
-            // X轴标签
-            "X",
-            // Y轴标签
-            "Y",
-            // 数据集
-            dataset);
-        // 将散点图生成为图片，并以Base64编码的方式嵌入到HTML代码中
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        ChartUtilities.writeChartAsPNG(outputStream, scatterPlot, 800, 600);
-        byte[] imageBytes = outputStream.toByteArray();
+        dataset.addSeries("Data", datapoints);
+        // 创建 JFreeChart 实例
+        JFreeChart scatterChart = ChartFactory.createScatterPlot("Scatter Plot Demo", "X", "Y", dataset,
+            PlotOrientation.VERTICAL, true, true, false);
+        // 设置散点样式
+        scatterChart.getXYPlot().getRenderer().setSeriesShape(0, new Ellipse2D.Double(-3, -3, 6, 6));
+        scatterChart.getXYPlot().getRenderer().setSeriesPaint(0, Color.RED);
+        // 创建缓冲图像
+        BufferedImage chartImage = new BufferedImage(800, 600, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2d = chartImage.createGraphics();
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setBackground(Color.WHITE);
+        g2d.clearRect(0, 0, 800, 600);
+        // 绘制图表
+        scatterChart.draw(g2d, new java.awt.Rectangle(50, 50, 800, 600), null, null);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+            ImageIO.write(chartImage, "png", baos);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        byte[] imageBytes = baos.toByteArray();
         String base64Image = java.util.Base64.getEncoder().encodeToString(imageBytes);
         // 生成HTML代码
         String html = "<html><body><img src='data:image/png;base64," + base64Image + "'/></body></html>";
         System.out.println(html);
         Html htmlControl = this.getView().getControl("aos_htmlap");
+        htmlControl.setConent(html);
+    }
+
+    private void aosTest(String title, String xName, String yName, String sign, int width, int height)
+        throws IOException {
+        DefaultXYDataset dataset = new DefaultXYDataset();
+        // 生成100个随机数据点
+        double[][] data = generateRandomData(100);
+        dataset.addSeries("Sport", data);
+        double[][] data2 = generateRandomData(100);
+        dataset.addSeries("Home", data2);
+        // 创建散点图
+        JFreeChart scatterPlot = ChartFactory.createScatterPlot(
+            // 标题
+            title,
+            // X轴标签
+            xName,
+            // Y轴标签
+            yName,
+            // 数据集
+            dataset);
+        // 将散点图生成为图片，并以Base64编码的方式嵌入到HTML代码中
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ChartUtilities.writeChartAsPNG(outputStream, scatterPlot, width, height);
+        byte[] imageBytes = outputStream.toByteArray();
+        String base64Image = java.util.Base64.getEncoder().encodeToString(imageBytes);
+        // 生成HTML代码
+        String html = "<html><body><img src='data:image/png;base64," + base64Image + "'/></body></html>";
+        Html htmlControl = this.getView().getControl(sign);
         htmlControl.setConent(html);
     }
 
@@ -133,4 +190,5 @@ public class AosMktTestBill extends AbstractBillPlugIn {
         treeView.setRootVisible(true);
         treeView.showNode("head");
     }
+
 }

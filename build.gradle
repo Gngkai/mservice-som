@@ -38,7 +38,11 @@ dependencies {
     implementation group: 'io.opentelemetry', name: 'opentelemetry-exporter-otlp',version: '1.26.0'
     implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk', version: '1.26.0'
     implementation group: 'io.opentelemetry', name: 'opentelemetry-semconv', version: '1.26.0-alpha'
-
+    // gson
+    implementation group: 'com.google.code.gson', name: 'gson', version: '2.10.1'
+    implementation group: 'org.jfree', name: 'jfreechart', version: '1.0.19'
+    implementation group: 'org.thymeleaf', name: 'thymeleaf', version: '3.0.11.RELEASE'
+    implementation group: 'freemarker', name: 'freemarker', version: '2.3.8'
 }
 
 
