@@ -7,6 +7,7 @@ import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.form.events.AfterDoOperationEventArgs;
 import kd.bos.form.plugin.AbstractFormPlugin;
+import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 
 
@@ -21,6 +22,7 @@ import java.util.*;
  */
 public class PromoteCalendarRpt extends AbstractFormPlugin {
     private static final String AMAZON_NUMBER = "AMAZON",EBAY_NUMBER = "EBAY";
+    private static final String ENTRY_KEY = "aos_entryentity";
 
     @Override
     public void afterDoOperation(AfterDoOperationEventArgs eventArgs) {
@@ -35,43 +37,51 @@ public class PromoteCalendarRpt extends AbstractFormPlugin {
      * 查询数据
      */
     public void queryData(){
+        this.getModel().deleteEntryData("aos_entryentity");
         List<QFBuilder> filterList = getFilter();
-        //获取营收合格的店铺
-        List<String> shopList = getRevenueStores();
+
         //获取活动计划选品表中的数据
-        getActSelectList(filterList.get(2));
+        List<Map<String, String>> actSelectList = getActSelectList(filterList.get(2));
         //设置国别节日数据
-
-
+        Map<String, DynamicObject> allShop = getAllShop();
+        getModel().getDataEntity(true).getDynamicObjectCollection("")
     }
 
     /**
      * 获取活动库中的 是否平台活动为是的店铺
      */
-    public void getAllShop(){
+    public Map<String,DynamicObject> getAllShop(){
         QFBuilder builder = new QFBuilder();
         builder.add("aos_assessment.number", "=", "Y");
         String orgId = ((DynamicObject)getModel().getValue("aos_sel_org")).getString("id");
         builder.add("aos_org","=",orgId);
         builder.add("aos_act_type","=","1");
-        DynamicObjectCollection dyc = QueryServiceHelper.query("aos_sal_act_type_p", "aos_shop", builder.toArray());
-        List<String> results = new ArrayList<>(dyc.size());
-        for (DynamicObject row : dyc) {
-            results.add(row.getString("aos_shop"));
+        builder.add("aos_shop","!=","");
+        Map<String,DynamicObject> shopMap = new HashMap<>();
+        for (DynamicObject row : BusinessDataServiceHelper.load("aos_sal_act_type_p", "aos_shop", builder.toArray())) {
+            DynamicObject shopEntry = row.getDynamicObject("aos_shop");
+            shopMap.put(shopEntry.getString("id"),shopEntry);
         }
+        return shopMap;
     }
 
     /**
      * 设置节日活动数据
      */
-    public void setFestivalData(QFBuilder builder) {
+    public void setFestivalData(QFBuilder builder,Map<String,String> actMap,Map<String, DynamicObject> allShop) {
+        //获取营收合格的店铺
+        List<String> shopList = getRevenueStores();
         //首先获取国别节日数据
-        DynamicObjectCollection festivalList = QueryServiceHelper.query("aos_mkt_festival", "name,number", builder.toArray());
+        DynamicObjectCollection festivalList = QueryServiceHelper.query("aos_mkt_festival", "id,name,number", builder.toArray());
         for (DynamicObject row : festivalList) {
+            String festival = row.getString("id");
+
 
         }
-    }
 
+
+
+    }
 
     /**
      * 获取活动选品表中本月的数据
@@ -84,10 +94,10 @@ public class PromoteCalendarRpt extends AbstractFormPlugin {
             String actType = row.getString("aos_act_type");
             String festival = row.getString("aos_festival");
             if (actType!=null){
-                actMap.put(shop,actType);
+                actMap.put(actType,shop);
             }
             if (festival!=null){
-                festivalMap.put(shop,festival);
+                festivalMap.put(festival,shop);
             }
         }
         List<Map<String,String>> result = new ArrayList<>(2);
