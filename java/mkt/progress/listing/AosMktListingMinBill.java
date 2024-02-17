@@ -1915,7 +1915,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
         /**
          * 内容运营部
          */
-        dept("内容运营部"),
+        dept("文案部"),
         /**
          * LISTING
          */

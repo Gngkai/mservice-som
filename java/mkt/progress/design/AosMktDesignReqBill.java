@@ -50,6 +50,7 @@ import mkt.progress.design3d.AosMkt3DesignBill;
 import mkt.progress.iface.ItemInfoUtil;
 import mkt.progress.iface.ParaInfoUtil;
 import mkt.progress.listing.AosMktListingSonBill;
+import mkt.progress.listing.hotpoint.AosMktListingHotUtil;
 import mkt.progress.parameter.errorlisting.ErrorListEntity;
 
 /**
@@ -375,6 +376,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                 generateListingSal(dyMain, "A");
                 dyMain.set("aos_status", "结束");
                 dyMain.set("aos_user", SYSTEM);
+                AosMktListingHotUtil.createHotFromDesign(dyMain);
                 if (aosRequireby != null) {
                     messageId = ((DynamicObject)aosRequireby).getPkValue().toString();
                 }
@@ -402,6 +404,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                     // 其他结束
                     dyMain.set("aos_status", "结束");
                     dyMain.set("aos_user", SYSTEM);
+                    AosMktListingHotUtil.createHotFromDesign(dyMain);
                     if (aosRequireby != null) {
                         messageId = ((DynamicObject)aosRequireby).getPkValue().toString();
                     }
@@ -439,6 +442,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                 } else {
                     dyMain.set("aos_status", "结束");
                     dyMain.set("aos_user", SYSTEM);
+                    AosMktListingHotUtil.createHotFromDesign(dyMain);
                     if (aosRequireby != null) {
                         messageId = ((DynamicObject)aosRequireby).getPkValue().toString();
                     }
@@ -450,6 +454,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                 generateListingLanguage(dyMain, listLanguageListing);
                 dyMain.set("aos_status", "结束");
                 dyMain.set("aos_user", SYSTEM);
+                AosMktListingHotUtil.createHotFromDesign(dyMain);
                 if (aosRequireby != null) {
                     messageId = ((DynamicObject)aosRequireby).getPkValue().toString();
                 }
@@ -474,6 +479,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                 } else {
                     dyMain.set("aos_status", "结束");
                     dyMain.set("aos_user", SYSTEM);
+                    AosMktListingHotUtil.createHotFromDesign(dyMain);
                     if (aosRequireby != null) {
                         messageId = ((DynamicObject)aosRequireby).getPkValue().toString();
                     }
@@ -604,6 +610,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                 }
                 dyMain.set("aos_status", "结束");
                 dyMain.set("aos_user", SYSTEM);
+                AosMktListingHotUtil.createHotFromDesign(dyMain);
                 if (aosRequireby != null) {
                     messageId = ((DynamicObject)aosRequireby).getPkValue().toString();
                 }
@@ -666,6 +673,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
             } else {
                 dyMain.set("aos_status", "结束");
                 dyMain.set("aos_user", SYSTEM);
+                AosMktListingHotUtil.createHotFromDesign(dyMain);
                 if (aosRequireby != null) {
                     messageId = ((DynamicObject)aosRequireby).getPkValue().toString();
                 }
@@ -818,6 +826,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
             // 执行保存操作
             dyMain.set("aos_status", "结束");
             dyMain.set("aos_user", SYSTEM);
+            AosMktListingHotUtil.createHotFromDesign(dyMain);
         } catch (Exception ex) {
             MmsOtelUtils.setException(span, ex);
             throw ex;

@@ -57,6 +57,7 @@ import mkt.progress.design3d.AosMkt3DesignBill;
 import mkt.progress.iface.ItemInfoUtil;
 import mkt.progress.listing.AosMktListingReqBill;
 import mkt.progress.listing.AosMktListingSonBill;
+import mkt.progress.listing.hotpoint.AosMktListingHotUtil;
 
 import static mkt.progress.ProgressUtil.Is_saleout;
 
@@ -69,6 +70,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
      * 拍照需求表标识
      **/
     public final static String AOS_MKT_PHOTOREQ = "aos_mkt_photoreq";
+    public final static String AOS_AUTOCLOSE = "aos_autoclose";
     /**
      * 状态
      **/
@@ -1400,6 +1402,8 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             aosMktPhotoReq.set("aos_vediotype", pAosMktPhotoReq.get("aos_vediotype"));
             aosMktPhotoReq.set("aos_orgtext", pAosMktPhotoReq.get("aos_orgtext"));
             aosMktPhotoReq.set("aos_samplestatus", pAosMktPhotoReq.get("aos_samplestatus"));
+            aosMktPhotoReq.set("aos_is_saleout", pAosMktPhotoReq.get("aos_is_saleout"));
+
             // 新增质检完成日期
             QFilter qFilterContra = new QFilter("aos_insrecordentity.aos_insresultchk", "=", "A");
             QFilter qFilterLineno = new QFilter("aos_insrecordentity.aos_instypedetailchk", "=", "1");
@@ -1550,6 +1554,8 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                 openPhotoUrl();
             } else if (sign.senceUrl.name.equals(control)) {
                 openSenceUrl();
+            } else if (AOS_AUTOCLOSE.equals(control)) {
+                autoClose();
             }
         } catch (FndError fndError) {
             fndError.show(getView());
@@ -1558,6 +1564,16 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
         } finally {
             MmsOtelUtils.spanClose(span);
         }
+    }
+
+    /**
+     * 手工关闭
+     */
+    private void autoClose() {
+        this.getModel().setValue("aos_status", "已完成");
+        this.getModel().setValue("aos_user", SYSTEM);
+        this.getView().invokeOperation("save");
+        this.getView().invokeOperation("refresh");
     }
 
     @Override
@@ -2859,7 +2875,6 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             this.getView().setVisible(false, AOS_REASON);
             this.getView().setVisible(false, AOS_SAMEITEMID);
             this.getView().setVisible(false, AOS_CONTRYBRAND);
-            this.getView().setVisible(false, AOS_NEWITEM);
             this.getView().setVisible(false, AOS_NEWVENDOR);
             this.getView().setVisible(false, AOS_PONUMBER);
             this.getView().setVisible(false, AOS_LINENUMBER);
@@ -2962,6 +2977,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                     aosMktPhotolist.set("aos_phstatus", "已完成");
                 } else if (sign.video.name.equals(aosType)) {
                     aosMktPhotolist.set("aos_vedstatus", "已完成");
+                    AosMktListingHotUtil.createHotFromPhoto(this.getModel().getDataEntity(true));
                 }
                 OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_photolist",
                     new DynamicObject[] {aosMktPhotolist}, OperateOption.create());
@@ -3097,6 +3113,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                     aosMktPhotolist.set("aos_vedstatus", "已完成");
                     OperationServiceHelper.executeOperate("save", "aos_mkt_photolist",
                         new DynamicObject[] {aosMktPhotolist}, OperateOption.create());
+                    AosMktListingHotUtil.createHotFromPhoto(this.getModel().getDataEntity(true));
                 }
             }
             // 仅更新提交人
