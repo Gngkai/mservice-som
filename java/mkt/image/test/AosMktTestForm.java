@@ -1,11 +1,9 @@
 package mkt.image.test;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.EventObject;
+import java.util.*;
 
-import common.fnd.FndMsg;
-import kd.bos.dataentity.entity.DynamicObjectCollection;
+import kd.bos.ext.form.control.CustomControl;
 import kd.bos.form.events.CustomEventArgs;
 import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.plugin.AbstractFormPlugin;
@@ -15,36 +13,130 @@ import kd.bos.form.plugin.AbstractFormPlugin;
  * @version 测试表单插件
  */
 public class AosMktTestForm extends AbstractFormPlugin {
+    public final static String KEY1 = "点击";
+    public final static String KEY2 = "曝光";
 
-    public static void outputDynamicRangeCombinations(int[] xValues, int[] yValues) {
+    public static ArrayList<String> outputDynamicRangeCombinations(BigDecimal[] xValues, BigDecimal[] yValues) {
         ArrayList<String> outputList = new ArrayList<>();
-        for (int x : xValues) {
-            for (int y : yValues) {
+        int i = 0;
+        for (BigDecimal x : xValues) {
+            int k = 0;
+            for (BigDecimal y : yValues) {
                 StringBuilder output = new StringBuilder();
-                if (x < xValues[0]) {
-                    output.append("x<=").append(xValues[0]);
-                } else if (x > xValues[1]) {
-                    output.append("x>=").append(xValues[1]);
-                } else {
-                    output.append(xValues[0]).append("<=x<=").append(xValues[1]);
+                if (x.compareTo(xValues[0]) == 0) {
+                    // X第一个
+                    first(KEY1, output, xValues[i]);
+                    if (y.compareTo(yValues[0]) == 0) {
+                        // Y第一个
+                        first(KEY2, output, yValues[k]);
+                    } else if (y.compareTo(yValues[k]) == 0) {
+                        // Y其他非最后一个
+                        other(KEY2, output, yValues[k - 1], yValues[k]);
+                    }
+                    end(outputList, output);
+                    if (k == yValues.length - 1) {
+                        output = new StringBuilder();
+                        // Y最后一个
+                        first(KEY1, output, xValues[i]);
+                        last(KEY2, output, yValues[k]);
+                        end(outputList, output);
+                    }
+                } else if (x.compareTo(xValues[i]) == 0) {
+                    // X其他非最后一个
+                    other(KEY1, output, xValues[i - 1], xValues[i]);
+                    if (y.compareTo(yValues[0]) == 0) {
+                        // Y第一个
+                        first(KEY2, output, yValues[k]);
+                    } else if (y.compareTo(yValues[k]) == 0) {
+                        // Y其他非最后一个
+                        other(KEY2, output, yValues[k - 1], yValues[k]);
+                    }
+                    end(outputList, output);
+                    if (k == yValues.length - 1) {
+                        output = new StringBuilder();
+                        // Y最后一个
+                        other(KEY1, output, xValues[i - 1], xValues[i]);
+                        last(KEY2, output, yValues[k]);
+                        end(outputList, output);
+                    }
                 }
-                output.append(" and ");
-                if (y < yValues[0]) {
-                    output.append("y<=").append(yValues[0]);
-                } else if (y > yValues[1]) {
-                    output.append("y>=").append(yValues[1]);
-                } else {
-                    output.append(yValues[0]).append("<=y<=").append(yValues[1]);
-                }
-                output.append(" ;");
-                outputList.add(output.toString());
+                k++;
             }
+            i++;
+        }
+        // X最后一个
+        int lastY = 0;
+        for (BigDecimal y : yValues) {
+            StringBuilder output = new StringBuilder();
+            // 最后一个
+            last(KEY1, output, xValues[xValues.length - 1]);
+            if (y.compareTo(yValues[0]) == 0) {
+                // Y第一个
+                first(KEY2, output, yValues[lastY]);
+            } else if (y.compareTo(yValues[lastY]) == 0) {
+                // Y其他非最后一个
+                other(KEY2, output, yValues[lastY - 1], yValues[lastY]);
+            }
+            end(outputList, output);
+            if (lastY == yValues.length - 1) {
+                output = new StringBuilder();
+                // Y最后一个
+                last(KEY1, output, xValues[xValues.length - 1]);
+                last(KEY2, output, yValues[lastY]);
+                end(outputList, output);
+            }
+            lastY++;
         }
         outputList.forEach(System.out::println);
+        return outputList;
+    }
+
+    private static void end(ArrayList<String> outputList, StringBuilder output) {
+        output.append(" ;");
+        outputList.add(output.toString());
+    }
+
+    private static void first(String axis, StringBuilder output, Object value) {
+        output.append(axis).append("<").append(value);
+        if (KEY1.equals(axis)) {
+            output.append(" & ");
+        }
+    }
+
+    private static void other(String axis, StringBuilder output, Object start, Object end) {
+        output.append(start).append("<").append(axis).append("<=").append(end);
+        if (KEY1.equals(axis)) {
+            output.append(" & ");
+        }
+    }
+
+    private static void last(String axis, StringBuilder output, Object value) {
+        output.append(axis).append(">").append(value);
+        if (KEY1.equals(axis)) {
+            output.append(" & ");
+        }
     }
 
     @Override
-    public void customEvent(CustomEventArgs e) {}
+    public void afterBindData(EventObject e) {
+        CustomControl aosPupple = this.getView().getControl("aos_pupple");
+        // 传入参数
+        Map<String, Object> para = new HashMap<>(16);
+        para.put("text", "推广关键词库分类器");
+        aosPupple.setData(para);
+    }
+
+    @Override
+    public void customEvent(CustomEventArgs e) {
+        // 返回参数
+        // 设计器上自定义控件的标识
+        String key = e.getKey();
+        // 前端通过model.invoke传给后端的数据
+        String args = e.getEventArgs();
+        // 前端通过model.invoke定义的事件名
+        String eventName = e.getEventName();
+        this.getModel().setValue(eventName, args);
+    }
 
     @Override
     public void registerListener(EventObject e) {
@@ -59,47 +151,37 @@ public class AosMktTestForm extends AbstractFormPlugin {
     public void itemClick(ItemClickEvent evt) {
         super.itemClick(evt);
         String control = evt.getItemKey();
-
         if ("aos_cal".equals(control)) {
             generateRanges();
         }
-
     }
 
     public void generateRanges() {
-        // 定义待筛选的坐标轴
+        List<BigDecimal> xlist = new ArrayList<>();
+        List<BigDecimal> ylist = new ArrayList<>();
         // 点击A
-        BigDecimal xAxis1 = (BigDecimal)this.getModel().getValue("aos_x1");
+        xlist.add((BigDecimal)this.getModel().getValue("aos_x1"));
         // 点击B
-        BigDecimal xAxis2 = (BigDecimal)this.getModel().getValue("aos_x2");
+        xlist.add((BigDecimal)this.getModel().getValue("aos_x2"));
         // 曝光A
-        BigDecimal yAxis1 = (BigDecimal)this.getModel().getValue("aos_y1");
+        ylist.add((BigDecimal)this.getModel().getValue("aos_y1"));
         // 曝光B
-        BigDecimal yAxis2 = (BigDecimal)this.getModel().getValue("aos_y2");
-
-        FndMsg.debug("xAxis1:" + xAxis1);
-        FndMsg.debug("xAxis2:" + xAxis2);
-        FndMsg.debug("yAxis1:" + yAxis1);
-        FndMsg.debug("yAxis2:" + yAxis2);
-
-        int[] xValues = {1, 2};
-        int[] yValues = {3, 4};
-        outputDynamicRangeCombinations(xValues, yValues);
-
+        ylist.add((BigDecimal)this.getModel().getValue("aos_y2"));
+        // 假设你已经将数据添加到了 list 中
+        // 转换为数组
+        Collections.sort(xlist);
+        Collections.sort(ylist);
+        BigDecimal[] xValues = xlist.toArray(new BigDecimal[xlist.size()]);
+        BigDecimal[] yValues = ylist.toArray(new BigDecimal[ylist.size()]);
+        ArrayList<String> outputList = outputDynamicRangeCombinations(xValues, yValues);
         // 打印筛选结果
-        DynamicObjectCollection aosEntryentityS = this.getModel().getEntryEntity("aos_entryentity");
-        aosEntryentityS.clear();
+        this.getModel().deleteEntryData("aos_entryentity");
         int i = 0;
-        // for (CoordinateRange coordinateRange : result) {
-        // this.getModel().batchCreateNewEntryRow("aos_entryentity", 1);
-        // this.getModel().setValue("aos_xstart", coordinateRange.getXStart(), i);
-        // this.getModel().setValue("aos_xend", coordinateRange.getXEnd(), i);
-        // this.getModel().setValue("aos_ystart", coordinateRange.getYStart(), i);
-        // this.getModel().setValue("aos_yend", coordinateRange.getYEnd(), i);
-        // i++;
-        // }
-
+        for (String key : outputList) {
+            this.getModel().batchCreateNewEntryRow("aos_entryentity", 1);
+            this.getModel().setValue("aos_condition", key, i);
+            i++;
+        }
         this.getView().updateView();
     }
-
 }
