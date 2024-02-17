@@ -9,7 +9,6 @@ import kd.bos.cache.TempFileCache;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.form.StyleCss;
-import kd.bos.form.control.Control;
 import kd.bos.form.control.EntryGrid;
 import kd.bos.form.control.SubEntryGrid;
 import kd.bos.form.events.AfterDoOperationEventArgs;
@@ -47,6 +46,7 @@ public class EventsCalendarReport extends AbstractFormPlugin implements HyperLin
     protected static final String SUBENTRY_KEY = "aos_subentryentity";
     protected static final String QUERY_KEY = "aos_query";
     protected static final String EXPORT_KEY = "export";
+    protected static final String AOS_ACT_TYPE = "aos_act_type";
     @Override
     public void afterDoOperation(AfterDoOperationEventArgs eventArgs) {
         super.afterDoOperation(eventArgs);
@@ -83,13 +83,16 @@ public class EventsCalendarReport extends AbstractFormPlugin implements HyperLin
         XSSFSheet sheet = workbook.createSheet();
         sheet.setDefaultColumnWidth(15);
         //创建父标题
-        EntryGrid entry = this.getControl(ENTRY_KEY);// 单据体
+        // 单据体
+        EntryGrid entry = this.getControl(ENTRY_KEY);
         List<FieldEdit> s1 = entry.getFieldEdits();
-        List<String> list_key = new ArrayList<>(); // 标识
-        List<String> list_name = new ArrayList<>(); // name
+        // 标识
+        List<String> keyList = new ArrayList<>();
+        // name
+        List<String> nameLits = new ArrayList<>();
         for (FieldEdit fiel : s1) {
-            list_key.add(fiel.getKey());
-            list_name.add(fiel.getProperty().getDisplayName().toString());
+            keyList.add(fiel.getKey());
+            nameLits.add(fiel.getProperty().getDisplayName().toString());
         }
         //下拉框对应的数据
         BidiMap<String, String> comboMapValue = SalUtil.getComboMapValue("aos_act_select_plan", "aos_seasonattr");
@@ -98,58 +101,59 @@ public class EventsCalendarReport extends AbstractFormPlugin implements HyperLin
         DynamicObjectCollection entryRows = this.getModel().getDataEntity(true).getDynamicObjectCollection(ENTRY_KEY);
         // 设置标题行
         XSSFRow headRow = sheet.createRow(0);
-        for (int i = 0; i < list_name.size(); i++) {
+        for (int i = 0; i < nameLits.size(); i++) {
             XSSFCell cell = headRow.createCell(i);
-            cell.setCellValue(list_name.get(i));
+            cell.setCellValue(nameLits.get(i));
         }
         // 设置子单据标题行
-        XSSFCell cell = headRow.createCell(list_name.size());
+        XSSFCell cell = headRow.createCell(nameLits.size());
         cell.setCellValue("店铺");
-        cell = headRow.createCell(list_name.size()+1);
+        cell = headRow.createCell(nameLits.size()+1);
         cell.setCellValue("活动类型");
 
         // 设置数据行
         for (DynamicObject dy : entryRows) {
             for (DynamicObject subRow : dy.getDynamicObjectCollection(SUBENTRY_KEY)) {
                 XSSFRow dateRow = sheet.createRow(sheet.getLastRowNum() + 1);
-                for (String key : list_key) {
-                    if (key.equals("aos_seasonattr")) {
-                        cell = dateRow.createCell(list_key.indexOf(key));
+                for (String key : keyList) {
+                    if ("aos_seasonattr".equals(key)) {
+                        cell = dateRow.createCell(keyList.indexOf(key));
                         if (FndGlobal.IsNotNull(dy.getString(key))){
                             cell.setCellValue(comboMapValue.get(dy.getString(key)));
                         }
                     }
-                    else if (key.equals("aos_type")){
-                        cell = dateRow.createCell(list_key.indexOf(key));
+                    else if ("aos_type".equals(key)){
+                        cell = dateRow.createCell(keyList.indexOf(key));
                         String value = dy.getString(key);
                         if (FndGlobal.IsNotNull(value)){
                             cell.setCellValue(typeMap.get(value));
                         }
                     }
                     else {
-                        cell = dateRow.createCell(list_key.indexOf(key));
+                        cell = dateRow.createCell(keyList.indexOf(key));
                         cell.setCellValue(dy.getString(key));
                     }
                 }
-                dateRow.createCell(list_key.size()).setCellValue(subRow.getString("aos_shop"));
-                dateRow.createCell(list_key.size()+1).setCellValue(subRow.getString("aos_act_type"));
+                dateRow.createCell(keyList.size()).setCellValue(subRow.getString("aos_shop"));
+                dateRow.createCell(keyList.size()+1).setCellValue(subRow.getString("aos_act_type"));
             }
         }
         // 下载
-        downloadXSSFWorkbook(workbook,"活动日历报表");
+        downloadWorkbook(workbook);
     }
 
-    private  void downloadXSSFWorkbook(XSSFWorkbook workbook, String fileName) {
+    private  void downloadWorkbook(XSSFWorkbook workbook) {
         ByteArrayOutputStream outputStream = null;
         InputStream inputStream = null;
         try {
             TempFileCache tempfile = CacheFactory.getCommonCacheFactory().getTempFileCache();
-            int timeout = 60 * 10;// 超时时间10分钟
+            // 超时时间10分钟
+            int timeout = 60 * 10;
             outputStream = new ByteArrayOutputStream();
             workbook.write(outputStream);
             inputStream = new ByteArrayInputStream(outputStream.toByteArray());
             String url = tempfile.saveAsUrl(
-                    "引出数据_" + fileName + "_" + DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss") + ".xlsx",
+                    "引出数据_" + "活动日历报表" + "_" + DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss") + ".xlsx",
                     inputStream, timeout);
             this.getView().download(url);
         } catch (IOException e) {
@@ -176,7 +180,7 @@ public class EventsCalendarReport extends AbstractFormPlugin implements HyperLin
     public void query() {
         this.getModel().deleteEntryData(ENTRY_KEY);
         //获取滞销sku
-        Map<String, String> unsalItemMap = new HashMap<>();
+        Map<String, String> unsalItemMap = new HashMap<>(100);
         boolean unsalItemFilter = getUnsalItemMap(unsalItemMap);
         //获取活动选品表数据
         Map<String, List<DynamicObject>> actData = getActData(unsalItemMap,unsalItemFilter);
@@ -205,7 +209,6 @@ public class EventsCalendarReport extends AbstractFormPlugin implements HyperLin
             entryNewRow.set("aos_itemnum",itemnum);
             entryNewRow.set("aos_itemname",actInfoRow.get("aos_itemname"));
             entryNewRow.set("aos_is_saleout",actInfoRow.get("aos_is_saleout"));
-            System.out.println("actInfoRow.get(\"aos_seasonattr\") = " + actInfoRow.get("aos_seasonattr"));
             entryNewRow.set("aos_seasonattr",actInfoRow.get("aos_seasonattr"));
             entryNewRow.set("aos_type",unsalItemMap.get(orgNum+"/"+itemnum));
             entryNewRow.set("aos_times",entry.getValue().size());
@@ -265,6 +268,9 @@ public class EventsCalendarReport extends AbstractFormPlugin implements HyperLin
      * 从活动选品表种查询出相关数据
      */
     public Map<String,List<DynamicObject>> getActData(Map<String, String> unsalItemMap,boolean unsalItemFilter){
+        //获取平台活动
+        List<String> platActList = getPlatAct();
+
         //获取过滤条件
         QFBuilder filter = getFilter();
         //获取活动选品表数据
@@ -300,9 +306,33 @@ public class EventsCalendarReport extends AbstractFormPlugin implements HyperLin
             if (unsalItemFilter && !unsalItemMap.containsKey(key.toString())) {
                 continue;
             }
+            //判断是否是平台活动
+            StringJoiner platActKey = new StringJoiner("/");
+            platActKey.add(row.getString("aos_shop"));
+            platActKey.add(row.getString("aos_acttype"));
+            if (!platActList.contains(platActKey.toString())) {
+                continue;
+            }
+            
             results.computeIfAbsent(key.toString(), k -> new ArrayList<>()).add(row);
         }
         return results;
+    }
+    /**
+     * 查找所有的平台活动
+     */
+    public List<String> getPlatAct() {
+        QFBuilder builder = new QFBuilder();
+        builder.add("aos_assessment.number","=","Y");
+        DynamicObjectCollection dyc = QueryServiceHelper.query("aos_sal_act_type_p", "aos_shop.number aos_shop,aos_acttype.number aos_acttype", builder.toArray());
+        List<String> listActTypes = new ArrayList<>(dyc.size());
+        for (DynamicObject dy : dyc) {
+            StringJoiner key = new StringJoiner("/");
+            key.add(dy.getString("aos_shop"));
+            key.add(dy.getString("aos_acttype"));
+            listActTypes.add(key.toString());
+        }
+        return listActTypes;
     }
 
     /**
@@ -311,7 +341,7 @@ public class EventsCalendarReport extends AbstractFormPlugin implements HyperLin
     public QFBuilder getFilter() {
         QFBuilder builder = new QFBuilder();
         //活动状态不为手动关闭
-        builder.add("aos_actstatus","!=","C");
+        builder.add("aos_sal_actplanentity.aos_l_actstatus","!=","B");
         //国家
         DynamicObjectCollection filterInfoRows = this.getModel().getDataEntity(true).getDynamicObjectCollection("aos_sel_org");
         List<String> countryList;
@@ -449,16 +479,16 @@ public class EventsCalendarReport extends AbstractFormPlugin implements HyperLin
     public void hyperLinkClick(HyperLinkClickEvent event) {
         String fieldName = event.getFieldName();
         int rowIndex = event.getRowIndex();
-        if ("aos_act_type".equals(fieldName) && rowIndex >= 0) {
+        if (AOS_ACT_TYPE.equals(fieldName) && rowIndex >= 0) {
             int currentRowIndex = getModel().getEntryCurrentRowIndex(ENTRY_KEY);
             //创建弹出单据页面对象，并赋值
-            BillShowParameter billShowParameter = FndGlobal.CraeteBillForm(this,"aos_act_select_plan","aos_sal_act",new HashMap<>());
+            BillShowParameter billShowParameter = FndGlobal.CraeteBillForm(this,"aos_act_select_plan","aos_sal_act",new HashMap<>(10));
             //设置弹出子单据页面的样式，高600宽800
             StyleCss inlineStyleCss = new StyleCss();
             inlineStyleCss.setHeight("800");
             inlineStyleCss.setWidth("1500");
             billShowParameter.getOpenStyle().setInlineStyleCss(inlineStyleCss);
-            Object value = getModel().getValue("aos_url", currentRowIndex,rowIndex);
+            Object value = getModel().getValue("aos_url",rowIndex,currentRowIndex);
 
             billShowParameter.setPkId(value);
             //弹窗子页面和父页面绑定
