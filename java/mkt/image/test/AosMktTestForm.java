@@ -1,8 +1,10 @@
 package mkt.image.test;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.*;
 
+import common.fnd.FndMsg;
 import kd.bos.ext.form.control.CustomControl;
 import kd.bos.form.events.CustomEventArgs;
 import kd.bos.form.control.events.ItemClickEvent;
@@ -15,6 +17,11 @@ import kd.bos.form.plugin.AbstractFormPlugin;
 public class AosMktTestForm extends AbstractFormPlugin {
     public final static String KEY1 = "点击";
     public final static String KEY2 = "曝光";
+    /**
+     * 控制气泡的大小
+     */
+    public final static double GRADIENT = Double.parseDouble(FndMsg.getStatic("PUPSIZE"));
+    public final static int QTY = Integer.parseInt(FndMsg.getStatic("PUPQTY"));
 
     public static ArrayList<String> outputDynamicRangeCombinations(BigDecimal[] xValues, BigDecimal[] yValues) {
         ArrayList<String> outputList = new ArrayList<>();
@@ -117,12 +124,58 @@ public class AosMktTestForm extends AbstractFormPlugin {
         }
     }
 
+    public static double[][] generateRandomData(int numData) {
+        double[][] data = new double[numData][3];
+        Random random = new Random();
+        DecimalFormat decimalFormat = new DecimalFormat("#.00");
+        for (int i = 0; i < numData; i++) {
+            // 随机生成 0 到 2 之间的数
+            data[i][0] = Double.parseDouble(decimalFormat.format(random.nextDouble() * 2.0));
+            // 随机生成 0 到 2 之间的数
+            data[i][1] = Double.parseDouble(decimalFormat.format(random.nextDouble() * 2.0));
+            data[i][2] = GRADIENT;
+        }
+        printArray(data);
+        return data;
+    }
+
+    public static void printArray(double[][] array) {
+        System.out.print("{{");
+        for (int i = 0; i < array.length; i++) {
+            System.out.print("{");
+            for (int j = 0; j < array[i].length; j++) {
+                System.out.print(array[i][j]);
+                if (j < array[i].length - 1) {
+                    System.out.print(", ");
+                }
+            }
+            System.out.print("}");
+            if (i < array.length - 1) {
+                System.out.print(", ");
+            }
+        }
+        System.out.println("}}");
+    }
+
     @Override
     public void afterBindData(EventObject e) {
         CustomControl aosPupple = this.getView().getControl("aos_pupple");
         // 传入参数
         Map<String, Object> para = new HashMap<>(16);
         para.put("text", "推广关键词库分类器");
+        String[] keys = {"double1", "double2", "double3", "double4"};
+        double[][][] values = {
+            // 藤编
+            generateRandomData(QTY),
+            // 运动
+            generateRandomData(QTY),
+            // 家具
+            generateRandomData(QTY),
+            // 宠物
+            generateRandomData(QTY)};
+        for (int i = 0; i < keys.length; i++) {
+            para.put(keys[i], values[i]);
+        }
         aosPupple.setData(para);
     }
 
@@ -152,6 +205,7 @@ public class AosMktTestForm extends AbstractFormPlugin {
         super.itemClick(evt);
         String control = evt.getItemKey();
         if ("aos_cal".equals(control)) {
+            // generateRandomData(5);
             generateRanges();
         }
     }
