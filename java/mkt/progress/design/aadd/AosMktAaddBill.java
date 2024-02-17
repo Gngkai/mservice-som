@@ -298,6 +298,7 @@ public class AosMktAaddBill extends AbstractBillPlugIn implements HyperLinkClick
         // 国别
         Object aosOrg = dyMain.get("aos_org");
         dyMain.set("aos_edsubmit", UserServiceHelper.getCurrentUserId());
+        dyMain.set("aos_eddate",new Date());
         // 校验是否海外确认必填
         Object aosOsconfirm = dyMain.get("aos_osconfirm");
         if (FndGlobal.IsNull(aosOsconfirm)) {
