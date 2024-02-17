@@ -401,7 +401,6 @@ public class EventsCalendarReport extends AbstractFormPlugin implements HyperLin
                     .stream()
                     .map(row -> row.getDynamicObject("fbasedataid").getString("number"))
                     .collect(Collectors.toList());
-            System.out.println("seasonList = " + seasonList);
             builder.add("aos_sal_actplanentity.aos_seasonattr", QFilter.in, seasonList);
         }
         //开始日期 的开始日期
