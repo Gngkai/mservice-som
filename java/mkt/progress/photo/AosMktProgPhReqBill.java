@@ -1570,6 +1570,14 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
      * 手工关闭
      */
     private void autoClose() {
+        Object billno = this.getModel().getValue("billno");
+        String hot = "爆品打分";
+        if (FndGlobal.IsNotNull(billno) && ((String)billno).contains(hot)) {
+            Object aosParentid = this.getModel().getValue("aos_parentid");
+            DynamicObject hotDyn = BusinessDataServiceHelper.loadSingle(aosParentid, "aos_mkt_hot_point");
+            hotDyn.set("aos_status", "结束");
+            SaveServiceHelper.save(new DynamicObject[] {hotDyn});
+        }
         this.getModel().setValue("aos_status", "已完成");
         this.getModel().setValue("aos_user", SYSTEM);
         this.getView().invokeOperation("save");
@@ -2856,6 +2864,15 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             }
         }
         initDifference();
+
+        Object billno = this.getModel().getValue("billno");
+        String hot = "爆品打分";
+        if (FndGlobal.IsNotNull(billno) && ((String)billno).contains(hot)) {
+            // 提交
+            this.getView().setVisible(true, "aos_autoclose");
+            // 保存
+            this.getView().setVisible(false, "aos_submit");
+        }
     }
 
     /**
@@ -3113,7 +3130,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                     aosMktPhotolist.set("aos_vedstatus", "已完成");
                     OperationServiceHelper.executeOperate("save", "aos_mkt_photolist",
                         new DynamicObject[] {aosMktPhotolist}, OperateOption.create());
-                    AosMktListingHotUtil.createHotFromPhoto(this.getModel().getDataEntity(true));
+                    AosMktListingHotUtil.createHotFromPhoto(aosMktPhotoreq);
                 }
             }
             // 仅更新提交人

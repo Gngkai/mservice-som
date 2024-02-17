@@ -15,12 +15,10 @@ import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
-import kd.bos.servicehelper.operation.SaveServiceHelper;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static mkt.progress.ProgressUtil.Is_saleout;
 
 /**
  * @author aosom
@@ -181,6 +179,7 @@ public class AosMktListingHotUtil {
             if (NO.equals(aosPromot)) {
                 continue;
             }
+            hotDyn.set("aos_status", "优化中");
             String itemId = aosItemid.getString("id");
             String category = CommonMktListing.getItemCateNameZH(itemId);
             String[] categoryGroup = category.split(",");
@@ -377,6 +376,7 @@ public class AosMktListingHotUtil {
             if (NO.equals(aosPromot)) {
                 continue;
             }
+            hotDyn.set("aos_status", "优化中");
             DynamicObject aosMktPhotoReq = BusinessDataServiceHelper.newDynamicObject("aos_mkt_photoreq");
             aosMktPhotoReq.set("aos_itemid", aosItemid);
             aosMktPhotoReq.set("aos_orgid", hotLine.get("aos_orgid"));
@@ -388,6 +388,10 @@ public class AosMktListingHotUtil {
             aosMktPhotoReq.set("aos_status", "视频剪辑");
             aosMktPhotoReq.set("aos_sonflag", false);
             aosMktPhotoReq.set("billno", fromPhoto.get("billno") + "-爆品打分");
+
+            aosMktPhotoReq.set("aos_parentid", hotDyn.getPkValue().toString());
+            aosMktPhotoReq.set("aos_parentbill", hotDyn.getString("billno"));
+
             setPhoto(aosMktPhotoReq, fromPhoto);
             setOrgnization(aosMktPhotoReq, (hotDyn.getDynamicObject("aos_apply")).getPkValue());
             // 视频需求单据体

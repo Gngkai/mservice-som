@@ -61,6 +61,8 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
     /** 设计需求表标识 **/
     public final static String AOS_MKT_DESIGNREQ = "aos_mkt_designreq";
     public final static String AOS_TYPE = "aos_type";
+    public final static String HOT = "HOT";
+
     public final static String AOS_ORGID = "aos_orgid";
     public final static String AOS_STATUS = "aos_status";
     public final static String AOS_SOURCETYPE = "aos_sourcetype";
@@ -1992,6 +1994,15 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
         ConfirmCallBackListener confirmCallBackListener = new ConfirmCallBackListener(keyCancel, this);
         // 设置页面确认框，参数为：标题，选项框类型，回调监听
         this.getView().showConfirm("您确认关闭此申请单吗？", MessageBoxOptions.YesNo, confirmCallBackListener);
+
+        Object aosSourcetype = this.getModel().getValue("aos_sourcetype");
+        if (HOT.equals(aosSourcetype)) {
+            Object aosSourceid = this.getModel().getValue("aos_sourceid");
+            DynamicObject hotDyn = BusinessDataServiceHelper.loadSingle(aosSourceid, "aos_mkt_hot_point");
+            hotDyn.set("aos_status", "结束");
+            SaveServiceHelper.save(new DynamicObject[] {hotDyn});
+        }
+
     }
 
     @Override
@@ -2158,6 +2169,12 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
             this.getView().setVisible(false, "aos_close");
             this.getView().setVisible(false, "aos_refresh");
             this.getView().setEnable(false, "contentpanelflex");
+        }
+
+        Object aosSourcetype = this.getModel().getValue("aos_sourcetype");
+        if (HOT.equals(aosSourcetype)) {
+            this.getView().setVisible(false, "aos_submit");
+            this.getView().setVisible(true, "aos_close");
         }
     }
 

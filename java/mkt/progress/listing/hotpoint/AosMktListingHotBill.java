@@ -1,5 +1,6 @@
 package mkt.progress.listing.hotpoint;
 
+import common.Cux_Common_Utl;
 import common.fnd.FndError;
 import common.fnd.FndGlobal;
 import common.fnd.FndWebHook;
@@ -146,7 +147,10 @@ public class AosMktListingHotBill extends AbstractBillPlugIn {
             }
             SaveServiceHelper.save(new DynamicObject[] {aosMktListingMana});
         }
-        // 明细中有是否需优化=“是”的SKU,触发生成优化流程
+
+        hotDyn.set("aos_status", "结束");
+        hotDyn.set("aos_user", Cux_Common_Utl.SYSTEM);
+        // 明细中有是否需优化=“是”的SKU,触发生成优化流程 将状态调整为优化中
         if (DES.equals(aosType)) {
             AosMktListingHotUtil.createDesign(aosItemid, hotDyn);
         } else if (VED.equals(aosType)) {
@@ -154,8 +158,6 @@ public class AosMktListingHotBill extends AbstractBillPlugIn {
         } else if (DOC.equals(aosType)) {
 
         }
-        // 将状态调整为优化中
-        hotDyn.set("aos_status", "优化中");
         hotDyn.set("aos_confirmdate", new Date());
         SaveServiceHelper.save(new DynamicObject[] {hotDyn});
     }
