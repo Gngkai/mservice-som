@@ -10,7 +10,7 @@ import mkt.act.dao.ActShopPriceDao;
 import mkt.act.dao.impl.ActShopPriceImpl;
 import mkt.act.rule.ActStrategy;
 import mkt.act.rule.ActUtil;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -52,22 +52,22 @@ public class AliexpressES implements ActStrategy {
             String aos_seasonattr = obj.getString("aos_seasonattr");
             // 剔除过季品
             if (ActUtil.isOutSeason(start, aos_seasonattr)) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 季节属性:" + aos_seasonattr + " 过季");
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 季节属性:" + aos_seasonattr + " 过季");
                 continue;
             }
 
             if (apartFromAmzItem.contains(aos_sku)) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "剔除除亚马逊外活动日过去30天已提报平台活动个数＞3的sku");
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "剔除除亚马逊外活动日过去30天已提报平台活动个数＞3的sku");
                 continue;
             }
 
             if (samePeriodActivitiesSet.contains(aos_sku)) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "剔除除剔除同国别同期活动");
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "剔除除剔除同国别同期活动");
                 continue;
             }
 
             if (daysBeforeAndAfterActItem.contains(aos_sku)) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 剔除同店铺前后30天已提报活动的SKU");
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 剔除同店铺前后30天已提报活动的SKU");
                 continue;
             }
             firstFilterList.add(obj);
@@ -94,7 +94,7 @@ public class AliexpressES implements ActStrategy {
             String aos_seasonattr = obj.getString("aos_seasonattr");
             DynamicObject itemObj = itemInfo.get(aos_sku);
             if (itemObj == null) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "取不到物料信息");
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "取不到物料信息");
                 continue;
             }
             String aos_itemid = itemObj.getString("aos_itemid");
@@ -108,7 +108,7 @@ public class AliexpressES implements ActStrategy {
                     aos_currentprice = map_shopPrice.get(aos_itemid);
                 }
                 else {
-                    MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 未获取到价格");
+                    MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 未获取到价格");
                     list_noPriceItem.add(aos_sku);
                     continue;
                 }
@@ -123,7 +123,7 @@ public class AliexpressES implements ActStrategy {
             // 自有仓库库存数量
             Integer ownWarehouseQty = nonPlatItemSet.getOrDefault(aos_sku, 0);
             if (!(ownWarehouseQty > 50)) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "自有仓库<=50 自有仓库库存数量:" + ownWarehouseQty);
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "自有仓库<=50 自有仓库库存数量:" + ownWarehouseQty);
                 continue;
             }
 
@@ -132,24 +132,24 @@ public class AliexpressES implements ActStrategy {
             // 常规品: 预计活动日可售天数>= 90
             if ("REGULAR".equals(aos_seasonattr) || "SPRING-SUMMER-CONVENTIONAL".equals(aos_seasonattr)) {
                 if (salDaysForAct < 90) {
-                    MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "常规品: 预计活动日可售天数< 90");
+                    MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "常规品: 预计活动日可售天数< 90");
                     continue;
                 }
             }
 
             int springSummerProToActStartDateBetweenDays = ActUtil.springSummerProToActStartDateBetweenDays(aos_seasonattr, start);
             if (salDaysForAct < springSummerProToActStartDateBetweenDays) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "春夏品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日=" + springSummerProToActStartDateBetweenDays);
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "春夏品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日=" + springSummerProToActStartDateBetweenDays);
                 continue;
             }
             int autumnWinterProToActStartDateBetweenDays = ActUtil.autumnWinterProToActStartDateBetweenDays(aos_seasonattr, start);
             if (salDaysForAct < autumnWinterProToActStartDateBetweenDays) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "春夏品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日=" + autumnWinterProToActStartDateBetweenDays);
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "春夏品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日=" + autumnWinterProToActStartDateBetweenDays);
                 continue;
             }
             int holidayAndActStartDateBetweenDays = ActUtil.holidayProToActStartDateBetweenDays(festivalStartAndEnd.get(aos_festivalseting), start);
             if (salDaysForAct < holidayAndActStartDateBetweenDays) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "节日品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日=" + holidayAndActStartDateBetweenDays);
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "节日品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日=" + holidayAndActStartDateBetweenDays);
                 continue;
             }
 

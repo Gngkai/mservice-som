@@ -28,7 +28,7 @@ import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import common.sal.util.QFBuilder;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.progress.ProgressUtil;
 import mkt.progress.iface.ItemInfoUtil;
 import mkt.progress.photo.AosMktProgPhReqBill;
@@ -122,7 +122,7 @@ public class AosMkt3DesignBill extends AbstractBillPlugIn implements ItemClickLi
                 OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_designreq",
                     new DynamicObject[] {aosMktDesignreq}, OperateOption.create());
                 if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
-                    MKTCom.SendGlobalMessage(messageId, "aos_mkt_designreq", String.valueOf(aosSourceid),
+                    MktComUtil.sendGlobalMessage(messageId, "aos_mkt_designreq", String.valueOf(aosSourceid),
                         String.valueOf(aosOrignbill), "设计确认3D");
                 }
             }
@@ -176,7 +176,7 @@ public class AosMkt3DesignBill extends AbstractBillPlugIn implements ItemClickLi
                     OperationServiceHelper.executeOperate("save", "aos_mkt_photolist",
                         new DynamicObject[] {aosMktPhotolist}, OperateOption.create());
                 }
-                MKTCom.SendGlobalMessage(messageId, "aos_mkt_photoreq", String.valueOf(aosSourceid),
+                MktComUtil.sendGlobalMessage(messageId, "aos_mkt_photoreq", String.valueOf(aosSourceid),
                     String.valueOf(aosOrignbill), "开发/采购确认图片");
             }
         }
@@ -290,7 +290,7 @@ public class AosMkt3DesignBill extends AbstractBillPlugIn implements ItemClickLi
             ex.printStackTrace();
         }
         if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
-            MKTCom.SendGlobalMessage(messageId, String.valueOf(aosMkt3design),
+            MktComUtil.sendGlobalMessage(messageId, String.valueOf(aosMkt3design),
                 String.valueOf(operationrst.getSuccessPkIds().get(0)), aosMkt3design.getString("billno"), message);
         }
     }
@@ -456,7 +456,7 @@ public class AosMkt3DesignBill extends AbstractBillPlugIn implements ItemClickLi
         OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_3design",
             new DynamicObject[] {aosMkt3design}, OperateOption.create());
         if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
-            MKTCom.SendGlobalMessage(messageId, String.valueOf(aosMkt3design),
+            MktComUtil.sendGlobalMessage(messageId, String.valueOf(aosMkt3design),
                 String.valueOf(operationrst.getSuccessPkIds().get(0)), aosMkt3design.getString("billno"), message);
         }
     }

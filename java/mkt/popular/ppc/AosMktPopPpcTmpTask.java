@@ -37,7 +37,7 @@ import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.common.AosMktCacheUtil;
 
 /**
@@ -47,6 +47,7 @@ import mkt.common.AosMktCacheUtil;
 public class AosMktPopPpcTmpTask extends AbstractTask {
     private static final DistributeSessionlessCache CACHE =
         CacheFactory.getCommonCacheFactory().getDistributeSessionlessCache("mkt_redis");
+
     private static void executerun() {
         // 初始化数据
         CommonDataSom.init();
@@ -77,6 +78,7 @@ public class AosMktPopPpcTmpTask extends AbstractTask {
             doOperate(params);
         }
     }
+
     public static void doOperate(Map<String, Object> params) {
         try {
             // 获取缓存
@@ -120,21 +122,21 @@ public class AosMktPopPpcTmpTask extends AbstractTask {
             // 获取单号
             int month = date.get(Calendar.MONTH) + 1;
             // 获取春夏品 秋冬品开始结束日期 营销日期参数表
-            Date summerSpringStart = MKTCom.Get_DateRange("aos_datefrom", "SS", pOrgId);
-            Date summerSpringEnd = MKTCom.Get_DateRange("aos_dateto", "SS", pOrgId);
-            Date autumnWinterStart = MKTCom.Get_DateRange("aos_datefrom", "AW", pOrgId);
-            Date autumnWinterEnd = MKTCom.Get_DateRange("aos_dateto", "AW", pOrgId);
+            Date summerSpringStart = MktComUtil.getDateRange("aos_datefrom", "SS", pOrgId);
+            Date summerSpringEnd = MktComUtil.getDateRange("aos_dateto", "SS", pOrgId);
+            Date autumnWinterStart = MktComUtil.getDateRange("aos_datefrom", "AW", pOrgId);
+            Date autumnWinterEnd = MktComUtil.getDateRange("aos_dateto", "AW", pOrgId);
             // 判断是否季末
             Date summerSpringSeasonEnd = DateUtils.setDays(DateUtils.addDays(summerSpringEnd, -32), 1);
             Date autumnWinterSeasonEnd = DateUtils.setDays(DateUtils.addDays(autumnWinterEnd, -32), 1);
             // 万圣节开始日期
-            Date halloweenStart = MKTCom.Get_DateRange("aos_datefrom", "Halloween", pOrgId);
+            Date halloweenStart = MktComUtil.getDateRange("aos_datefrom", "Halloween", pOrgId);
             // 万圣节结束日期
-            Date halloweenEnd = MKTCom.Get_DateRange("aos_dateto", "Halloween", pOrgId);
+            Date halloweenEnd = MktComUtil.getDateRange("aos_dateto", "Halloween", pOrgId);
             // 圣诞节开始日期
-            Date christmasStart = MKTCom.Get_DateRange("aos_datefrom", "Christmas", pOrgId);
+            Date christmasStart = MktComUtil.getDateRange("aos_datefrom", "Christmas", pOrgId);
             // 圣诞节结束日期
-            Date christmasEnd = MKTCom.Get_DateRange("aos_dateto", "Christmas", pOrgId);
+            Date christmasEnd = MktComUtil.getDateRange("aos_dateto", "Christmas", pOrgId);
             Map<String, Integer> productNoMap = new HashMap<>(16);
             // 获取营销国别参数
             BigDecimal qtyStandard = (BigDecimal)popOrgInfo.get(pOrgId + "~" + "QTYSTANDARD").get("aos_value");
@@ -266,8 +268,8 @@ public class AosMktPopPpcTmpTask extends AbstractTask {
                             // 季末 判断是否达标
                             isSeasonEnd = true;
                             float seasonRate =
-                                MKTCom.Get_SeasonRate(orgId, itemId, aosSeasonpro, itemOverseaqty, month);
-                            if (!MKTCom.Is_SeasonRate(aosSeasonpro, month, seasonRate)) {
+                                MktComUtil.getSeasonRate(orgId, itemId, aosSeasonpro, itemOverseaqty, month);
+                            if (!MktComUtil.isSeasonRate(aosSeasonpro, month, seasonRate)) {
                                 continue;
                             }
                         }
@@ -278,15 +280,15 @@ public class AosMktPopPpcTmpTask extends AbstractTask {
                             isSeasonEnd = true;
                             // 季末 判断是否达标
                             float seasonRate =
-                                MKTCom.Get_SeasonRate(orgId, itemId, aosSeasonpro, itemOverseaqty, month);
-                            if (!MKTCom.Is_SeasonRate(aosSeasonpro, month, seasonRate)) {
+                                MktComUtil.getSeasonRate(orgId, itemId, aosSeasonpro, itemOverseaqty, month);
+                            if (!MktComUtil.isSeasonRate(aosSeasonpro, month, seasonRate)) {
                                 continue;
                             }
                         }
                     }
                     // (海外在库+在途数量)/7日均销量)<60 或 满足销售预断货逻辑 则为营销预断货逻辑 且 不能为季节品季末
                     cond = (((((int)itemOverseaqty + (int)itemIntransqty) / aos7daysSale < 60)
-                        || (MKTCom.Is_PreSaleOut(orgId, itemId, (int)itemIntransqty, aosShpDay, aosFreightDay,
+                        || (MktComUtil.isPreSaleOut(orgId, itemId, (int)itemIntransqty, aosShpDay, aosFreightDay,
                             aosClearDay, availableDays)))
                         && !isSeasonEnd);
                 } else {
@@ -327,7 +329,7 @@ public class AosMktPopPpcTmpTask extends AbstractTask {
                 if ("其它节日装饰".equals(aosCategory2) || "圣诞装饰".equals(aosCategory2)) {
                     log.add(aosItemnumer + "产品类别" + aosCategory2);
                 }
-                if (aosFirstindate == null || MKTCom.GetBetweenDays(today, aosFirstindate) < 30) {
+                if (aosFirstindate == null || MktComUtil.getBetweenDays(today, aosFirstindate) < 30) {
                     log.add(aosItemnumer + "首次入库日期" + today);
                 }
                 if (actAmazonItem.contains(aosItemnumer)) {
@@ -338,7 +340,7 @@ public class AosMktPopPpcTmpTask extends AbstractTask {
                     && !"AUTUMN_WINTER".equals(aosSeasonpro) && !"WINTER".equals(aosSeasonpro)
                     && aosSpend14Sku.compareTo(BigDecimal.valueOf(0)) > 0 && !"其它节日装饰".equals(aosCategory2)
                     && !"圣诞装饰".equals(aosCategory2) && !actAmazonItem.contains(aosItemnumer)
-                    && ((aosFirstindate != null) && MKTCom.GetBetweenDays(today, aosFirstindate) >= 30));
+                    && ((aosFirstindate != null) && MktComUtil.getBetweenDays(today, aosFirstindate) >= 30));
                 if (cond) {
                     DynamicObject aosMktPopppcCal = BusinessDataServiceHelper.newDynamicObject("aos_mkt_popppc_cal");
                     aosMktPopppcCal.set("aos_orgid", pOrgId);

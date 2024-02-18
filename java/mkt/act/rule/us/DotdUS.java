@@ -27,7 +27,7 @@ import mkt.act.dao.ActShopPriceDao;
 import mkt.act.dao.impl.ActShopPriceImpl;
 import mkt.act.rule.ActStrategy;
 import mkt.act.rule.ActUtil;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 
 public class DotdUS implements ActStrategy {
 	@Override
@@ -88,7 +88,7 @@ public class DotdUS implements ActStrategy {
 			// 物料信息
 			DynamicObject itemObj = itemInfo.get(aos_sku);
 			if (itemObj == null) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 未获取到物料信息");
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 未获取到物料信息");
 				continue;
 			}
 			String aos_itemid =  itemObj.getString("aos_itemid") ;// 物料id 
@@ -101,7 +101,7 @@ public class DotdUS implements ActStrategy {
 
 			Object Category2 = Group.get(aos_sku);
 			if (Category2 == null) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 类别信息不存在");
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 类别信息不存在");
 				continue;
 			}
 
@@ -115,7 +115,7 @@ public class DotdUS implements ActStrategy {
 				}
 				else {
 					list_noPriceItem.add(aos_sku);
-					MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 未获取到价格");
+					MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 未获取到价格");
 					continue;
 				}
 			}
@@ -126,7 +126,7 @@ public class DotdUS implements ActStrategy {
 			BigDecimal actPrice = aos_currentprice.multiply(BigDecimal.ONE.subtract(aos_disstrength));// 活动价
 			DynamicObject lowestPriceObj = lowestPriceMap.get(aos_itemid);// 最低价
 			if (lowestPriceObj == null) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 未取到最低价");
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 未取到最低价");
 				continue;
 			}
 			BigDecimal minPrice30 = lowestPriceObj.getBigDecimal("aos_min_price30");// 30天最低价
@@ -137,7 +137,7 @@ public class DotdUS implements ActStrategy {
 			// Review
 			DynamicObject reviewObj = reviewItemSet.get(aos_sku);
 			if (reviewObj == null) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 未获取到Review");
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 未获取到Review");
 				continue;
 			}
 			BigDecimal aos_review = reviewObj.getBigDecimal("aos_review");
@@ -147,31 +147,31 @@ public class DotdUS implements ActStrategy {
 			// 自有仓库库存数量
 			int ownWarehouseQuantity = nonPlatItemSet.getOrDefault(aos_sku, 0);
 			if (ownWarehouseQuantity == 0) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 自有仓库存库存为0");
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 自有仓库存库存为0");
 				continue;
 			}
 
 			// 自有仓库存>30；或平台仓可售天数≥60天
 			if (!(ownWarehouseQuantity > 30 || platSaleDays >= 60)) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 自有仓库存>30；或平台仓可售天数≥60天；");
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 自有仓库存>30；或平台仓可售天数≥60天；");
 				continue;
 			}
 
 			// 剔除①预计活动日前后30天，活动类型为DOTD，且状态为正常的在线ID
 			if (beforeAfter30Set.contains(aos_itemid)) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 剔除①预计活动日前后30天，活动类型为DOTD，且状态为正常的在线ID");
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 剔除①预计活动日前后30天，活动类型为DOTD，且状态为正常的在线ID");
 				continue;
 			}
 
 			// 剔除①预计活动日前后7天，活动类型为LD/7DD，且状态为正常的在线ID
 			if (beforeAfter7Set.contains(aos_itemid)) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 剔除①预计活动日前后7天，活动类型为LD/7DD，且状态为正常的在线ID");
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 剔除①预计活动日前后7天，活动类型为LD/7DD，且状态为正常的在线ID");
 				continue;
 			}
 
 			// 剔除活动日，非当季SKU
 			if (ActUtil.isOutSeason(start, aos_seasonattr)) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 季节属性:" + aos_seasonattr + " 剔除活动日，非当季SKU");
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 季节属性:" + aos_seasonattr + " 剔除活动日，非当季SKU");
 				continue;
 			}
 
@@ -179,7 +179,7 @@ public class DotdUS implements ActStrategy {
 			if (reviewObj != null) {
 				if (!(aos_stars.compareTo(BigDecimal.valueOf(0)) == 0
 						|| aos_stars.compareTo(BigDecimal.valueOf(4)) >= 0)) {
-					MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " Review分数:" + aos_stars);
+					MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " Review分数:" + aos_stars);
 					continue;
 				}
 			}
@@ -187,10 +187,10 @@ public class DotdUS implements ActStrategy {
 			// 同中类提报的产品过去30天销售额>17.5W
 			Object orderamt = OrderAmt.get(Category2 + "");
 			if (orderamt == null) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 同中类过去30天无销售");
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 同中类过去30天无销售");
 				continue;
 			} else if (orderamt != null && ((BigDecimal) orderamt).compareTo(BigDecimal.valueOf(175000)) <= 0) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 同中类提报的产品过去30天销售额<=17.5W");
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 同中类提报的产品过去30天销售额<=17.5W");
 				continue;
 			}
 

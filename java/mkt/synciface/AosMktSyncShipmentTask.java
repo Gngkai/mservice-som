@@ -10,7 +10,7 @@ import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.progress.ProgressUtil;
 import mkt.progress.iface.ItemInfoUtil;
 
@@ -162,7 +162,7 @@ public class AosMktSyncShipmentTask extends AbstractTask {
                     syncPhotoList(dyReq.getString("billno"), shipDate);
                 }
             }
-            MKTCom.Put_SyncLog(aosSyncLogS, logRow.toString());
+            MktComUtil.putSyncLog(aosSyncLogS, logRow.toString());
         }
         SaveServiceHelper.save(new DynamicObject[] {aosSyncLog});
         int size = listSave.size();

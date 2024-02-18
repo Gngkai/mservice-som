@@ -45,7 +45,7 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.common.AosMktCacheUtil;
 import mkt.popular.AosMktPopUtil;
 import mkt.popular.sale.AosMktPopAddTask;
@@ -280,31 +280,31 @@ public class AosMktPopPpcTask extends AbstractTask {
                 return;
             }
             // 获取春夏品 秋冬品开始结束日期 营销日期参数表
-            Date summerSpringStart = MKTCom.Get_DateRange("aos_datefrom", "SS", orgId);
+            Date summerSpringStart = MktComUtil.getDateRange("aos_datefrom", "SS", orgId);
             Date summerSpringFirst = DateUtils.setDays(DateUtils.addDays(summerSpringStart, 63), 1);
-            Date summerSpringEnd = MKTCom.Get_DateRange("aos_dateto", "SS", orgId);
-            Date autumnWinterStart = MKTCom.Get_DateRange("aos_datefrom", "AW", orgId);
+            Date summerSpringEnd = MktComUtil.getDateRange("aos_dateto", "SS", orgId);
+            Date autumnWinterStart = MktComUtil.getDateRange("aos_datefrom", "AW", orgId);
             Date autumnWinterFirst = DateUtils.setDays(DateUtils.addDays(autumnWinterStart, 63), 1);
-            Date autumnWinterEnd = MKTCom.Get_DateRange("aos_dateto", "AW", orgId);
+            Date autumnWinterEnd = MktComUtil.getDateRange("aos_dateto", "AW", orgId);
             // 春夏品不剔除日期
-            Date summerSpringUnStart = MKTCom.Get_DateRange("aos_datefrom", "SSUN", orgId);
+            Date summerSpringUnStart = MktComUtil.getDateRange("aos_datefrom", "SSUN", orgId);
             // 秋冬品不剔除日期
-            Date autumnWinterUnStart = MKTCom.Get_DateRange("aos_datefrom", "AWUN", orgId);
+            Date autumnWinterUnStart = MktComUtil.getDateRange("aos_datefrom", "AWUN", orgId);
             // 春夏品不剔除日期
-            Date summerSpringUnEnd = MKTCom.Get_DateRange("aos_dateto", "SSUN", orgId);
+            Date summerSpringUnEnd = MktComUtil.getDateRange("aos_dateto", "SSUN", orgId);
             // 判断是否季末
             Date summerSpringSeasonEnd = DateUtils.setDays(DateUtils.addDays(summerSpringEnd, -32), 1);
             // 秋冬品不剔除日期
-            Date autumnWinterUnEnd = MKTCom.Get_DateRange("aos_dateto", "AWUN", orgId);
+            Date autumnWinterUnEnd = MktComUtil.getDateRange("aos_dateto", "AWUN", orgId);
             Date autumnWinterSeasonEnd = DateUtils.setDays(DateUtils.addDays(autumnWinterEnd, -32), 1);
             // 万圣节
-            Date halloweenStart = MKTCom.Get_DateRange("aos_datefrom", "Halloween", orgId);
+            Date halloweenStart = MktComUtil.getDateRange("aos_datefrom", "Halloween", orgId);
             // 万圣节
-            Date halloweenEnd = MKTCom.Get_DateRange("aos_dateto", "Halloween", orgId);
+            Date halloweenEnd = MktComUtil.getDateRange("aos_dateto", "Halloween", orgId);
             // 圣诞节
-            Date christmasStart = MKTCom.Get_DateRange("aos_datefrom", "Christmas", orgId);
+            Date christmasStart = MktComUtil.getDateRange("aos_datefrom", "Christmas", orgId);
             // 圣诞节
-            Date christmasEnd = MKTCom.Get_DateRange("aos_dateto", "Christmas", orgId);
+            Date christmasEnd = MktComUtil.getDateRange("aos_dateto", "Christmas", orgId);
             Map<String, Integer> productNoMap = new HashMap<>(16);
             Map<String, BigDecimal> productNoBidMap = new HashMap<>(16);
             // 获取营销国别参数
@@ -797,9 +797,9 @@ public class AosMktPopPpcTask extends AbstractTask {
                                 if (todayD.after(summerSpringSeasonEnd)) {
                                     // 季末 判断是否达标
                                     isSeasonEnd = true;
-                                    float seasonRate = MKTCom.Get_SeasonRate(orgIdLong, itemIdLong, aosSeasonpro,
+                                    float seasonRate = MktComUtil.getSeasonRate(orgIdLong, itemIdLong, aosSeasonpro,
                                         itemOverseaqty, month);
-                                    if (!MKTCom.Is_SeasonRate(aosSeasonpro, month, seasonRate)) {
+                                    if (!MktComUtil.isSeasonRate(aosSeasonpro, month, seasonRate)) {
                                         insertData(aosEntryentityS, insertMap, "OFFSALE");
                                         continue;
                                     }
@@ -810,9 +810,9 @@ public class AosMktPopPpcTask extends AbstractTask {
                                 if (todayD.after(autumnWinterSeasonEnd)) {
                                     isSeasonEnd = true;
                                     // 季末 判断是否达标
-                                    float seasonRate = MKTCom.Get_SeasonRate(orgIdLong, itemIdLong, aosSeasonpro,
+                                    float seasonRate = MktComUtil.getSeasonRate(orgIdLong, itemIdLong, aosSeasonpro,
                                         itemOverseaqty, month);
-                                    if (!MKTCom.Is_SeasonRate(aosSeasonpro, month, seasonRate)) {
+                                    if (!MktComUtil.isSeasonRate(aosSeasonpro, month, seasonRate)) {
                                         insertData(aosEntryentityS, insertMap, "OFFSALE");
                                         continue;
                                     }
@@ -822,7 +822,7 @@ public class AosMktPopPpcTask extends AbstractTask {
                             int itemavadays = mapItemavadays.getOrDefault(pOuCode + "~" + aosItemnumer, 0);
                             // 预断货标记
                             boolean offSaleFlag = (((availableDays < 30)
-                                || ((MKTCom.Is_PreSaleOut(orgIdLong, itemIdLong, (int)itemIntransqty, aosShpDay,
+                                || ((MktComUtil.isPreSaleOut(orgIdLong, itemIdLong, (int)itemIntransqty, aosShpDay,
                                     aosFreightDay, aosClearDay, availableDays)) && itemavadays < 45))
                                 && !isSeasonEnd);
                             if (offSaleFlag) {
@@ -868,7 +868,7 @@ public class AosMktPopPpcTask extends AbstractTask {
                         // 新品
                         boolean newFlag =
                             aosFirstindate == null || (("E".equals(aosItemstatus) || "A".equals(aosItemstatus))
-                                && (aosFirstindate != null) && MKTCom.GetBetweenDays(todayD, aosFirstindate) <= 14);
+                                && (aosFirstindate != null) && MktComUtil.getBetweenDays(todayD, aosFirstindate) <= 14);
                         // 春夏品
                         boolean springSummerFlag =
                             ("SPRING".equals(aosSeasonpro) || "SPRING_SUMMER".equals(aosSeasonpro)
@@ -880,9 +880,9 @@ public class AosMktPopPpcTask extends AbstractTask {
                                 && (todayD.after(autumnWinterUnStart) && todayD.before(autumnWinterUnEnd));
                         // 14日在线
                         boolean online14Days =
-                            aosOnline >= 10 && MKTCom.GetBetweenDays(todayD, (Date)aosGroupDate) > 14;
+                            aosOnline >= 10 && MktComUtil.getBetweenDays(todayD, (Date)aosGroupDate) > 14;
                         // 7日在线
-                        boolean online7Days = aosOnline >= 5 && MKTCom.GetBetweenDays(todayD, (Date)aosGroupDate) > 7;
+                        boolean online7Days = aosOnline >= 5 && MktComUtil.getBetweenDays(todayD, (Date)aosGroupDate) > 7;
                         // =====开始ROI剔除判断=====
                         boolean roiFlag = false;
                         String roiType = null;
@@ -1075,7 +1075,7 @@ public class AosMktPopPpcTask extends AbstractTask {
                             // (海外在库+在途数量)/7日均销量)<30 或 满足销售预断货逻辑 则为营销预断货逻辑 且 不能为季节品季末 且可售天数小于45
                             int itemavadays = mapItemavadays.getOrDefault(pOuCode + "~" + aosItemnumer, 0);
                             boolean preSaleOut = (((availableDays < 30)
-                                || ((MKTCom.Is_PreSaleOut(orgIdLong, itemIdLong, (int)itemIntransqty, aosShpDay,
+                                || ((MktComUtil.isPreSaleOut(orgIdLong, itemIdLong, (int)itemIntransqty, aosShpDay,
                                     aosFreightDay, aosClearDay, availableDays)) && itemavadays < 45)));
                             if (preSaleOut) {
                                 insertData(aosEntryentityS, insertMap, "OFFSALE");
@@ -1116,7 +1116,7 @@ public class AosMktPopPpcTask extends AbstractTask {
                 aosEntryentity.set("aos_rpt_roi", aosRptRoi);
 
                 if (FndGlobal.IsNotNull(onlineDate.get(aosItemnumer))
-                    && MKTCom.GetBetweenDays(todayD, onlineDate.get(aosItemnumer)) < 14) {
+                    && MktComUtil.getBetweenDays(todayD, onlineDate.get(aosItemnumer)) < 14) {
                     aosEntryentity.set("aos_offline", "Y");
                 } else {
                     aosEntryentity.set("aos_offline", "N");
@@ -2044,7 +2044,7 @@ public class AosMktPopPpcTask extends AbstractTask {
         aosEntryentity.set("aos_firstindate", insertMap.get("aos_firstindate"));
         aosEntryentity.set("aos_rpt_roi", insertMap.get("aos_rpt_roi"));
         int forteen = 14;
-        if (FndGlobal.IsNotNull(aosOnline) && MKTCom.GetBetweenDays(new Date(), (Date)aosOnline) < forteen) {
+        if (FndGlobal.IsNotNull(aosOnline) && MktComUtil.getBetweenDays(new Date(), (Date)aosOnline) < forteen) {
             aosEntryentity.set("aos_offline", "Y");
         } else {
             aosEntryentity.set("aos_offline", "N");

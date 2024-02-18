@@ -20,7 +20,7 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 
 /**
  * @author aosom
@@ -59,7 +59,7 @@ public class AosMktPopWeekList extends AbstractListPlugin {
     public void setFilter(SetFilterEvent e) {
         long currentUserId = UserServiceHelper.getCurrentUserId();
         // 1.判断该人员是否销售人员 (品类人员对应表)
-        QFilter salespersonOrg = MKTCom.querySalespersonOrg(currentUserId, "aos_orgid", "aos_groupid");
+        QFilter salespersonOrg = MktComUtil.querySalespersonOrg(currentUserId, "aos_orgid", "aos_groupid");
         // 2.判断该人员是否为审核人员
         Set<String> salesAuditorSet = CommonDataSomQuo.querySalesAuditors(currentUserId);
         List<Object> salesAuditorList = Arrays.asList(salesAuditorSet.toArray());

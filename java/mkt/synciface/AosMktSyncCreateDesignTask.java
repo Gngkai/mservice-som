@@ -18,7 +18,7 @@ import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.common.MKTS3PIC;
 import mkt.progress.ProgressUtil;
 import mkt.progress.iface.ItemInfoUtil;
@@ -56,7 +56,7 @@ public class AosMktSyncCreateDesignTask extends AbstractTask {
                 }
                 createMultipleEntity(dyItem);
             }
-            MKTCom.Put_SyncLog(aosSyncLogS, logRow.toString());
+            MktComUtil.putSyncLog(aosSyncLogS, logRow.toString());
         }
     }
 
@@ -151,7 +151,7 @@ public class AosMktSyncCreateDesignTask extends AbstractTask {
         dyDesignReq.set("aos_type", "其他");
         dyDesignReq.set("aos_source", "综合帖");
         // 设计师
-        String category = MKTCom.getItemCateNameZH(aosItem);
+        String category = MktComUtil.getItemCateNameZh(aosItem);
         String[] categoryGroup = category.split(",");
         String[] fields = new String[] {"aos_designeror", "aos_3d", "aos_eng"};
         DynamicObject dyDesign =

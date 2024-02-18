@@ -31,7 +31,7 @@ import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.progress.ProgressUtil;
 
 /**
@@ -195,7 +195,7 @@ public class AosMktDesignCmpBill extends AbstractBillPlugIn implements ItemClick
                 ProgressUtil.getOrderOrg(aosEntryentity.getDynamicObject("aos_itemid").getPkValue()));
         }
         // 根据循环中最后一个物料去获取对应的 英语编辑师 小语种编辑师 LastItemId
-        String category = MKTCom.getItemCateNameZH(lastItemId);
+        String category = MktComUtil.getItemCateNameZh(lastItemId);
         String[] categoryGroup = category.split(",");
         String aosCategory1 = null;
         String aosCategory2 = null;
@@ -239,7 +239,7 @@ public class AosMktDesignCmpBill extends AbstractBillPlugIn implements ItemClick
         OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_listing_min",
             new DynamicObject[] {aosMktListingMin}, OperateOption.create());
         if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
-            MKTCom.SendGlobalMessage(messageId, String.valueOf(aosMktListingMin),
+            MktComUtil.sendGlobalMessage(messageId, String.valueOf(aosMktListingMin),
                 String.valueOf(operationrst.getSuccessPkIds().get(0)), aosMktListingMin.getString("billno"), message);
             FndHistory.Create(dyMain, messageId, "生成小语种");
             FndHistory.Create(aosMktListingMin, aosMktListingMin.getString("aos_status"), "Listing优化需求表小语种-设计完成表自动创建");
@@ -263,7 +263,7 @@ public class AosMktDesignCmpBill extends AbstractBillPlugIn implements ItemClick
         Object aosOrgnumber = aosOrgid.getString("number");
         Object itemId =
             dyMain.getDynamicObjectCollection("aos_entryentity").get(0).getDynamicObject("aos_itemid").getPkValue();
-        String category = MKTCom.getItemCateNameZH(itemId);
+        String category = MktComUtil.getItemCateNameZh(itemId);
         String[] categoryGroup = category.split(",");
         String aosCategory1 = null;
         String aosCategory2 = null;
@@ -340,7 +340,7 @@ public class AosMktDesignCmpBill extends AbstractBillPlugIn implements ItemClick
         OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_listing_sal",
             new DynamicObject[] {aosMktListingSal}, OperateOption.create());
         if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
-            MKTCom.SendGlobalMessage(messageId, String.valueOf(aosMktListingSal),
+            MktComUtil.sendGlobalMessage(messageId, String.valueOf(aosMktListingSal),
                 String.valueOf(operationrst.getSuccessPkIds().get(0)), aosMktListingSal.getString("billno"), message);
             FndHistory.Create(dyMain, messageId, "生成销售确认单");
             FndHistory.Create(aosMktListingSal, aosMktListingSal.getString("aos_status"), "Listing优化需求表小语种-设计完成表自动创建");
@@ -425,7 +425,7 @@ public class AosMktDesignCmpBill extends AbstractBillPlugIn implements ItemClick
         dyMain.set("aos_status", "销售确认");
         // 流转给销售人员
         dyMain.set("aos_user", aosSale);
-        MKTCom.SendGlobalMessage(messageId, "aos_mkt_designcmp", String.valueOf(reqFid), String.valueOf(billno),
+        MktComUtil.sendGlobalMessage(messageId, "aos_mkt_designcmp", String.valueOf(reqFid), String.valueOf(billno),
             message);
     }
 
@@ -567,7 +567,7 @@ public class AosMktDesignCmpBill extends AbstractBillPlugIn implements ItemClick
         this.getModel().setValue("aos_user", aosRequireby);
         this.getView().invokeOperation("save");
         this.getView().invokeOperation("refresh");
-        MKTCom.SendGlobalMessage(messageId, "aos_mkt_designcmp", String.valueOf(reqFid), String.valueOf(billno),
+        MktComUtil.sendGlobalMessage(messageId, "aos_mkt_designcmp", String.valueOf(reqFid), String.valueOf(billno),
             message);
     }
 

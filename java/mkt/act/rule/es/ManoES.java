@@ -10,9 +10,10 @@ import mkt.act.dao.ActShopPriceDao;
 import mkt.act.dao.impl.ActShopPriceImpl;
 import mkt.act.rule.ActStrategy;
 import mkt.act.rule.ActUtil;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 
 public class ManoES implements ActStrategy {
@@ -25,7 +26,6 @@ public class ManoES implements ActStrategy {
         String aos_channelid = object.getDynamicObject("aos_channel").getString("id");
         String aos_shopid = object.getDynamicObject("aos_shop").getString("id");
 
-
         DynamicObject aos_sync_log = ActUtil.getCommonLog("ManoES", aos_orgnum);
         DynamicObjectCollection aos_sync_logS = aos_sync_log.getDynamicObjectCollection("aos_entryentity");
 
@@ -36,7 +36,7 @@ public class ManoES implements ActStrategy {
         // 至活动日间隔天数
         int currentToAct = ActUtil.currentToActivityDateBetweenDays(start);
 
-        Set<String> apartFromAmzItem = ActUtil.queryApartFromAmzAndEbayItem(aos_orgid, new String[]{"AMAZON"}, start);
+        Set<String> apartFromAmzItem = ActUtil.queryApartFromAmzAndEbayItem(aos_orgid, new String[] {"AMAZON"}, start);
         // 剔除同店铺同期活动
         Set<String> sameShopAndSamePeriodItem = ActUtil.querySamePeriodActivities(aos_orgid, aos_shopid, start, end);
 
@@ -52,22 +52,22 @@ public class ManoES implements ActStrategy {
             String aos_seasonattr = obj.getString("aos_seasonattr");
             // 剔除过季品
             if (ActUtil.isOutSeason(start, aos_seasonattr)) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 季节属性:" + aos_seasonattr + " 过季");
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 季节属性:" + aos_seasonattr + " 过季");
                 continue;
             }
 
             if (apartFromAmzItem.contains(aos_sku)) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "剔除除亚马逊、eBay外活动日过去30天已提报平台活动个数＞3的sku");
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "剔除除亚马逊、eBay外活动日过去30天已提报平台活动个数＞3的sku");
                 continue;
             }
 
             if (sameShopAndSamePeriodItem.contains(aos_sku)) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "剔除同店铺同期活动");
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "剔除同店铺同期活动");
                 continue;
             }
 
             if (daysBeforeAndAfterActItem.contains(aos_sku)) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "剔除活动日前后30天已提报活动的SKU");
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "剔除活动日前后30天已提报活动的SKU");
                 continue;
             }
 
@@ -76,18 +76,20 @@ public class ManoES implements ActStrategy {
         }
 
         DynamicObject orgActivityQty = ActUtil.getOrgActivityQty(aos_orgid);
-        Map<String, DynamicObject> priceMap = ActUtil.getAsinAndPriceFromPrice(aos_orgid, aos_shopid, aos_channelid, itemFilterList);
+        Map<String, DynamicObject> priceMap =
+            ActUtil.getAsinAndPriceFromPrice(aos_orgid, aos_shopid, aos_channelid, itemFilterList);
         Map<String, DynamicObject> itemInfo = ActUtil.getItemInfo(itemFilterList, aos_orgid);
         // 查询节日销售时间
         Map<String, String[]> festivalStartAndEnd = ActUtil.queryFestivalStartAndEnd(aos_orgid);
         // 查询自有仓库库存数量
         Map<String, Integer> nonPlatItemSet = ActUtil.queryNonPlatQty(aos_orgid);
 
-        //店铺价格
+        // 店铺价格
         List<String> list_noPriceItem = new ArrayList<>(itemFilterList.size());
         String entityId = object.getString("id");
         ActShopPriceDao actShopPriceDao = new ActShopPriceImpl();
-        Map<String, BigDecimal> map_shopPrice = actShopPriceDao.QueryOrgChannelShopItemNumberPrice(aos_orgid, aos_channelid, aos_shopid, itemFilterList);
+        Map<String, BigDecimal> map_shopPrice =
+            actShopPriceDao.QueryOrgChannelShopItemNumberPrice(aos_orgid, aos_channelid, aos_shopid, itemFilterList);
 
         // 第二次过滤
         List<JSONObject> secFilterList = new ArrayList<>();
@@ -96,7 +98,7 @@ public class ManoES implements ActStrategy {
             String aos_seasonattr = obj.getString("aos_seasonattr");
             DynamicObject itemObj = itemInfo.get(aos_sku);
             if (itemObj == null) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "取不到物料信息");
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "取不到物料信息");
                 continue;
             }
 
@@ -105,17 +107,15 @@ public class ManoES implements ActStrategy {
             DynamicObject priceObj = priceMap.get(aos_sku);
             String asin = "";
             BigDecimal aos_currentprice;
-            if (priceObj == null) {	//每日价格不存在
-                if (map_shopPrice.containsKey(aos_itemid)){ //店铺价格存在
+            if (priceObj == null) { // 每日价格不存在
+                if (map_shopPrice.containsKey(aos_itemid)) { // 店铺价格存在
                     aos_currentprice = map_shopPrice.get(aos_itemid);
-                }
-                else {
-                    MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 未获取到价格");
+                } else {
+                    MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 未获取到价格");
                     list_noPriceItem.add(aos_sku);
                     continue;
                 }
-            }
-            else {
+            } else {
                 asin = priceObj.getString("aos_asin");// ASIN码
                 aos_currentprice = priceObj.getBigDecimal("aos_currentprice");// 当前价格
             }
@@ -124,34 +124,39 @@ public class ManoES implements ActStrategy {
             // 自有仓库库存数量
             Integer ownWarehouseQty = nonPlatItemSet.getOrDefault(aos_sku, 0);
             if (!(ownWarehouseQty > 30)) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "自有仓库<30 自有仓库库存数量:" + ownWarehouseQty);
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "自有仓库<30 自有仓库库存数量:" + ownWarehouseQty);
                 continue;
             }
-
 
             // 预计活动日可售天数
             int salDaysForAct = InStockAvailableDays.calInstockSalDaysForAct(aos_orgid, aos_itemid, start);
             // 常规品: 预计活动日可售天数>= 90
             if ("REGULAR".equals(aos_seasonattr) || "SPRING-SUMMER-CONVENTIONAL".equals(aos_seasonattr)) {
                 if (salDaysForAct < 90) {
-                    MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "常规品: 预计活动日可售天数< 90");
+                    MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "常规品: 预计活动日可售天数< 90");
                     continue;
                 }
             }
 
-            int springSummerProToActStartDateBetweenDays = ActUtil.springSummerProToActStartDateBetweenDays(aos_seasonattr, start);
+            int springSummerProToActStartDateBetweenDays =
+                ActUtil.springSummerProToActStartDateBetweenDays(aos_seasonattr, start);
             if (salDaysForAct < springSummerProToActStartDateBetweenDays) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "春夏品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日=" + springSummerProToActStartDateBetweenDays);
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "春夏品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日="
+                    + springSummerProToActStartDateBetweenDays);
                 continue;
             }
-            int autumnWinterProToActStartDateBetweenDays = ActUtil.autumnWinterProToActStartDateBetweenDays(aos_seasonattr, start);
+            int autumnWinterProToActStartDateBetweenDays =
+                ActUtil.autumnWinterProToActStartDateBetweenDays(aos_seasonattr, start);
             if (salDaysForAct < autumnWinterProToActStartDateBetweenDays) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "春夏品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日=" + autumnWinterProToActStartDateBetweenDays);
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "春夏品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日="
+                    + autumnWinterProToActStartDateBetweenDays);
                 continue;
             }
-            int holidayAndActStartDateBetweenDays = ActUtil.holidayProToActStartDateBetweenDays(festivalStartAndEnd.get(aos_festivalseting), start);
+            int holidayAndActStartDateBetweenDays =
+                ActUtil.holidayProToActStartDateBetweenDays(festivalStartAndEnd.get(aos_festivalseting), start);
             if (salDaysForAct < holidayAndActStartDateBetweenDays) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "节日品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日=" + holidayAndActStartDateBetweenDays);
+                MktComUtil.putSyncLog(aos_sync_logS,
+                    aos_sku + "节日品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日=" + holidayAndActStartDateBetweenDays);
                 continue;
             }
 
@@ -170,13 +175,14 @@ public class ManoES implements ActStrategy {
             int aos_lowestqty = orgActivityQty.getInt("aos_lowestqty");
             BigDecimal aos_inventoryratio = orgActivityQty.getBigDecimal("aos_inventoryratio");
 
-            int aos_qty = Math.max(aos_lowestqty, BigDecimal.valueOf(aos_overseaqty).multiply(aos_inventoryratio).setScale(0, BigDecimal.ROUND_HALF_UP).intValue());
-
+            int aos_qty = Math.max(aos_lowestqty, BigDecimal.valueOf(aos_overseaqty).multiply(aos_inventoryratio)
+                .setScale(0, RoundingMode.HALF_UP).intValue());
 
             int nonPlatQty = InStockAvailableDays.getNonPlatQty(aos_orgid, aos_itemid);
             // 线上7天日均销量 R
             float R = InStockAvailableDays.getOrgItemOnlineAvgQty(aos_orgid, aos_itemid);
-            BigDecimal aos_preactqty = BigDecimal.valueOf(nonPlatQty).subtract(BigDecimal.valueOf(R).multiply(BigDecimal.valueOf(currentToAct)));
+            BigDecimal aos_preactqty = BigDecimal.valueOf(nonPlatQty)
+                .subtract(BigDecimal.valueOf(R).multiply(BigDecimal.valueOf(currentToAct)));
 
             // 活动价 = min(当年最低定价，当前价格*折扣力度,过去30天最低定价*0.95)
             BigDecimal actPrice;
@@ -185,7 +191,6 @@ public class ManoES implements ActStrategy {
             } else {
                 actPrice = aos_currentprice.subtract(aos_disamt);
             }
-
 
             JSONObject itemObject = new JSONObject();
             itemObject.put("aos_itemnum", aos_itemid);
@@ -211,9 +216,9 @@ public class ManoES implements ActStrategy {
             itemObject.put("aos_typedetail", aos_typedetail);// 折扣金额
             itemObject.put("aos_seasonattr", aos_seasonattr);// 季节属性
             itemObject.put("aos_brand", aos_brand);// 品牌
-//            itemObject.put("aos_invcostamt", "");// 库存金额
-//            itemObject.put("aos_stars", aos_stars);// review分数
-//            itemObject.put("aos_reviewqty", aos_review);// review个数
+            // itemObject.put("aos_invcostamt", "");// 库存金额
+            // itemObject.put("aos_stars", aos_stars);// review分数
+            // itemObject.put("aos_reviewqty", aos_review);// review个数
             secFilterList.add(itemObject);
         }
         DynamicObjectCollection aos_sal_actplanentity = object.getDynamicObjectCollection("aos_sal_actplanentity");
@@ -227,9 +232,8 @@ public class ManoES implements ActStrategy {
             }
         }
 
-        SaveServiceHelper.save(new DynamicObject[] { object });
-        DynamicObject dynamicObject = BusinessDataServiceHelper.loadSingle(object.getPkValue(),
-                "aos_act_select_plan");
+        SaveServiceHelper.save(new DynamicObject[] {object});
+        DynamicObject dynamicObject = BusinessDataServiceHelper.loadSingle(object.getPkValue(), "aos_act_select_plan");
         ActUtil.setProfitRate(dynamicObject);
 
         // 计算活动毛利率
@@ -237,7 +241,7 @@ public class ManoES implements ActStrategy {
         ActUtil.setLowestProfitRate(object.getPkValue(), orgLowestProfitRate);
 
         // 保存日志表
-        SaveServiceHelper.save(new DynamicObject[]{aos_sync_log});
-        ActUtil.SaveItme(entityId,list_noPriceItem);
+        SaveServiceHelper.save(new DynamicObject[] {aos_sync_log});
+        ActUtil.SaveItme(entityId, list_noPriceItem);
     }
 }

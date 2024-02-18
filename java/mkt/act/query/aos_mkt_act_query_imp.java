@@ -24,7 +24,7 @@ import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import common.sal.util.QFBuilder;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import org.apache.commons.lang3.time.DateUtils;
 
 import java.io.PrintWriter;
@@ -212,7 +212,7 @@ public class aos_mkt_act_query_imp extends BatchImportPlugin {
 					orgid_str = ItemInfoD.get("org_id") + "";
 					itemid_str = ItemInfoD.get("item_id") + "";
 
-					float SeasonRate = MKTCom.Get_SeasonRate((long) ItemInfoD.get("org_id"),
+					float SeasonRate = MktComUtil.getSeasonRate((long) ItemInfoD.get("org_id"),
 							(long) ItemInfoD.get("item_id"), ItemInfoD.get("aos_season") + "", item_ouqty.getOrDefault(key + "_OS",0),
 							month);
 					BigDecimal SeasonRateB = new BigDecimal(SeasonRate).setScale(2, BigDecimal.ROUND_HALF_UP);

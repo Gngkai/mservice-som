@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import kd.bos.entity.datamodel.ListSelectedRowCollection;
 import kd.bos.entity.operate.result.OperationResult;
 import kd.bos.form.*;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.progress.ProgressUtil;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
@@ -253,7 +253,7 @@ public class AosMktRcvList extends AbstractListPlugin {
             aosMktRcv.set("aos_user", aosUser);
             OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_rcv",
                 new DynamicObject[] {aosMktRcv}, OperateOption.create());
-            MKTCom.SendGlobalMessage(String.valueOf(((DynamicObject)aosUser).getPkValue()), String.valueOf(aosMktRcv),
+            MktComUtil.sendGlobalMessage(String.valueOf(((DynamicObject)aosUser).getPkValue()), String.valueOf(aosMktRcv),
                 String.valueOf(operationrst.getSuccessPkIds().get(0)), billno, currentUserName + "流程转办!");
             FndHistory fndHistory = new FndHistory();
             fndHistory.SetActionBy(currentUserId);

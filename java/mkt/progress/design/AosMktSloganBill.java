@@ -34,7 +34,7 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 
 /**
  * @author aosom
@@ -103,7 +103,7 @@ public class AosMktSloganBill extends AbstractBillPlugIn {
             dyMain.set("aos_designer", aosDesigner);
             dyMain.set("aos_user", aosDesigner);
             dyMain.set("aos_status", "设计");
-            MKTCom.SendGlobalMessage(String.valueOf(messageId), "aos_mkt_slogan", String.valueOf(reqFid),
+            MktComUtil.sendGlobalMessage(String.valueOf(messageId), "aos_mkt_slogan", String.valueOf(reqFid),
                 String.valueOf(billno), "Slogan-设计");
         } else {
             dyMain.set("aos_user", SYSTEM);
@@ -628,7 +628,7 @@ public class AosMktSloganBill extends AbstractBillPlugIn {
         } else if ("优化".equals(aos_type)) {
             updateSlogan();
         }
-        MKTCom.SendGlobalMessage(String.valueOf(aos_requireby.getPkValue()), "aos_mkt_listing_min",
+        MktComUtil.sendGlobalMessage(String.valueOf(aos_requireby.getPkValue()), "aos_mkt_listing_min",
             String.valueOf(ReqFId), String.valueOf(billno), "Slogan-结束");
     }
 
@@ -888,7 +888,7 @@ public class AosMktSloganBill extends AbstractBillPlugIn {
                 }
                 OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_slogan",
                     new DynamicObject[] {aos_mkt_slogan}, OperateOption.create());
-                MKTCom.SendGlobalMessage(String.valueOf(messageId), "aos_mkt_slogan",
+                MktComUtil.sendGlobalMessage(String.valueOf(messageId), "aos_mkt_slogan",
                     String.valueOf(operationrst.getSuccessPkIds().get(0)), aos_mkt_slogan.getString("billno"),
                     "Slogan-小语种翻译");
             }

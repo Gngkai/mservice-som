@@ -31,7 +31,7 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import mkt.common.AosMktGenUtil;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.popular.AosMktPopUtil;
 
 /**
@@ -113,10 +113,10 @@ public class AosMktPopAddsTask extends AbstractTask {
         int aosFreightDay = mapList.get(1);
         // 清关天数
         int aosClearDay = mapList.get(2);
-        Date summerSpringStart = MKTCom.Get_DateRange("aos_datefrom", "SS", pOrgId);
-        Date summerSpringEnd = MKTCom.Get_DateRange("aos_dateto", "SS", pOrgId);
-        Date autumnWinterStart = MKTCom.Get_DateRange("aos_datefrom", "AW", pOrgId);
-        Date autumnWinterEnd = MKTCom.Get_DateRange("aos_dateto", "AW", pOrgId);
+        Date summerSpringStart = MktComUtil.getDateRange("aos_datefrom", "SS", pOrgId);
+        Date summerSpringEnd = MktComUtil.getDateRange("aos_dateto", "SS", pOrgId);
+        Date autumnWinterStart = MktComUtil.getDateRange("aos_datefrom", "AW", pOrgId);
+        Date autumnWinterEnd = MktComUtil.getDateRange("aos_dateto", "AW", pOrgId);
         Set<String> specialSet = getSpecial(orgidStr, todayStr);
         HashMap<String, Map<String, String>> itemPoint = generateItemPoint(pOrgId);
         // 查询国别物料
@@ -213,7 +213,7 @@ public class AosMktPopAddsTask extends AbstractTask {
                         log.add(aosItemnumer + "昨日PPCST中不能存在");
                         continue;
                     }
-                    if ((availableDays < 30) && (MKTCom.Is_PreSaleOut(orgId, itemId, (int)itemIntransqty, aosShpDay,
+                    if ((availableDays < 30) && (MktComUtil.isPreSaleOut(orgId, itemId, (int)itemIntransqty, aosShpDay,
                         aosFreightDay, aosClearDay, availableDays))) {
                         log.add(aosItemnumer + " 非预断货");
                         continue;
@@ -237,9 +237,9 @@ public class AosMktPopAddsTask extends AbstractTask {
                         log.add(aosItemnumer + "季节品海外库存必须大于50");
                         continue;
                     }
-                    float seasonRate = MKTCom.Get_SeasonRate(orgId, itemId, aosSeasonpro, itemOverseaqty, month);
+                    float seasonRate = MktComUtil.getSeasonRate(orgId, itemId, aosSeasonpro, itemOverseaqty, month);
                     cond = (!(ppcStLastMap.get(itemidStr) == null
-                        || (seasonRate < 0.9 && !MKTCom.Is_SeasonRate(aosSeasonpro, month, seasonRate))));
+                        || (seasonRate < 0.9 && !MktComUtil.isSeasonRate(aosSeasonpro, month, seasonRate))));
                     if (cond) {
                         log.add(aosItemnumer + " 累计完成率" + seasonRate);
                         continue;

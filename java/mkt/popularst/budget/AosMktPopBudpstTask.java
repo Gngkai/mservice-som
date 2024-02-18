@@ -88,8 +88,8 @@ public class AosMktPopBudpstTask extends AbstractTask {
         HashMap<String, Map<String, Map<String, Object>>> skuRpt7SerialD =
             AosMktGenUtil.generateSkuRpt7Serial(pOuCode);
         HashMap<String, Map<String, Map<String, Object>>> ppcYsterSerial7 =
-            AosMktGenUtil.generateYesterSTSerial7D(pOuCode);
-        HashMap<String, Map<String, Object>> ppcYsterSerialG = AosMktGenUtil.generateYesterSTSerial7G(pOuCode);
+            AosMktGenUtil.generateYesterStSerial7D(pOuCode);
+        HashMap<String, Map<String, Object>> ppcYsterSerialG = AosMktGenUtil.generateYesterStSerial7G(pOuCode);
         // 国别标准ROI
         BigDecimal popOrgRoist = (BigDecimal)popOrgInfo.get(pOrgId + "~" + "ROIST").get("aos_value");
         // 很差

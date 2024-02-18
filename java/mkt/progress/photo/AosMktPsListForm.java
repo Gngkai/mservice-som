@@ -22,7 +22,7 @@ import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.common.MKTS3PIC;
 import mkt.progress.ProgressUtil;
 import mkt.progress.design.AosMktDesignReqBill;
@@ -358,7 +358,7 @@ public class AosMktPsListForm extends AbstractBillPlugIn implements ItemClickLis
         OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_designreq",
             new DynamicObject[] {aosMktDesignreq}, OperateOption.create());
         if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
-            MKTCom.SendGlobalMessage(messageId, "aos_mkt_photoreq",
+            MktComUtil.sendGlobalMessage(messageId, "aos_mkt_photoreq",
                 String.valueOf(operationrst.getSuccessPkIds().get(0)), aosMktDesignreq.getString("billno"),
                 "设计需求表-拍照新品自动创建");
             FndHistory.Create(aosMktDesignreq, aosMktDesignreq.getString("aos_status"), "设计需求表-拍照新品自动创建");

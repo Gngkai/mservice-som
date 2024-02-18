@@ -35,7 +35,7 @@ import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import common.sal.util.QFBuilder;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.common.otel.MmsOtelUtils;
 import mkt.progress.ProgressUtil;
 import mkt.progress.design3d.AosMkt3DesignBill;
@@ -670,12 +670,12 @@ public class AosMktRcvBill extends AbstractBillPlugIn implements ItemClickListen
             }
             // 发送消息
             if ((boolean)aosPhotoFlag && (boolean)aosVedioFlag) {
-                MKTCom.SendGlobalMessage(messageId, "aos_mkt_photoreq", String.valueOf(reqFid),
+                MktComUtil.sendGlobalMessage(messageId, "aos_mkt_photoreq", String.valueOf(reqFid),
                     String.valueOf(aosBillno), "拍照需求表-白底拍摄");
-                MKTCom.SendGlobalMessage(messageId, "aos_mkt_photoreq", String.valueOf(reqFidSplit),
+                MktComUtil.sendGlobalMessage(messageId, "aos_mkt_photoreq", String.valueOf(reqFidSplit),
                     String.valueOf(aosBillno), "拍照需求表-视频拍摄");
             } else {
-                MKTCom.SendGlobalMessage(messageId, "aos_mkt_photoreq", String.valueOf(reqFid),
+                MktComUtil.sendGlobalMessage(messageId, "aos_mkt_photoreq", String.valueOf(reqFid),
                     String.valueOf(aosBillno), messageStr);
             }
 

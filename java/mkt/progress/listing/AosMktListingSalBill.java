@@ -16,7 +16,7 @@ import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.control.events.ItemClickListener;
 import kd.bos.form.events.BeforeClosedEvent;
 import kd.bos.servicehelper.user.UserServiceHelper;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.progress.ProgressUtil;
 
 /**
@@ -166,7 +166,7 @@ public class AosMktListingSalBill extends AbstractBillPlugIn implements ItemClic
         this.getView().invokeOperation("refresh");
         String messageId = String.valueOf(aosSale);
         String message = "设计需求表-Listing优化需求自动创建";
-        MKTCom.SendGlobalMessage(messageId, "aos_mkt_listing_sal", String.valueOf(fid), String.valueOf(aosBillno),
+        MktComUtil.sendGlobalMessage(messageId, "aos_mkt_listing_sal", String.valueOf(fid), String.valueOf(aosBillno),
             message);
     }
 

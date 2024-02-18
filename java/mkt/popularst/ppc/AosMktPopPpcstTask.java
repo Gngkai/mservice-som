@@ -33,7 +33,7 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import mkt.common.AosMktGenUtil;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.popular.AosMktPopUtil;
 import mkt.popularst.add.AosMktPopAddsTask;
 import mkt.popularst.sale.AosMktPopStaddTask;
@@ -133,10 +133,10 @@ public class AosMktPopPpcstTask extends AbstractTask {
         Map<String, String> productAvaMap = new HashMap<>(16);
         // 记录系列可用组个数
         Map<String, Integer> productNoMap = new HashMap<>(16);
-        Date summerSpringStart = MKTCom.Get_DateRange("aos_datefrom", "SS", pOrgId);
-        Date summerSpringEnd = MKTCom.Get_DateRange("aos_dateto", "SS", pOrgId);
-        Date autumnWinterStart = MKTCom.Get_DateRange("aos_datefrom", "AW", pOrgId);
-        Date autumnWinterEnd = MKTCom.Get_DateRange("aos_dateto", "AW", pOrgId);
+        Date summerSpringStart = MktComUtil.getDateRange("aos_datefrom", "SS", pOrgId);
+        Date summerSpringEnd = MktComUtil.getDateRange("aos_dateto", "SS", pOrgId);
+        Date autumnWinterStart = MktComUtil.getDateRange("aos_datefrom", "AW", pOrgId);
+        Date autumnWinterEnd = MktComUtil.getDateRange("aos_dateto", "AW", pOrgId);
         // 通用数据 店铺货号
         HashMap<String, String> productInfo = AosMktGenUtil.generateShopSku(pOuCode);
         List<Map<String, Object>> itemQtyList = AosMktGenUtil.generateItemQtyList(pOuCode);
@@ -407,7 +407,7 @@ public class AosMktPopPpcstTask extends AbstractTask {
             // 可售天数
             int availableDays = InStockAvailableDays.calInstockSalDaysForDayMin(orgidStr, itemidStr, dayMap);
             if (FndGlobal.IsNull(aosFestivalseting)) {
-                if (((availableDays < 30) && (MKTCom.Is_PreSaleOut(orgId, itemId, (int)itemIntransqty, aosShpDay,
+                if (((availableDays < 30) && (MktComUtil.isPreSaleOut(orgId, itemId, (int)itemIntransqty, aosShpDay,
                     aosFreightDay, aosClearDay, availableDays)))) {
                     insertMap.put("aos_reason", "预断货剔除");
                     insertData(aosEntryentityS, insertMap);

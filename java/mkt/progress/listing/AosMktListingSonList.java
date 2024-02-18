@@ -27,7 +27,7 @@ import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.progress.ProgressUtil;
 import mkt.progress.iface.ParaInfoUtil;
 import org.apache.commons.collections4.BidiMap;
@@ -170,7 +170,7 @@ public class AosMktListingSonList extends AbstractListPlugin {
             AosMktListingSonBill.setListSonUserOrganizate(aosMktListingSon);
             OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_listing_son",
                 new DynamicObject[] {aosMktListingSon}, OperateOption.create());
-            MKTCom.SendGlobalMessage(String.valueOf(((DynamicObject)aosUser).getPkValue()), "aos_mkt_listing_son",
+            MktComUtil.sendGlobalMessage(String.valueOf(((DynamicObject)aosUser).getPkValue()), "aos_mkt_listing_son",
                 String.valueOf(operationrst.getSuccessPkIds().get(0)), billno, currentUserName + "流程转办!");
             FndHistory fndHistory = new FndHistory();
             fndHistory.SetActionBy(currentUserId);

@@ -26,7 +26,7 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.popularst.budget.AosMktPopBudpstTask;
 
 /**
@@ -460,7 +460,7 @@ public class AosMktPopAdjstForm extends AbstractFormPlugin implements ItemClickL
                 BigDecimal aosHighvalue = (BigDecimal)Optional
                     .ofNullable(this.getModel().getValue("aos_highprz", selectRow)).orElse(BigDecimal.ZERO);
                 this.getModel().setValue("aos_manualprz",
-                    MKTCom.min(aosAdjprice.multiply((BigDecimal)aosAdjustrate).setScale(2, RoundingMode.HALF_UP),
+                    MktComUtil.min(aosAdjprice.multiply((BigDecimal)aosAdjustrate).setScale(2, RoundingMode.HALF_UP),
                         aosHighvalue),
                     selectRow);
             }

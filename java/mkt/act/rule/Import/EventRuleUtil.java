@@ -20,7 +20,7 @@ import kd.bos.exception.KDException;
 import kd.bos.formula.FormulaEngine;
 import kd.bos.servicehelper.QueryServiceHelper;
 import mkt.act.rule.ActUtil;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -553,7 +553,7 @@ class EventRuleUtil {
             return;
         }
         //获取下拉列表
-        Map<String, String> typeValue = MKTCom.getComboMap("aos_base_stitem", "aos_type");
+        Map<String, String> typeValue = MktComUtil.getComboMap("aos_base_stitem", "aos_type");
         QFBuilder builder = new QFBuilder();
         builder.add("aos_orgid","=",eventRule.orgEntity.getPkValue());
         builder.add("aos_itemid","!=","");
@@ -725,7 +725,7 @@ class EventRuleUtil {
         }
         itemStatus = new HashMap<>(eventRule.itemInfoes.size());
         //获取下拉列表
-        Map<String, String> countryStatus = MKTCom.getComboMap("bd_material", "aos_contryentrystatus");
+        Map<String, String> countryStatus = MktComUtil.getComboMap("bd_material", "aos_contryentrystatus");
 
         for (DynamicObject infoe : eventRule.itemInfoes) {
             String itemid = infoe.getString("id");

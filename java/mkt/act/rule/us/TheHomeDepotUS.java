@@ -28,7 +28,7 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import mkt.act.rule.ActStrategy;
 import mkt.act.rule.ActUtil;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 
 public class TheHomeDepotUS implements ActStrategy {
 	@Override
@@ -78,7 +78,7 @@ public class TheHomeDepotUS implements ActStrategy {
 			String aos_seasonattr = aos_mkt_actselect.getString("aos_seasonattr");// 季节属性
 			DynamicObject itemObj = itemInfo.get(aos_sku);
 			if (itemObj == null) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 未获取到物料信息");
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 未获取到物料信息");
 				continue;
 			}
 			String aos_itemid =  itemObj.getString("aos_itemid") ;// 物料id 
@@ -108,7 +108,7 @@ public class TheHomeDepotUS implements ActStrategy {
 
 			Object Category2 = Group.get(aos_sku);
 			if (Category2 == null) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 类别信息不存在");
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 类别信息不存在");
 				continue;
 			}
 
@@ -122,7 +122,7 @@ public class TheHomeDepotUS implements ActStrategy {
 				}
 				else {
 					list_noPriceItem.add(aos_sku);
-					MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 未获取到价格");
+					MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 未获取到价格");
 					continue;
 				}
 			}
@@ -133,7 +133,7 @@ public class TheHomeDepotUS implements ActStrategy {
 			BigDecimal actPrice = aos_currentprice.multiply(BigDecimal.ONE.subtract(aos_disstrength));// 活动价
 			DynamicObject lowestPriceObj = lowestPriceMap.get(aos_itemid);// 最低价
 			if (lowestPriceObj == null) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 未取到最低价");
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 未取到最低价");
 				continue;
 			}
 			BigDecimal minPrice30 = lowestPriceObj.getBigDecimal("aos_min_price30");// 30天最低价
@@ -144,7 +144,7 @@ public class TheHomeDepotUS implements ActStrategy {
 			// Review
 			DynamicObject reviewObj = reviewItemSet.get(aos_sku);
 			if (reviewObj == null) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 未获取到Review");
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 未获取到Review");
 				continue;
 			}
 			BigDecimal aos_review = reviewObj.getBigDecimal("aos_review");
@@ -155,13 +155,13 @@ public class TheHomeDepotUS implements ActStrategy {
 			// 自有仓库库存数量
 			int ownWarehouseQuantity = nonPlatItemSet.getOrDefault(aos_sku, 0);
 			if (ownWarehouseQuantity == 0) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 自有仓库存库存为0");
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 自有仓库存库存为0");
 				continue;
 			}
 
 			// 自有仓库存>80；或平台仓可售天数≥60天
 			if (!(ownWarehouseQuantity > 80 )) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 自有仓库存>80");
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 自有仓库存>80");
 				continue;
 			}
 
@@ -169,7 +169,7 @@ public class TheHomeDepotUS implements ActStrategy {
 			// 预计活动日可售天数
 			if ("REGULAR".equals(aos_seasonattr) || "SPRING-SUMMER-CONVENTIONAL".equals(aos_seasonattr)) {
 				if (salDaysForAct < 90) {
-					MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 预计可售天数:" + salDaysForAct + " 常规品: 预计活动日可售天数 <90 ");
+					MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 预计可售天数:" + salDaysForAct + " 常规品: 预计活动日可售天数 <90 ");
 					continue;
 				}
 			}
@@ -177,40 +177,40 @@ public class TheHomeDepotUS implements ActStrategy {
 			int springSummerProToActStartDateBetweenDays = ActUtil
 					.springSummerProToActStartDateBetweenDays(aos_seasonattr, start);
 			if (salDaysForAct < springSummerProToActStartDateBetweenDays) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "春夏品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日="
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "春夏品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日="
 						+ springSummerProToActStartDateBetweenDays);
 				continue;
 			}
 			int autumnWinterProToActStartDateBetweenDays = ActUtil
 					.autumnWinterProToActStartDateBetweenDays(aos_seasonattr, start);
 			if (salDaysForAct < autumnWinterProToActStartDateBetweenDays) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "春夏品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日="
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "春夏品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日="
 						+ autumnWinterProToActStartDateBetweenDays);
 				continue;
 			}
 			int holidayAndActStartDateBetweenDays = ActUtil
 					.holidayProToActStartDateBetweenDays(festivalStartAndEnd.get(aos_festivalseting), start);
 			if (salDaysForAct < holidayAndActStartDateBetweenDays) {
-				MKTCom.Put_SyncLog(aos_sync_logS,
+				MktComUtil.putSyncLog(aos_sync_logS,
 						aos_sku + "节日品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日=" + holidayAndActStartDateBetweenDays);
 				continue;
 			}
 
 			// 剔除活动日，非当季SKU
 			if (ActUtil.isOutSeason(start, aos_seasonattr)) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 季节属性:" + aos_seasonattr + " 剔除活动日，非当季SKU");
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 季节属性:" + aos_seasonattr + " 剔除活动日，非当季SKU");
 				continue;
 			}
 
 			// 剔除同店铺同期活动
 			if (sameShopAndSamePeriodItem.contains(aos_sku)) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "剔除同店铺同期活动");
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "剔除同店铺同期活动");
 				continue;
 			}
 
 			// 剔除除亚马逊、eBay、Walmart活动日过去30天已提报平台活动个数＞3的sku
 			if (apartFromAmzItem.contains(aos_sku)) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "剔除除亚马逊、eBay、Walmart活动日过去30天已提报平台活动个数＞3的sku");
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "剔除除亚马逊、eBay、Walmart活动日过去30天已提报平台活动个数＞3的sku");
 				continue;
 			}
 

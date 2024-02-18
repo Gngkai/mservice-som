@@ -42,7 +42,7 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.common.MKTS3PIC;
 import mkt.common.otel.MmsOtelUtils;
 import mkt.progress.ProgressUtil;
@@ -214,7 +214,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
             DynamicObject dyEntFirstRow = dyMain.getDynamicObjectCollection("aos_entryentity").get(0);
             Object itemId = dyEntFirstRow.get("aos_itemid");
             Object id = ((DynamicObject)itemId).getString("id");
-            String category = MKTCom.getItemCateNameZH(id);
+            String category = MktComUtil.getItemCateNameZh(id);
             String[] categoryGroup = category.split(",");
             String aosCategory1 = null;
             String aosCategory2 = null;
@@ -565,7 +565,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
             }
             // 任务类型为小语种或者功能图翻译，流转给小语种，其他类型流转给国别编辑
             if (aosEditormin == null && aosItemid != null && aosOrgid != null) {
-                String category = MKTCom.getItemCateNameZH(aosItemid.getPkValue());
+                String category = MktComUtil.getItemCateNameZh(aosItemid.getPkValue());
                 String[] categoryGroup = category.split(",");
                 String aosCategory1 = null;
                 String aosCategory2 = null;
@@ -598,7 +598,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
             if (Cux_Common_Utl.IsNull(aosOrignbill)) {
                 splitMinBySegment3(dyMain);
             }
-            MKTCom.SendGlobalMessage(messageId, "aos_mkt_listing_min", String.valueOf(reqFid), String.valueOf(billno),
+            MktComUtil.sendGlobalMessage(messageId, "aos_mkt_listing_min", String.valueOf(reqFid), String.valueOf(billno),
                 message);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -917,7 +917,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
             aosSubentryentity.set("aos_shootscenes", bdMaterial.getString("aos_shootscenes"));
         }
         // 产品类别
-        String category = MKTCom.getItemCateNameZH(lastItemId);
+        String category = MktComUtil.getItemCateNameZh(lastItemId);
         String[] categoryGroup = category.split(",");
         String aosCategory1 = null;
         String aosCategory2 = null;
@@ -977,7 +977,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
             ex.printStackTrace();
         }
         if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
-            MKTCom.SendGlobalMessage(messageId, "aos_mkt_designreq",
+            MktComUtil.sendGlobalMessage(messageId, "aos_mkt_designreq",
                 String.valueOf(operationrst.getSuccessPkIds().get(0)), aosMktDesignreq.getString("billno"),
                 "设计需求表-Listing优化需求表子表自动创建翻译类型");
             FndHistory.Create(aosMktDesignreq, aosMktDesignreq.getString("aos_status"), "设计需求表-Listing优化需求表子表自动创建翻译类型");
@@ -1046,7 +1046,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
             cmpEntryentity.set("aos_srcrowseq", aosEntryentity.get("SEQ"));
         }
         Object itemId = aosEntryentityS.get(0).getDynamicObject("aos_itemid").getPkValue();
-        String category = MKTCom.getItemCateNameZH(itemId);
+        String category = MktComUtil.getItemCateNameZh(itemId);
         String[] categoryGroup = category.split(",");
         String aosCategory1 = null;
         String aosCategory2 = null;
@@ -1095,7 +1095,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
             ex.printStackTrace();
         }
         if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
-            MKTCom.SendGlobalMessage(messageId, String.valueOf(aosMktListingSal),
+            MktComUtil.sendGlobalMessage(messageId, String.valueOf(aosMktListingSal),
                 String.valueOf(operationrst.getSuccessPkIds().get(0)), aosMktListingSal.getString("billno"), message);
         }
     }
@@ -1161,7 +1161,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
                 cmpEntryentity.set("aos_srcrowseq", aosEntryentity.get("SEQ"));
             }
             Object itemId = aosEntryentityS.get(0).getDynamicObject("aos_itemid").getPkValue();
-            String category = MKTCom.getItemCateNameZH(itemId);
+            String category = MktComUtil.getItemCateNameZh(itemId);
             String[] categoryGroup = category.split(",");
             String aosCategory1 = null;
             String aosCategory2 = null;
@@ -1226,7 +1226,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
                 ex.printStackTrace();
             }
             if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
-                MKTCom.SendGlobalMessage(messageId, String.valueOf(aosMktListingSal),
+                MktComUtil.sendGlobalMessage(messageId, String.valueOf(aosMktListingSal),
                     String.valueOf(operationrst.getSuccessPkIds().get(0)), aosMktListingSal.getString("billno"),
                     message);
             }
@@ -1326,7 +1326,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
                 }
             }
             // 获取英语编辑
-            String category = MKTCom.getItemCateNameZH(itemId);
+            String category = MktComUtil.getItemCateNameZh(itemId);
             String[] categoryGroup = category.split(",");
             String aosCategory1 = null;
             String aosCategory2 = null;
@@ -1589,7 +1589,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
         this.getModel().setValue("aos_user", aosRequireby);
         this.getView().invokeOperation("save");
         this.getView().invokeOperation("refresh");
-        MKTCom.SendGlobalMessage(messageId, "aos_mkt_listing_son", String.valueOf(reqFid), String.valueOf(billno),
+        MktComUtil.sendGlobalMessage(messageId, "aos_mkt_listing_son", String.valueOf(reqFid), String.valueOf(billno),
             message);
     }
 

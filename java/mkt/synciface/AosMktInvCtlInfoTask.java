@@ -34,7 +34,7 @@ public class AosMktInvCtlInfoTask extends AbstractTask {
                 createInvEntity(listSave, dyPrice);
             }
         }
-        mkt.common.MKTCom.EntitySave(listSave, true);
+        mkt.common.MktComUtil.entitySave(listSave, true);
     }
 
     /** 获取平台上架信息中的所有数据 **/
@@ -105,7 +105,7 @@ public class AosMktInvCtlInfoTask extends AbstractTask {
         dyInv.set("aos_productid", dyPrice.get("aos_shopsku"));
         dyInv.set("billstatus", "C");
         listSave.add(dyInv);
-        mkt.common.MKTCom.EntitySave(listSave, false);
+        mkt.common.MktComUtil.entitySave(listSave, false);
     }
 
     @Override

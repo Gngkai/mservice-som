@@ -40,7 +40,7 @@ import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.GlobalMessage;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.common.MKTS3PIC;
 import mkt.common.otel.MmsOtelUtils;
 import mkt.progress.ProgressUtil;
@@ -271,7 +271,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                 messageId = ((DynamicObject)aosDesigner).getPkValue().toString();
             }
             // 发送消息
-            MKTCom.SendGlobalMessage(messageId, AOS_MKT_DESIGNREQ, String.valueOf(fid), String.valueOf(aosBillno),
+            MktComUtil.sendGlobalMessage(messageId, AOS_MKT_DESIGNREQ, String.valueOf(fid), String.valueOf(aosBillno),
                 "设计需求表-设计节点");
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -502,7 +502,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
             }
 
             // 发送消息
-            MKTCom.SendGlobalMessage(messageId, AOS_MKT_DESIGNREQ, String.valueOf(fid), String.valueOf(aosBillno),
+            MktComUtil.sendGlobalMessage(messageId, AOS_MKT_DESIGNREQ, String.valueOf(fid), String.valueOf(aosBillno),
                 message);
             if (APPLYCONFIRM.equals(dyMain.getString(AOS_STATUS))) {
                 GlobalMessage.SendMessage(aosBillno + "-设计需求单据待申请人确认", messageId);
@@ -547,7 +547,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
             }
             message = "设计需求表-设计确认3D";
             // 发送消息
-            MKTCom.SendGlobalMessage(messageId, AOS_MKT_DESIGNREQ, String.valueOf(fid), String.valueOf(aosBillno),
+            MktComUtil.sendGlobalMessage(messageId, AOS_MKT_DESIGNREQ, String.valueOf(fid), String.valueOf(aosBillno),
                 message);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -621,7 +621,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
             // 发送消息
             dyMain.set("aos_designby", RequestContext.get().getCurrUserId());
             dyMain.set("aos_design_date", new Date());
-            MKTCom.SendGlobalMessage(messageId, AOS_MKT_DESIGNREQ, String.valueOf(fid), String.valueOf(aosBillno),
+            MktComUtil.sendGlobalMessage(messageId, AOS_MKT_DESIGNREQ, String.valueOf(fid), String.valueOf(aosBillno),
                 message);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -684,7 +684,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
             dyMain.set("aos_designby", RequestContext.get().getCurrUserId());
             dyMain.set("aos_design_date", new Date());
             // 发送消息
-            MKTCom.SendGlobalMessage(messageId, AOS_MKT_DESIGNREQ, String.valueOf(fid), String.valueOf(aosBillno),
+            MktComUtil.sendGlobalMessage(messageId, AOS_MKT_DESIGNREQ, String.valueOf(fid), String.valueOf(aosBillno),
                 message);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -722,7 +722,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
             }
             message = "设计需求表-申请人确认";
             // 发送消息
-            MKTCom.SendGlobalMessage(messageId, AOS_MKT_DESIGNREQ, String.valueOf(fid), String.valueOf(aosBillno),
+            MktComUtil.sendGlobalMessage(messageId, AOS_MKT_DESIGNREQ, String.valueOf(fid), String.valueOf(aosBillno),
                 message);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -897,7 +897,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                 // 头信息
                 // 根据国别大类中类取对应营销US编辑
                 Object itemId = dyn3dR.getDynamicObject("aos_itemid").getPkValue();
-                String category = MKTCom.getItemCateNameZH(itemId);
+                String category = MktComUtil.getItemCateNameZh(itemId);
                 String[] categoryGroup = category.split(",");
                 String aosCategory1 = null;
                 String aosCategory2 = null;
@@ -1009,7 +1009,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                         ex.printStackTrace();
                     }
                     if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
-                        MKTCom.SendGlobalMessage(messageId, String.valueOf(aosMktListingSon),
+                        MktComUtil.sendGlobalMessage(messageId, String.valueOf(aosMktListingSon),
                             String.valueOf(operationrst.getSuccessPkIds().get(0)), aosMktListingSon.getString("billno"),
                             message);
                         FndHistory.Create(dyMain, messageId, "生成文案", aosMktListingSon.getString("billno"));
@@ -1128,7 +1128,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                     ProgressUtil.getOrderOrg(aosEntryentity.getDynamicObject("aos_itemid").getPkValue()));
             }
             // 根据循环中最后一个物料去获取对应的 英语编辑师 小语种编辑师 LastItemId
-            String category = MKTCom.getItemCateNameZH(lastItemId);
+            String category = MktComUtil.getItemCateNameZh(lastItemId);
             String[] categoryGroup = category.split(",");
             String aosCategory1 = null;
             String aosCategory2 = null;
@@ -1190,7 +1190,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
             // 修复关联关系
             ProgressUtil.botp("aos_mkt_listing_min", aosMktListingMin.get("id"));
             if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
-                MKTCom.SendGlobalMessage(messageId, String.valueOf(aosMktListingMin),
+                MktComUtil.sendGlobalMessage(messageId, String.valueOf(aosMktListingMin),
                     String.valueOf(operationrst.getSuccessPkIds().get(0)), aosMktListingMin.getString("billno"),
                     message);
                 FndHistory.Create(dyMain, messageId, "生成小语种", aosMktListingMin.getString("billno"));
@@ -1304,7 +1304,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                 cmpEntryentity.set("aos_ps", aosEntryentity.get("aos_ps"));
                 cmpEntryentity.set("aos_fix", aosEntryentity.get("aos_fix"));
                 Object itemId = aosEntryentity.getDynamicObject("aos_itemid").getPkValue();
-                String category = MKTCom.getItemCateNameZH(itemId);
+                String category = MktComUtil.getItemCateNameZh(itemId);
                 String[] categoryGroup = category.split(",");
                 String aosCategory1 = null;
                 String aosCategory2 = null;
@@ -1358,7 +1358,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
             }
             // 推送给销售
             Object itemId = aosEntryentityS.get(0).getDynamicObject("aos_itemid").getPkValue();
-            String category = MKTCom.getItemCateNameZH(itemId);
+            String category = MktComUtil.getItemCateNameZh(itemId);
             String[] categoryGroup = category.split(",");
             String aosCategory1 = null;
             String aosCategory2 = null;
@@ -1406,7 +1406,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                 }
 
                 if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
-                    MKTCom.SendGlobalMessage(messageId, String.valueOf(aosMktDesigncmp),
+                    MktComUtil.sendGlobalMessage(messageId, String.valueOf(aosMktDesigncmp),
                         String.valueOf(operationrst.getSuccessPkIds().get(0)), aosMktDesigncmp.getString("billno"),
                         message);
                     FndHistory.Create(dyMain, messageId, "生成设计完成表", aosMktDesigncmp.getString("billno"));
@@ -1546,7 +1546,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                     cmpEntryentity.set("aos_designway", aosEntryentity.get("aos_designway"));
                     cmpEntryentity.set("aos_srcrowseq", aosEntryentity.get("SEQ"));
                     Object itemId = aosEntryentity.getDynamicObject("aos_itemid").getPkValue();
-                    String category = MKTCom.getItemCateNameZH(String.valueOf(itemId));
+                    String category = MktComUtil.getItemCateNameZh(String.valueOf(itemId));
                     String[] categoryGroup = category.split(",");
                     String aosCategory1 = null;
                     String aosCategory2 = null;
@@ -1602,7 +1602,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                 }
                 // 推送给销售
                 Object itemId = aosEntryentityS.get(0).getDynamicObject("aos_itemid").getPkValue();
-                String category = MKTCom.getItemCateNameZH(itemId);
+                String category = MktComUtil.getItemCateNameZh(itemId);
                 String[] categoryGroup = category.split(",");
                 String aosCategory1 = null;
                 String aosCategory2 = null;
@@ -1645,7 +1645,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                     // 修复关联关系
                     ProgressUtil.botp("aos_mkt_designcmp", aosMktDesigncmp.get("id"));
                     if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
-                        MKTCom.SendGlobalMessage(messageId, String.valueOf(aosMktDesigncmp),
+                        MktComUtil.sendGlobalMessage(messageId, String.valueOf(aosMktDesigncmp),
                             String.valueOf(operationrst.getSuccessPkIds().get(0)), aosMktDesigncmp.getString("billno"),
                             message);
                         FndHistory.Create(dyMain, messageId, "生成设计完成表", aosMktDesigncmp.getString("billno"));
@@ -1781,7 +1781,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                     cmpEntryentity.set("aos_text", aosEntryentity.get("aos_desreq"));
                     cmpEntryentity.set("aos_srcrowseq", aosEntryentity.get("SEQ"));
                     Object itemId = aosEntryentity.getDynamicObject("aos_itemid").getPkValue();
-                    String category = MKTCom.getItemCateNameZH(itemId);
+                    String category = MktComUtil.getItemCateNameZh(itemId);
                     String[] categoryGroup = category.split(",");
                     String aosCategory1 = null;
                     String aosCategory2 = null;
@@ -1863,7 +1863,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                     ex.printStackTrace();
                 }
                 if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
-                    MKTCom.SendGlobalMessage(messageId, String.valueOf(aosMktListingSal),
+                    MktComUtil.sendGlobalMessage(messageId, String.valueOf(aosMktListingSal),
                         String.valueOf(operationrst.getSuccessPkIds().get(0)), aosMktListingSal.getString("billno"),
                         message);
                     FndHistory.Create(dyMain, messageId, "生成销售确认单", aosMktListingSal.getString("billno"));
@@ -2319,7 +2319,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
             this.getModel().setValue("aos_is_design", designItem.contains(String.valueOf(fid)), 0);
 
             // 产品类别
-            String category = MKTCom.getItemCateNameZH(fid);
+            String category = MktComUtil.getItemCateNameZh(fid);
             String[] categoryGroup = category.split(",");
             String aosCategory1 = null;
             String aosCategory2 = null;

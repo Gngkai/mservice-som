@@ -48,9 +48,9 @@ public class AosMktGenUtil {
      * @return itemQtyList
      */
     public static List<Map<String, Object>> generateItemQtyList(Object pOuCode) {
-        List<Map<String, Object>> itemQtyList = new ArrayList<Map<String, Object>>();
-        Map<String, Object> itemOverseaqty = new HashMap<String, Object>(16);
-        Map<String, Object> itemIntransqty = new HashMap<String, Object>(16);
+        List<Map<String, Object>> itemQtyList = new ArrayList<>();
+        Map<String, Object> itemOverseaqty = new HashMap<>(16);
+        Map<String, Object> itemIntransqty = new HashMap<>(16);
         QFilter filterOrg = new QFilter("aos_ou.number", QCP.equals, pOuCode);
         QFilter[] filters = new QFilter[] {filterOrg};
         DynamicObjectCollection aosSyncInvouValueS = QueryServiceHelper.query("aos_sync_invou_value",
@@ -73,7 +73,7 @@ public class AosMktGenUtil {
      * @return mapList
      */
     public static List<Integer> generateShpDay(Object pOuCode) {
-        List<Integer> mapList = new ArrayList<Integer>();
+        List<Integer> mapList = new ArrayList<>();
         QFilter filterOrg = new QFilter("aos_org.number", QCP.equals, pOuCode);
         QFilter[] filters = new QFilter[] {filterOrg};
         DynamicObjectCollection aosScmFcorderParaS =
@@ -1454,7 +1454,7 @@ public class AosMktGenUtil {
         return keyDetailToday;
     }
 
-    public static HashMap<String, Map<String, Map<String, Object>>> generateYesterSTSerial7D(String pOuCode) {
+    public static HashMap<String, Map<String, Map<String, Object>>> generateYesterStSerial7D(String pOuCode) {
         HashMap<String, Map<String, Map<String, Object>>> ppcYster7 = new HashMap<>(16);
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, 0);
@@ -1496,7 +1496,7 @@ public class AosMktGenUtil {
         return ppcYster7;
     }
 
-    public static HashMap<String, Map<String, Object>> generateYesterSTSerial7G(String pOuCode) {
+    public static HashMap<String, Map<String, Object>> generateYesterStSerial7G(String pOuCode) {
         HashMap<String, Map<String, Object>> ppcYster7 = new HashMap<>(16);
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, 0);

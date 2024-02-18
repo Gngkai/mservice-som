@@ -20,7 +20,7 @@ import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.common.AosMktCacheUtil;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.logging.Log;
@@ -132,17 +132,17 @@ public class AosMktPopAddTask extends AbstractTask {
         HashMap<String, Integer> order7 = generateOrder(pOrgId, 7);
         HashMap<String, Map<String, Object>> itemMap = generateItem(pOrgId);
         // 圣诞季初开始
-        Date christmasStart = MKTCom.Get_DateRange("aos_datefrom", "CH-1", pOrgId);
+        Date christmasStart = MktComUtil.getDateRange("aos_datefrom", "CH-1", pOrgId);
         // 圣诞季中结束
-        Date christmasEnd = MKTCom.Get_DateRange("aos_dateto", "CH-2", pOrgId);
+        Date christmasEnd = MktComUtil.getDateRange("aos_dateto", "CH-2", pOrgId);
         // 万圣欧洲季初开始
-        Date hae1 = MKTCom.Get_DateRange("aos_datefrom", "HA-E-1", pOrgId);
+        Date hae1 = MktComUtil.getDateRange("aos_datefrom", "HA-E-1", pOrgId);
         // 万圣欧洲季中结束
-        Date hae2 = MKTCom.Get_DateRange("aos_dateto", "HA-E-2", pOrgId);
+        Date hae2 = MktComUtil.getDateRange("aos_dateto", "HA-E-2", pOrgId);
         // 万圣北美季初开始
-        Date hau1 = MKTCom.Get_DateRange("aos_datefrom", "HA-U-1", pOrgId);
+        Date hau1 = MktComUtil.getDateRange("aos_datefrom", "HA-U-1", pOrgId);
         // 万圣北美季中结束
-        Date hau2 = MKTCom.Get_DateRange("aos_dateto", "HA-U-2", pOrgId);
+        Date hau2 = MktComUtil.getDateRange("aos_dateto", "HA-U-2", pOrgId);
         BigDecimal multi = (BigDecimal)popOrgInfo.get(pOrgId + "~" + "MULTI").get("aos_value");
         // 平台上架信息
         Set<String> categorySet = generateCategorySet(pOrgId);
@@ -294,7 +294,7 @@ public class AosMktPopAddTask extends AbstractTask {
                 }
             }
             cond = aosFirstindate == null || ("E".equals(aosItemstatus) || "A".equals(aosItemstatus))
-                && MKTCom.GetBetweenDays(todayD, aosFirstindate) <= 30;
+                && MktComUtil.getBetweenDays(todayD, aosFirstindate) <= 30;
             if (cond) {
                 newFlag = true;
             }
@@ -319,15 +319,15 @@ public class AosMktPopAddTask extends AbstractTask {
             }
             float seasonRate = 0;
             if (springSummerFlag || autumnWinterFlag) {
-                seasonRate = MKTCom.Get_SeasonRate((long)pOrgId, itemId, aosSeasonpro, itemOverseaqty, month);
+                seasonRate = MktComUtil.getSeasonRate((long)pOrgId, itemId, aosSeasonpro, itemOverseaqty, month);
             }
 
             cond = springSummerFlag && (month == 2 || month == 3 || month == 4);
             cond2 = autumnWinterFlag && (month == 8 || month == 9 || month == 10);
             boolean cond3 = (springSummerFlag && (month == 5 || month == 6 || month == 7 || month == 8 || month == 9)
-                && MKTCom.Is_SeasonRate(aosSeasonpro, month, seasonRate));
+                && MktComUtil.isSeasonRate(aosSeasonpro, month, seasonRate));
             boolean cond4 = (autumnWinterFlag && (month == 11 || month == 12 || month == 1 || month == 2 || month == 3)
-                && MKTCom.Is_SeasonRate(aosSeasonpro, month, seasonRate));
+                && MktComUtil.isSeasonRate(aosSeasonpro, month, seasonRate));
             if (cond) {
                 rangeFlag = true;
             } else if (cond2) {

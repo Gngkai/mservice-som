@@ -30,7 +30,7 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.progress.ProgressUtil;
 import mkt.progress.iface.ParaInfoUtil;
 import org.apache.commons.collections4.BidiMap;
@@ -204,7 +204,7 @@ public class AosMktDesignReqList extends AbstractListPlugin {
             }
             OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_designreq",
                 new DynamicObject[] {aosMktDesignreq}, OperateOption.create());
-            MKTCom.SendGlobalMessage(String.valueOf(((DynamicObject)aosUser).getPkValue()),
+            MktComUtil.sendGlobalMessage(String.valueOf(((DynamicObject)aosUser).getPkValue()),
                 String.valueOf(aosMktDesignreq), String.valueOf(operationrst.getSuccessPkIds().get(0)), billno,
                 currentUserName + "流程转办!");
             FndHistory fndHistory = new FndHistory();

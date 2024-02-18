@@ -18,7 +18,7 @@ import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.progress.listing.AosMktListingReqBill;
 
 import java.time.LocalDateTime;
@@ -88,7 +88,7 @@ public class AosMktCreateListingReqTask extends AbstractTask {
                 SaveServiceHelper.update(new DynamicObject[] {dyPhototReq});
             }
             if (logRow.toString().length() > 0) {
-                MKTCom.Put_SyncLog(aosSyncLogS, logRow.toString());
+                MktComUtil.putSyncLog(aosSyncLogS, logRow.toString());
             }
         }
     }

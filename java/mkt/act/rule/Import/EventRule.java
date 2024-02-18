@@ -17,7 +17,7 @@ import kd.bos.logging.LogFactory;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -1036,7 +1036,7 @@ public class EventRule {
     public Map<String,Boolean> cachedData (String rule,String dataType,DynamicObject row){
         Map<String,Boolean> result = new HashMap<>(itemInfoes.size());
         //获取下拉列表
-        rowRuleName = MKTCom.getComboMap("aos_sal_act_type_p", "aos_project");
+        rowRuleName = MktComUtil.getComboMap("aos_sal_act_type_p", "aos_project");
         FormulaResults formulaResults = new FormulaResults(this);
         switch (dataType){
             case "overseasStock":
@@ -1320,7 +1320,7 @@ public class EventRule {
             //7天日均销量
             float saleAve = itemSaleAve.getOrDefault(itemId, BigDecimal.ZERO).floatValue();
             str.add("7天日均销量： "+saleAve);
-            String type = MKTCom.Get_RegularUn(orgEntity.getString("number"), saleDay, saleAve);
+            String type = MktComUtil.getRegularUn(orgEntity.getString("number"), saleDay, saleAve);
             str.add("滞销类型： "+type);
             if ("低动销".equals(type)){
                 if (util.profitStand.containsKey("低动销1") && util.profitStand.get("低动销1").contains(itemId) ){

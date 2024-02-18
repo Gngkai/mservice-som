@@ -10,7 +10,7 @@ import mkt.act.dao.ActShopPriceDao;
 import mkt.act.dao.impl.ActShopPriceImpl;
 import mkt.act.rule.ActStrategy;
 import mkt.act.rule.ActUtil;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -61,18 +61,18 @@ public class Wayfair implements ActStrategy {
 
 			// 剔除过季品
 			if (ActUtil.isOutSeason(start, aos_seasonattr)){
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 季节属性:" + aos_seasonattr + " 过季");
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 季节属性:" + aos_seasonattr + " 过季");
 				continue;
 			}
 			// 剔除除亚马逊、eBay外活动日过去30天已提报平台活动个数＞3的sku
 			if (apartFromAmzAndEbayItem.contains(aos_sku)){
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "剔除除亚马逊、eBay外活动日过去30天已提报平台活动个数＞3的sku");
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "剔除除亚马逊、eBay外活动日过去30天已提报平台活动个数＞3的sku");
 				continue;
 			}
 
 			// 剔除同店铺同期活动
 			if (sameShopAndSamePeriodItem.contains(aos_sku)) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "剔除同店铺同期活动");
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "剔除同店铺同期活动");
 				continue;
 			}
 			firstFilterList.add(obj);
@@ -102,7 +102,7 @@ public class Wayfair implements ActStrategy {
 			String aos_seasonattr = obj.getString("aos_seasonattr");
 			DynamicObject itemObj = itemInfo.get(aos_sku);
 			if (itemObj == null) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "取不到物料信息");
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "取不到物料信息");
 				continue;
 			}
 			String aos_itemid = itemObj.getString("aos_itemid");
@@ -118,7 +118,7 @@ public class Wayfair implements ActStrategy {
 						aos_currentprice = map_shopPrice.get(aos_itemid);
 					}
 					else {
-						MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 未获取到价格");
+						MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 未获取到价格");
 						list_noPriceItem.add(aos_sku);
 						continue;
 					}
@@ -138,7 +138,7 @@ public class Wayfair implements ActStrategy {
 			// 选择自有仓库库存>= 30 或平台仓可售天数>=90天的物料
 			int platSaleDays = InStockAvailableDays.calAvailableDaysByPlatQty(aos_orgid, aos_itemid);
 			if (!(nonPlatItemSet.containsKey(aos_sku) || platSaleDays >= 90)) {
-				MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "自有仓库<30 平台仓可售天数:" + platSaleDays );
+				MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "自有仓库<30 平台仓可售天数:" + platSaleDays );
 				continue;
 			}
 
@@ -148,7 +148,7 @@ public class Wayfair implements ActStrategy {
 			// 常规品: 预计活动日可售天数>= 90
 			if ("REGULAR".equals(aos_seasonattr) || "SPRING-SUMMER-CONVENTIONAL".equals(aos_seasonattr))
 				if (salDaysForAct < 90) {
-					MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "常规品: 预计活动日可售天数< 90");
+					MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "常规品: 预计活动日可售天数< 90");
 					continue;
 				}
 			// 春夏品
@@ -159,7 +159,7 @@ public class Wayfair implements ActStrategy {
 				seasonEnd.set(Calendar.DAY_OF_MONTH, 31);
 				long betweenDays = ActUtil.betweenDays(seasonEnd.getTime().getTime(), start.getTime());
 				if (salDaysForAct < betweenDays) {
-					MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "春夏品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日=" + betweenDays);
+					MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "春夏品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日=" + betweenDays);
 					continue;
 				}
 			}
@@ -172,7 +172,7 @@ public class Wayfair implements ActStrategy {
 				}
 				long betweenDays = ActUtil.betweenDays(seasonEnd.getTime().getTime(), start.getTime());
 				if (salDaysForAct < betweenDays) {
-					MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "秋冬品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日=" + betweenDays);
+					MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "秋冬品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日=" + betweenDays);
 					continue;
 				}
 			}
@@ -200,7 +200,7 @@ public class Wayfair implements ActStrategy {
 
 				long betweenDays = ActUtil.betweenDays(festivalEnd.getTime(), start.getTime());
 				if (salDaysForAct < betweenDays) {
-					MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "节日品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日=" + betweenDays);
+					MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "节日品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日=" + betweenDays);
 					continue;
 				}
 			}

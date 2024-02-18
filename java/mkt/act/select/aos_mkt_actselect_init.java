@@ -25,7 +25,7 @@ import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.threads.ThreadPools;
 import mkt.common.AosMktGenUtil;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.common.AosMktCacheUtil;
 import org.apache.commons.lang3.SerializationUtils;
 
@@ -168,7 +168,7 @@ public class aos_mkt_actselect_init extends AbstractTask {
                 // 产品状态 季节属性
                 if (aos_itemstatus == null || aos_itemstatus.equals("null") || aos_seasonpro == null
                     || aos_seasonpro.equals("null")) {
-                    MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "季节属性为空");
+                    MktComUtil.putSyncLog(aos_sync_logS, aos_itemnumber + "季节属性为空");
                     continue;
                 }
                 // 最大库龄≥15天
@@ -189,12 +189,12 @@ public class aos_mkt_actselect_init extends AbstractTask {
                 // (最大库龄 < 15 || 海外库存 <= 30) && 平台仓可售天数 < 120
                 if ((flag1 || flag2) && flag3) {
                     if (flag1) {
-                        MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "最大库龄<15天");
+                        MktComUtil.putSyncLog(aos_sync_logS, aos_itemnumber + "最大库龄<15天");
                     }
                     if (flag2) {
-                        MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "海外库存<30");
+                        MktComUtil.putSyncLog(aos_sync_logS, aos_itemnumber + "海外库存<30");
                     }
-                    MKTCom.Put_SyncLog(aos_sync_logS,
+                    MktComUtil.putSyncLog(aos_sync_logS,
                         aos_itemnumber + "平台仓数量可售天数:" + availableDaysByPlatQty + " < 120");
                     continue;
                 }
@@ -206,26 +206,25 @@ public class aos_mkt_actselect_init extends AbstractTask {
                 if (item_intransqty == null || item_intransqty.equals("null"))
                     item_intransqty = 0;
                 // 活动数量占比
-                BigDecimal ActQtyRate = MKTCom.Get_ActQtyRate(aos_itemstatus, aos_seasonpro, aos_festivalseting);
+                BigDecimal ActQtyRate = MktComUtil.getActQtyRate(aos_itemstatus, aos_seasonpro, aos_festivalseting);
                 if (ActQtyRate == null) {
-                    MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "活动数量占比为空");
+                    MktComUtil.putSyncLog(aos_sync_logS, aos_itemnumber + "活动数量占比为空");
                     continue;
                 }
                 // 已提报未来60天活动数量
-                int Act60PreQty = MKTCom.Get_Act60PreQty(org_id, item_id);
+                int Act60PreQty = MktComUtil.getAct60PreQty(org_id, item_id);
                 BigDecimal AvaQty = new BigDecimal((int)item_overseaqty + (int)item_intransqty);
                 // 可提报活动数量
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + ActQtyRate + "活动数量占比");
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + item_overseaqty + "海外库存");
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + item_intransqty + "在途数量");
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + Act60PreQty + "已提报未来60天活动数量");
+                MktComUtil.putSyncLog(aos_sync_logS, aos_itemnumber + ActQtyRate + "活动数量占比");
+                MktComUtil.putSyncLog(aos_sync_logS, aos_itemnumber + item_overseaqty + "海外库存");
+                MktComUtil.putSyncLog(aos_sync_logS, aos_itemnumber + item_intransqty + "在途数量");
+                MktComUtil.putSyncLog(aos_sync_logS, aos_itemnumber + Act60PreQty + "已提报未来60天活动数量");
                 int aos_qty = ActQtyRate.multiply(AvaQty).intValue() - Act60PreQty;
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + aos_qty + "可提报活动数量");
+                MktComUtil.putSyncLog(aos_sync_logS, aos_itemnumber + aos_qty + "可提报活动数量");
                 if (aos_qty <= 5) {
-                    MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "可提报活动数量<=5");
+                    MktComUtil.putSyncLog(aos_sync_logS, aos_itemnumber + "可提报活动数量<=5");
                     // continue;
                 }
-
                 String aos_typedetail = "";// 滞销类型 低动销 低周转
 
                 // 7天销量
@@ -236,11 +235,11 @@ public class aos_mkt_actselect_init extends AbstractTask {
                 // 判断当前月份
                 Boolean speFlag = false;
                 if (/* monthOri == Calendar.SEPTEMBER && */unsalableProducts.contains(String.valueOf(item_id))) {
-                    boolean preSaleOut = MKTCom.Is_PreSaleOut(org_id, item_id, (int)item_intransqty, aos_shp_day,
+                    boolean preSaleOut = MktComUtil.isPreSaleOut(org_id, item_id, (int)item_intransqty, aos_shp_day,
                         aos_freight_day, aos_clear_day, availableDays);
                     if (!preSaleOut) {
                         speFlag = true;
-                        MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "九月春夏滞销不预断货货号");
+                        MktComUtil.putSyncLog(aos_sync_logS, aos_itemnumber + "九月春夏滞销不预断货货号");
                     }
                 }
 
@@ -275,12 +274,12 @@ public class aos_mkt_actselect_init extends AbstractTask {
                         if (!unsalableProducts.contains(String.valueOf(item_id)) && flag1 && flag2 && flag4
                             && month - 1 >= Calendar.SEPTEMBER)
                         {
-                            MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "-春夏品-月份:" + (month - 1));
+                            MktComUtil.putSyncLog(aos_sync_logS, aos_itemnumber + "-春夏品-月份:" + (month - 1));
                             continue;
                         }
                     } else if ("AUTUMN_WINTER_PRO".equals(aos_seasonprostr)) {
                         if (month - 1 >= Calendar.APRIL && month - 1 < Calendar.JULY) {
-                            MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "-秋冬品-月份:" + (month - 1));
+                            MktComUtil.putSyncLog(aos_sync_logS, aos_itemnumber + "-秋冬品-月份:" + (month - 1));
                             continue;
                         }
                     }
@@ -303,7 +302,7 @@ public class aos_mkt_actselect_init extends AbstractTask {
                     // 非爆品
                     if (!issaleout) {
                         // 预断货
-                        boolean preSaleOut = MKTCom.Is_PreSaleOut(org_id, item_id, (int)item_intransqty, aos_shp_day,
+                        boolean preSaleOut = MktComUtil.isPreSaleOut(org_id, item_id, (int)item_intransqty, aos_shp_day,
                             aos_freight_day, aos_clear_day, availableDays);
 
                         if (FndGlobal.IsNotNull(stSkuSet) && stSkuSet.contains(itemIdStr) && !preSaleOut) {
@@ -311,55 +310,55 @@ public class aos_mkt_actselect_init extends AbstractTask {
                             aos_itemtype = "D";
                         } else if (aos_category2.equals("圣诞装饰") || aos_category2.equals("其它节日装饰")) {
                             // 0.0 节日品
-                            SeasonRate = MKTCom.Get_SeasonRate(org_id, item_id, aos_seasonpro, item_overseaqty, month);
+                            SeasonRate = MktComUtil.getSeasonRate(org_id, item_id, aos_seasonpro, item_overseaqty, month);
                             if (SeasonRate == 0) {
-                                MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "节日品累计完成率为空");
+                                MktComUtil.putSyncLog(aos_sync_logS, aos_itemnumber + "节日品累计完成率为空");
                                 continue;
                             }
                             if (SeasonRate < 1)
                                 aos_itemtype = "S";
                             else {
-                                MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "节日品累计完成率不满足条件");
+                                MktComUtil.putSyncLog(aos_sync_logS, aos_itemnumber + "节日品累计完成率不满足条件");
                                 continue;
                             }
                             // 季节品预断货 跳过
                             // 海运备货清关
                             if (preSaleOut) {
-                                MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "节日品未预断货");
+                                MktComUtil.putSyncLog(aos_sync_logS, aos_itemnumber + "节日品未预断货");
                                 continue;
                             }
                             // 判断季节类型
-                            aos_typedetail = MKTCom.seasonalProStage(aos_seasonpro);
+                            aos_typedetail = MktComUtil.seasonalProStage(aos_seasonpro);
                         }
                         // 1.0季节品 累计完成率
                         else if (seasonProduct) {
                             // 判断季节品累计完成率是否满足条件
-                            SeasonRate = MKTCom.Get_SeasonRate(org_id, item_id, aos_seasonpro, item_overseaqty, month);
-                            MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "-季节品累计完成率:" + SeasonRate);
+                            SeasonRate = MktComUtil.getSeasonRate(org_id, item_id, aos_seasonpro, item_overseaqty, month);
+                            MktComUtil.putSyncLog(aos_sync_logS, aos_itemnumber + "-季节品累计完成率:" + SeasonRate);
                             if (SeasonRate == 0) {
-                                MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "季节品累计完成率为空");
+                                MktComUtil.putSyncLog(aos_sync_logS, aos_itemnumber + "季节品累计完成率为空");
                                 continue;
                             }
-                            if (MKTCom.Is_SeasonRate(aos_seasonpro, month, SeasonRate))
+                            if (MktComUtil.isSeasonRate(aos_seasonpro, month, SeasonRate))
                                 aos_itemtype = "S";
                             else {
-                                MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "季节品累计完成率不满足条件");
+                                MktComUtil.putSyncLog(aos_sync_logS, aos_itemnumber + "季节品累计完成率不满足条件");
                                 continue;
                             }
                             // 季节品预断货 跳过
                             // 海运备货清关
                             if (preSaleOut) {
-                                MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "季节品未预断货");
+                                MktComUtil.putSyncLog(aos_sync_logS, aos_itemnumber + "季节品未预断货");
                                 continue;
                             }
                             // 判断季节类型
-                            aos_typedetail = MKTCom.seasonalProStage(aos_seasonpro);
+                            aos_typedetail = MktComUtil.seasonalProStage(aos_seasonpro);
                         }
                         // 2.0常规品 滞销
                         else if (aos_seasonpro.equals("REGULAR")
                             || aos_seasonpro.equals("SPRING-SUMMER-CONVENTIONAL")) {
                             // 判断是为周转还是低滞销
-                            aos_typedetail = MKTCom.Get_RegularUn(aos_orgnumber, availableDays, R);
+                            aos_typedetail = MktComUtil.getRegularUn(aos_orgnumber, availableDays, R);
                             // 20230711 gk:判断是否为常规品滞销
                             if ("".equals(aos_typedetail)) {
                                 // 营销国别滞销货号中存在这个货号,并且还不为 预断货
@@ -369,8 +368,9 @@ public class aos_mkt_actselect_init extends AbstractTask {
                                     aos_typedetail = "常规品滞销";
                                 }
                             }
-                            if ("".equals(aos_typedetail)) {// 如果为空则表示不为滞销品
-                                MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "常规品未滞销");
+                            if ("".equals(aos_typedetail)) {
+                                // 如果为空则表示不为滞销品
+                                MktComUtil.putSyncLog(aos_sync_logS, aos_itemnumber + "常规品未滞销");
                                 continue;
                             }
                             aos_itemtype = "D";
@@ -392,7 +392,7 @@ public class aos_mkt_actselect_init extends AbstractTask {
                         }
                         // 3.0其他情况都跳过
                         else {
-                            MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "其他情况都跳过");
+                            MktComUtil.putSyncLog(aos_sync_logS, aos_itemnumber + "其他情况都跳过");
                             continue;
                         }
                     }
@@ -453,7 +453,7 @@ public class aos_mkt_actselect_init extends AbstractTask {
                 }
 
             } catch (Exception ex) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_itemnumber + "异常跳过");
+                MktComUtil.putSyncLog(aos_sync_logS, aos_itemnumber + "异常跳过");
                 continue;
             }
         }

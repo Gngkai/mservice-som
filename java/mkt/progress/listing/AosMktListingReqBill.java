@@ -42,7 +42,7 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.common.MKTS3PIC;
 import mkt.common.otel.MmsOtelUtils;
 import mkt.progress.ProgressUtil;
@@ -204,7 +204,7 @@ public class AosMktListingReqBill extends AbstractBillPlugIn
             // 头信息
             // 根据国别大类中类取对应营销US编辑
             Object itemId = dyn3dR.getDynamicObject("aos_itemid").getPkValue();
-            String category = MKTCom.getItemCateNameZH(itemId);
+            String category = MktComUtil.getItemCateNameZh(itemId);
             String[] categoryGroup = category.split(",");
             String aosCategory1 = null;
             String aosCategory2 = null;
@@ -356,7 +356,7 @@ public class AosMktListingReqBill extends AbstractBillPlugIn
                 messageId = String.valueOf(aosEditordefualt);
                 message = "Listing优化需求表子表-Listing优化需求自动创建";
                 if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
-                    MKTCom.SendGlobalMessage(messageId, String.valueOf(aosMktListingSon),
+                    MktComUtil.sendGlobalMessage(messageId, String.valueOf(aosMktListingSon),
                         String.valueOf(operationrst.getSuccessPkIds().get(0)), aosMktListingSon.getString("billno"),
                         message);
                 }
@@ -400,7 +400,7 @@ public class AosMktListingReqBill extends AbstractBillPlugIn
             String aosSegment3 = dyn3dR.getString("aos_segment3");
             // 根据国别大类中类取对应营销US编辑
             Object itemId = dyn3dR.getDynamicObject("aos_itemid").getPkValue();
-            String category = MKTCom.getItemCateNameZH(itemId);
+            String category = MktComUtil.getItemCateNameZh(itemId);
             String[] categoryGroup = category.split(",");
             String aosCategory1 = null;
             String aosCategory2 = null;
@@ -641,7 +641,7 @@ public class AosMktListingReqBill extends AbstractBillPlugIn
                 messageId = String.valueOf(aosDesignerdefualt);
                 message = "设计需求表-Listing优化需求自动创建";
                 if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
-                    MKTCom.SendGlobalMessage(messageId, String.valueOf(aosMktDesignreq),
+                    MktComUtil.sendGlobalMessage(messageId, String.valueOf(aosMktDesignreq),
                         String.valueOf(operationrst.getSuccessPkIds().get(0)), aosMktDesignreq.getString("billno"),
                         message);
                     FndHistory.Create(aosMktDesignreq, aosMktDesignreq.getString("aos_status"),

@@ -48,7 +48,7 @@ import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import common.sal.util.QFBuilder;
 import mkt.common.GlobalMessage;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.common.MKTS3PIC;
 import mkt.common.otel.MmsOtelUtils;
 import mkt.progress.ProgressUtil;
@@ -558,7 +558,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             OperationServiceHelper.executeOperate("save", AOS_MKT_PHOTOREQ, new DynamicObject[] {dyMain},
                 OperateOption.create());
             // 发送消息
-            MKTCom.SendGlobalMessage(messageId, AOS_MKT_PHOTOREQ, String.valueOf(fid), String.valueOf(aosBillno),
+            MktComUtil.sendGlobalMessage(messageId, AOS_MKT_PHOTOREQ, String.valueOf(fid), String.valueOf(aosBillno),
                 message);
             GlobalMessage.SendMessage(aosBillno + "-拍照需求单据待处理", messageId);
         } catch (Exception ex) {
@@ -789,7 +789,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                     OperateOption.create());
             }
             // 发送消息
-            MKTCom.SendGlobalMessage(messageId, AOS_MKT_PHOTOREQ, String.valueOf(fid), String.valueOf(aosBillno),
+            MktComUtil.sendGlobalMessage(messageId, AOS_MKT_PHOTOREQ, String.valueOf(fid), String.valueOf(aosBillno),
                 messageStr);
         } catch (Exception ex) {
             throw ex;
@@ -908,7 +908,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                     OperateOption.create());
             }
             // 发送消息
-            MKTCom.SendGlobalMessage(messageId, AOS_MKT_PHOTOREQ, String.valueOf(fid), String.valueOf(aosBillno),
+            MktComUtil.sendGlobalMessage(messageId, AOS_MKT_PHOTOREQ, String.valueOf(fid), String.valueOf(aosBillno),
                 messageStr);
             GlobalMessage.SendMessage(aosBillno + "-拍照需求单据待处理", messageId);
         } catch (Exception ex) {
@@ -1139,7 +1139,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                 ex.printStackTrace();
             }
             if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
-                MKTCom.SendGlobalMessage(messageId, "aos_mkt_designreq",
+                MktComUtil.sendGlobalMessage(messageId, "aos_mkt_designreq",
                     String.valueOf(operationrst.getSuccessPkIds().get(0)), aosMktDesignreq.getString("billno"),
                     "设计需求表-拍照新品自动创建");
                 FndHistory.Create(aosMktDesignreq, aosMktDesignreq.getString("aos_status"), "设计需求表-拍照新品自动创建");
@@ -1279,7 +1279,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                 FndError.send(SalUtil.getExceptionStr(ex), FndWebHook.urlMms);
             }
             if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
-                MKTCom.SendGlobalMessage(messageId, "aos_mkt_rcv",
+                MktComUtil.sendGlobalMessage(messageId, "aos_mkt_rcv",
                     String.valueOf(operationrst.getSuccessPkIds().get(0)), aosMktRcv.getString("billno"),
                     "样品入库通知单-拍照流程自动创建");
             }
@@ -3241,7 +3241,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             this.getView().invokeOperation("refresh");
             // 发送消息
             if (!strightCut) {
-                MKTCom.SendGlobalMessage(messageId, AOS_MKT_PHOTOREQ, String.valueOf(reqFid), String.valueOf(aosBillno),
+                MktComUtil.sendGlobalMessage(messageId, AOS_MKT_PHOTOREQ, String.valueOf(reqFid), String.valueOf(aosBillno),
                     "拍照需求表-视频剪辑");
             }
         } catch (Exception ex) {
@@ -3322,7 +3322,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             }
         }
         // 根据国别大类中类取对应营销US编辑
-        String category = MKTCom.getItemCateNameZH(String.valueOf(itemId));
+        String category = MktComUtil.getItemCateNameZh(String.valueOf(itemId));
         String[] categoryGroup = category.split(",");
         String aosCategory1 = null;
         String aosCategory2 = null;
@@ -3407,7 +3407,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             FndError.showex(getView(), ex, FndWebHook.urlMms);
         }
         if (operationrst.getValidateResult().getValidateErrors().size() != 0) {
-            MKTCom.SendGlobalMessage(messageId, String.valueOf(aosMktListingSon),
+            MktComUtil.sendGlobalMessage(messageId, String.valueOf(aosMktListingSon),
                 String.valueOf(operationrst.getSuccessPkIds().get(0)), aosMktListingSon.getString("billno"), message);
         }
     }
@@ -3468,7 +3468,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             this.getModel().setValue(AOS_USER, nextUser);
             messageId = String.valueOf(nextUser);
             // 发送消息
-            MKTCom.SendGlobalMessage(messageId, AOS_MKT_PHOTOREQ, String.valueOf(reqFid), String.valueOf(aosBillno),
+            MktComUtil.sendGlobalMessage(messageId, AOS_MKT_PHOTOREQ, String.valueOf(reqFid), String.valueOf(aosBillno),
                 "拍照需求表-" + nextStatus);
             GlobalMessage.SendMessage(aosBillno + "-拍照需求单据待处理", messageId);
         } catch (Exception ex) {
@@ -3510,7 +3510,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             this.getView().invokeOperation("save");
             this.getView().invokeOperation("refresh");
             // 发送消息
-            MKTCom.SendGlobalMessage(messageId, AOS_MKT_PHOTOREQ, String.valueOf(reqFid), String.valueOf(aosBillno),
+            MktComUtil.sendGlobalMessage(messageId, AOS_MKT_PHOTOREQ, String.valueOf(reqFid), String.valueOf(aosBillno),
                 "拍照需求表-开发确认");
         } catch (Exception ex) {
             throw ex;
@@ -3658,7 +3658,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             this.getView().invokeOperation("save");
             this.getView().invokeOperation("refresh");
             // 发送消息
-            MKTCom.SendGlobalMessage(messageId, AOS_MKT_PHOTOREQ, String.valueOf(reqFid), String.valueOf(aosBillno),
+            MktComUtil.sendGlobalMessage(messageId, AOS_MKT_PHOTOREQ, String.valueOf(reqFid), String.valueOf(aosBillno),
                 "拍照需求表-白底退回");
         } catch (Exception ex) {
             throw ex;
@@ -3768,7 +3768,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             this.getView().invokeOperation("save");
             this.getView().invokeOperation("refresh");
             // 发送消息
-            MKTCom.SendGlobalMessage(messageId, AOS_MKT_PHOTOREQ, String.valueOf(reqFid), String.valueOf(aosBillno),
+            MktComUtil.sendGlobalMessage(messageId, AOS_MKT_PHOTOREQ, String.valueOf(reqFid), String.valueOf(aosBillno),
                 "拍照需求表-开发退回");
         } catch (Exception ex) {
             throw ex;

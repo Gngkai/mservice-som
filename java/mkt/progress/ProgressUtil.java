@@ -19,7 +19,7 @@ import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import common.sal.util.QFBuilder;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.progress.design.AosMktDesignReqBill;
 import mkt.progress.design.AosMktSloganBill;
 import mkt.progress.design.aadd.AosMktAaddBill;
@@ -85,7 +85,7 @@ public class ProgressUtil {
 		IListView view = (IListView) formView;
 		String billFormId = view.getBillFormId();
 		// 获取权限用户
-		List<String> list_user = MKTCom.getPrivilegedUser();
+		List<String> list_user = MktComUtil.getPrivilegedUser();
 		String currUserId = String.valueOf(RequestContext.get().getCurrUserId());
 		StringJoiner str = new StringJoiner(" , ");
 		List<Object> list_rows = listSelectedRows.stream().map(row -> row.getPrimaryKeyValue()).distinct()
@@ -514,7 +514,7 @@ public class ProgressUtil {
 	 */
 	public static String findUserByOrgCate(Object org_id, Object itemid, String user) {
 		String re = "";
-		String category = MKTCom.getItemCateNameZH(itemid);
+		String category = MktComUtil.getItemCateNameZh(itemid);
 		String[] category_group = category.split(",");
 		String AosCategory1 = null;
 		String AosCategory2 = null;

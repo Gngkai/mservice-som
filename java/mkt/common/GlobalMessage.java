@@ -1,7 +1,5 @@
 package mkt.common;
 
-import common.fnd.FndMsg;
-import common.scm.FunctionUtils;
 import kd.bos.bill.BillShowParameter;
 import kd.bos.bill.OperationStatus;
 import kd.bos.dataentity.entity.LocaleString;
@@ -19,16 +17,21 @@ import java.util.Map;
 
 /**
  * @author create by gk
- * @date 2022/11/5 13:28
- * @action  全部消息提醒的弹框点击事件
+ * @since 2022/11/5 13:28
+ * @version 全部消息提醒的弹框点击事件
  */
 public class GlobalMessage extends AbstractNotificationClick {
+    private static final String AOS_DETAIL = "aos_detail";
+    private static final String NAME = "name";
+    private static final String ID = "id";
+    private static final String FORMID = "formId";
+    private static final String PKID = "pkId";
     @Override
     public void buttonClick(ButtonClickEventArgs eventArgs) {
         String buttonKey = eventArgs.getButtonKey();
-        if (buttonKey.equals("aos_detail")){
+        if (AOS_DETAIL.equals(buttonKey)){
             Map<String, Object> params = this.getNotificationFormInfo().getNotification().getParams();
-            if (params.containsKey("name")&& params.containsKey("id")){
+            if (params.containsKey(NAME)&& params.containsKey(ID)){
                 BillShowParameter showParameter = new BillShowParameter();
                 showParameter.setFormId(params.get("name").toString());
                 showParameter.setPkId(params.get("id"));
@@ -50,14 +53,13 @@ public class GlobalMessage extends AbstractNotificationClick {
      * @param id 消息类型 : MessageInfo.TYPE_ALAR（报警） MessageInfo.TYPE_WARNING（预警） MessageInfo.TYPE_MESSAGE（消息通知）
      */
     public static void SendMessage(String msg, String id) {
-        Map<String, String> map = new HashMap<>();
+        Map<String, String> map = new HashMap<>(16);
         ArrayList<Long> ids = new ArrayList<>();
-        String message_type = MessageInfo.TYPE_MESSAGE;
+        String messageType = MessageInfo.TYPE_MESSAGE;
         map.put("title", msg);
         map.put("content", msg);
         map.put("tag", msg);
         ids.add(Long.valueOf(id));
-
         MessageInfo messageInfo = new MessageInfo();
         //消息标题
         LocaleString title = new LocaleString();
@@ -74,12 +76,13 @@ public class GlobalMessage extends AbstractNotificationClick {
         //消息接收方ID
         messageInfo.setUserIds(ids);
         //消息类型
-        messageInfo.setType(message_type);
+        messageInfo.setType(messageType);
         // 业务标签
         messageInfo.setTag(map.get("tag"));
         //设置快速处理url
-        if (StringUtils.isNotBlank(map.get("formId")) && StringUtils.isNotBlank(map.get("pkId"))) {
-            messageInfo.setContentUrl(UrlService.getDomainContextUrl() + "/index.html?formId=" + map.get("formId") + "&pkId=" + map.get("pkId") + "");
+        if (StringUtils.isNotBlank(map.get(FORMID)) && StringUtils.isNotBlank(map.get(PKID))) {
+            messageInfo.setContentUrl(
+                UrlService.getDomainContextUrl() + "/index.html?formId=" + map.get("formId") + "&pkId=" + map.get("pkId"));
         }
         //发送消息
         MessageCenterServiceHelper.sendMessage(messageInfo);
@@ -93,9 +96,9 @@ public class GlobalMessage extends AbstractNotificationClick {
      */
     @Deprecated
     public static void SendMessageTest(String msg, String id) {
-        Map<String, String> map = new HashMap<>();
+        Map<String, String> map = new HashMap<>(16);
         ArrayList<Long> ids = new ArrayList<>();
-        String message_type = MessageInfo.TYPE_WARNING;
+        String messageType = MessageInfo.TYPE_WARNING;
         map.put("title", msg);
         map.put("content", msg);
         map.put("tag", msg);
@@ -117,12 +120,12 @@ public class GlobalMessage extends AbstractNotificationClick {
         //消息接收方ID
         messageInfo.setUserIds(ids);
         //消息类型
-        messageInfo.setType(message_type);
+        messageInfo.setType(messageType);
         // 业务标签
         messageInfo.setTag(map.get("tag"));
         //设置快速处理url
-        if (StringUtils.isNotBlank(map.get("formId")) && StringUtils.isNotBlank(map.get("pkId"))) {
-            messageInfo.setContentUrl(UrlService.getDomainContextUrl() + "/index.html?formId=" + map.get("formId") + "&pkId=" + map.get("pkId") + "");
+        if (StringUtils.isNotBlank(map.get(FORMID)) && StringUtils.isNotBlank(map.get(PKID))) {
+            messageInfo.setContentUrl(UrlService.getDomainContextUrl() + "/index.html?formId=" + map.get("formId") + "&pkId=" + map.get("pkId"));
         }
         //发送消息
         MessageCenterServiceHelper.sendMessage(messageInfo);

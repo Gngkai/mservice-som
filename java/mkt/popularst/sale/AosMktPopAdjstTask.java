@@ -34,7 +34,7 @@ import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.threads.ThreadPool;
 import kd.bos.threads.ThreadPools;
 import mkt.common.AosMktGenUtil;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.popularst.promot.AosMktPopAdjpstTask;
 
 /**
@@ -131,8 +131,8 @@ public class AosMktPopAdjstTask extends AbstractTask {
         BigDecimal exposure = (BigDecimal)popOrgInfo.get(pOrgId + "~" + "EXPOSURE").get("aos_value");
         // 前7天日均销量标准
         BigDecimal avgSales7Std = (BigDecimal)popOrgInfo.get(pOrgId + "~" + "7AVGSALES").get("aos_value");
-        Date summerSpringEnd = MKTCom.Get_DateRange("aos_dateto", "SS", pOrgId);
-        Date autumnWinterEnd = MKTCom.Get_DateRange("aos_dateto", "AW", pOrgId);
+        Date summerSpringEnd = MktComUtil.getDateRange("aos_dateto", "SS", pOrgId);
+        Date autumnWinterEnd = MktComUtil.getDateRange("aos_dateto", "AW", pOrgId);
         // 判断是否季末
         Date summerSpringSeasonEnd = DateUtils.setDays(DateUtils.addDays(summerSpringEnd, -32), 1);
         Date autumnWinterSeasonEnd = DateUtils.setDays(DateUtils.addDays(autumnWinterEnd, -32), 1);
@@ -205,7 +205,7 @@ public class AosMktPopAdjstTask extends AbstractTask {
             // 只筛选0销量 低销量
             int halfMonthTotalSales = (int)Cux_Common_Utl.nvl(orderMonth.get(String.valueOf(itemId)));
             float r = InStockAvailableDays.getOrgItemOnlineAvgQty(pOrgId.toString(), String.valueOf(itemId));
-            Boolean regularUn = MKTCom.Get_RegularUn((long)pOrgId, itemId, pOuCode, aosAvadays, r, halfMonthTotalSales);
+            Boolean regularUn = MktComUtil.getRegularUn((long)pOrgId, pOuCode, aosAvadays, r, halfMonthTotalSales);
             log.add(aosItemnumer + "非0销量低销量 标记=" + regularUn);
             if (regularUn) {
                 continue;
@@ -252,8 +252,8 @@ public class AosMktPopAdjstTask extends AbstractTask {
                 || "SPRING-SUMMER-CONVENTIONAL".equals(aosSeasonpro)) {
                 if (todayD.after(summerSpringSeasonEnd)) {
                     // 季末 判断是否达标
-                    float seasonRate = MKTCom.Get_SeasonRate((long)pOrgId, itemId, aosSeasonpro, itemOverseaqty, month);
-                    if (!MKTCom.Is_SeasonRate(aosSeasonpro, month, seasonRate)) {
+                    float seasonRate = MktComUtil.getSeasonRate((long)pOrgId, itemId, aosSeasonpro, itemOverseaqty, month);
+                    if (!MktComUtil.isSeasonRate(aosSeasonpro, month, seasonRate)) {
                         log.add(aosItemnumer + "季末达标");
                         continue;
                     }
@@ -263,8 +263,8 @@ public class AosMktPopAdjstTask extends AbstractTask {
                 // 判断是否季末
                 if (todayD.after(autumnWinterSeasonEnd)) {
                     // 季末 判断是否达标
-                    float seasonRate = MKTCom.Get_SeasonRate((long)pOrgId, itemId, aosSeasonpro, itemOverseaqty, month);
-                    if (!MKTCom.Is_SeasonRate(aosSeasonpro, month, seasonRate)) {
+                    float seasonRate = MktComUtil.getSeasonRate((long)pOrgId, itemId, aosSeasonpro, itemOverseaqty, month);
+                    if (!MktComUtil.isSeasonRate(aosSeasonpro, month, seasonRate)) {
                         continue;
                     }
                 }

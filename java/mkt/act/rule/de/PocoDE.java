@@ -10,7 +10,7 @@ import mkt.act.dao.ActShopPriceDao;
 import mkt.act.dao.impl.ActShopPriceImpl;
 import mkt.act.rule.ActStrategy;
 import mkt.act.rule.ActUtil;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -74,7 +74,7 @@ public class PocoDE implements ActStrategy {
             String aos_seasonattr = obj.getString("aos_seasonattr");
             DynamicObject itemObj = itemInfo.get(aos_sku);
             if (itemObj == null) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 未获取到物料信息");
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 未获取到物料信息");
                 continue;
             }
 
@@ -89,7 +89,7 @@ public class PocoDE implements ActStrategy {
                     aos_currentprice = map_shopPrice.get(aos_itemid);
                 }
                 else {
-                    MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 未获取到价格");
+                    MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 未获取到价格");
                     list_noPriceItem.add(aos_sku);
                     continue;
                 }
@@ -103,13 +103,13 @@ public class PocoDE implements ActStrategy {
 
             //
             if (samePeriodActivitiesSet.contains(aos_sku)) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 剔除除剔除同国别同期活动");
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 剔除除剔除同国别同期活动");
                 continue;
             }
 
             // 剔除过季品
             if (ActUtil.isOutSeason(start, aos_seasonattr)) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 季节属性:" + aos_seasonattr + " 过季");
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 季节属性:" + aos_seasonattr + " 过季");
                 continue;
             }
 
@@ -120,11 +120,11 @@ public class PocoDE implements ActStrategy {
 //            int platSaleDays = InStockAvailableDays.calInstockSalDays(aos_orgid, aos_itemid, platformQty);
 
             if (!(noPlatQty >30)) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 自有仓库存>30；");
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 自有仓库存>30；");
                 continue;
             }
             if (apartFromAmzAndEbayItem.contains(aos_sku)) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "剔除除亚马逊、eBay外活动日过去30天已提报平台活动个数＞3的sku");
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "剔除除亚马逊、eBay外活动日过去30天已提报平台活动个数＞3的sku");
                 continue;
             }
 
@@ -133,24 +133,24 @@ public class PocoDE implements ActStrategy {
             int salDaysForAct = InStockAvailableDays.calInstockSalDaysForAct(aos_orgid, aos_itemid, start);
             if ("REGULAR".equals(aos_seasonattr) || "SPRING-SUMMER-CONVENTIONAL".equals(aos_seasonattr)) {
                 if (salDaysForAct < 120) {
-                    MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + " 预计可售天数:" + salDaysForAct +" 常规品: 预计活动日可售天数 <90 ");
+                    MktComUtil.putSyncLog(aos_sync_logS, aos_sku + " 预计可售天数:" + salDaysForAct +" 常规品: 预计活动日可售天数 <90 ");
                     continue;
                 }
             }
 
             int springSummerProToActStartDateBetweenDays = ActUtil.springSummerProToActStartDateBetweenDays(aos_seasonattr, start);
             if (salDaysForAct < springSummerProToActStartDateBetweenDays) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "春夏品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日=" + springSummerProToActStartDateBetweenDays);
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "春夏品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日=" + springSummerProToActStartDateBetweenDays);
                 continue;
             }
             int autumnWinterProToActStartDateBetweenDays = ActUtil.autumnWinterProToActStartDateBetweenDays(aos_seasonattr, start);
             if (salDaysForAct < autumnWinterProToActStartDateBetweenDays) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "春夏品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日=" + autumnWinterProToActStartDateBetweenDays);
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "春夏品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日=" + autumnWinterProToActStartDateBetweenDays);
                 continue;
             }
             int holidayAndActStartDateBetweenDays = ActUtil.holidayProToActStartDateBetweenDays(festivalStartAndEnd.get(aos_festivalseting), start);
             if (salDaysForAct < holidayAndActStartDateBetweenDays) {
-                MKTCom.Put_SyncLog(aos_sync_logS, aos_sku + "节日品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日=" + holidayAndActStartDateBetweenDays);
+                MktComUtil.putSyncLog(aos_sync_logS, aos_sku + "节日品: 预计活动日可售天数=" + salDaysForAct + " 季末-预计活动日=" + holidayAndActStartDateBetweenDays);
                 continue;
             }
 

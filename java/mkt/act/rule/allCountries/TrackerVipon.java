@@ -29,7 +29,7 @@ import mkt.act.rule.ActStrategy;
 import mkt.act.rule.ActUtil;
 import mkt.act.rule.service.ActPlanService;
 import mkt.act.rule.service.impl.ActPlanServiceImpl;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.TreeBidiMap;
 
@@ -83,11 +83,11 @@ public class TrackerVipon implements ActStrategy {
 		DynamicObjectCollection aos_sync_logS = aos_sync_log.getDynamicObjectCollection("aos_entryentity");
 		// 获取常规品
 		Map<String, String> map_conventItem = getConventItem(orgId);
-		MKTCom.Put_SyncLog(aos_sync_logS, "常规基础数据获取完成 根据抓客规则获取数据 " + map_conventItem.keySet().size());
+		MktComUtil.putSyncLog(aos_sync_logS, "常规基础数据获取完成 根据抓客规则获取数据 " + map_conventItem.keySet().size());
 		logger.info(billno + "  常规基础数据获取完成 根据抓客规则获取数据  " + map_conventItem.keySet().size());
 		// 获取季节品
 		Map<String, String> map_seasonItem = getSeasonItem(orgId, aos_sync_logS);
-		MKTCom.Put_SyncLog(aos_sync_logS, "季节基础数据获取完成 根据抓客规则获取数据 " + map_seasonItem.keySet().size());
+		MktComUtil.putSyncLog(aos_sync_logS, "季节基础数据获取完成 根据抓客规则获取数据 " + map_seasonItem.keySet().size());
 		logger.info(billno + "  季节基础数据获取完成 根据抓客规则获取数据  " + map_seasonItem.keySet().size());
 		// 获取各品类的分配比例
 		Map<String, BigDecimal> map_cateAllocate = ActUtil.queryActCateAllocate(orgId, actId);
@@ -328,7 +328,7 @@ public class TrackerVipon implements ActStrategy {
 					|| !Cux_Common_Utl.IsNull(dy.get("aos_festivalseting"))) {
 				map_re.put(dy.getString("id"), "季节滞销");
 			} else {
-				MKTCom.Put_SyncLog(aos_sync_logS,
+				MktComUtil.putSyncLog(aos_sync_logS,
 						dy.getString("number") + " 剔除;  是否季节品： "
 								+ list_season.contains(dy.getString("aos_seasonseting")) + " 是否是节日品： "
 								+ !Cux_Common_Utl.IsNull(dy.get("aos_festivalseting")));
@@ -387,7 +387,7 @@ public class TrackerVipon implements ActStrategy {
 				}
 
 			}
-			MKTCom.Put_SyncLog(aos_sync_logS, str.toString());
+			MktComUtil.putSyncLog(aos_sync_logS, str.toString());
 		}
 		return map_re;
 	}
@@ -466,7 +466,7 @@ public class TrackerVipon implements ActStrategy {
 			if (!list_OtherActItem.contains(item) && !list_sameAct.contains(item)) {
 				list_re.add(item);
 			} else {
-				MKTCom.Put_SyncLog(aos_sync_logS, bidiMap_ietmID.get(item) + "存在重复活动 剔除");
+				MktComUtil.putSyncLog(aos_sync_logS, bidiMap_ietmID.get(item) + "存在重复活动 剔除");
 			}
 		}
 		return list_re;
@@ -540,7 +540,7 @@ public class TrackerVipon implements ActStrategy {
 			big_ItemPrice[1] = big_discount;
 			map_itemPrice.put(item, big_ItemPrice);
 			str.add("折扣价：  " + big_discount);
-			MKTCom.Put_SyncLog(aos_sync_logS, str.toString());
+			MktComUtil.putSyncLog(aos_sync_logS, str.toString());
 		}
 		// 计算毛利率
 		// 计算毛利率
@@ -608,7 +608,7 @@ public class TrackerVipon implements ActStrategy {
 					BigDecimal big_stockPrice = entry.getValue().multiply(new BigDecimal(map_itemStock.get(itemNumber)))
 							.setScale(3, BigDecimal.ROUND_HALF_UP);
 					map_re.put(entry.getKey(), big_stockPrice);
-					MKTCom.Put_SyncLog(aos_sync_logS,
+					MktComUtil.putSyncLog(aos_sync_logS,
 							itemNumber + "入库成本：" + entry.getValue() + "  库存金额： " + big_stockPrice);
 				}
 			}

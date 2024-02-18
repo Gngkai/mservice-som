@@ -39,7 +39,7 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
-import mkt.common.MKTCom;
+import mkt.common.MktComUtil;
 import mkt.progress.iface.ItemInfoUtil;
 
 /**
@@ -95,7 +95,7 @@ public class AosMktAaddBill extends AbstractBillPlugIn implements HyperLinkClick
         dyMain.set("aos_salesub_date", new Date());
         // 发送消息
         String messageId = aosRequireby.toString();
-        MKTCom.SendGlobalMessage(messageId, "aos_mkt_aadd", reqFid, aosBillNo, "高级A+需求单-已完成");
+        MktComUtil.sendGlobalMessage(messageId, "aos_mkt_aadd", reqFid, aosBillNo, "高级A+需求单-已完成");
     }
 
     /**
@@ -132,7 +132,7 @@ public class AosMktAaddBill extends AbstractBillPlugIn implements HyperLinkClick
         }
         // 发送消息
         String messageId = aosUser.toString();
-        MKTCom.SendGlobalMessage(messageId, "aos_mkt_aadd", reqFid, aosBillNo, "高级A+需求单-销售上线");
+        MktComUtil.sendGlobalMessage(messageId, "aos_mkt_aadd", reqFid, aosBillNo, "高级A+需求单-销售上线");
     }
 
     private static Date queryItemFirstDate(DynamicObject aosItemId, String aosOrg) {
@@ -235,7 +235,7 @@ public class AosMktAaddBill extends AbstractBillPlugIn implements HyperLinkClick
         dyMain.set("aos_design_date", new Date());
         // 发送消息
         String messageId = aosUser.toString();
-        MKTCom.SendGlobalMessage(messageId, "aos_mkt_aadd", reqFid, aosBillNo, "高级A+需求单-新品对比模块录入");
+        MktComUtil.sendGlobalMessage(messageId, "aos_mkt_aadd", reqFid, aosBillNo, "高级A+需求单-新品对比模块录入");
     }
 
     /**
@@ -268,7 +268,7 @@ public class AosMktAaddBill extends AbstractBillPlugIn implements HyperLinkClick
         String messageId = aosUser.toString();
         String reqFid = dyMain.getPkValue().toString();
         String aosBillNo = dyMain.getString("aos_billno");
-        MKTCom.SendGlobalMessage(messageId, "aos_mkt_aadd", reqFid, aosBillNo, "高级A+需求单-设计制作");
+        MktComUtil.sendGlobalMessage(messageId, "aos_mkt_aadd", reqFid, aosBillNo, "高级A+需求单-设计制作");
         // 如果当前为小语种同步主单 则需要同步修改其他子单
         boolean aosMin = dyMain.getBoolean("aos_min");
         Object aosSourceid = dyMain.get("aos_sourceid");
@@ -330,7 +330,7 @@ public class AosMktAaddBill extends AbstractBillPlugIn implements HyperLinkClick
             String messageId = aosUser.toString();
             String reqFid = dyMain.getPkValue().toString();
             String aosBillNo = dyMain.getString("aos_billno");
-            MKTCom.SendGlobalMessage(messageId, "aos_mkt_aadd", reqFid, aosBillNo, "高级A+需求单-海外确认");
+            MktComUtil.sendGlobalMessage(messageId, "aos_mkt_aadd", reqFid, aosBillNo, "高级A+需求单-海外确认");
         } else /* if ("否".equals(aos_osconfirm)) */ {
             Object aosUser = dyMain.get("aos_design");
             dyMain.set("aos_status", "设计制作");
@@ -339,7 +339,7 @@ public class AosMktAaddBill extends AbstractBillPlugIn implements HyperLinkClick
             String messageId = aosUser.toString();
             String reqFid = dyMain.getPkValue().toString();
             String aosBillNo = dyMain.getString("aos_billno");
-            MKTCom.SendGlobalMessage(messageId, "aos_mkt_aadd", reqFid, aosBillNo, "高级A+需求单-设计制作");
+            MktComUtil.sendGlobalMessage(messageId, "aos_mkt_aadd", reqFid, aosBillNo, "高级A+需求单-设计制作");
             // 如果当前为小语种确认主单 则提交所有小语种同步单据
             boolean aosMin = dyMain.getBoolean("aos_min");
             Object aosSourceid = dyMain.get("aos_sourceid");
@@ -380,7 +380,7 @@ public class AosMktAaddBill extends AbstractBillPlugIn implements HyperLinkClick
         }
         // 物料ID
         Object itemId = aosEntryentityS.get(0).getDynamicObject("aos_itemid").getPkValue();
-        String category = MKTCom.getItemCateNameZH(itemId);
+        String category = MktComUtil.getItemCateNameZh(itemId);
         String[] categoryGroup = category.split(",");
         // 大类
         String aosCategory1 = null;
@@ -466,7 +466,7 @@ public class AosMktAaddBill extends AbstractBillPlugIn implements HyperLinkClick
         String messageId = aosUser.toString();
         String reqFid = dyMain.getPkValue().toString();
         String aosBillNo = dyMain.getString("aos_billno");
-        MKTCom.SendGlobalMessage(messageId, "aos_mkt_aadd", reqFid, aosBillNo, "高级A+需求单-文案确认");
+        MktComUtil.sendGlobalMessage(messageId, "aos_mkt_aadd", reqFid, aosBillNo, "高级A+需求单-文案确认");
     }
 
     /**
@@ -532,7 +532,7 @@ public class AosMktAaddBill extends AbstractBillPlugIn implements HyperLinkClick
     public static void genSameAadd(String reqFid, String ou, int count, String type, Object itemId) throws FndError {
         FndError fndError = new FndError();
         DynamicObject sourceBill = BusinessDataServiceHelper.loadSingle(reqFid, "aos_mkt_aadd");
-        String category = MKTCom.getItemCateNameZH(itemId);
+        String category = MktComUtil.getItemCateNameZh(itemId);
         String[] categoryGroup = category.split(",");
         String aosCategory1 = null;
         String aosCategory2 = null;
@@ -626,7 +626,7 @@ public class AosMktAaddBill extends AbstractBillPlugIn implements HyperLinkClick
         aosMktAadd.set("aos_type", "国别新品");
         aosMktAadd.set("aos_org", ou);
         aosMktAadd.set("aos_osconfirm", "是");
-        String category = MKTCom.getItemCateNameZH(aosItemid.getPkValue());
+        String category = MktComUtil.getItemCateNameZh(aosItemid.getPkValue());
         String[] categoryGroup = category.split(",");
         String aosCategory1 = null;
         String aosCategory2 = null;
@@ -895,7 +895,7 @@ public class AosMktAaddBill extends AbstractBillPlugIn implements HyperLinkClick
             DynamicObject bdMaterial =
                 BusinessDataServiceHelper.loadSingle(aosItemidObject.getPkValue(), "bd_material");
             // 明细面板
-            String category = MKTCom.getItemCateNameZH(aosItemidObject.getPkValue());
+            String category = MktComUtil.getItemCateNameZh(aosItemidObject.getPkValue());
             String[] categoryGroup = category.split(",");
             String aosCategory1 = null;
             // \\192.168.70.61\Marketing_Files图片库\A+上架资料\设计高级版A+\大类\品名-产品号
