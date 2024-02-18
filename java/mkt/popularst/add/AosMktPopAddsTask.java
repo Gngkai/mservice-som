@@ -30,7 +30,7 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
-import mkt.common.AosMktGenerate;
+import mkt.common.AosMktGenUtil;
 import mkt.common.MKTCom;
 import mkt.popular.AosMktPopUtil;
 
@@ -98,15 +98,15 @@ public class AosMktPopAddsTask extends AbstractTask {
         QFilter[] filtersSt = new QFilter[] {filterId, filterDate};
         DeleteServiceHelper.delete("aos_mkt_pop_addst", filtersSt);
         // 通用数据
-        HashMap<String, Object> ppcStLastMap = AosMktGenerate.GeneratePpcStLast(pOuCode);
-        List<Map<String, Object>> itemQtyList = AosMktGenerate.GenerateItemQtyList(pOuCode);
-        HashMap<String, Map<String, Object>> keyRpt7Map = AosMktGenerate.GenerateKeyRpt7(pOuCode);
+        HashMap<String, Object> ppcStLastMap = AosMktGenUtil.generatePpcStLast(pOuCode);
+        List<Map<String, Object>> itemQtyList = AosMktGenUtil.generateItemQtyList(pOuCode);
+        HashMap<String, Map<String, Object>> keyRpt7Map = AosMktGenUtil.generateKeyRpt7(pOuCode);
         // 海外库存
         Map<String, Object> itemOverseaQtyMap = itemQtyList.get(0);
         // 在途数量
         Map<String, Object> itemIntransQtyMap = itemQtyList.get(1);
         // 全程天数信息
-        List<Integer> mapList = AosMktGenerate.GenerateShpDay(pOuCode);
+        List<Integer> mapList = AosMktGenUtil.generateShpDay(pOuCode);
         // 备货天数
         int aosShpDay = mapList.get(0);
         // 海运天数

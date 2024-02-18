@@ -29,7 +29,7 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.threads.ThreadPools;
-import mkt.common.AosMktGenerate;
+import mkt.common.AosMktGenUtil;
 
 /**
  * @author aosom
@@ -75,21 +75,21 @@ public class AosMktPopBudpstTask extends AbstractTask {
         DeleteServiceHelper.delete("aos_mkt_popbudget_stdt", filtersAdj);
         // 初始化数据
         // 营销国别标准参数
-        HashMap<String, Map<String, Object>> popOrgInfo = AosMktGenerate.GeneratePopOrgInfo(pOuCode);
+        HashMap<String, Map<String, Object>> popOrgInfo = AosMktGenUtil.generatePopOrgInfo(pOuCode);
         // 7日关键词报告系列
-        HashMap<String, Map<String, Object>> skuRpt7Serial = AosMktGenerate.GenerateSkuRptSerial(pOuCode);
+        HashMap<String, Map<String, Object>> skuRpt7Serial = AosMktGenUtil.generateSkuRptSerial(pOuCode);
         // 今日系列维度关键词个数
-        HashMap<String, Object> ppcTodaySerial = AosMktGenerate.GeneratePpcTodayStSerial(pOuCode);
+        HashMap<String, Object> ppcTodaySerial = AosMktGenUtil.generatePpcTodayStSerial(pOuCode);
         // ST数据源昨日系列预算
-        HashMap<String, Object> ppcYesterSerial = AosMktGenerate.GeneratePpcYeStSerial(pOuCode);
-        HashMap<String, Map<String, Object>> skuRptDetailSerial = AosMktGenerate.GenerateSkuRptDetailSerial(pOuCode);
-        HashMap<String, Object> ppcTodaySerialGroup = AosMktGenerate.GeneratePpcTodayStSerialGroup(pOuCode);
+        HashMap<String, Object> ppcYesterSerial = AosMktGenUtil.generatePpcYeStSerial(pOuCode);
+        HashMap<String, Map<String, Object>> skuRptDetailSerial = AosMktGenUtil.generateSkuRptDetailSerial(pOuCode);
+        HashMap<String, Object> ppcTodaySerialGroup = AosMktGenUtil.generatePpcTodayStSerialGroup(pOuCode);
         HashMap<String, BigDecimal> adjsMap = initAdjsMap(pOuCode, today);
         HashMap<String, Map<String, Map<String, Object>>> skuRpt7SerialD =
-            AosMktGenerate.GenerateSkuRpt7Serial(pOuCode);
+            AosMktGenUtil.generateSkuRpt7Serial(pOuCode);
         HashMap<String, Map<String, Map<String, Object>>> ppcYsterSerial7 =
-            AosMktGenerate.GenerateYesterSTSerial7D(pOuCode);
-        HashMap<String, Map<String, Object>> ppcYsterSerialG = AosMktGenerate.GenerateYesterSTSerial7G(pOuCode);
+            AosMktGenUtil.generateYesterSTSerial7D(pOuCode);
+        HashMap<String, Map<String, Object>> ppcYsterSerialG = AosMktGenUtil.generateYesterSTSerial7G(pOuCode);
         // 国别标准ROI
         BigDecimal popOrgRoist = (BigDecimal)popOrgInfo.get(pOrgId + "~" + "ROIST").get("aos_value");
         // 很差

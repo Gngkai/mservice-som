@@ -33,7 +33,7 @@ import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.threads.ThreadPool;
 import kd.bos.threads.ThreadPools;
-import mkt.common.AosMktGenerate;
+import mkt.common.AosMktGenUtil;
 import mkt.common.MKTCom;
 import mkt.popularst.promot.AosMktPopAdjpstTask;
 
@@ -108,25 +108,25 @@ public class AosMktPopAdjstTask extends AbstractTask {
         int day = today.get(Calendar.DAY_OF_MONTH);
         // 初始化数据
         // 3日组报告
-        HashMap<String, Map<String, Object>> skuRpt3Avg = AosMktGenerate.GenerateSkuRpt3Group(pOuCode);
+        HashMap<String, Map<String, Object>> skuRpt3Avg = AosMktGenUtil.generateSkuRpt3Group(pOuCode);
         // 7日组报告
-        HashMap<String, Map<String, Object>> skuRpt = AosMktGenerate.GenerateSkuRpt7Group(pOuCode);
+        HashMap<String, Map<String, Object>> skuRpt = AosMktGenUtil.generateSkuRpt7Group(pOuCode);
         // 今日可用词
-        HashMap<String, Map<String, Object>> keyDetailToday = AosMktGenerate.GenerateKeyDetailToday(pOuCode, pGroupId);
+        HashMap<String, Map<String, Object>> keyDetailToday = AosMktGenUtil.generateKeyDetailToday(pOuCode, pGroupId);
         // 半月销量
-        HashMap<String, Integer> orderMonth = AosMktGenerate.GenerateOrderMonth(pOuCode);
-        HashMap<String, Map<String, Object>> keyRpt7Map = AosMktGenerate.GenerateKeyRpt7(pOuCode);
+        HashMap<String, Integer> orderMonth = AosMktGenUtil.generateOrderMonth(pOuCode);
+        HashMap<String, Map<String, Object>> keyRpt7Map = AosMktGenUtil.generateKeyRpt7(pOuCode);
         // 昨日数据
-        HashMap<String, Map<String, Object>> ppcYester = AosMktGenerate.GeneratePpcYesterSt(pOuCode);
+        HashMap<String, Map<String, Object>> ppcYester = AosMktGenUtil.generatePpcYesterSt(pOuCode);
         // 昨日数据
-        HashMap<String, Map<String, Object>> ppcToday = AosMktGenerate.GeneratePpcTodaySt(pOuCode);
+        HashMap<String, Map<String, Object>> ppcToday = AosMktGenUtil.generatePpcTodaySt(pOuCode);
         // 关键词建议价格
-        HashMap<String, Map<String, Object>> adPriceKey = AosMktGenerate.GenerateAdvKeyPrice(pOuCode);
-        List<Map<String, Object>> itemQtyList = AosMktGenerate.GenerateItemQtyList(pOuCode);
+        HashMap<String, Map<String, Object>> adPriceKey = AosMktGenUtil.generateAdvKeyPrice(pOuCode);
+        List<Map<String, Object>> itemQtyList = AosMktGenUtil.generateItemQtyList(pOuCode);
         // 海外库存
         Map<String, Object> itemOverseaQtyMap = itemQtyList.get(0);
         // 营销国别标准参数
-        HashMap<String, Map<String, Object>> popOrgInfo = AosMktGenerate.GeneratePopOrgInfo(pOuCode);
+        HashMap<String, Map<String, Object>> popOrgInfo = AosMktGenUtil.generatePopOrgInfo(pOuCode);
         // 国别曝光标准BigDecimal
         BigDecimal exposure = (BigDecimal)popOrgInfo.get(pOrgId + "~" + "EXPOSURE").get("aos_value");
         // 前7天日均销量标准

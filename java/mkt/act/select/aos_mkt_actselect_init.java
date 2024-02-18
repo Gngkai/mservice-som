@@ -24,7 +24,7 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.threads.ThreadPools;
-import mkt.common.AosMktGenerate;
+import mkt.common.AosMktGenUtil;
 import mkt.common.MKTCom;
 import mkt.common.AosMktCacheUtil;
 import org.apache.commons.lang3.SerializationUtils;
@@ -92,7 +92,7 @@ public class aos_mkt_actselect_init extends AbstractTask {
         Object p_ou_code = params.get("p_ou_code");
         // 获取当前国别下所有活动物料已提报次数
         Map<String, Integer> alreadyActivityTimes = getAlreadyActivityTimes(p_ou_code);
-        HashMap<String, Integer> Order7Days = AosMktGenerate.GenerateOrder7Days(p_ou_code);// 7天销量
+        HashMap<String, Integer> Order7Days = AosMktGenUtil.generateOrder7Days(p_ou_code);// 7天销量
         QFilter filter_ou = new QFilter("aos_contryentry.aos_nationality.number", "=", p_ou_code);
         QFilter filter_itemtype = new QFilter("aos_protype", "=", "N");
         QFilter[] filters = new QFilter[] {filter_ou, filter_itemtype};

@@ -27,7 +27,7 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
-import mkt.common.AosMktGenerate;
+import mkt.common.AosMktGenUtil;
 import mkt.popular.AosMktPopUtil;
 import mkt.popularst.ppc.AosMktPopPpcstTask;
 
@@ -89,16 +89,16 @@ public class AosMktPopWeekTask extends AbstractTask {
         QFilter[] filtersSt = new QFilter[] {filterId, filterDate};
         DeleteServiceHelper.delete("aos_mkt_pop_weekst", filtersSt);
         // 初始化数据
-        HashMap<String, Map<String, Object>> popOrgInfo = AosMktGenerate.GeneratePopOrgInfo(pOuCode);
+        HashMap<String, Map<String, Object>> popOrgInfo = AosMktGenUtil.generatePopOrgInfo(pOuCode);
         BigDecimal exposure = (BigDecimal)popOrgInfo.get(pOrgId + "~" + "EXPOSURE").get("aos_value");
-        HashMap<String, BigDecimal> keyRpt7GroupExp = AosMktGenerate.GenerateKeyRpt7GroupExp(pOuCode);
-        List<Map<String, Object>> itemQtyList = AosMktGenerate.GenerateItemQtyList(pOuCode);
+        HashMap<String, BigDecimal> keyRpt7GroupExp = AosMktGenUtil.generateKeyRpt7GroupExp(pOuCode);
+        List<Map<String, Object>> itemQtyList = AosMktGenUtil.generateItemQtyList(pOuCode);
         // 海外库存
         Map<String, Object> itemOverseaQtyMap = itemQtyList.get(0);
-        HashMap<String, Map<String, Object>> keyRpt7Map = AosMktGenerate.GenerateKeyRpt7(pOuCode);
+        HashMap<String, Map<String, Object>> keyRpt7Map = AosMktGenUtil.generateKeyRpt7(pOuCode);
         HashMap<String, Map<String, String>> itemPoint = AosMktPopPpcstTask.generateItemPoint(pOrgId);
         // 物料词信息 关键词报告
-        HashMap<String, Map<String, Object>> keyRpt = AosMktGenerate.GenerateKeyRpt(pOrgId);
+        HashMap<String, Map<String, Object>> keyRpt = AosMktGenUtil.generateKeyRpt(pOrgId);
         filterDate = new QFilter("aos_date", "=", today);
         QFilter filterPpcorg = new QFilter("aos_orgid.number", "=", pOuCode);
         QFilter filterAva = new QFilter("aos_keystatus", "=", "AVAILABLE");

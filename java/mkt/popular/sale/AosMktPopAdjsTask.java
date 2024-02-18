@@ -24,7 +24,7 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
-import mkt.common.AosMktGenerate;
+import mkt.common.AosMktGenUtil;
 import mkt.common.MKTCom;
 import mkt.common.AosMktCacheUtil;
 import mkt.popular.promot.AosMktPopAdjpTask;
@@ -153,7 +153,7 @@ public class AosMktPopAdjsTask extends AbstractTask {
         // 海外在库数量
         Map<String, Object> itemOverseaqtyMap = item.get("item_overseaqty");
         // 半月销量
-        HashMap<String, Integer> orderMonth = AosMktGenerate.GenerateOrderMonth(pOuCode);
+        HashMap<String, Integer> orderMonth = AosMktGenUtil.generateOrderMonth(pOuCode);
         // SKU曝光标准
         BigDecimal skuExptandard = (BigDecimal)popOrgInfo.get(pOrgId + "~" + "EXPOSURE").get("aos_value");
         // 国别标准ROI

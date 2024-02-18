@@ -32,7 +32,7 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
-import mkt.common.AosMktGenerate;
+import mkt.common.AosMktGenUtil;
 import mkt.common.MKTCom;
 import mkt.popular.AosMktPopUtil;
 import mkt.popularst.add.AosMktPopAddsTask;
@@ -138,44 +138,44 @@ public class AosMktPopPpcstTask extends AbstractTask {
         Date autumnWinterStart = MKTCom.Get_DateRange("aos_datefrom", "AW", pOrgId);
         Date autumnWinterEnd = MKTCom.Get_DateRange("aos_dateto", "AW", pOrgId);
         // 通用数据 店铺货号
-        HashMap<String, String> productInfo = AosMktGenerate.GenerateShopSKU(pOuCode);
-        List<Map<String, Object>> itemQtyList = AosMktGenerate.GenerateItemQtyList(pOuCode);
+        HashMap<String, String> productInfo = AosMktGenUtil.generateShopSku(pOuCode);
+        List<Map<String, Object>> itemQtyList = AosMktGenUtil.generateItemQtyList(pOuCode);
         // 海外库存
         Map<String, Object> itemOverseaQtyMap = itemQtyList.get(0);
         // 在途数量
         Map<String, Object> itemIntransQtyMap = itemQtyList.get(1);
         // 组创建日期
-        HashMap<String, Object> groupDateMap = AosMktGenerate.GenerateLastGroupDate(pOuCode);
+        HashMap<String, Object> groupDateMap = AosMktGenUtil.generateLastGroupDate(pOuCode);
         // 词创建日期
-        HashMap<String, Object> keyDateMap = AosMktGenerate.GenerateLastKeyDate(pOuCode);
+        HashMap<String, Object> keyDateMap = AosMktGenUtil.generateLastKeyDate(pOuCode);
         // 词创建日期
-        HashMap<String, Object> serialDateMap = AosMktGenerate.GenerateLastSerialDate(pOuCode);
+        HashMap<String, Object> serialDateMap = AosMktGenUtil.generateLastSerialDate(pOuCode);
         // 关键词报告 非常重要！
-        HashMap<String, Map<String, Object>> keyRpt = AosMktGenerate.GenerateKeyRpt(pOuCode);
+        HashMap<String, Map<String, Object>> keyRpt = AosMktGenUtil.generateKeyRpt(pOuCode);
         // 关键词建议价格
-        HashMap<String, Map<String, Object>> adPriceKey = AosMktGenerate.GenerateAdvKeyPrice(pOuCode);
+        HashMap<String, Map<String, Object>> adPriceKey = AosMktGenUtil.generateAdvKeyPrice(pOuCode);
         // 亚马逊定价
-        HashMap<String, Object> dailyPrice = AosMktGenerate.GenerateDailyPrice(pOuCode);
+        HashMap<String, Object> dailyPrice = AosMktGenUtil.generateDailyPrice(pOuCode);
         // 营销国别标准参数
-        HashMap<String, Map<String, Object>> popOrgInfo = AosMktGenerate.GeneratePopOrgInfo(pOuCode);
+        HashMap<String, Map<String, Object>> popOrgInfo = AosMktGenUtil.generatePopOrgInfo(pOuCode);
         // 可售天数
-        HashMap<String, Object> itemAvaDays = AosMktGenerate.GenerateAvaDays(pOuCode);
+        HashMap<String, Object> itemAvaDays = AosMktGenUtil.generateAvaDays(pOuCode);
         // 昨日数据
-        HashMap<String, Map<String, Object>> ppcYester = AosMktGenerate.GeneratePpcYesterSt(pOuCode);
+        HashMap<String, Map<String, Object>> ppcYester = AosMktGenUtil.generatePpcYesterSt(pOuCode);
         // 7日词报告
-        HashMap<String, Map<String, Object>> keyRpt7 = AosMktGenerate.GenerateSkuRpt7(pOuCode);
+        HashMap<String, Map<String, Object>> keyRpt7 = AosMktGenUtil.generateSkuRpt7(pOuCode);
         // 预测汇总表
-        HashMap<String, Map<String, Object>> salSummary = AosMktGenerate.GenerateSalSummarySerial(pOuCode);
-        HashMap<String, Map<String, Object>> ppcYesterSerial = AosMktGenerate.GeneratePpcYesterSerial(pOuCode);
-        HashMap<String, Map<String, Object>> skuRptSerial = AosMktGenerate.GenerateSkuRptSerial(pOuCode);
-        HashMap<String, Map<String, Object>> skuRptDetailSerial = AosMktGenerate.GenerateSkuRptDetailSerial(pOuCode);
+        HashMap<String, Map<String, Object>> salSummary = AosMktGenUtil.gnerateSalSummarySerial(pOuCode);
+        HashMap<String, Map<String, Object>> ppcYesterSerial = AosMktGenUtil.generatePpcYesterSerial(pOuCode);
+        HashMap<String, Map<String, Object>> skuRptSerial = AosMktGenUtil.generateSkuRptSerial(pOuCode);
+        HashMap<String, Map<String, Object>> skuRptDetailSerial = AosMktGenUtil.generateSkuRptDetailSerial(pOuCode);
         HashMap<String, Map<String, Map<String, Object>>> skuRpt3Serial =
-            AosMktGenerate.GenerateSkuRpt3SerialObject(pOuCode);
+            AosMktGenUtil.generateSkuRpt3SerialObject(pOuCode);
         Set<String> manualSet = generateManual(pOuCode);
         Set<String> weekSet = generateWeek(pOuCode);
         HashMap<String, Map<String, String>> itemPoint = generateItemPoint(pOrgId);
         // 全程天数信息
-        List<Integer> mapList = AosMktGenerate.GenerateShpDay(pOuCode);
+        List<Integer> mapList = AosMktGenUtil.generateShpDay(pOuCode);
         // 备货天数
         int aosShpDay = mapList.get(0);
         // 海运天数
