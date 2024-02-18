@@ -427,6 +427,26 @@ public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEv
         SalUtil.skipVerifyFieldChanged(entity,entity.getDynamicObjectType(),fields);
     }
 
+    @Override
+    public void afterDoOperation(AfterDoOperationEventArgs eventArgs) {
+        super.afterDoOperation(eventArgs);
+        String operateKey = eventArgs.getOperateKey();
+        //批量新增行
+        if (operateKey.contains("_insert")){
+            String[] split = operateKey.split("_");
+            StringJoiner str = new StringJoiner("_");
+            for (int i = 0; i < split.length-1; i++) {
+                str.add(split[i]);
+            }
+            Object insertRow = this.getModel().getValue("aos_insert_row");
+            int row = 1;
+            if (FndGlobal.IsNotNull(insertRow)){
+                row = Integer.parseInt(insertRow.toString());
+                this.getModel().batchCreateNewEntryRow(str.toString(),row);
+            }
+        }
+    }
+
     //设置sku清单
     private void setItemEntity(){
         QFBuilder builder = new QFBuilder();

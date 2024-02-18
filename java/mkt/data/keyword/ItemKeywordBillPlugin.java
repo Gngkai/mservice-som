@@ -17,9 +17,7 @@ import kd.bos.entity.datamodel.events.PropertyChangedArgs;
 import kd.bos.form.container.TabPage;
 import kd.bos.form.control.Hyperlink;
 import kd.bos.form.control.events.ItemClickEvent;
-import kd.bos.form.events.BeforeClosedEvent;
-import kd.bos.form.events.BeforeDoOperationEventArgs;
-import kd.bos.form.events.ClosedCallBackEvent;
+import kd.bos.form.events.*;
 import kd.bos.form.operate.FormOperate;
 import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
@@ -130,7 +128,8 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
 
     @Override
     public void closedCallBack(ClosedCallBackEvent closedCallBackEvent) {
-        if (StringUtils.equals(closedCallBackEvent.getActionId(), "items_select")
+        String actionId = closedCallBackEvent.getActionId();
+        if (StringUtils.equals(actionId, "items_select")
                 && null != closedCallBackEvent.getReturnData()) {
             // 这里返回对象为Object，可强转成相应的其他类型，
             // 单条数据可用String类型传输，返回多条数据可放入map中，也可使用json等方式传输
@@ -138,6 +137,11 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
             copyToData(returnData);
             getView().showSuccessNotification("Copy To Success (●'◡'●)");
         }
+        else if ("aos_mkt_keyword_sl".equals(actionId)) {
+            String data = (String) closedCallBackEvent.getReturnData();
+            syncPointDate(data);
+        }
+
     }
 
     private void copyToData(Map<String, List<String>> returnData) {
@@ -182,7 +186,6 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
         }
         SaveServiceHelper.save(load);
     }
-
 
     @Override
     public void beforeDoOperation(BeforeDoOperationEventArgs args) {
@@ -241,66 +244,37 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
             DynamicObject aosOrgid = (DynamicObject) this.getModel().getValue("aos_orgid");
             // 2. 物料
             StringJoiner str = new StringJoiner(",");
-
-            str.add("aos_linentity.aos_keyword aos_keyword");
-            str.add("aos_linentity.aos_sort aos_sort");
-            str.add("aos_linentity.aos_search aos_search");
-            str.add("aos_linentity.aos_apply aos_apply");
-            str.add("aos_linentity.aos_attribute aos_attribute");
-            str.add("aos_linentity.aos_remake aos_remake");
-
+            str.add("id");
+            str.add("aos_detail");
             QFBuilder builder = new QFBuilder();
             builder.add("aos_orgid", QCP.equals, aosOrgid.getString("id"));
-            builder.add("aos_category1", "=", getModel().getValue("aos_category1"));
-            builder.add("aos_category2", "=", getModel().getValue("aos_category2"));
-            builder.add("aos_category3", "=", getModel().getValue("aos_category3"));
             builder.add("aos_itemnamecn", "=", getModel().getValue("aos_itemname"));
             DynamicObjectCollection list = QueryServiceHelper.query("aos_mkt_point", str.toString(), builder.toArray());
             if (list == null || list.size() == 0) {
                 this.getView().showTipNotification("无可用数据!");
                 return;
             }
-
-            // 删除原来的
-            this.getModel().deleteEntryData("aos_entryentity");
-            // 取出关键词 赋值到关键词单据体
-            for (DynamicObject obj : list) {
-                int index = this.getModel().createNewEntryRow("aos_entryentity");
-                getModel().setValue("aos_mainvoc", obj.get("aos_keyword"), index);
-                getModel().setValue("aos_sort", obj.get("aos_sort"), index);
-                getModel().setValue("aos_search", obj.get("aos_search"), index);
-                getModel().setValue("aos_apply", obj.get("aos_apply"), index);
-                getModel().setValue("aos_attribute", obj.get("aos_attribute"), index);
-                getModel().setValue("aos_attribute", obj.get("aos_attribute"), index);
-                getModel().setValue("aos_remake", obj.get("aos_remake"), index);
+           else if (list.size() > 1) {
+                //弹出 属性细分选择框
+                Map<String,Object> params = new HashMap<>();
+                List<String> detailList = new ArrayList<>(list.size());
+                for (DynamicObject row : list) {
+                    detailList.add(row.getString("aos_detail"));
+                }
+                params.put("detailList",detailList);
+                FndGlobal.OpenForm(this,"aos_mkt_keyword_sl",params);
+            }
+           else {
+               syncPointDate(list.get(0).getString("aos_detail"));
             }
 
-            // 删除原来的
-            str = new StringJoiner(",");
-            str.add("aos_linentity_gw.aos_gw_keyword aos_gw_keyword");
-            str.add("aos_linentity_gw.aos_gw_search aos_gw_search");
-            DynamicObjectCollection listgw =
-                    QueryServiceHelper.query("aos_mkt_point", str.toString(), builder.toArray());
-            if (FndGlobal.IsNull(listgw) || list.size() == 0) {
-                this.getView().showTipNotification("无官网可用数据!");
-                return;
-            }
-
-            this.getModel().deleteEntryData("aos_linentity_gw");
-            // 取出关键词 赋值到关键词单据体
-            for (DynamicObject obj : listgw) {
-                String aosGwKeyword = obj.getString("aos_gw_keyword");
-                String aosGwSearch = obj.getString("aos_gw_search");
-                int index = this.getModel().createNewEntryRow("aos_linentity_gw");
-                this.getModel().setValue("aos_gw_keyword", aosGwKeyword, index);
-                this.getModel().setValue("aos_gw_search", aosGwSearch, index);
-            }
         } catch (Exception ex) {
             ex.printStackTrace();
         } finally {
             MmsOtelUtils.spanClose(span);
         }
     }
+
 
     /**
      * 保存前事件
@@ -339,5 +313,85 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
         fields.add("aos_hyperlinkap");
         fields.add("aos_textfield");
         SalUtil.skipVerifyFieldChanged(dataEntity, dataEntity.getDynamicObjectType(), fields);
+    }
+
+    @Override
+    public void afterDoOperation(AfterDoOperationEventArgs eventArgs) {
+        super.afterDoOperation(eventArgs);
+        String operateKey = eventArgs.getOperateKey();
+        //批量新增行
+        if (operateKey.contains("_insert")){
+            String[] split = operateKey.split("_");
+            StringJoiner str = new StringJoiner("_");
+            for (int i = 0; i < split.length-1; i++) {
+                str.add(split[i]);
+            }
+            int row= 1;
+            Object insertRow = this.getModel().getValue("aos_insert_row");
+            if (FndGlobal.IsNotNull(insertRow)){
+                row = Integer.parseInt(insertRow.toString());
+            }
+            this.getModel().batchCreateNewEntryRow(str.toString(),row);
+        }
+    }
+
+    /**
+     * 引用关键词数据
+     * @param key   属性细分
+     */
+    private void syncPointDate(String key){
+        // 1. 国别
+        DynamicObject aosOrgid = (DynamicObject) this.getModel().getValue("aos_orgid");
+        // 2. 物料
+        StringJoiner str = new StringJoiner(",");
+        str.add("aos_linentity.aos_keyword aos_keyword");
+        str.add("aos_linentity.aos_sort aos_sort");
+        str.add("aos_linentity.aos_search aos_search");
+        str.add("aos_linentity.aos_apply aos_apply");
+        str.add("aos_linentity.aos_attribute aos_attribute");
+        str.add("aos_linentity.aos_remake aos_remake");
+
+        QFBuilder builder = new QFBuilder();
+        builder.add("aos_orgid", QCP.equals, aosOrgid.getString("id"));
+        builder.add("aos_itemnamecn", "=", getModel().getValue("aos_itemname"));
+        builder.add("aos_detail", "=", key);
+        DynamicObjectCollection list = QueryServiceHelper.query("aos_mkt_point", str.toString(), builder.toArray());
+        System.out.println("list.size() = " + list.size());
+        // 删除原来的
+        this.getModel().deleteEntryData("aos_entryentity");
+        // 取出关键词 赋值到关键词单据体
+        for (DynamicObject obj : list) {
+            int index = this.getModel().createNewEntryRow("aos_entryentity");
+            getModel().setValue("aos_mainvoc", obj.get("aos_keyword"), index);
+            getModel().setValue("aos_sort", obj.get("aos_sort"), index);
+            getModel().setValue("aos_search", obj.get("aos_search"), index);
+            getModel().setValue("aos_apply", obj.get("aos_apply"), index);
+            getModel().setValue("aos_attribute", obj.get("aos_attribute"), index);
+            getModel().setValue("aos_attribute", obj.get("aos_attribute"), index);
+            getModel().setValue("aos_remake", obj.get("aos_remake"), index);
+        }
+
+        // 删除原来的
+        str = new StringJoiner(",");
+        str.add("aos_linentity_gw.aos_gw_keyword aos_gw_keyword");
+        str.add("aos_linentity_gw.aos_gw_search aos_gw_search");
+        DynamicObjectCollection listgw =
+                QueryServiceHelper.query("aos_mkt_point", str.toString(), builder.toArray());
+        System.out.println("listgw.size() = " + listgw.size());
+        if (FndGlobal.IsNull(listgw) || list.size() == 0) {
+            this.getView().showTipNotification("无官网可用数据!");
+            return;
+        }
+
+        this.getModel().deleteEntryData("aos_linentity_gw");
+        // 取出关键词 赋值到关键词单据体
+        for (DynamicObject obj : listgw) {
+            String aosGwKeyword = obj.getString("aos_gw_keyword");
+            String aosGwSearch = obj.getString("aos_gw_search");
+            int index = this.getModel().createNewEntryRow("aos_linentity_gw");
+            this.getModel().setValue("aos_gw_keyword", aosGwKeyword, index);
+            this.getModel().setValue("aos_gw_search", aosGwSearch, index);
+        }
+
     }
 }
