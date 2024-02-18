@@ -1035,7 +1035,7 @@ public class AosMktListingReqBill extends AbstractBillPlugIn
                 aosSubmit(this.getModel().getDataEntity(true), "A");
             }
         } catch (Exception e) {
-            this.getView().showErrorNotification("报错：" + e.getMessage());
+            this.getView().showErrorNotification("报错：" + SalUtil.getExceptionStr(e));
         }
 
     }
