@@ -22,7 +22,7 @@ import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.MktComUtil;
-import mkt.common.MKTS3PIC;
+import mkt.common.MktS3Pic;
 import mkt.progress.ProgressUtil;
 import mkt.progress.design.AosMktDesignReqBill;
 import mkt.progress.iface.ItemInfoUtil;
@@ -278,7 +278,7 @@ public class AosMktPsListBill extends AbstractBillPlugIn implements ItemClickLis
         aosSubentryentity.set("aos_seting1", bdMaterial.get("aos_seting_cn"));
         aosSubentryentity.set("aos_seting2", bdMaterial.get("aos_seting_en"));
         aosSubentryentity.set("aos_spec", bdMaterial.get("aos_specification_cn"));
-        aosSubentryentity.set("aos_url", MKTS3PIC.GetItemPicture(itemNumber));
+        aosSubentryentity.set("aos_url", MktS3Pic.getItemPicture(itemNumber));
         aosSubentryentity.set("aos_broitem", aosBroitem);
         aosSubentryentity.set("aos_orgtext", aosOrgtext);
         StringJoiner productStyle = new StringJoiner(";");

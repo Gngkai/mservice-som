@@ -49,7 +49,7 @@ import kd.bos.servicehelper.user.UserServiceHelper;
 import common.sal.util.QFBuilder;
 import mkt.common.GlobalMessage;
 import mkt.common.MktComUtil;
-import mkt.common.MKTS3PIC;
+import mkt.common.MktS3Pic;
 import mkt.common.otel.MmsOtelUtils;
 import mkt.progress.ProgressUtil;
 import mkt.progress.design.AosMktDesignReqBill;
@@ -1106,7 +1106,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             aosSubentryentity.set("aos_seting1", bdMaterial.get("aos_seting_cn"));
             aosSubentryentity.set("aos_seting2", bdMaterial.get("aos_seting_en"));
             aosSubentryentity.set("aos_spec", bdMaterial.get("aos_specification_cn"));
-            aosSubentryentity.set("aos_url", MKTS3PIC.GetItemPicture(itemNumber));
+            aosSubentryentity.set("aos_url", MktS3Pic.getItemPicture(itemNumber));
             aosSubentryentity.set("aos_broitem", aosBroitem);
             aosSubentryentity.set("aos_orgtext", aosOrgtext.toString());
 
@@ -2285,11 +2285,11 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
         // 对于流程图
         Object aosType = this.getModel().getValue("aos_type");
         if (FndGlobal.IsNull(aosType)) {
-            this.getModel().setValue("aos_flowpic", MKTS3PIC.aos_flowpic);
+            this.getModel().setValue("aos_flowpic", MktS3Pic.AOS_FLOWPIC);
         } else if (sign.photo.name.equals(aosType)) {
-            this.getModel().setValue("aos_flowpic", MKTS3PIC.aos_flowpic);
+            this.getModel().setValue("aos_flowpic", MktS3Pic.AOS_FLOWPIC);
         } else if (sign.video.name.equals(aosType)) {
-            this.getModel().setValue("aos_flowpic", MKTS3PIC.aos_flowved);
+            this.getModel().setValue("aos_flowpic", MktS3Pic.AOS_FLOWVED);
         }
     }
 

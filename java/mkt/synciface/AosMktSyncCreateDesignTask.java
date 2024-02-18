@@ -19,7 +19,7 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import mkt.common.MktComUtil;
-import mkt.common.MKTS3PIC;
+import mkt.common.MktS3Pic;
 import mkt.progress.ProgressUtil;
 import mkt.progress.iface.ItemInfoUtil;
 
@@ -249,7 +249,7 @@ public class AosMktSyncCreateDesignTask extends AbstractTask {
         dySubRow.set("aos_seting1", bdMaterial.get("aos_seting_cn"));
         dySubRow.set("aos_seting2", bdMaterial.get("aos_seting_en"));
         dySubRow.set("aos_spec", bdMaterial.get("aos_specification_cn"));
-        dySubRow.set("aos_url", MKTS3PIC.GetItemPicture(itemNumber));
+        dySubRow.set("aos_url", MktS3Pic.getItemPicture(itemNumber));
         dySubRow.set("aos_broitem", aosBroitem);
         dySubRow.set("aos_orgtext", aosOrgtext);
         dySubRow.set("aos_sellingpoint", bdMaterial.get("aos_sellingpoint"));

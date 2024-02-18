@@ -41,7 +41,7 @@ import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.servicehelper.user.UserServiceHelper;
 import mkt.common.GlobalMessage;
 import mkt.common.MktComUtil;
-import mkt.common.MKTS3PIC;
+import mkt.common.MktS3Pic;
 import mkt.common.otel.MmsOtelUtils;
 import mkt.progress.ProgressUtil;
 import mkt.progress.design.aadd.AosMktAaddBill;
@@ -2293,7 +2293,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
             this.getModel().setValue("aos_seting1", bdMaterial.get("aos_seting_cn"), 0);
             this.getModel().setValue("aos_seting2", bdMaterial.get("aos_seting_en"), 0);
             this.getModel().setValue("aos_spec", bdMaterial.get("aos_specification_cn"), 0);
-            this.getModel().setValue("aos_url", MKTS3PIC.GetItemPicture(itemNumber), 0);
+            this.getModel().setValue("aos_url", MktS3Pic.getItemPicture(itemNumber), 0);
             this.getModel().setValue("aos_broitem", aosBroitem, 0);
             this.getModel().setValue("aos_orgtext", aosOrgtext.toString(), 0);
             this.getModel().setValue("aos_sellingpoint", bdMaterial.get("aos_sellingpoint"), 0);
