@@ -939,7 +939,7 @@ public class EventRule {
             //首先查找所有的平台活动
             builder.clear();
             builder.add("aos_org","=",orgEntity.getPkValue());
-            builder.add("aos_suggest","=","是");
+            builder.add("aos_assessment.number","=","Y");
             DynamicObjectCollection dyc = QueryServiceHelper.query("aos_sal_act_type_p", "aos_acttype", builder.toArray());
             List<String> listActTypes = new ArrayList<>(dyc.size());
             for (DynamicObject dy : dyc) {
