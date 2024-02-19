@@ -12,13 +12,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author: GK
- * @create: 2024-02-01 14:03
- * @Description:  属性细分选择框
+ * @author GK
+ * @since 2024-02-01 14:03
+ * @version 属性细分选择框
  */
-public class attributesForm extends AbstractFormPlugin {
+public class AttributesForm extends AbstractFormPlugin {
     private static final String DETAIL_LIST = "detailList";
     private static final String DETAIL_KEY = "aos_detail";
+    private static final String BTNOK = "btnok";
 
     @Override
     public void afterBindData(EventObject e) {
@@ -37,7 +38,7 @@ public class attributesForm extends AbstractFormPlugin {
         super.click(evt);
         Control control = (Control)evt.getSource();
         String key = control.getKey();
-        if ("btnok".equals(key)) {
+        if (BTNOK.equals(key)) {
             btnok();
         }
     }
@@ -46,14 +47,15 @@ public class attributesForm extends AbstractFormPlugin {
      * 确认按钮
      */
     private void btnok() {
-        String value = (String) getModel().getValue(DETAIL_KEY);
+        String value = (String)getModel().getValue(DETAIL_KEY);
         getView().returnDataToParent(value);
         this.getView().close();
     }
 
-    private void  init(){
-        Map<String,Object> params = getView().getFormShowParameter().getCustomParam("params");
-        List<String> datailList  = (List<String>) params.get(DETAIL_LIST);
+    private void init() {
+        Map<String, Object> params = getView().getFormShowParameter().getCustomParam("params");
+        @SuppressWarnings("unchecked")
+        List<String> datailList = (List<String>)params.get(DETAIL_LIST);
         // 设置过滤
         ComboEdit comboEdit = this.getControl(DETAIL_KEY);
         comboEdit.setComboInputable(false);

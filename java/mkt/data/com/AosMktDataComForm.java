@@ -20,6 +20,7 @@ import java.util.*;
 public class AosMktDataComForm extends AbstractFormPlugin {
     private static final String BILL_TYPE = "bill_type";
     private static final String AOS_BILL = "aos_bill";
+    private static final String BTNOK = "btnok";
     private static final Map<String, String> OPTIONS = new LinkedHashMap<>();
     static {
         OPTIONS.put("aos_mkt_standard", "国别文案标准库");
@@ -48,16 +49,18 @@ public class AosMktDataComForm extends AbstractFormPlugin {
         comboEdit.setComboItems(data);
     }
 
+    @Override
     public void registerListener(EventObject e) {
         super.registerListener(e);
         this.addClickListeners("btnok");
     }
 
+    @Override
     public void click(EventObject evt) {
         super.click(evt);
         Control control = (Control)evt.getSource();
         String key = control.getKey();
-        if ("btnok".equals(key)) {
+        if (BTNOK.equals(key)) {
             btnok();
         }
     }

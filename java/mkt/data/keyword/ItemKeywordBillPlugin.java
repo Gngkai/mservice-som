@@ -35,9 +35,17 @@ import java.util.*;
  *
  * @author aosom
  */
-@SuppressWarnings({"unchecked", "unused"})
+
 public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
     private static final Tracer TRACER = MmsOtelUtils.getTracer(ItemKeywordBillPlugin.class, RequestContext.get());
+    private static final String AOS_IMPKEYWORD = "aos_impkeyword";
+    private static final String AOS_COPYTO = "aos_copyto";
+    private static final String AOS_ORGID = "aos_orgid";
+    private static final String AOS_ITEMID = "aos_itemid";
+    private static final String ITEMS_SELECT = "items_select";
+    private static final String AOS_MKT_KEYWORD_SL = "aos_mkt_keyword_sl";
+    private static final String SAVE = "save";
+    private static final String INSERT = "_insert";
 
     @Override
     public void afterBindData(EventObject e) {
@@ -56,9 +64,9 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
         try (Scope ignored = span.makeCurrent()) {
             this.getModel().setValue("aos_textfield", "AM链接");
             Hyperlink hyperlink = this.getView().getControl("aos_hyperlinkap");
-            DynamicObject aosOrgid = (DynamicObject) this.getModel().getValue("aos_orgid");
-            DynamicObject aosItemid = (DynamicObject) this.getModel().getValue("aos_itemid");
-            Map<String, Object> style = new HashMap<>();
+            DynamicObject aosOrgid = (DynamicObject)this.getModel().getValue("aos_orgid");
+            DynamicObject aosItemid = (DynamicObject)this.getModel().getValue("aos_itemid");
+            Map<String, Object> style = new HashMap<>(16);
             if (aosOrgid != null && aosItemid != null) {
                 String itemId = aosItemid.getString("id");
                 List<String> list = Collections.singletonList(itemId);
@@ -68,7 +76,7 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
                     String[] split = url.split("!");
                     if (split.length > 1) {
                         hyperlink.setUrl(split[0] + split[1]);
-                        Map<String, Object> map1 = new HashMap<>();
+                        Map<String, Object> map1 = new HashMap<>(16);
                         style.put("text", map1);
                         map1.put("zh_CN", split[1]);
                         map1.put("en_US", split[1]);
@@ -93,11 +101,11 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
         Span span = MmsOtelUtils.getCusSubSpan(TRACER, MmsOtelUtils.getMethodPath());
         try (Scope ignored = span.makeCurrent()) {
             String itemKey = evt.getItemKey();
-            if ("aos_impkeyword".equals(itemKey)) {
+            if (AOS_IMPKEYWORD.equals(itemKey)) {
                 // 如果为引用关键词库
                 importItemKeyword();
                 statusControl();
-            } else if ("aos_copyto".equals(itemKey)) {
+            } else if (AOS_COPYTO.equals(itemKey)) {
                 // 如果为引用关键词库
                 CommonDataSomDis.popForm(this, "aos_mkt_itemselect", "items_select", null);
                 statusControl();
@@ -114,9 +122,9 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
         Span span = MmsOtelUtils.getCusMainSpan(TRACER, MmsOtelUtils.getMethodPath());
         try (Scope ignored = span.makeCurrent()) {
             String name = e.getProperty().getName();
-            if ("aos_orgid".equals(name)) {
+            if (AOS_ORGID.equals(name)) {
                 setItemUrl();
-            } else if ("aos_itemid".equals(name)) {
+            } else if (AOS_ITEMID.equals(name)) {
                 setItemUrl();
             }
         } catch (Exception ex) {
@@ -129,16 +137,15 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
     @Override
     public void closedCallBack(ClosedCallBackEvent closedCallBackEvent) {
         String actionId = closedCallBackEvent.getActionId();
-        if (StringUtils.equals(actionId, "items_select")
-                && null != closedCallBackEvent.getReturnData()) {
+        if (StringUtils.equals(actionId, ITEMS_SELECT) && null != closedCallBackEvent.getReturnData()) {
             // 这里返回对象为Object，可强转成相应的其他类型，
             // 单条数据可用String类型传输，返回多条数据可放入map中，也可使用json等方式传输
-            Map<String, List<String>> returnData = (Map<String, List<String>>) closedCallBackEvent.getReturnData();
+            @SuppressWarnings("unchecked")
+            Map<String, List<String>> returnData = (Map<String, List<String>>)closedCallBackEvent.getReturnData();
             copyToData(returnData);
             getView().showSuccessNotification("Copy To Success (●'◡'●)");
-        }
-        else if ("aos_mkt_keyword_sl".equals(actionId)) {
-            String data = (String) closedCallBackEvent.getReturnData();
+        } else if (AOS_MKT_KEYWORD_SL.equals(actionId)) {
+            String data = (String)closedCallBackEvent.getReturnData();
             syncPointDate(data);
         }
 
@@ -146,7 +153,7 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
 
     private void copyToData(Map<String, List<String>> returnData) {
         QFilter orgFilter = null;
-        DynamicObject aosOrgid = (DynamicObject) this.getModel().getValue("aos_orgid");
+        DynamicObject aosOrgid = (DynamicObject)this.getModel().getValue("aos_orgid");
         if (aosOrgid != null) {
             orgFilter = new QFilter("aos_orgid", QCP.equals, aosOrgid.getString("id"));
         }
@@ -157,21 +164,22 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
         StringJoiner selectField = new StringJoiner(",");
         selectField.add("id");
         Map<String, EntityType> allEntities = getModel().getDataEntityType().getAllEntities();
-        //添加页签字段
+        // 添加页签字段
         for (String tab : tabList) {
             Map<String, IDataEntityProperty> fields = allEntities.get(tab).getFields();
             for (String field : fields.keySet()) {
                 selectField.add(tab + "." + field);
             }
         }
-        //查找字段
-        DynamicObject[] load = BusinessDataServiceHelper.load("aos_mkt_keyword", selectField.toString(), new QFilter[]{orgFilter, itemFilter});
+        // 查找字段
+        DynamicObject[] load = BusinessDataServiceHelper.load("aos_mkt_keyword", selectField.toString(),
+            new QFilter[] {orgFilter, itemFilter});
         if (load.length == 0) {
             return;
         }
-        //开始赋值
+        // 开始赋值
         for (String tab : tabList) {
-            //当前界面数据
+            // 当前界面数据
             DynamicObjectCollection sourceData = getModel().getDataEntity(true).getDynamicObjectCollection(tab);
             for (DynamicObject targetEntity : load) {
                 DynamicObjectCollection targetRow = targetEntity.getDynamicObjectCollection(tab);
@@ -191,9 +199,9 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
     public void beforeDoOperation(BeforeDoOperationEventArgs args) {
         Span span = MmsOtelUtils.getCusSubSpan(TRACER, MmsOtelUtils.getMethodPath());
         try (Scope ignored = span.makeCurrent()) {
-            FormOperate operate = (FormOperate) args.getSource();
+            FormOperate operate = (FormOperate)args.getSource();
             String operateKey = operate.getOperateKey();
-            if ("save".equals(operateKey)) {
+            if (SAVE.equals(operateKey)) {
                 beforeSave();
                 statusControl();
             }
@@ -224,7 +232,7 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
                 TabPage control = this.getControl("aos_tabpageap3");
                 BadgeInfo badgeInfo = new BadgeInfo();
                 badgeInfo.setBadgeText("!");
-                badgeInfo.setOffset(new String[]{"5px", "5px"});
+                badgeInfo.setOffset(new String[] {"5px", "5px"});
                 control.setBadgeInfo(badgeInfo);
             }
         } catch (Exception ex) {
@@ -241,7 +249,7 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
         Span span = MmsOtelUtils.getCusSubSpan(TRACER, MmsOtelUtils.getMethodPath());
         try (Scope ignored = span.makeCurrent()) {
             // 1. 国别
-            DynamicObject aosOrgid = (DynamicObject) this.getModel().getValue("aos_orgid");
+            DynamicObject aosOrgid = (DynamicObject)this.getModel().getValue("aos_orgid");
             // 2. 物料
             StringJoiner str = new StringJoiner(",");
             str.add("id");
@@ -252,20 +260,17 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
             DynamicObjectCollection list = QueryServiceHelper.query("aos_mkt_point", str.toString(), builder.toArray());
             if (list == null || list.size() == 0) {
                 this.getView().showTipNotification("无可用数据!");
-                return;
-            }
-           else if (list.size() > 1) {
-                //弹出 属性细分选择框
-                Map<String,Object> params = new HashMap<>();
+            } else if (list.size() > 1) {
+                // 弹出 属性细分选择框
+                Map<String, Object> params = new HashMap<>(16);
                 List<String> detailList = new ArrayList<>(list.size());
                 for (DynamicObject row : list) {
                     detailList.add(row.getString("aos_detail"));
                 }
-                params.put("detailList",detailList);
-                FndGlobal.OpenForm(this,"aos_mkt_keyword_sl",params);
-            }
-           else {
-               syncPointDate(list.get(0).getString("aos_detail"));
+                params.put("detailList", detailList);
+                FndGlobal.OpenForm(this, "aos_mkt_keyword_sl", params);
+            } else {
+                syncPointDate(list.get(0).getString("aos_detail"));
             }
 
         } catch (Exception ex) {
@@ -275,7 +280,6 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
         }
     }
 
-
     /**
      * 保存前事件
      */
@@ -284,9 +288,9 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
         Span span = MmsOtelUtils.getCusSubSpan(TRACER, MmsOtelUtils.getMethodPath());
         try (Scope ignored = span.makeCurrent()) {
             DynamicObjectCollection sourcEntity =
-                    this.getModel().getDataEntity(true).getDynamicObjectCollection("aos_entryentity");
+                this.getModel().getDataEntity(true).getDynamicObjectCollection("aos_entryentity");
             DynamicObjectCollection copyEntity =
-                    this.getModel().getDataEntity(true).getDynamicObjectCollection("aos_entryentity1");
+                this.getModel().getDataEntity(true).getDynamicObjectCollection("aos_entryentity1");
             copyEntity.removeIf(dy -> true);
             for (DynamicObject sourceRow : sourcEntity) {
                 DynamicObject newRow = copyEntity.addNew();
@@ -319,29 +323,30 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
     public void afterDoOperation(AfterDoOperationEventArgs eventArgs) {
         super.afterDoOperation(eventArgs);
         String operateKey = eventArgs.getOperateKey();
-        //批量新增行
-        if (operateKey.contains("_insert")){
+        // 批量新增行
+        if (operateKey.contains(INSERT)) {
             String[] split = operateKey.split("_");
             StringJoiner str = new StringJoiner("_");
-            for (int i = 0; i < split.length-1; i++) {
+            for (int i = 0; i < split.length - 1; i++) {
                 str.add(split[i]);
             }
-            int row= 1;
+            int row = 1;
             Object insertRow = this.getModel().getValue("aos_insert_row");
-            if (FndGlobal.IsNotNull(insertRow)){
+            if (FndGlobal.IsNotNull(insertRow)) {
                 row = Integer.parseInt(insertRow.toString());
             }
-            this.getModel().batchCreateNewEntryRow(str.toString(),row);
+            this.getModel().batchCreateNewEntryRow(str.toString(), row);
         }
     }
 
     /**
      * 引用关键词数据
-     * @param key   属性细分
+     * 
+     * @param key 属性细分
      */
-    private void syncPointDate(String key){
+    private void syncPointDate(String key) {
         // 1. 国别
-        DynamicObject aosOrgid = (DynamicObject) this.getModel().getValue("aos_orgid");
+        DynamicObject aosOrgid = (DynamicObject)this.getModel().getValue("aos_orgid");
         // 2. 物料
         StringJoiner str = new StringJoiner(",");
         str.add("aos_linentity.aos_keyword aos_keyword");
@@ -375,8 +380,7 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
         str = new StringJoiner(",");
         str.add("aos_linentity_gw.aos_gw_keyword aos_gw_keyword");
         str.add("aos_linentity_gw.aos_gw_search aos_gw_search");
-        DynamicObjectCollection listgw =
-                QueryServiceHelper.query("aos_mkt_point", str.toString(), builder.toArray());
+        DynamicObjectCollection listgw = QueryServiceHelper.query("aos_mkt_point", str.toString(), builder.toArray());
         System.out.println("listgw.size() = " + listgw.size());
         if (FndGlobal.IsNull(listgw) || list.size() == 0) {
             this.getView().showTipNotification("无官网可用数据!");
