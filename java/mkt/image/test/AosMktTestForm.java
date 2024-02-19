@@ -174,6 +174,7 @@ public class AosMktTestForm extends AbstractFormPlugin {
             // 宠物
             generateRandomData(QTY)};
         for (int i = 0; i < keys.length; i++) {
+            // 循环
             para.put(keys[i], values[i]);
         }
         aosPupple.setData(para);
