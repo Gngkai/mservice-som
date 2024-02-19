@@ -13,7 +13,6 @@ import mkt.act.dao.ActShopPriceDao;
 import mkt.act.dao.impl.ActShopPriceImpl;
 import mkt.act.rule.ActStrategy;
 import mkt.act.rule.ActUtil;
-import mkt.common.MKTCom;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
 import java.math.BigDecimal;
