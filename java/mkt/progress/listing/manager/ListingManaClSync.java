@@ -90,7 +90,6 @@ public class ListingManaClSync extends AbstractTask {
                 aosMktClUrl.set("aos_itemid", itemMap.get(jsObj.getString("SEGMENT1")));
                 aosMktClUrl.set("aos_shopsku", jsObj.getString("SHELF_SKU"));
                 aosMktClUrl.set("aos_url", jsObj.getString("LISTING_URL"));
-
                 aosMktClUrlS.add(aosMktClUrl);
                 if (aosMktClUrlS.size() >= 5000 || i == length - 1) {
                     DynamicObject[] aosMktClUrlArray = aosMktClUrlS.toArray(new DynamicObject[0]);

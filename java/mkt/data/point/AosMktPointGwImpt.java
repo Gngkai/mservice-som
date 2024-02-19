@@ -19,10 +19,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+
 /**
- * 官网导入插件
+ * @author aosom
+ * @version 官网导入插件
  */
-public class aos_mkt_point_importgw extends BatchImportPlugin {
+public class AosMktPointGwImpt extends BatchImportPlugin {
     private static Map<String, String> getAllOrgId() {
         DynamicObjectCollection list = QueryServiceHelper.query("bd_country", "id ,number", null);
         return list.stream().collect(Collectors.toMap(obj -> obj.getString("number"), obj -> obj.getString("id"), (k1, k2) -> k1));
@@ -33,24 +35,21 @@ public class aos_mkt_point_importgw extends BatchImportPlugin {
         Map<String, String> allOrgIdMap = getAllOrgId();
         for (ImportBillData data : billdatas) {
             JSONObject object = data.getData();
-            JSONObject aos_orgObject = object.getJSONObject("aos_orgid");
-            String aos_orgnum = aos_orgObject.getString("number");
-            String aos_orgid = allOrgIdMap.getOrDefault(aos_orgnum, "0");
-
-            String aos_detail = object.getString("aos_detail");
-            String aos_category1 = object.getString("aos_category1");
-            String aos_category2 = object.getString("aos_category2");
-            String aos_category3 = object.getString("aos_category3");
-            String aos_itemnamecn = object.getString("aos_itemnamecn");
-            if (aos_detail == null) {
+            JSONObject aosOrgObject = object.getJSONObject("aos_orgid");
+            String aosOrgnum = aosOrgObject.getString("number");
+            String aosOrgid = allOrgIdMap.getOrDefault(aosOrgnum, "0");
+            String aosDetail = object.getString("aos_detail");
+            String aosCategory1 = object.getString("aos_category1");
+            String aosCategory2 = object.getString("aos_category2");
+            String aosCategory3 = object.getString("aos_category3");
+            String aosItemnamecn = object.getString("aos_itemnamecn");
+            if (aosDetail == null) {
                 object.put("aos_detail", "");
-                aos_detail = "";
+                aosDetail = "";
             }
-
-            object.put("aos_category1_name", aos_category1);
-            object.put("aos_category2_name", aos_category2);
-            object.put("aos_category3_name", aos_category3);
-
+            object.put("aos_category1_name", aosCategory1);
+            object.put("aos_category2_name", aosCategory2);
+            object.put("aos_category3_name", aosCategory3);
             String selectFields1 = "aos_linentity_gw.aos_mainvoc_gw," +
                     "aos_linentity_gw.aos_type_gw," +
                     "aos_linentity_gw.aos_desc_gw," +
@@ -60,43 +59,43 @@ public class aos_mkt_point_importgw extends BatchImportPlugin {
                     "aos_linentity_gw.aos_source_gw," +
                     "aos_linentity_gw.aos_adress_gw";;
             DynamicObject object1 = BusinessDataServiceHelper.loadSingle("aos_mkt_point", selectFields1, new QFilter[]{
-                    new QFilter("aos_orgid", QCP.equals, aos_orgid),
-                    new QFilter("aos_category1", QCP.equals, aos_category1),
-                    new QFilter("aos_category2", QCP.equals, aos_category2),
-                    new QFilter("aos_category3", QCP.equals, aos_category3),
-                    new QFilter("aos_itemnamecn", QCP.equals, aos_itemnamecn),
-                    new QFilter("aos_detail", QCP.equals, aos_detail)
+                    new QFilter("aos_orgid", QCP.equals, aosOrgid),
+                    new QFilter("aos_category1", QCP.equals, aosCategory1),
+                    new QFilter("aos_category2", QCP.equals, aosCategory2),
+                    new QFilter("aos_category3", QCP.equals, aosCategory3),
+                    new QFilter("aos_itemnamecn", QCP.equals, aosItemnamecn),
+                    new QFilter("aos_detail", QCP.equals, aosDetail)
             });
-            if (object1 == null) continue;
-            JSONArray aos_linentity_gw = object.getJSONArray("aos_linentity_gw");
-            DynamicObjectCollection aos_linentity_gw1 = object1.getDynamicObjectCollection("aos_linentity_gw");
-            aos_linentity_gw1.clear();
-
-            for (Object v : aos_linentity_gw) {
+            if (object1 == null)
+            {
+                continue;
+            }
+            JSONArray aosLinentityGw = object.getJSONArray("aos_linentity_gw");
+            DynamicObjectCollection aosLinentityGw1 = object1.getDynamicObjectCollection("aos_linentity_gw");
+            aosLinentityGw1.clear();
+            for (Object v : aosLinentityGw) {
                 JSONObject webLineData = (JSONObject) v;
-                Object aos_mainvoc_gw = webLineData.get("aos_mainvoc_gw");
-                Object aos_type_gw = webLineData.get("aos_type_gw");
-                Object aos_desc_gw = webLineData.get("aos_desc_gw");
-                Object aos_relate_gw = webLineData.get("aos_relate_gw");
-                Object aos_rate_gw = webLineData.get("aos_rate_gw");
-                Object aos_counts_gw = webLineData.get("aos_counts_gw");
-                Object aos_source_gw = webLineData.get("aos_source_gw");
-                Object aos_adress_gw = webLineData.get("aos_adress_gw");
-
-                DynamicObject object2 = aos_linentity_gw1.addNew();
-                object2.set("aos_mainvoc_gw", aos_mainvoc_gw);
-                object2.set("aos_type_gw", aos_type_gw);
-                object2.set("aos_desc_gw", aos_desc_gw);
-                object2.set("aos_relate_gw", aos_relate_gw);
-                object2.set("aos_rate_gw", aos_rate_gw);
-                object2.set("aos_counts_gw", aos_counts_gw);
-                object2.set("aos_source_gw", aos_source_gw);
-                object2.set("aos_adress_gw", aos_adress_gw);
+                Object aosMainvocGw = webLineData.get("aos_mainvoc_gw");
+                Object aosTypeGw = webLineData.get("aos_type_gw");
+                Object aosDescGw = webLineData.get("aos_desc_gw");
+                Object aosRelateGw = webLineData.get("aos_relate_gw");
+                Object aosRateGw = webLineData.get("aos_rate_gw");
+                Object aosCountsGw = webLineData.get("aos_counts_gw");
+                Object aosSourceGw = webLineData.get("aos_source_gw");
+                Object aosAdressGw = webLineData.get("aos_adress_gw");
+                DynamicObject object2 = aosLinentityGw1.addNew();
+                object2.set("aos_mainvoc_gw", aosMainvocGw);
+                object2.set("aos_type_gw", aosTypeGw);
+                object2.set("aos_desc_gw", aosDescGw);
+                object2.set("aos_relate_gw", aosRelateGw);
+                object2.set("aos_rate_gw", aosRateGw);
+                object2.set("aos_counts_gw", aosCountsGw);
+                object2.set("aos_source_gw", aosSourceGw);
+                object2.set("aos_adress_gw", aosAdressGw);
             }
             AosMktPointBillOld.setCate(object1);
             SaveServiceHelper.save(new DynamicObject[]{object1});
-
-            aos_linentity_gw.clear();
+            aosLinentityGw.clear();
         }
     }
 
