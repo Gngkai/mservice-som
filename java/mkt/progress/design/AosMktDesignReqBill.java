@@ -1811,12 +1811,7 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
                     if (FndGlobal.IsNotNull(aosCategory1) && FndGlobal.IsNotNull(aosCategory2)) {
                         QFilter filterCategory1 = new QFilter("aos_category1", "=", aosCategory1);
                         QFilter filterCategory2 = new QFilter("aos_category2", "=", aosCategory2);
-                        String id = "";
-                        if (aosOrgid != null) {
-                            DynamicObject dyOrg = (DynamicObject)aosOrgid;
-                            id = dyOrg.getString("id");
-                        }
-                        QFilter filterOu = new QFilter("aos_orgid", "=", id);
+                        QFilter filterOu = new QFilter("aos_orgid", "=", orgId);
                         QFilter[] filtersCategory = new QFilter[] {filterCategory1, filterCategory2, filterOu};
                         String selectStr = "aos_salehelper aos_salehelper";
                         DynamicObject aosMktProgorguser =
