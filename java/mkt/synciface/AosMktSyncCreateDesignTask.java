@@ -138,7 +138,7 @@ public class AosMktSyncCreateDesignTask extends AbstractTask {
     }
 
     /** 生成设计需求表 **/
-    private static void createEntity(DynamicObject dyItem, List<DynamicObject> listOther) {
+    private static void createEndtity(DynamicObject dyItem, List<DynamicObject> listOther) {
         String aosOrg = dyItem.getString("aos_org");
         String aosItem = dyItem.getString("aos_item");
         DynamicObject dyDesignReq = BusinessDataServiceHelper.newDynamicObject("aos_mkt_designreq");
