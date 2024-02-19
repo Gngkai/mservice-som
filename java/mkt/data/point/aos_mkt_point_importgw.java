@@ -93,7 +93,7 @@ public class aos_mkt_point_importgw extends BatchImportPlugin {
                 object2.set("aos_source_gw", aos_source_gw);
                 object2.set("aos_adress_gw", aos_adress_gw);
             }
-            aos_mkt_point_bill.setCate(object1);
+            AosMktPointBillOld.setCate(object1);
             SaveServiceHelper.save(new DynamicObject[]{object1});
 
             aos_linentity_gw.clear();

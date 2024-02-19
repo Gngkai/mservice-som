@@ -66,7 +66,7 @@ import java.util.stream.Collectors;
 @SuppressWarnings("unchecked")
 public class productKeyWordForm extends AbstractBillPlugIn implements RowClickEventListener, BeforeF7SelectListener, HyperLinkClickListener {
     public final static String DB_MKT = "aos.mkt";// 供应链库
-    private static final Log logger = LogFactory.getLog(aos_mkt_point_bill.class);
+    private static final Log logger = LogFactory.getLog(productKeyWordForm.class);
     private static final String KEY_ITEM = "item";  //物料值改变的是否由品名改变触发的标识
 
     @Override

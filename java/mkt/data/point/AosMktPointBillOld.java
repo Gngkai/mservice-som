@@ -45,8 +45,7 @@ import java.util.*;
 
 /**
  * @author aosom
- * @version 品名关键词库(已弃用)
- * @deprecated
+ * @version 品名关键词库
  */
 public class AosMktPointBillOld extends AbstractBillPlugIn
     implements RowClickEventListener, BeforeF7SelectListener, HyperLinkClickListener {
