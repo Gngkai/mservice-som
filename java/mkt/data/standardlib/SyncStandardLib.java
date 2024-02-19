@@ -15,7 +15,6 @@ import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
-import mkt.common.MKTS3PIC;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
