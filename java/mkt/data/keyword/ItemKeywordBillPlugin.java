@@ -256,6 +256,9 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
             str.add("aos_detail");
             QFBuilder builder = new QFBuilder();
             builder.add("aos_orgid", QCP.equals, aosOrgid.getString("id"));
+            builder.add("aos_category1","=",getModel().getValue("aos_category1"));
+            builder.add("aos_category2","=",getModel().getValue("aos_category2"));
+            builder.add("aos_category3","=",getModel().getValue("aos_category3"));
             builder.add("aos_itemnamecn", "=", getModel().getValue("aos_itemname"));
             DynamicObjectCollection list = QueryServiceHelper.query("aos_mkt_point", str.toString(), builder.toArray());
             if (list == null || list.size() == 0) {
@@ -358,6 +361,9 @@ public class ItemKeywordBillPlugin extends AbstractBillPlugIn {
 
         QFBuilder builder = new QFBuilder();
         builder.add("aos_orgid", QCP.equals, aosOrgid.getString("id"));
+        builder.add("aos_category1","=",getModel().getValue("aos_category1"));
+        builder.add("aos_category2","=",getModel().getValue("aos_category2"));
+        builder.add("aos_category3","=",getModel().getValue("aos_category3"));
         builder.add("aos_itemnamecn", "=", getModel().getValue("aos_itemname"));
         builder.add("aos_detail", "=", key);
         DynamicObjectCollection list = QueryServiceHelper.query("aos_mkt_point", str.toString(), builder.toArray());
