@@ -1357,6 +1357,13 @@ public class AosMktListingSonBill extends AbstractBillPlugIn implements ItemClic
                 this.getView().setVisible(false, "bar_save");
                 this.getView().setVisible(false, "aos_close");
             }
+
+            Object aosSourcetype = this.getModel().getValue("aos_sourcetype");
+            if (HOT.equals(aosSourcetype)) {
+                this.getView().setVisible(false, "aos_submit");
+                this.getView().setVisible(true, "aos_close");
+            }
+
         } catch (Exception ex) {
             ex.printStackTrace();
             throw ex;

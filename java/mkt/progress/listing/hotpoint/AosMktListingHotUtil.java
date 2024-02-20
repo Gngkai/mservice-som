@@ -648,6 +648,8 @@ public class AosMktListingHotUtil {
      * @param hotDyn 爆品对象
      */
     public static void createDoc(DynamicObject aosItemid, DynamicObject hotDyn) {
+        FndMsg.debug("into createDoc");
+        hotDyn.set("aos_status", "优化中");
         // 循环爆品打分行
         DynamicObjectCollection hotLineS = hotDyn.getDynamicObjectCollection("aos_entryentity");
         for (DynamicObject hotLine : hotLineS) {

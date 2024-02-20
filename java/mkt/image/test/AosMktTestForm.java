@@ -5,10 +5,15 @@ import java.text.DecimalFormat;
 import java.util.*;
 
 import common.fnd.FndMsg;
+import kd.bos.dataentity.entity.DynamicObject;
+import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.ext.form.control.CustomControl;
 import kd.bos.form.events.CustomEventArgs;
 import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.plugin.AbstractFormPlugin;
+import kd.bos.orm.query.QCP;
+import kd.bos.orm.query.QFilter;
+import kd.bos.servicehelper.QueryServiceHelper;
 
 /**
  * @author aosom
@@ -124,6 +129,26 @@ public class AosMktTestForm extends AbstractFormPlugin {
         }
     }
 
+    public static double[][] generateData(String type) {
+        DynamicObjectCollection selectS = QueryServiceHelper.query("aos_mkt_select_test", "aos_click,aos_exp",
+            new QFilter("aos_type", QCP.equals, type).toArray());
+
+        double[][] data = new double[selectS.size()][3];
+
+        DecimalFormat decimalFormat = new DecimalFormat("#.00");
+        int i = 0;
+        for (DynamicObject select : selectS) {
+            // 随机生成 0 到 2 之间的数
+            data[i][0] = Double.parseDouble(decimalFormat.format(select.getBigDecimal("aos_click")));
+            // 随机生成 0 到 2 之间的数
+            data[i][1] = Double.parseDouble(decimalFormat.format(select.getBigDecimal("aos_exp")));
+            data[i][2] = GRADIENT;
+            i++;
+        }
+        printArray(data);
+        return data;
+    }
+
     public static double[][] generateRandomData(int numData) {
         double[][] data = new double[numData][3];
         Random random = new Random();
@@ -166,13 +191,13 @@ public class AosMktTestForm extends AbstractFormPlugin {
         String[] keys = {"double1", "double2", "double3", "double4"};
         double[][][] values = {
             // 藤编
-            generateRandomData(QTY),
+            generateData("1"),
             // 运动
-            generateRandomData(QTY),
+            generateData("2"),
             // 家具
-            generateRandomData(QTY),
+            generateData("3"),
             // 宠物
-            generateRandomData(QTY)};
+            generateData("4")};
         for (int i = 0; i < keys.length; i++) {
             // 循环
             para.put(keys[i], values[i]);
