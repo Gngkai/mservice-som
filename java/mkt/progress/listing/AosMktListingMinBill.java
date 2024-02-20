@@ -62,6 +62,7 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
     public final static int TWO = 2;
     public final static int THREE = 3;
     public final static int FOUR = 4;
+    public final static String HOT = "HOT";
     private static final Tracer TRACER = MmsOtelUtils.getTracer(AosMktListingMinBill.class, RequestContext.get());
 
     /**
@@ -598,8 +599,8 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
             if (Cux_Common_Utl.IsNull(aosOrignbill)) {
                 splitMinBySegment3(dyMain);
             }
-            MktComUtil.sendGlobalMessage(messageId, "aos_mkt_listing_min", String.valueOf(reqFid), String.valueOf(billno),
-                message);
+            MktComUtil.sendGlobalMessage(messageId, "aos_mkt_listing_min", String.valueOf(reqFid),
+                String.valueOf(billno), message);
         } catch (Exception ex) {
             ex.printStackTrace();
             throw ex;
@@ -1469,6 +1470,14 @@ public class AosMktListingMinBill extends AbstractBillPlugIn implements ItemClic
                 FndHistory.Create(this.getView(), "手工关闭", "手工关闭");
                 setErrorList(this.getModel().getDataEntity(true));
                 statusControl();
+
+                Object aosSourcetype = this.getModel().getValue("aos_sourcetype");
+                if (HOT.equals(aosSourcetype)) {
+                    Object aosSourceid = this.getModel().getValue("aos_sourceid");
+                    DynamicObject hotDyn = BusinessDataServiceHelper.loadSingle(aosSourceid, "aos_mkt_hot_point");
+                    hotDyn.set("aos_status", "结束");
+                    SaveServiceHelper.save(new DynamicObject[] {hotDyn});
+                }
             }
         }
     }

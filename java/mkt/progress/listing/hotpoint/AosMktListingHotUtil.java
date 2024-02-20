@@ -2,23 +2,29 @@ package mkt.progress.listing.hotpoint;
 
 import common.CommonMktListing;
 import common.Cux_Common_Utl;
+import common.fnd.FndError;
 import common.fnd.FndGlobal;
 import common.fnd.FndHistory;
 import common.fnd.FndMsg;
 import common.sal.util.SalUtil;
+import kd.bos.context.RequestContext;
 import kd.bos.dataentity.OperateOption;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
+import kd.bos.dataentity.metadata.dynamicobject.DynamicObjectType;
+import kd.bos.entity.EntityMetadataCache;
 import kd.bos.entity.operate.result.OperationResult;
 import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.OperationServiceHelper;
+import mkt.common.MktComUtil;
+import mkt.progress.ProgressUtil;
+import mkt.progress.listing.AosMktListingSonBill;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
 
 /**
  * @author aosom
@@ -36,6 +42,55 @@ public class AosMktListingHotUtil {
     public final static String[] DESGROUP = {"aos_point6", "aos_point7", "aos_point8", "aos_point9", "aos_point10"};
     public final static String[] VEDGROUP = {"aos_point11", "aos_point12"};
     public final static String NO = "否";
+
+    /**
+     * 文案打分明细-CL同步图片错误数据生成
+     *
+     * @param clErrorDyn 拍照需求表对象
+     */
+    public static void createHotFromCl(DynamicObject clErrorDyn) {
+        FndMsg.debug("===========into createHotFromCl===========");
+        // 货号
+        DynamicObject itemId = clErrorDyn.getDynamicObject("aos_itemid");
+        // 如果货号不存在 跳过
+        if (FndGlobal.IsNull(itemId)) {
+            return;
+        }
+        String orgNum = clErrorDyn.getDynamicObject("aos_orgid").getString("number");
+        // 是否爆品
+        DynamicObject bdMaterial = QueryServiceHelper.queryOne("bd_material",
+            "aos_contryentry.aos_is_saleout aos_is_saleout", new QFilter("id", QCP.equals, itemId.getString("id"))
+                .and("aos_contryentry.aos_nationality.number", QCP.equals, orgNum).toArray());
+        if (FndGlobal.IsNull(bdMaterial)) {
+            // 国别货号不存在 跳过
+            return;
+        }
+        boolean saleOut = bdMaterial.getBoolean("aos_is_saleout");
+        // 判断物料是否爆品 如果不是爆品 直接跳过
+        if (!saleOut) {
+            return;
+        }
+        // 爆品质量打分对象
+        DynamicObject aosMktHotPoint = BusinessDataServiceHelper.newDynamicObject("aos_mkt_hot_point");
+        // 类型
+        aosMktHotPoint.set("aos_type", "DOC");
+        // 申请日期
+        aosMktHotPoint.set("aos_applydate", new Date());
+        // 申请人取 CL推送过来的人员
+        aosMktHotPoint.set("aos_apply", clErrorDyn.get("aos_user"));
+        // SKU
+        aosMktHotPoint.set("aos_itemid", itemId);
+        // 流程节点
+        aosMktHotPoint.set("aos_status", "待确认");
+        // 来源单id
+        aosMktHotPoint.set("aos_sourceid", clErrorDyn.getPkValue().toString());
+        // 当前操作人 根据品类判断
+        setUserDoc(aosMktHotPoint, itemId.getString("id"), orgNum);
+        // 爆品质量打分行
+        setLineDoc(aosMktHotPoint, itemId, orgNum);
+        OperationServiceHelper.executeOperate("save", "aos_mkt_hot_point", new DynamicObject[] {aosMktHotPoint},
+            OperateOption.create());
+    }
 
     /**
      * 视频打分明细
@@ -80,7 +135,7 @@ public class AosMktListingHotUtil {
 
     /**
      * 设计打分明细
-     * 
+     *
      * @param designDyn 设计需求表对象
      */
     public static void createHotFromDesign(DynamicObject designDyn) {
@@ -125,6 +180,31 @@ public class AosMktListingHotUtil {
      *
      * @param aosMktHotPoint 爆品打分单据对象
      * @param itemId 物料
+     */
+    private static void setLineDoc(DynamicObject aosMktHotPoint, DynamicObject itemId, String orgNum) {
+        DynamicObjectCollection aosEntryentityS = aosMktHotPoint.getDynamicObjectCollection("aos_entryentity");
+        // 去Listing资产管理下该货号所存在国别
+        DynamicObjectCollection orgS = QueryServiceHelper.query("aos_mkt_listing_mana", "aos_orgid",
+            new QFilter("aos_itemid.number", QCP.equals, itemId.getString("number"))
+                .and("aos_orgid.number", QCP.equals, orgNum).toArray());
+        for (DynamicObject org : orgS) {
+            DynamicObject aosEntryentity = aosEntryentityS.addNew();
+            // 国别
+            aosEntryentity.set("aos_orgid", org.getString("aos_orgid"));
+            // 是否优化
+            aosEntryentity.set("aos_promot", "否");
+            // 设置打分为空
+            for (String key : DOCGROUP) {
+                aosEntryentity.set(key, null);
+            }
+        }
+    }
+
+    /**
+     * 设置爆品打分行信息
+     *
+     * @param aosMktHotPoint 爆品打分单据对象
+     * @param itemId 物料
      * @param group 类型分组
      */
     private static void setLine(DynamicObject aosMktHotPoint, DynamicObject itemId, String[] group) {
@@ -146,7 +226,7 @@ public class AosMktListingHotUtil {
     }
 
     /**
-     * 
+     *
      * @param aosMktHotPoint 爆品质量打分对象
      * @param itemId 物料id
      */
@@ -166,8 +246,33 @@ public class AosMktListingHotUtil {
     }
 
     /**
+     *
+     * @param aosMktHotPoint 爆品质量打分对象
+     * @param itemId 物料id
+     * @param orgNum 国别编码
+     */
+    private static void setUserDoc(DynamicObject aosMktHotPoint, String itemId, String orgNum) {
+        String category = (String)SalUtil.getCategoryByItemId(itemId).get("name");
+        String[] categoryGroup = category.split(",");
+        String aosCategory1 = null;
+        String aosCategory2 = null;
+        int categoryLength = categoryGroup.length;
+        if (categoryLength > 1) {
+            aosCategory1 = categoryGroup[0];
+            aosCategory2 = categoryGroup[1];
+        }
+        // 根据国别+大类+中类 从国别品类人员表中获取 编辑组长
+        DynamicObject aosMktProgorguser = QueryServiceHelper.queryOne("aos_mkt_progorguser", "aos_editmon",
+            new QFilter("aos_category1", QCP.equals, aosCategory1).and("aos_category2", QCP.equals, aosCategory2)
+                .and("aos_orgid.number", QCP.equals, orgNum).toArray());
+        if (FndGlobal.IsNotNull(aosMktProgorguser)) {
+            aosMktHotPoint.set("aos_user", aosMktProgorguser.get("aos_editmon"));
+        }
+    }
+
+    /**
      * 爆品打分单创建设计需求表
-     * 
+     *
      * @param aosItemid 物料
      * @param hotDyn 爆品打分单据对象
      */
@@ -345,7 +450,7 @@ public class AosMktListingHotUtil {
 
     /**
      * 设置组织
-     * 
+     *
      * @param dyn 要设置的单据对象
      * @param user 对应的人员
      */
@@ -363,7 +468,7 @@ public class AosMktListingHotUtil {
 
     /**
      * 创建拍照需求表
-     * 
+     *
      * @param aosItemid 物料
      * @param hotDyn 爆品打分表对象
      */
@@ -413,7 +518,7 @@ public class AosMktListingHotUtil {
 
     /**
      * 根据老拍照单赋值新拍照单
-     * 
+     *
      * @param aosMktPhotoReq 新拍照单
      * @param fromPhoto 老拍照单
      */
@@ -533,6 +638,179 @@ public class AosMktListingHotUtil {
             aosEntryentity4.set("aos_editor", aosEntryentityOri4.get("aos_editor"));
             aosEntryentity4.set("aos_salerece_date", new Date());
             aosEntryentityOri4.set("aos_salerece_date", new Date());
+        }
+    }
+
+    /**
+     * 爆品质量打分表-生成文案
+     *
+     * @param aosItemid 物料
+     * @param hotDyn 爆品对象
+     */
+    public static void createDoc(DynamicObject aosItemid, DynamicObject hotDyn) {
+        // 循环爆品打分行
+        DynamicObjectCollection hotLineS = hotDyn.getDynamicObjectCollection("aos_entryentity");
+        for (DynamicObject hotLine : hotLineS) {
+            String aosPromot = hotLine.getString("aos_promot");
+            if (NO.equals(aosPromot)) {
+                continue;
+            }
+            String orgNum = hotLine.getDynamicObject("aos_orgid").getString("number");
+            String orgId = hotLine.getDynamicObject("aos_orgid").getString("id");
+            if ("US/UK/CA".contains(orgNum)) {
+                // 生成文案
+                createSonBill(aosItemid, hotDyn, orgId);
+            } else {
+                // 生成小语种
+                createMinBill(aosItemid, hotDyn, orgId);
+            }
+        }
+    }
+
+    private static void createMinBill(DynamicObject aosItemid, DynamicObject hotDyn, String orgId) {
+        DynamicObject aosMktListingMin = BusinessDataServiceHelper.newDynamicObject("aos_mkt_listing_min");
+        aosMktListingMin.set("aos_requireby", hotDyn.get("aos_apply"));
+        aosMktListingMin.set("aos_requiredate", new Date());
+        aosMktListingMin.set("aos_type", "四者一致");
+        aosMktListingMin.set("aos_orignbill", hotDyn.get("billno"));
+        aosMktListingMin.set("aos_sourceid", hotDyn.getPkValue().toString());
+        aosMktListingMin.set("aos_status", "编辑确认");
+        aosMktListingMin.set("aos_sourcetype", "HOT");
+        aosMktListingMin.set("aos_orgid", orgId);
+        // BOTP
+        aosMktListingMin.set("aos_sourcebilltype", "aos_mkt_hot_point");
+        aosMktListingMin.set("aos_sourcebillno", hotDyn.get("billno"));
+        aosMktListingMin.set("aos_srcentrykey", "aos_entryentity");
+        List<DynamicObject> mapList = Cux_Common_Utl.GetUserOrg(((DynamicObject)hotDyn.get("aos_apply")).getPkValue());
+        if (mapList != null) {
+            if (mapList.get(2) != null) {
+                aosMktListingMin.set("aos_organization1", mapList.get(2).get("id"));
+            }
+            if (mapList.get(3) != null) {
+                aosMktListingMin.set("aos_organization2", mapList.get(3).get("id"));
+            }
+        }
+        String category = MktComUtil.getItemCateNameZh(aosItemid.getString("id"));
+        String[] categoryGroup = category.split(",");
+        String aosCategory1 = null;
+        String aosCategory2 = null;
+        int categoryLength = categoryGroup.length;
+        if (categoryLength > 0) {
+            aosCategory1 = categoryGroup[0];
+        }
+        if (categoryLength > 1) {
+            aosCategory2 = categoryGroup[1];
+        }
+        long aosEditor = RequestContext.get().getCurrUserId();
+        if (aosEditor == 0) {
+            throw new FndError(aosCategory1 + "," + aosCategory2 + "英语编辑不存在!");
+        }
+        long aosOueditor = 0;
+        if (FndGlobal.IsNotNull(aosCategory1) && FndGlobal.IsNotNull(aosCategory2)) {
+            DynamicObject aosMktProgorguser =
+                ProgressUtil.minListtFindEditorByType(orgId, aosCategory1, aosCategory2, "四者一致");
+            if (aosMktProgorguser != null) {
+                aosOueditor = aosMktProgorguser.getLong("aos_user");
+            }
+        }
+        if (aosOueditor == 0) {
+            throw new FndError(aosCategory1 + "," + aosCategory2 + "小语种编辑师不存在!");
+        }
+        // 英语编辑师
+        aosMktListingMin.set("aos_editor", aosEditor);
+        // 小语种编辑师
+        aosMktListingMin.set("aos_editormin", aosOueditor);
+        aosMktListingMin.set("aos_user", aosOueditor);
+        DynamicObjectCollection entityS = aosMktListingMin.getDynamicObjectCollection("aos_entryentity");
+        DynamicObject entity = entityS.addNew();
+        entity.set("aos_itemid", aosItemid);
+        entity.set("aos_is_saleout", true);
+        entity.set("aos_srcrowseq", hotDyn.getDynamicObjectCollection("aos_entryentity").get(0).get("SEQ"));
+        entity.set("aos_require",
+            "爆品质量打分退回:" + hotDyn.getDynamicObjectCollection("aos_entryentity").get(0).getString("aos_context"));
+        OperationServiceHelper.executeOperate("save", "aos_mkt_listing_min", new DynamicObject[] {aosMktListingMin},
+            OperateOption.create());
+        // 修复关联关系
+        try {
+            ProgressUtil.botp("aos_mkt_listing_min", aosMktListingMin.get("id"));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private static void createSonBill(DynamicObject aosItemid, DynamicObject hotDyn, String orgId) {
+        // 头信息
+        // 根据国别大类中类取对应营销US编辑
+        Object itemId = aosItemid.getPkValue();
+        String category = MktComUtil.getItemCateNameZh(itemId);
+        String[] categoryGroup = category.split(",");
+        String aosCategory1 = null;
+        String aosCategory2 = null;
+        int categoryLength = categoryGroup.length;
+        if (categoryLength > 0) {
+            aosCategory1 = categoryGroup[0];
+        }
+        if (categoryLength > 1) {
+            aosCategory2 = categoryGroup[1];
+        }
+        String type = "四者一致";
+        long aosEditordefualt = 0;
+        long aosDesignerdefualt = 0;
+        if (FndGlobal.IsNotNull(aosCategory1) && FndGlobal.IsNotNull(aosCategory2)) {
+            String[] selectFields = new String[] {"aos_eng aos_editor"};
+            DynamicObject aosMktDesigner =
+                ProgressUtil.findDesignerByType(orgId, aosCategory1, aosCategory2, type, selectFields);
+            DynamicObject dyEditor = ProgressUtil.findEditorByType(aosCategory1, aosCategory2, type);
+            if (aosMktDesigner != null) {
+                aosDesignerdefualt = aosMktDesigner.getLong("aos_designer");
+            }
+            if (dyEditor != null) {
+                aosEditordefualt = dyEditor.getLong("aos_user");
+            }
+        }
+        DynamicObject aosMktListingSon = BusinessDataServiceHelper.newDynamicObject("aos_mkt_listing_son");
+        aosMktListingSon.set("aos_requireby", hotDyn.get("aos_apply"));
+        aosMktListingSon.set("aos_requiredate", new Date());
+        aosMktListingSon.set("aos_type", type);
+        aosMktListingSon.set("aos_designer", aosDesignerdefualt);
+        aosMktListingSon.set("aos_editor", aosEditordefualt);
+        aosMktListingSon.set("aos_user", aosEditordefualt);
+        aosMktListingSon.set("aos_orignbill", hotDyn.get("billno"));
+        aosMktListingSon.set("aos_sourceid", hotDyn.getPkValue().toString());
+        aosMktListingSon.set("aos_status", "编辑确认");
+        aosMktListingSon.set("aos_sourcetype", "HOT");
+        aosMktListingSon.set("aos_orgid", orgId);
+        // BOTP
+        aosMktListingSon.set("aos_sourcebilltype", "aos_mkt_hot_point");
+        aosMktListingSon.set("aos_sourcebillno", hotDyn.get("billno"));
+        aosMktListingSon.set("aos_srcentrykey", "aos_entryentity");
+        List<DynamicObject> mapList = Cux_Common_Utl.GetUserOrg(hotDyn.getDynamicObject("aos_apply").getPkValue());
+        if (mapList != null) {
+            if (mapList.size() >= 3 && mapList.get(2) != null) {
+                aosMktListingSon.set("aos_organization1", mapList.get(2).get("id"));
+            }
+            if (mapList.size() >= 4 && mapList.get(3) != null) {
+                aosMktListingSon.set("aos_organization2", mapList.get(3).get("id"));
+            }
+        }
+        DynamicObject entity = hotDyn.getDynamicObjectCollection("aos_entryentity").get(0);
+        // 明细
+        DynamicObjectCollection aosEntryentityS = aosMktListingSon.getDynamicObjectCollection("aos_entryentity");
+        DynamicObject aosEntryentity = aosEntryentityS.addNew();
+        aosEntryentity.set("aos_itemid", itemId);
+        aosEntryentity.set("aos_is_saleout", ProgressUtil.Is_saleout(itemId));
+        aosEntryentity.set("aos_require", "爆品质量打分退回:" + entity.getString("aos_context"));
+        aosEntryentity.set("aos_srcrowseq", entity.get("SEQ"));
+        AosMktListingSonBill.setListSonUserOrganizate(aosMktListingSon);
+        OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_listing_son",
+            new DynamicObject[] {aosMktListingSon}, OperateOption.create());
+        FndHistory.Create("aos_mkt_listing_son", operationrst.getSuccessPkIds().get(0).toString(), "爆品质量打分生成文案",
+            "到编辑确认节点");
+        // 修复关联关系
+        try {
+            ProgressUtil.botp("aos_mkt_listing_son", aosMktListingSon.get("id"));
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 }

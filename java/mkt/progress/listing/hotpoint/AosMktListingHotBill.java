@@ -121,6 +121,24 @@ public class AosMktListingHotBill extends AbstractBillPlugIn {
                     }
                 }
             }
+            if (DOC.equals(aosType)) {
+                for (String key : DOCGROUP) {
+                    if (FndGlobal.IsNull(entity.get(key))) {
+                        // 若打分明细内有字段未打分，则提交时报错"打分明细未填写!"
+                        fndError.add("打分明细未填写!");
+                        throw fndError;
+                    }
+                }
+            }
+            if (VED.equals(aosType)) {
+                for (String key : VEDGROUP) {
+                    if (FndGlobal.IsNull(entity.get(key))) {
+                        // 若打分明细内有字段未打分，则提交时报错"打分明细未填写!"
+                        fndError.add("打分明细未填写!");
+                        throw fndError;
+                    }
+                }
+            }
         }
         // 修改对应【listing数字资产管理】-【打分明细表】
         DynamicObject aosItemid = hotDyn.getDynamicObject("aos_itemid");
@@ -129,6 +147,13 @@ public class AosMktListingHotBill extends AbstractBillPlugIn {
             DynamicObject aosMktListingMana = BusinessDataServiceHelper.loadSingle("aos_mkt_listing_mana",
                 new QFilter("aos_orgid", QCP.equals, aosOrgid.getPkValue().toString())
                     .and("aos_itemid", QCP.equals, aosItemid.getPkValue().toString()).toArray());
+
+            if (FndGlobal.IsNull(aosMktListingMana)) {
+                // 若打分明细内有字段未打分，则提交时报错"打分明细未填写!"
+                fndError.add("数字资产管理未找到!");
+                throw fndError;
+            }
+
             DynamicObjectCollection pointS = aosMktListingMana.getDynamicObjectCollection("aos_pointentity");
             for (DynamicObject point : pointS) {
                 String[] group = null;
@@ -156,7 +181,7 @@ public class AosMktListingHotBill extends AbstractBillPlugIn {
         } else if (VED.equals(aosType)) {
             AosMktListingHotUtil.createPhoto(aosItemid, hotDyn);
         } else if (DOC.equals(aosType)) {
-
+            AosMktListingHotUtil.createDoc(aosItemid, hotDyn);
         }
         hotDyn.set("aos_confirmdate", new Date());
         SaveServiceHelper.save(new DynamicObject[] {hotDyn});
