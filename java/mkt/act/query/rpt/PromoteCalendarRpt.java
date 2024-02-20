@@ -299,8 +299,11 @@ public class PromoteCalendarRpt extends AbstractFormPlugin {
      */
     private List<QFBuilder> getFilter(){
         List<QFBuilder> result = new ArrayList<>(3);
-        //国别节日库过滤条件，渠道大促活动库过滤条件，活动选品表过滤条件
+        //国别节日库过滤条件，渠道大促活动库过滤条件，活动选品表过滤条件，无活动渠道过滤条件
         QFBuilder orgFilterArray = new QFBuilder(),channelFilterArray = new QFBuilder(),actFilterArray = new QFBuilder(),noActBuilder = new QFBuilder();
+        //活动选品过滤条件添加只提报的数据
+        actFilterArray.add("aos_actstatus","=","B");
+
         Object org = getModel().getValue("aos_sel_org");
         if (org!=null){
             String orgId = ((DynamicObject)org).getString("id");
@@ -395,7 +398,7 @@ public class PromoteCalendarRpt extends AbstractFormPlugin {
             orgAmt = orgAmt.add(totalamt);
 
         }
-        List<String> results = new ArrayList<>(storeAmtMap.keySet());
+        List<String> results = new ArrayList<>(storeAmtMap.keySet().size());
         //判断 am渠道营收是否大于5%
         if (orgAmt.compareTo(BigDecimal.ZERO)<=0) {
             return results;
@@ -416,8 +419,10 @@ public class PromoteCalendarRpt extends AbstractFormPlugin {
             }
             else {
                 rate = entry.getValue().divide(orgAmt,4,BigDecimal.ROUND_HALF_UP);
+                System.out.println(shopfid+"  "+rate);
                 if (rate.compareTo(new BigDecimal("0.05")) > 0){
                     results.add(shopfid);
+
                 }
             }
         }
