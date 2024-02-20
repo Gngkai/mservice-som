@@ -1,5 +1,6 @@
 package mkt.data.standardlib;
 
+import common.fnd.FndGlobal;
 import common.sal.util.SalUtil;
 import kd.bos.algo.DataSet;
 import kd.bos.algo.Row;
@@ -17,11 +18,12 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.util.*;
 
 /**
- * lch
- * 2022-05-05
- * 汇总表动态表单插件
+ * lch 2022-05-05 汇总表动态表单插件
  */
 public class MKTStandardLibSummaryForm extends AbstractFormPlugin {
+    public final static String AOS_QUERY = "aos_query";
+    public final static String AOS_EXPORT = "aos_export";
+
     @Override
     public void registerListener(EventObject e) {
         this.addItemClickListeners("aos_toolbarap");
@@ -30,71 +32,72 @@ public class MKTStandardLibSummaryForm extends AbstractFormPlugin {
     @Override
     public void itemClick(ItemClickEvent evt) {
         String itemKey = evt.getItemKey();
-        if ("aos_query".equals(itemKey)) {
+        if (AOS_QUERY.equals(itemKey)) {
             // 查询
             // 非手动关闭
             DynamicObject dataEntity = this.getModel().getDataEntity(true);
-            String aos_stdlibs = dataEntity.getString("aos_stdlibs");
-            queryArticleStandard(aos_stdlibs);
+            String aosStdlibs = dataEntity.getString("aos_stdlibs");
+            queryArticleStandard(aosStdlibs);
         }
-
-        if ("aos_export".equals(itemKey)) {
+        if (AOS_EXPORT.equals(itemKey)) {
             export();
         }
     }
 
-    private void queryArticleStandard(String aos_stdlibs) {
+    private void queryArticleStandard(String aosStdlibs) {
         this.getModel().deleteEntryData("aos_entryentity");
         // 品名下物料数量
         Map<String, Integer> itemQtyMap = MKTStandardUtil.sumItemByItemName();
-        if (null != aos_stdlibs && !"".equals(aos_stdlibs) && !"null".equals(aos_stdlibs) ) {
-            setHz(itemQtyMap, aos_stdlibs);
+        if (FndGlobal.IsNotNull(aosStdlibs)) {
+            setHz(itemQtyMap, aosStdlibs);
         } else {
             // 查全部
             Map<String, String> comboMap = SalUtil.getComboMap("aos_mkt_stdsummary", "aos_stdlibs");
-            for (String key:comboMap.keySet()) {
+            for (String key : comboMap.keySet()) {
                 setHz(itemQtyMap, comboMap.get(key));
             }
         }
     }
 
-
     private void setHz(Map<String, Integer> itemQtyMap, String libs) {
-        DataSet allItemNameDataSet = QueryServiceHelper.queryDataSet("1111", libs, "aos_groupid,aos_category1_name||','||aos_category2_name||','||aos_category3_name aos_category,aos_itemnamecn", new QFilter[]{
-                new QFilter("billstatus", QCP.not_equals, "E"),
-                new QFilter("aos_groupid", QCP.not_equals, null)
-        }, null);
-        DataSet completedItemNameDataSet = QueryServiceHelper.queryDataSet("2222", libs, "aos_groupid,aos_category1_name||','||aos_category2_name||','||aos_category3_name aos_category,aos_itemnamecn,case when billstatus = 'C' then 1 else 0 end as billstatus", new QFilter[]{
-                new QFilter("aos_groupid", QCP.not_equals, null)
-        }, null);
-        completedItemNameDataSet = completedItemNameDataSet.groupBy(new String[]{"aos_groupid", "aos_category", "aos_itemnamecn"}).min("billstatus").finish();
-        completedItemNameDataSet = completedItemNameDataSet.filter("billstatus = 1");// 全部国家完成才算完成
+        DataSet allItemNameDataSet = QueryServiceHelper.queryDataSet("1111", libs,
+            "aos_groupid,aos_category1_name||','||aos_category2_name||','||aos_category3_name aos_category,aos_itemnamecn",
+            new QFilter[] {new QFilter("billstatus", QCP.not_equals, "E"),
+                new QFilter("aos_groupid", QCP.not_equals, null)},
+            null);
+        DataSet completedItemNameDataSet = QueryServiceHelper.queryDataSet("2222", libs,
+            "aos_groupid,aos_category1_name||','||aos_category2_name||','||aos_category3_name aos_category,aos_itemnamecn,case when billstatus = 'C' then 1 else 0 end as billstatus",
+            new QFilter[] {new QFilter("aos_groupid", QCP.not_equals, null)}, null);
+        completedItemNameDataSet = completedItemNameDataSet
+            .groupBy(new String[] {"aos_groupid", "aos_category", "aos_itemnamecn"}).min("billstatus").finish();
+        // 全部国家完成才算完成
+        completedItemNameDataSet = completedItemNameDataSet.filter("billstatus = 1");
         Map<String, Set<String>> allItemNameMap = sumItemNameByGroup(allItemNameDataSet);
         Map<String, Set<String>> completedItemNameMap = sumItemNameByGroup(completedItemNameDataSet);
-        for (String groupId:allItemNameMap.keySet()) {
+        for (String groupId : allItemNameMap.keySet()) {
             int index = this.getModel().createNewEntryRow("aos_entryentity");
             this.getModel().setValue("aos_groupid", groupId, index);
             this.getModel().setValue("aos_stdlib", libs, index);
 
             // 总品名数
             Set<String> allItemNameSet = allItemNameMap.get(groupId);
-            int aos_total = allItemNameSet != null ? allItemNameSet.size() : 0;
-            this.getModel().setValue("aos_total", aos_total, index);
+            int aosTotal = allItemNameSet != null ? allItemNameSet.size() : 0;
+            this.getModel().setValue("aos_total", aosTotal, index);
 
             // 完成数
             Set<String> completedItemNameSet = completedItemNameMap.get(groupId);
-            int aos_completeamt = completedItemNameSet != null ? completedItemNameSet.size() : 0;
-            this.getModel().setValue("aos_completeamt", aos_completeamt, index);
+            int aosCompleteamt = completedItemNameSet != null ? completedItemNameSet.size() : 0;
+            this.getModel().setValue("aos_completeamt", aosCompleteamt, index);
 
-            float aos_completerate = 0;
-            if (aos_total != 0) {
-                aos_completerate = (float)aos_completeamt/aos_total;
+            float aosCompleterate = 0;
+            if (aosTotal != 0) {
+                aosCompleterate = (float)aosCompleteamt / aosTotal;
             }
             // 完成率
-            this.getModel().setValue("aos_completerate", aos_completerate, index);
+            this.getModel().setValue("aos_completerate", aosCompleterate, index);
 
             // 未完成数
-            this.getModel().setValue("aos_undoneamt", aos_total - aos_completeamt, index);
+            this.getModel().setValue("aos_undoneamt", aosTotal - aosCompleteamt, index);
 
             // SKU覆盖率
             // 所有非手动关闭状态的所有品名的SKU；
@@ -102,18 +105,18 @@ public class MKTStandardLibSummaryForm extends AbstractFormPlugin {
             // 已完成的品名涉及SKU
             int itemQtyCompleted = MKTStandardUtil.getItemQtyByGroup(itemQtyMap, completedItemNameSet);
             if (itemQtyAll != 0) {
-                this.getModel().setValue("aos_coveragerate", (float)itemQtyCompleted/itemQtyAll, index);
+                this.getModel().setValue("aos_coveragerate", (float)itemQtyCompleted / itemQtyAll, index);
             }
         }
     }
 
-
     /**
      * 组别维度下合计所有非手动关闭状态的品名数量
+     * 
      * @return 组别 下品名数量
      */
     public Map<String, Set<String>> sumItemNameByGroup(DataSet libDataSet) {
-        Map<String, Set<String>>  result = new HashMap<>();
+        Map<String, Set<String>> result = new HashMap<>();
         while (libDataSet.hasNext()) {
             Row next = libDataSet.next();
             String aos_groupid = next.getString("aos_groupid");
@@ -131,7 +134,7 @@ public class MKTStandardLibSummaryForm extends AbstractFormPlugin {
         List<FieldEdit> fieldEdits = aos_itementity.getFieldEdits();
         List<String> fieldNameList = new ArrayList<>();
         List<String> fieldMarkList = new ArrayList<>();
-        for (FieldEdit fieldEdit:fieldEdits) {
+        for (FieldEdit fieldEdit : fieldEdits) {
             String displayName = fieldEdit.getProperty().getDisplayName().getLocaleValue();
             String fieldKey = fieldEdit.getFieldKey();
             fieldNameList.add(displayName);

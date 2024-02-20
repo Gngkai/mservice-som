@@ -24,41 +24,55 @@ import java.util.*;
 
 public class MKTStandardUtil {
 
-    // 获取组别下所有品名下的所有sku数量
+    /**
+     * 获取组别下所有品名下的所有sku数量
+     * 
+     * @param itemQty 数量
+     * @param allItemNameSet 品名组
+     * @return 合计数量
+     */
     public static int getItemQtyByGroup(Map<String, Integer> itemQty, Set<String> allItemNameSet) {
-        if (allItemNameSet == null) return 0;
+        if (allItemNameSet == null) {
+            return 0;
+        }
         int total = 0;
-        for (String aos_category : allItemNameSet) {
-            total += itemQty.getOrDefault(aos_category, 0);
+        for (String aosCategory : allItemNameSet) {
+            total += itemQty.getOrDefault(aosCategory, 0);
         }
         return total;
     }
 
-
     /**
      * 合计品名下sku数量
+     * 
      * @return 品名下sku的数量
      */
     public static Map<String, Integer> sumItemByItemName() {
-        DataSet materialDataSet = QueryServiceHelper.queryDataSet("sumItemByItemName", "bd_materialgroupdetail", "group.name aos_category,material.name aos_itemnamecn,1 aos_count", null, null);
-        materialDataSet = materialDataSet.groupBy(new String[]{"aos_category", "aos_itemnamecn"}).sum("aos_count").finish();
-        Map<String, Integer> result = new HashMap<>();
+        DataSet materialDataSet = QueryServiceHelper.queryDataSet("sumItemByItemName", "bd_materialgroupdetail",
+            "group.name aos_category,material.name aos_itemnamecn,1 aos_count", null, null);
+        materialDataSet =
+            materialDataSet.groupBy(new String[] {"aos_category", "aos_itemnamecn"}).sum("aos_count").finish();
+        Map<String, Integer> result = new HashMap<>(16);
         while (materialDataSet.hasNext()) {
             Row next = materialDataSet.next();
-            String aos_category = next.getString("aos_category");
-            String aos_itemnamecn = next.getString("aos_itemnamecn");
-            Integer aos_count = next.getInteger("aos_count");
-            result.put(aos_category + "~" + aos_itemnamecn, aos_count);
+            String aosCategory = next.getString("aos_category");
+            String aosItemnamecn = next.getString("aos_itemnamecn");
+            Integer aosCount = next.getInteger("aos_count");
+            result.put(aosCategory + "~" + aosItemnamecn, aosCount);
         }
+        materialDataSet.close();
         return result;
     }
 
-
-    // 创建头信息等
+    /**
+     * 创建头信息等
+     * @param workbook 工作簿
+     * @param fieldNameList 列名
+     * @return 文档
+     */
     public static XSSFSheet createXSSFSheet(XSSFWorkbook workbook, List<String> fieldNameList) {
         XSSFCellStyle style = workbook.createCellStyle();
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-//		style.setAlignment(HorizontalAlignment.LEFT);
         style.setFillForegroundColor(IndexedColors.GREY_40_PERCENT.getIndex());
         // 创建工作表sheet
         XSSFSheet sheet = workbook.createSheet();
@@ -77,28 +91,49 @@ public class MKTStandardUtil {
     public static String getLibName(String key) {
         String value = "";
         switch (key) {
-            case "aos_mkt_standard" : value = "文案标准库"; break;
-            case "aos_mkt_point" : value = "关键词库"; break;
-            case "aos_mkt_designstd" : value = "设计标准库"; break;
-            case "aos_mkt_photostd" : value = "摄影标准库"; break;
-            case "aos_mkt_videostd" : value = "摄像标准库"; break;
-            case "aos_mkt_viewstd" : value = "布景标准库"; break;
+            case "aos_mkt_standard":
+                value = "文案标准库";
+                break;
+            case "aos_mkt_point":
+                value = "关键词库";
+                break;
+            case "aos_mkt_designstd":
+                value = "设计标准库";
+                break;
+            case "aos_mkt_photostd":
+                value = "摄影标准库";
+                break;
+            case "aos_mkt_videostd":
+                value = "摄像标准库";
+                break;
+            case "aos_mkt_viewstd":
+                value = "布景标准库";
+                break;
+            default:
+                break;
         }
         return value;
     }
 
-
-    // 下载工作簿
+    /**
+     * 下载工作簿
+     * @param obj 单据体
+     * @param workbook 工作簿
+     * @param fileName 列名
+     */
     public static void downloadXSSFWorkbook(AbstractFormPlugin obj, XSSFWorkbook workbook, String fileName) {
         ByteArrayOutputStream outputStream = null;
         InputStream inputStream = null;
         try {
             TempFileCache tempfile = CacheFactory.getCommonCacheFactory().getTempFileCache();
-            int timeout = 60*10;//超时时间10分钟
+            // 超时时间10分钟
+            int timeout = 60 * 10;
             outputStream = new ByteArrayOutputStream();
             workbook.write(outputStream);
             inputStream = new ByteArrayInputStream(outputStream.toByteArray());
-            String url = tempfile.saveAsUrl("引出数据_" + fileName + "_" + DateFormatUtils.format(new Date(),  "yyyy-MM-dd HH:mm:ss") + ".xlsx", inputStream, timeout);
+            String url = tempfile.saveAsUrl(
+                "引出数据_" + fileName + "_" + DateFormatUtils.format(new Date(), "yyyy-MM-dd HH:mm:ss") + ".xlsx",
+                inputStream, timeout);
             obj.getView().download(url);
         } catch (IOException e) {
             obj.getView().showTipNotification(SalUtil.getExceptionStr(e));
@@ -118,11 +153,10 @@ public class MKTStandardUtil {
         }
     }
 
-
     static void setCellValue(IDataModel model, XSSFSheet sheet, List<String> fieldMarkList) {
         DynamicObject dataEntity = model.getDataEntity(true);
-        DynamicObjectCollection aos_entryentity = dataEntity.getDynamicObjectCollection("aos_entryentity");
-        for (DynamicObject obj : aos_entryentity) {
+        DynamicObjectCollection aosEntryentity = dataEntity.getDynamicObjectCollection("aos_entryentity");
+        for (DynamicObject obj : aosEntryentity) {
             int row = sheet.getLastRowNum() + 1;
             XSSFRow dataRow = sheet.createRow(row);
             for (int i = 0; i < fieldMarkList.size(); i++) {
@@ -136,7 +170,6 @@ public class MKTStandardUtil {
         }
     }
 
-
     private static void setCellValue(XSSFRow dataRow, Object value, int index) {
         XSSFCell cell = dataRow.createCell(index);
         if (value instanceof String) {
@@ -144,9 +177,9 @@ public class MKTStandardUtil {
         } else if (value instanceof Integer) {
             cell.setCellValue((Integer)value);
         } else if (value instanceof BigDecimal) {
-            cell.setCellValue(((BigDecimal) value).doubleValue());
+            cell.setCellValue(((BigDecimal)value).doubleValue());
         } else if (value instanceof DynamicObject) {
-            cell.setCellValue(((DynamicObject) value).getString("name"));
+            cell.setCellValue(((DynamicObject)value).getString("name"));
         }
     }
 }

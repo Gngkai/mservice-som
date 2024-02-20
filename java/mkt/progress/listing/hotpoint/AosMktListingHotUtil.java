@@ -649,7 +649,6 @@ public class AosMktListingHotUtil {
      */
     public static void createDoc(DynamicObject aosItemid, DynamicObject hotDyn) {
         FndMsg.debug("into createDoc");
-        hotDyn.set("aos_status", "优化中");
         // 循环爆品打分行
         DynamicObjectCollection hotLineS = hotDyn.getDynamicObjectCollection("aos_entryentity");
         for (DynamicObject hotLine : hotLineS) {
@@ -657,6 +656,7 @@ public class AosMktListingHotUtil {
             if (NO.equals(aosPromot)) {
                 continue;
             }
+            hotDyn.set("aos_status", "优化中");
             String orgNum = hotLine.getDynamicObject("aos_orgid").getString("number");
             String orgId = hotLine.getDynamicObject("aos_orgid").getString("id");
             if ("US/UK/CA".contains(orgNum)) {

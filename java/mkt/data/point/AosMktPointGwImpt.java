@@ -105,12 +105,11 @@ public class AosMktPointGwImpt extends BatchImportPlugin {
     public List<ComboItem> getOverrideFieldsConfig() {
         List<ComboItem> overrideFieldsConfig = super.getOverrideFieldsConfig();
         List<ComboItem> comboItems = new ArrayList<>(6);
-        for (int i = 0; i < overrideFieldsConfig.size(); i++) {
-            ComboItem comboItem = overrideFieldsConfig.get(i);
+        for (ComboItem comboItem : overrideFieldsConfig) {
             String value = comboItem.getValue();
-            if ("aos_orgid".equals(value) || "aos_itemnamecn".equals(value)
-                    || "aos_category1".equals(value) || "aos_category2".equals(value)
-                    || "aos_category3".equals(value) || "aos_detail".equals(value)) {
+            if ("aos_orgid".equals(value) || "aos_itemnamecn".equals(value) || "aos_category1".equals(
+                value) || "aos_category2".equals(value) || "aos_category3".equals(value) || "aos_detail".equals(
+                value)) {
                 comboItems.add(comboItem);
             }
         }

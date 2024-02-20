@@ -48,6 +48,7 @@ public class AosMktListingHotDocTask extends AbstractTask {
             JSONArray jsonArr = JSON.parseArray(response.body().string());
             int length = jsonArr.size();
             for (int i = 0; i < length; i++) {
+                FndMsg.debug("======into process======");
                 JSONObject jsObj = jsonArr.getJSONObject(i);
                 // 国别
                 String country = jsObj.getString("Country");
