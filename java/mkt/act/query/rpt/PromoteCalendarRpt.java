@@ -24,6 +24,7 @@ import java.util.*;
  * @create: 2024-02-01 17:43
  * @Description:  国别节日&渠道大促活动日历 报表
  */
+@SuppressWarnings("unused")
 public class PromoteCalendarRpt extends AbstractFormPlugin {
     private static final String AMAZON_NUMBER = "AMAZON",EBAY_NUMBER = "EBAY",NOACT_KEY = "aos_mkt_act_promote";
     private static final String ENTRY_KEY = "aos_entryentity",SUBENTRY_KEY = "aos_subentryentity";
@@ -99,10 +100,12 @@ public class PromoteCalendarRpt extends AbstractFormPlugin {
         List<Map<String, Set<String>>> actSelectList = getActSelectList(filterList.get(2));
         //设置国别节日数据
         DynamicObjectCollection entryRows = getModel().getDataEntity(true).getDynamicObjectCollection(ENTRY_KEY);
+        //记录店铺对应的渠道类型（number）
+        Map<String,String> shopChannelMap = new HashMap<>();
         //获取所有店铺
-        Map<String, DynamicObject> allShopMap = getAllShop();
+        Map<String, DynamicObject> allShopMap = getAllShop( shopChannelMap);
         //设置节日活动数据
-        setFestivalData(noActData.get("节日活动"), allShopMap,filterList.get(0),actSelectList.get(0),entryRows);
+        setFestivalData(noActData.get("节日活动"), allShopMap,filterList.get(0),actSelectList.get(0),entryRows,shopChannelMap);
         //设置渠道大促活动数据
         setPromoteData(noActData.get("大型活动"),allShopMap,filterList.get(1),actSelectList.get(1),entryRows);
 
@@ -118,9 +121,9 @@ public class PromoteCalendarRpt extends AbstractFormPlugin {
      * @param entryRows 表体行
      */
     public void setFestivalData ( Map<String, List<String>> noActMap,Map<String, DynamicObject> allShop,QFBuilder builder,
-                                 Map<String, Set<String>> actMap, DynamicObjectCollection entryRows) {
+                                 Map<String, Set<String>> actMap, DynamicObjectCollection entryRows,Map<String,String> shopChannelMap) {
         //获取营收合格的店铺
-        List<String> revenueShopList = getRevenueStores();
+        List<String> revenueShopList = getRevenueStores(shopChannelMap);
 
         //首先获取国别节日数据
         DynamicObjectCollection festivalList = QueryServiceHelper.query("aos_mkt_festival", "id,name,number", builder.toArray());
@@ -235,16 +238,23 @@ public class PromoteCalendarRpt extends AbstractFormPlugin {
     /**
      * 获取活动库中的 是否平台活动为是的店铺
      */
-    public Map<String,DynamicObject> getAllShop(){
+    public Map<String,DynamicObject> getAllShop(Map<String,String> shopChannelMap){
         QFBuilder builder = new QFBuilder();
         builder.add("aos_assessment.number", "=", "Y");
         String orgId = ((DynamicObject)getModel().getValue("aos_sel_org")).getString("id");
         builder.add("aos_org","=",orgId);
         builder.add("aos_shop","!=","");
         Map<String,DynamicObject> shopMap = new HashMap<>();
-        for (DynamicObject row : BusinessDataServiceHelper.load("aos_sal_act_type_p", "aos_shop", builder.toArray())) {
+        for (DynamicObject row : BusinessDataServiceHelper.load("aos_sal_act_type_p", "aos_shop,aos_channel", builder.toArray())) {
             DynamicObject shopEntry = row.getDynamicObject("aos_shop");
             shopMap.put(shopEntry.getString("id"),shopEntry);
+            DynamicObject channelDy = row.getDynamicObject("aos_channel");
+            if (channelDy != null){
+                shopChannelMap.put(shopEntry.getString("id"),channelDy.getString("number"));
+            }
+            else {
+                shopChannelMap.put(shopEntry.getString("id")," ");
+            }
         }
         return shopMap;
     }
@@ -346,7 +356,7 @@ public class PromoteCalendarRpt extends AbstractFormPlugin {
     /**
      *  获取营收合格的店铺
      */
-    public List<String> getRevenueStores(){
+    public List<String> getRevenueStores(Map<String,String> shopChannelMap){
         QFBuilder orderFilter = new QFBuilder();
         //国别
         String orgId = ((DynamicObject) getModel().getValue("aos_sel_org")).getString("id");
@@ -372,7 +382,14 @@ public class PromoteCalendarRpt extends AbstractFormPlugin {
         //计算店铺总营收
         Map<String,BigDecimal> storeAmtMap = new HashMap<>();
         //记录亚马逊店铺、ebay店铺
-        List<String> amStoreList = new ArrayList<>(),ebStoreList = new ArrayList<>();
+        List<String> amStoreList = new ArrayList<>(shopChannelMap.size()),ebStoreList = new ArrayList<>(shopChannelMap.size());
+        for (Map.Entry<String, String> entry : shopChannelMap.entrySet()) {
+            if (AMAZON_NUMBER.equals(entry.getValue())) {
+                amStoreList.add(entry.getKey());
+            } else if (EBAY_NUMBER.equals(entry.getValue())) {
+                ebStoreList.add(entry.getKey());
+            }
+        }
 
         for (DynamicObject row : orderList) {
             //平台
@@ -382,15 +399,9 @@ public class PromoteCalendarRpt extends AbstractFormPlugin {
 
             if (AMAZON_NUMBER.equals(platform)){
                  amazonAmt = amazonAmt.add(totalamt);
-                if (!amStoreList.contains(shopfid)) {
-                    amStoreList.add(shopfid);
-                }
             }
             else if (EBAY_NUMBER.equals(platform)){
                 ebayAmt = ebayAmt.add(totalamt);
-                if (!ebStoreList.contains(shopfid)) {
-                    ebStoreList.add(shopfid);
-                }
             }
 
             BigDecimal shopAmt = storeAmtMap.getOrDefault(shopfid, BigDecimal.ZERO).add(totalamt);
@@ -409,23 +420,24 @@ public class PromoteCalendarRpt extends AbstractFormPlugin {
         rate = ebayAmt.divide(orgAmt,4,BigDecimal.ROUND_HALF_UP);
         boolean ebFlag = rate.compareTo(new BigDecimal("0.05")) > 0;
 
-        for (Map.Entry<String, BigDecimal> entry : storeAmtMap.entrySet()) {
-            String shopfid = entry.getKey();
-            if (amFlag && amStoreList.contains(shopfid)){
-                results.add(shopfid);
+        for (Map.Entry<String, String> entry : shopChannelMap.entrySet()) {
+            String shopId = entry.getKey();
+            if (amFlag && amStoreList.contains(shopId)){
+                results.add(shopId);
             }
-            else if (ebFlag && ebStoreList.contains(shopfid)){
-                results.add(shopfid);
+            else if (ebFlag && ebStoreList.contains(shopId)){
+                results.add(shopId);
             }
             else {
-                rate = entry.getValue().divide(orgAmt,4,BigDecimal.ROUND_HALF_UP);
-                System.out.println(shopfid+"  "+rate);
-                if (rate.compareTo(new BigDecimal("0.05")) > 0){
-                    results.add(shopfid);
-
+                if (storeAmtMap.containsKey(shopId)){
+                    rate = storeAmtMap.get(shopId).divide(orgAmt,4,BigDecimal.ROUND_HALF_UP);
+                    if (rate.compareTo(new BigDecimal("0.05")) > 0){
+                        results.add(shopId);
+                    }
                 }
             }
         }
         return results;
     }
+
 }
