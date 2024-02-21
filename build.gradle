@@ -1,6 +1,38 @@
+plugins {
+    id 'com.diffplug.spotless' version '6.13.0'
+}
+
+spotless {
+    enforceCheck false
+    java {
+        //格式化形式
+        palantirJavaFormat()
+        //移除无用Import
+        removeUnusedImports()
+        //导入顺序
+        importOrder()
+        //注解格式化
+        formatAnnotations()
+        def taggetSpotlessFiles
+        if (project.spotlessFiles != "") {
+            taggetSpotlessFiles = fileTree(".") {
+                include(project.spotlessFiles.split(','))
+            }
+        } else {
+            taggetSpotlessFiles = fileTree(".") {
+                include '**/*.java'
+                exclude(['*/build', '.gradle', '.idea', 'gradle.properties'])
+            }
+        }
+
+        target taggetSpotlessFiles
+    }
+}
+
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
+
 
 sourceCompatibility = 1.8
 group = 'kd.bos.service'
@@ -34,8 +66,8 @@ dependencies {
 
     // otel
     implementation group: 'io.opentelemetry', name: 'opentelemetry-api', version: '1.26.0'
-    implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-trace',version: '1.26.0'
-    implementation group: 'io.opentelemetry', name: 'opentelemetry-exporter-otlp',version: '1.26.0'
+    implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk-trace', version: '1.26.0'
+    implementation group: 'io.opentelemetry', name: 'opentelemetry-exporter-otlp', version: '1.26.0'
     implementation group: 'io.opentelemetry', name: 'opentelemetry-sdk', version: '1.26.0'
     implementation group: 'io.opentelemetry', name: 'opentelemetry-semconv', version: '1.26.0-alpha'
 }
@@ -48,7 +80,7 @@ sourceSets {
         }
     }
 }
-jar{
+jar {
     manifest {
         attributes 'Builddate': date
         attributes 'Release': 'CICD'

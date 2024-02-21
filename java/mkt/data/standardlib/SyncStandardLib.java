@@ -1,5 +1,10 @@
 package mkt.data.standardlib;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import kd.bos.algo.DataSet;
 import kd.bos.algo.JoinType;
 import kd.bos.algo.Row;
@@ -16,16 +21,12 @@ import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 /**
  * 同步标准库 lch 2022-05-03
  */
 public class SyncStandardLib extends AbstractTask {
     public final static String AOS_MKT_POINT = "aos_mkt_point";
+
     /**
      *
      */
@@ -146,8 +147,8 @@ public class SyncStandardLib extends AbstractTask {
             // 布景师
             long aosSetdesigner = next.getLong("aos_setdesigner");
             if (aosGroupView != 0 && aosViewLeader != 0 && aosSetdesigner != 0) {
-                DynamicObject dynamicObject = setStandardBillData("aos_mkt_viewstd", split, aosItemnamecn,
-                    aosGroupView, aosSetdesigner, aosViewLeader);
+                DynamicObject dynamicObject = setStandardBillData("aos_mkt_viewstd", split, aosItemnamecn, aosGroupView,
+                    aosSetdesigner, aosViewLeader);
                 if (dynamicObject != null) {
                     viewStdObjList.add(dynamicObject);
                 }
@@ -189,15 +190,14 @@ public class SyncStandardLib extends AbstractTask {
 
     }
 
-    private static DynamicObject setStandardBillData(String bill, String[] category, String aosItemnamecn,
-        long groupId, long aosOperater, long aosAuditor) {
+    private static DynamicObject setStandardBillData(String bill, String[] category, String aosItemnamecn, long groupId,
+        long aosOperater, long aosAuditor) {
         boolean exists = QueryServiceHelper.exists(bill,
             new QFilter[] {new QFilter("aos_category1_name", QCP.equals, category[0]),
                 new QFilter("aos_category2_name", QCP.equals, category[1]),
                 new QFilter("aos_category3_name", QCP.equals, category[2]),
                 new QFilter("aos_itemnamecn", QCP.equals, aosItemnamecn)});
-        if (exists)
-        {
+        if (exists) {
             return null;
         }
         DynamicObject dynamicObject = BusinessDataServiceHelper.newDynamicObject(bill);
@@ -219,8 +219,7 @@ public class SyncStandardLib extends AbstractTask {
                 new QFilter("aos_category2_name", QCP.equals, category[1]),
                 new QFilter("aos_category3_name", QCP.equals, category[2]),
                 new QFilter("aos_itemnamecn", QCP.equals, aosItemnamecn)});
-        if (exists)
-        {
+        if (exists) {
             return null;
         }
         DynamicObject dynamicObject = BusinessDataServiceHelper.newDynamicObject(bill);
@@ -254,8 +253,7 @@ public class SyncStandardLib extends AbstractTask {
                 new QFilter("aos_category2_name", QCP.equals, category[1]),
                 new QFilter("aos_category3_name", QCP.equals, category[2]),
                 new QFilter("aos_itemnamecn", QCP.equals, aosItemnamecn)});
-        if (exists)
-        {
+        if (exists) {
             return null;
         }
         DynamicObject dynamicObject = BusinessDataServiceHelper.newDynamicObject("aos_mkt_photostd");
