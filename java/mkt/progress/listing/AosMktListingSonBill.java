@@ -1141,15 +1141,14 @@ public class AosMktListingSonBill extends AbstractBillPlugIn implements ItemClic
                 FndHistory.Create(this.getView(), "手工关闭", "手工关闭");
                 statusControl();
                 setErrorList(this.getModel().getDataEntity(true));
-
                 Object aosSourcetype = this.getModel().getValue("aos_sourcetype");
                 if (HOT.equals(aosSourcetype)) {
                     Object aosSourceid = this.getModel().getValue("aos_sourceid");
                     DynamicObject hotDyn = BusinessDataServiceHelper.loadSingle(aosSourceid, "aos_mkt_hot_point");
-                    hotDyn.set("aos_status", "结束");
+                    hotDyn.set("aos_status", "二次确认");
+                    hotDyn.set("aos_user", hotDyn.get("aos_deal"));
                     SaveServiceHelper.save(new DynamicObject[] {hotDyn});
                 }
-
             }
         }
     }

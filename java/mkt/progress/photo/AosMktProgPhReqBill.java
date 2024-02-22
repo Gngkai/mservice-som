@@ -1575,7 +1575,8 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
         if (FndGlobal.IsNotNull(billno) && ((String)billno).contains(hot)) {
             Object aosParentid = this.getModel().getValue("aos_parentid");
             DynamicObject hotDyn = BusinessDataServiceHelper.loadSingle(aosParentid, "aos_mkt_hot_point");
-            hotDyn.set("aos_status", "结束");
+            hotDyn.set("aos_status", "二次确认");
+            hotDyn.set("aos_user", hotDyn.get("aos_deal"));
             SaveServiceHelper.save(new DynamicObject[] {hotDyn});
         }
         this.getModel().setValue("aos_status", "已完成");
