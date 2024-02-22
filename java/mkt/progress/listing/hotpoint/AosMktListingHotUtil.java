@@ -202,7 +202,7 @@ public class AosMktListingHotUtil {
             aosEntryentity.set("aos_promot", "否");
             // 设置打分为Listing资产管理中数据
             for (String key : DOCGROUP) {
-                aosEntryentity.set(key, org.getString(key));
+                aosEntryentity.set(key, org.getString("aos_pointentity." + key));
             }
         }
     }
@@ -223,6 +223,7 @@ public class AosMktListingHotUtil {
             joiner.add(fixedString + str);
         }
         String result = joiner.toString();
+        FndMsg.debug("result:" + result);
         DynamicObjectCollection orgS = QueryServiceHelper.query("aos_mkt_listing_mana", "aos_orgid," + result,
             new QFilter("aos_itemid.number", QCP.equals, itemId.getString("number")).toArray());
         for (DynamicObject org : orgS) {
@@ -233,7 +234,7 @@ public class AosMktListingHotUtil {
             aosEntryentity.set("aos_promot", "否");
             // 设置打分为空
             for (String key : group) {
-                aosEntryentity.set(key, org.getString(key));
+                aosEntryentity.set(key, org.getString("aos_pointentity." + key));
             }
         }
     }
