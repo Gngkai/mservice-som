@@ -41,7 +41,7 @@ public class AosMktListingHotDocTask extends AbstractTask {
             // 上线后参数调整
             RequestBody body = RequestBody.create(mediaType, "{\"SYNC_TIME\": \"" + dateStr + "\"}");
             String clToken = AosMktClApiUtil.getClToken();
-            Request request = new Request.Builder().url("http://54.82.42.126:9400/api/SST/GetErrorImageList")
+            Request request = new Request.Builder().url("http://54.82.42.126:9400/api/SST/getCountrySKUInfo")
                 .method("POST", body).addHeader("User-Agent", "Apifox/1.0.0 (https://apifox.com)")
                 .addHeader("Content-Type", "application/json").addHeader("Authorization", "Bearer " + clToken).build();
             Response response = client.newCall(request).execute();
