@@ -200,7 +200,7 @@ public class AosMktListingHotUtil {
             aosEntryentity.set("aos_orgid", org.getString("aos_orgid"));
             // 是否优化
             aosEntryentity.set("aos_promot", "否");
-            // 设置打分为Listing资产管理中数据
+            // 设置打分为Listing资产管理中数据 key
             for (String key : DOCGROUP) {
                 aosEntryentity.set(key, org.getString("aos_pointentity." + key));
             }
