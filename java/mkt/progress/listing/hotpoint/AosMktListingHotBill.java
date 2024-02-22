@@ -1,5 +1,6 @@
 package mkt.progress.listing.hotpoint;
 
+import common.CommonMktListing;
 import common.Cux_Common_Utl;
 import common.fnd.FndError;
 import common.fnd.FndGlobal;
@@ -9,6 +10,7 @@ import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.events.AfterDoOperationEventArgs;
+import kd.bos.form.events.BeforeClosedEvent;
 import kd.bos.form.operate.FormOperate;
 import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
@@ -33,6 +35,7 @@ public class AosMktListingHotBill extends AbstractBillPlugIn {
     public final static String DOC = "DOC";
     public final static String AOS_SUBMIT = "aos_submit";
     public final static String CONFIRMSOON = "待确认";
+    public final static String SECOND = "二次确认";
     public final static String LISTING = "优化中";
     public final static String END = "结束";
 
@@ -49,6 +52,16 @@ public class AosMktListingHotBill extends AbstractBillPlugIn {
     public void afterBindData(EventObject e) {
         super.afterBindData(e);
         statusControl();
+        initItemPic();
+    }
+
+    /**
+     * 刷新物料图片信息
+     */
+    private void initItemPic() {
+        String itemNumber = ((DynamicObject)this.getModel().getValue("aos_itemid")).getString("number");
+        this.getModel().setValue("aos_url", CommonMktListing.GetItemPicture(itemNumber));
+        this.getModel().setValue("aos_skupic", "https://clss.s3.amazonaws.com/" + itemNumber + ".jpg");
     }
 
     @Override
@@ -81,8 +94,8 @@ public class AosMktListingHotBill extends AbstractBillPlugIn {
         String aosStatus = hotDyn.getString("aos_status");
         if (CONFIRMSOON.equals(aosStatus)) {
             confirmSoonSubmit(hotDyn);
-        } else if (LISTING.equals(aosStatus)) {
-            listingSubmit(hotDyn);
+        } else if (SECOND.equals(aosStatus)) {
+            secondSubmit(hotDyn);
         }
         // 保存对应的调整
         this.getView().invokeOperation("refresh");
@@ -90,26 +103,53 @@ public class AosMktListingHotBill extends AbstractBillPlugIn {
     }
 
     /**
-     * 优化中状态下提交
-     * 
+     * 二次确认状态下提交
+     *
      * @param hotDyn 爆品打分单据对象
-     * @throws FndError 异常处理
      */
-    private void listingSubmit(DynamicObject hotDyn) throws FndError {
+    private void secondSubmit(DynamicObject hotDyn) {
         // 将状态调整为结束
         hotDyn.set("aos_status", "结束");
         hotDyn.set("aos_enddate", new Date());
         SaveServiceHelper.save(new DynamicObject[] {hotDyn});
+        // 同步爆品质量打分
+        syncListingManager(hotDyn);
     }
 
     /**
      * 待确认提交
-     * 
+     *
      * @param hotDyn 爆品打分单据对象
      */
     private void confirmSoonSubmit(DynamicObject hotDyn) throws FndError {
+        String aosType = hotDyn.getString("aos_type");
+        // 修改对应【listing数字资产管理】-【打分明细表】
+        syncListingManager(hotDyn);
+        hotDyn.set("aos_status", "结束");
+        hotDyn.set("aos_user", Cux_Common_Utl.SYSTEM);
+        DynamicObject aosItemid = hotDyn.getDynamicObject("aos_itemid");
+        // 明细中有是否需优化=“是”的SKU,触发生成优化流程 将状态调整为优化中
+        if (DES.equals(aosType)) {
+            AosMktListingHotUtil.createDesign(aosItemid, hotDyn);
+        } else if (VED.equals(aosType)) {
+            AosMktListingHotUtil.createPhoto(aosItemid, hotDyn);
+        } else if (DOC.equals(aosType)) {
+            AosMktListingHotUtil.createDoc(aosItemid, hotDyn);
+        }
+        hotDyn.set("aos_confirmdate", new Date());
+        SaveServiceHelper.save(new DynamicObject[] {hotDyn});
+    }
+
+    /**
+     * 修改对应【listing数字资产管理】-【打分明细表】
+     * 
+     * @param hotDyn 爆品打分单据对象
+     * @throws FndError 异常返回
+     */
+    private void syncListingManager(DynamicObject hotDyn) throws FndError {
         FndError fndError = new FndError();
         String aosType = hotDyn.getString("aos_type");
+        DynamicObject aosItemid = hotDyn.getDynamicObject("aos_itemid");
         DynamicObjectCollection entityS = hotDyn.getDynamicObjectCollection("aos_entryentity");
         for (DynamicObject entity : entityS) {
             if (DES.equals(aosType)) {
@@ -140,8 +180,7 @@ public class AosMktListingHotBill extends AbstractBillPlugIn {
                 }
             }
         }
-        // 修改对应【listing数字资产管理】-【打分明细表】
-        DynamicObject aosItemid = hotDyn.getDynamicObject("aos_itemid");
+
         for (DynamicObject entity : entityS) {
             DynamicObject aosOrgid = entity.getDynamicObject("aos_orgid");
             DynamicObject aosMktListingMana = BusinessDataServiceHelper.loadSingle("aos_mkt_listing_mana",
@@ -172,19 +211,6 @@ public class AosMktListingHotBill extends AbstractBillPlugIn {
             }
             SaveServiceHelper.save(new DynamicObject[] {aosMktListingMana});
         }
-
-        hotDyn.set("aos_status", "结束");
-        hotDyn.set("aos_user", Cux_Common_Utl.SYSTEM);
-        // 明细中有是否需优化=“是”的SKU,触发生成优化流程 将状态调整为优化中
-        if (DES.equals(aosType)) {
-            AosMktListingHotUtil.createDesign(aosItemid, hotDyn);
-        } else if (VED.equals(aosType)) {
-            AosMktListingHotUtil.createPhoto(aosItemid, hotDyn);
-        } else if (DOC.equals(aosType)) {
-            AosMktListingHotUtil.createDoc(aosItemid, hotDyn);
-        }
-        hotDyn.set("aos_confirmdate", new Date());
-        SaveServiceHelper.save(new DynamicObject[] {hotDyn});
     }
 
     /**
@@ -201,6 +227,11 @@ public class AosMktListingHotBill extends AbstractBillPlugIn {
         }
     }
 
+    @Override
+    public void beforeClosed(BeforeClosedEvent e) {
+        super.beforeClosed(e);
+        e.setCheckDataChange(false);
+    }
     /**
      * 界面控制
      */
@@ -226,7 +257,7 @@ public class AosMktListingHotBill extends AbstractBillPlugIn {
         // 状态控制
         Object aosStatus = this.getModel().getValue("aos_status");
         // 提交按钮
-        this.getView().setVisible(CONFIRMSOON.equals(aosStatus) || LISTING.equals(aosStatus), "aos_submit");
+        this.getView().setVisible(CONFIRMSOON.equals(aosStatus) || SECOND.equals(aosStatus), "aos_submit");
         // 结束全锁
         if (END.equals(aosStatus)) {
             this.getView().setEnable(false, "contentpanelflex");

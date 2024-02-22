@@ -1993,7 +1993,8 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
         if (HOT.equals(aosSourcetype)) {
             Object aosSourceid = this.getModel().getValue("aos_sourceid");
             DynamicObject hotDyn = BusinessDataServiceHelper.loadSingle(aosSourceid, "aos_mkt_hot_point");
-            hotDyn.set("aos_status", "结束");
+            hotDyn.set("aos_status", "二次确认");
+            hotDyn.set("aos_user", hotDyn.get("aos_deal"));
             SaveServiceHelper.save(new DynamicObject[] {hotDyn});
         }
 

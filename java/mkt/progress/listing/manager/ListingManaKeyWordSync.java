@@ -75,11 +75,11 @@ public class ListingManaKeyWordSync extends AbstractTask {
 
             for (int i = 0; i < length; i++) {
                 JSONObject jsObj = jsonArr.getJSONObject(i);
-                String aosKeyWordUsd = jsObj.getString("keyworD_USED");
+                String aosKeyWordUsd = jsObj.getString("KEYWORD_USED");
                 DynamicObject aosMktKeyWord = BusinessDataServiceHelper.newDynamicObject("aos_mkt_clkeyword");
                 aosMktKeyWord.set("aos_orgid", orgId);
-                aosMktKeyWord.set("aos_itemid", itemMap.get(jsObj.getString("segmenT1")));
-                aosMktKeyWord.set("aos_keyword", jsObj.getString("keyword"));
+                aosMktKeyWord.set("aos_itemid", itemMap.get(jsObj.getString("SEGMENT1")));
+                aosMktKeyWord.set("aos_keyword", jsObj.getString("KEYWORD"));
                 aosMktKeyWord.set("aos_keyword_usd", aosKeyWordUsd);
                 aosMktKeyWord.set("aos_keycount", aosKeyWordUsd.split(",").length);
 

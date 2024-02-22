@@ -78,9 +78,9 @@ public class ListingManaCateSync extends AbstractTask {
 
                 DynamicObject aosMktCateRate = BusinessDataServiceHelper.newDynamicObject("aos_mkt_caterate");
                 aosMktCateRate.set("aos_orgid", orgId);
-                aosMktCateRate.set("aos_itemid", itemMap.get(jsObj.getString("segmenT1")));
-                aosMktCateRate.set("aos_platform", jsObj.getString("platform"));
-                aosMktCateRate.set("aos_caterate", jsObj.getBigDecimal("completioN_RATE"));
+                aosMktCateRate.set("aos_itemid", itemMap.get(jsObj.getString("SEGMENT1")));
+                aosMktCateRate.set("aos_platform", jsObj.getString("PLATFORM"));
+                aosMktCateRate.set("aos_caterate", jsObj.getBigDecimal("COMPLETION_RATE"));
                 aosMktCateRateS.add(aosMktCateRate);
 
                 if (aosMktCateRateS.size() >= 5000 || i == length - 1) {

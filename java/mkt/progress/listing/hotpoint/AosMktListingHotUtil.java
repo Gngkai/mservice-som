@@ -184,18 +184,19 @@ public class AosMktListingHotUtil {
     private static void setLineDoc(DynamicObject aosMktHotPoint, DynamicObject itemId, String orgNum) {
         DynamicObjectCollection aosEntryentityS = aosMktHotPoint.getDynamicObjectCollection("aos_entryentity");
         // 去Listing资产管理下该货号所存在国别
-        DynamicObjectCollection orgS = QueryServiceHelper.query("aos_mkt_listing_mana", "aos_orgid",
-            new QFilter("aos_itemid.number", QCP.equals, itemId.getString("number"))
-                .and("aos_orgid.number", QCP.equals, orgNum).toArray());
+        DynamicObjectCollection orgS =
+            QueryServiceHelper.query("aos_mkt_listing_mana", "aos_orgid," + String.join(",", DOCGROUP),
+                new QFilter("aos_itemid.number", QCP.equals, itemId.getString("number"))
+                    .and("aos_orgid.number", QCP.equals, orgNum).toArray());
         for (DynamicObject org : orgS) {
             DynamicObject aosEntryentity = aosEntryentityS.addNew();
             // 国别
             aosEntryentity.set("aos_orgid", org.getString("aos_orgid"));
             // 是否优化
             aosEntryentity.set("aos_promot", "否");
-            // 设置打分为空
+            // 设置打分为Listing资产管理中数据
             for (String key : DOCGROUP) {
-                aosEntryentity.set(key, null);
+                aosEntryentity.set(key, org.getString(key));
             }
         }
     }
@@ -210,8 +211,9 @@ public class AosMktListingHotUtil {
     private static void setLine(DynamicObject aosMktHotPoint, DynamicObject itemId, String[] group) {
         DynamicObjectCollection aosEntryentityS = aosMktHotPoint.getDynamicObjectCollection("aos_entryentity");
         // 去Listing资产管理下该货号所存在国别
-        DynamicObjectCollection orgS = QueryServiceHelper.query("aos_mkt_listing_mana", "aos_orgid",
-            new QFilter("aos_itemid.number", QCP.equals, itemId.getString("number")).toArray());
+        DynamicObjectCollection orgS =
+            QueryServiceHelper.query("aos_mkt_listing_mana", "aos_orgid," + String.join(",", group),
+                new QFilter("aos_itemid.number", QCP.equals, itemId.getString("number")).toArray());
         for (DynamicObject org : orgS) {
             DynamicObject aosEntryentity = aosEntryentityS.addNew();
             // 国别
@@ -220,7 +222,7 @@ public class AosMktListingHotUtil {
             aosEntryentity.set("aos_promot", "否");
             // 设置打分为空
             for (String key : group) {
-                aosEntryentity.set(key, null);
+                aosEntryentity.set(key, org.getString(key));
             }
         }
     }
@@ -240,8 +242,10 @@ public class AosMktListingHotUtil {
         }
         if (HOME.equals(aosCategory1)) {
             aosMktHotPoint.set("aos_user", FndGlobal.getBaseByName("任艇艇", "bos_user"));
+            aosMktHotPoint.set("aos_deal", FndGlobal.getBaseByName("任艇艇", "bos_user"));
         } else {
             aosMktHotPoint.set("aos_user", FndGlobal.getBaseByName("刘欢", "bos_user"));
+            aosMktHotPoint.set("aos_deal", FndGlobal.getBaseByName("刘欢", "bos_user"));
         }
     }
 
@@ -267,6 +271,7 @@ public class AosMktListingHotUtil {
                 .and("aos_orgid.number", QCP.equals, orgNum).toArray());
         if (FndGlobal.IsNotNull(aosMktProgorguser)) {
             aosMktHotPoint.set("aos_user", aosMktProgorguser.get("aos_editmon"));
+            aosMktHotPoint.set("aos_deal", aosMktProgorguser.get("aos_editmon"));
         }
     }
 
@@ -402,6 +407,7 @@ public class AosMktListingHotUtil {
             aosEntryentity.set("aos_is_saleout", CommonMktListing.Is_saleout(itemId));
             aosEntryentity.set("aos_desreq", "爆品质量打分退回:" + hotLine.getDynamicObject("aos_orgid").getString("number")
                 + "," + hotLine.getString("aos_context"));
+            aosEntryentity.set("aos_picture", hotLine.get("aos_picture"));
             aosEntryentity.set("aos_srcrowseq", hotLine.get("SEQ"));
             DynamicObjectCollection aosSubentryentityS =
                 aosEntryentity.getDynamicObjectCollection("aos_subentryentity");
@@ -728,6 +734,7 @@ public class AosMktListingHotUtil {
         entity.set("aos_itemid", aosItemid);
         entity.set("aos_is_saleout", true);
         entity.set("aos_srcrowseq", hotDyn.getDynamicObjectCollection("aos_entryentity").get(0).get("SEQ"));
+        entity.set("aos_picture", hotDyn.getDynamicObjectCollection("aos_entryentity").get(0).get("aos_picture"));
         entity.set("aos_require",
             "爆品质量打分退回:" + hotDyn.getDynamicObjectCollection("aos_entryentity").get(0).getString("aos_context"));
         OperationServiceHelper.executeOperate("save", "aos_mkt_listing_min", new DynamicObject[] {aosMktListingMin},
@@ -802,6 +809,7 @@ public class AosMktListingHotUtil {
         aosEntryentity.set("aos_itemid", itemId);
         aosEntryentity.set("aos_is_saleout", ProgressUtil.Is_saleout(itemId));
         aosEntryentity.set("aos_require", "爆品质量打分退回:" + entity.getString("aos_context"));
+        aosEntryentity.set("aos_picture", entity.get("aos_picture"));
         aosEntryentity.set("aos_srcrowseq", entity.get("SEQ"));
         AosMktListingSonBill.setListSonUserOrganizate(aosMktListingSon);
         OperationResult operationrst = OperationServiceHelper.executeOperate("save", "aos_mkt_listing_son",
