@@ -183,9 +183,15 @@ public class AosMktListingHotUtil {
      */
     private static void setLineDoc(DynamicObject aosMktHotPoint, DynamicObject itemId, String orgNum) {
         DynamicObjectCollection aosEntryentityS = aosMktHotPoint.getDynamicObjectCollection("aos_entryentity");
+        String fixedString = "aos_pointentity.";
+        StringJoiner joiner = new StringJoiner(",");
+        for (String str : DOCGROUP) {
+            joiner.add(fixedString + str);
+        }
+        String result = joiner.toString();
         // 去Listing资产管理下该货号所存在国别
         DynamicObjectCollection orgS =
-            QueryServiceHelper.query("aos_mkt_listing_mana", "aos_orgid," + String.join(",", DOCGROUP),
+            QueryServiceHelper.query("aos_mkt_listing_mana", "aos_orgid," + String.join(",", result),
                 new QFilter("aos_itemid.number", QCP.equals, itemId.getString("number"))
                     .and("aos_orgid.number", QCP.equals, orgNum).toArray());
         for (DynamicObject org : orgS) {
@@ -211,9 +217,14 @@ public class AosMktListingHotUtil {
     private static void setLine(DynamicObject aosMktHotPoint, DynamicObject itemId, String[] group) {
         DynamicObjectCollection aosEntryentityS = aosMktHotPoint.getDynamicObjectCollection("aos_entryentity");
         // 去Listing资产管理下该货号所存在国别
-        DynamicObjectCollection orgS =
-            QueryServiceHelper.query("aos_mkt_listing_mana", "aos_orgid," + String.join(",", group),
-                new QFilter("aos_itemid.number", QCP.equals, itemId.getString("number")).toArray());
+        String fixedString = "aos_pointentity.";
+        StringJoiner joiner = new StringJoiner(",");
+        for (String str : group) {
+            joiner.add(fixedString + str);
+        }
+        String result = joiner.toString();
+        DynamicObjectCollection orgS = QueryServiceHelper.query("aos_mkt_listing_mana", "aos_orgid," + result,
+            new QFilter("aos_itemid.number", QCP.equals, itemId.getString("number")).toArray());
         for (DynamicObject org : orgS) {
             DynamicObject aosEntryentity = aosEntryentityS.addNew();
             // 国别

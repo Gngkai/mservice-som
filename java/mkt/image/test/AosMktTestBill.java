@@ -3,6 +3,7 @@ package mkt.image.test;
 import kd.bos.bill.AbstractBillPlugIn;
 import kd.bos.form.control.events.ItemClickEvent;
 import mkt.progress.listing.hotpoint.AosMktListingHotDocTask;
+import mkt.synciface.AosMktSyncErrorPicTask;
 
 /**
  * @author aosom
@@ -16,7 +17,7 @@ public class AosMktTestBill extends AbstractBillPlugIn {
         super.itemClick(evt);
         String control = evt.getItemKey();
         if (AOS_CAL.equals(control)) {
-            AosMktListingHotDocTask.process();
+            AosMktSyncErrorPicTask.process();
         }
     }
 }
