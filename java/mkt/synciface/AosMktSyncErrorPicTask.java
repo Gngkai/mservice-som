@@ -13,6 +13,7 @@ import kd.bos.context.RequestContext;
 import kd.bos.dataentity.OperateOption;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
+import kd.bos.entity.operate.result.OperationResult;
 import kd.bos.exception.KDException;
 import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
@@ -59,13 +60,13 @@ public class AosMktSyncErrorPicTask extends AbstractTask {
             Response response = client.newCall(request).execute();
             JSONArray jsonArr = JSON.parseArray(response.body().string());
             int length = jsonArr.size();
-            FndMsg.debug("length:"+length);
+            FndMsg.debug("length:" + length);
             for (int i = 0; i < length; i++) {
                 JSONObject jsObj = jsonArr.getJSONObject(i);
                 FndMsg.debug(jsObj);
                 String country = jsObj.getString("Country");
                 String sku = jsObj.getString("SEGMENT1");
-                FndMsg.debug("sku:"+sku);
+                FndMsg.debug("sku:" + sku);
                 DynamicObject aosItem = FndGlobal.getBase(sku, "bd_material");
                 if (FndGlobal.IsNull(aosItem)) {
                     FndMsg.debug("========into continue========");
@@ -134,8 +135,13 @@ public class AosMktSyncErrorPicTask extends AbstractTask {
         DynamicObject lastListingReq = QueryServiceHelper.queryOne("aos_mkt_listing_req", "id",
             new QFilter("createtime", QCP.large_equals, lastMonthStr).and("aos_orgid", QCP.equals, orgId)
                 .and("aos_entryentity.aos_itemid", QCP.equals, itemId)
-                .and("aos_entryentity.aos_requirepic", QCP.equals, aosError).toArray());
+                .and("aos_entryentity.aos_requirepic", QCP.equals, "CL图片缺失:" + aosError).toArray());
+        FndMsg.debug("lastMonthStr:" + lastMonthStr);
+        FndMsg.debug("orgId:" + orgId);
+        FndMsg.debug("itemId:" + itemId);
+        FndMsg.debug("aosError:" + aosError);
         if (FndGlobal.IsNotNull(lastListingReq)) {
+            FndMsg.debug("2222");
             return "";
         }
         // 申请人 根据sku取自【品类人员对应表】-【设计.姓名】
@@ -188,8 +194,11 @@ public class AosMktSyncErrorPicTask extends AbstractTask {
         entity.set("aos_itemname", dyItem.getString("name"));
         entity.set("aos_orgtext", utils.getOrderCountry(dyItem));
         entity.set("aos_broitem", utils.getBroItem(dyItem.getString("number"), dyItem.getString("aos_productno")));
-        SaveServiceHelper.saveOperate("aos_mkt_listing_req", new DynamicObject[] {aosMktListingReq},
-            OperateOption.create());
+        OperationResult result = SaveServiceHelper.saveOperate("aos_mkt_listing_req",
+            new DynamicObject[] {aosMktListingReq}, OperateOption.create());
+        aosMktListingReq =
+            BusinessDataServiceHelper.loadSingle(result.getSuccessPkIds().get(0).toString(), "aos_mkt_listing_req");
+        FndMsg.debug("into aaaa");
         new mkt.progress.listing.AosMktListingReqBill().aosSubmit(aosMktListingReq, "B");
         return aosMktListingReq.getString("billno");
     }
