@@ -42,6 +42,7 @@ public class AosMktSyncErrorPicTask extends AbstractTask {
 
     public static void process() {
         try {
+            FndMsg.debug("========into process========");
             Date today = FndDate.zero(new Date());
             Date yesterday = FndDate.add_days(FndDate.zero(new Date()), -1);
             DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
@@ -58,13 +59,16 @@ public class AosMktSyncErrorPicTask extends AbstractTask {
             Response response = client.newCall(request).execute();
             JSONArray jsonArr = JSON.parseArray(response.body().string());
             int length = jsonArr.size();
+            FndMsg.debug("length:"+length);
             for (int i = 0; i < length; i++) {
                 JSONObject jsObj = jsonArr.getJSONObject(i);
                 FndMsg.debug(jsObj);
                 String country = jsObj.getString("Country");
                 String sku = jsObj.getString("SEGMENT1");
+                FndMsg.debug("sku:"+sku);
                 DynamicObject aosItem = FndGlobal.getBase(sku, "bd_material");
                 if (FndGlobal.IsNull(aosItem)) {
+                    FndMsg.debug("========into continue========");
                     continue;// 货号不存在 跳过
                 }
                 Date firstInstockDate = dateFormat.parse(jsObj.getString("SCM_FIRST_IN_DATE"));
@@ -159,6 +163,7 @@ public class AosMktSyncErrorPicTask extends AbstractTask {
         aosMktListingReq.set("aos_type", "四者一致");
         aosMktListingReq.set("aos_requireby", aosUser);
         aosMktListingReq.set("aos_designer", aosUser);
+        aosMktListingReq.set("aos_user", aosUser);
         aosMktListingReq.set("aos_importance", "紧急");
         aosMktListingReq.set("aos_orgid", orgId);
         aosMktListingReq.set("aos_autoflag", true);
