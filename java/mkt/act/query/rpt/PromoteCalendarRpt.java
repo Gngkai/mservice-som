@@ -9,6 +9,7 @@ import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.form.events.AfterDoOperationEventArgs;
 import kd.bos.form.plugin.AbstractFormPlugin;
+import kd.bos.orm.query.QFilter;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
 import kd.bos.servicehelper.operation.DeleteServiceHelper;
@@ -182,12 +183,12 @@ public class PromoteCalendarRpt extends AbstractFormPlugin {
      */
     public void setPromoteData(Map<String, List<String>> noActMap,Map<String, DynamicObject> allShop,QFBuilder builder,Map<String, Set<String>> actMap, DynamicObjectCollection entryRows){
         //获取渠道大促中的数据
-        DynamicObjectCollection promoteList = QueryServiceHelper.query("aos_mkt_cl_promote", "aos_shop,name", builder.toArray());
+        DynamicObjectCollection promoteList = QueryServiceHelper.query("aos_mkt_actplan", "aos_shopid,aos_actname name", builder.toArray());
         //根据渠道大促分类
         Map<String,Set<String>> promoteMap = new HashMap<>();
         for (DynamicObject row : promoteList) {
             String name = row.getString("name");
-            promoteMap.computeIfAbsent(name, k -> new HashSet<>()).add(row.getString("aos_shop"));
+            promoteMap.computeIfAbsent(name, k -> new HashSet<>()).add(row.getString("aos_shopid"));
         }
 
         for (Map.Entry<String, Set<String>> entry : promoteMap.entrySet()) {
@@ -312,13 +313,13 @@ public class PromoteCalendarRpt extends AbstractFormPlugin {
         //国别节日库过滤条件，渠道大促活动库过滤条件，活动选品表过滤条件，无活动渠道过滤条件
         QFBuilder orgFilterArray = new QFBuilder(),channelFilterArray = new QFBuilder(),actFilterArray = new QFBuilder(),noActBuilder = new QFBuilder();
         //活动选品过滤条件添加只提报的数据
-        actFilterArray.add("aos_actstatus","=","B");
+        actFilterArray.add("aos_actstatus", QFilter.in,Arrays.asList("A","B"));
 
         Object org = getModel().getValue("aos_sel_org");
         if (org!=null){
             String orgId = ((DynamicObject)org).getString("id");
             orgFilterArray.add("aos_orgid","=",orgId);
-            channelFilterArray.add("aos_org","=",orgId);
+            channelFilterArray.add("aos_orgid","=",orgId);
             actFilterArray.add("aos_nationality","=",orgId);
             noActBuilder.add("aos_org","=",orgId);
         }
@@ -332,14 +333,14 @@ public class PromoteCalendarRpt extends AbstractFormPlugin {
         yearCal.set(Calendar.DAY_OF_MONTH,1);
 
         orgFilterArray.add("aos_date",">=",yearCal.getTime());
-        channelFilterArray.add("aos_start",">=",yearCal.getTime());
+        channelFilterArray.add("aos_startdate",">=",yearCal.getTime());
         actFilterArray.add("aos_enddate1",">=",yearCal.getTime());
         noActBuilder.add("aos_year","=",yearCal.get(Calendar.YEAR));
         noActBuilder.add("aos_month","=",yearCal.get(Calendar.MONTH));
 
         yearCal.add(Calendar.MONTH,1);
         orgFilterArray.add("aos_date","<",yearCal.getTime());
-        channelFilterArray.add("aos_start","<",yearCal.getTime());
+        channelFilterArray.add("aos_startdate","<",yearCal.getTime());
         actFilterArray.add("aos_startdate","<=",yearCal.getTime());
 
         //国别节日库过滤条件
