@@ -175,6 +175,7 @@ public class AosMktSyncErrorPicTask extends AbstractTask {
         aosMktListingReq.set("aos_autoflag", true);
         aosMktListingReq.set("aos_requiredate", new Date());
         aosMktListingReq.set("aos_status", "申请人");
+        aosMktListingReq.set("aos_source", "上架图片缺失");
 
         if (mapList != null) {
             if (mapList.size() >= THREE && mapList.get(TWO) != null) {
