@@ -11,8 +11,6 @@ import kd.bos.context.RequestContext;
 import kd.bos.dataentity.OperateOption;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
-import kd.bos.dataentity.metadata.dynamicobject.DynamicObjectType;
-import kd.bos.entity.EntityMetadataCache;
 import kd.bos.entity.operate.result.OperationResult;
 import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
