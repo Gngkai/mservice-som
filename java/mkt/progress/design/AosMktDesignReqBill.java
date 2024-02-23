@@ -1992,12 +1992,17 @@ public class AosMktDesignReqBill extends AbstractBillPlugIn implements ItemClick
         Object aosSourcetype = this.getModel().getValue("aos_sourcetype");
         if (HOT.equals(aosSourcetype)) {
             Object aosSourceid = this.getModel().getValue("aos_sourceid");
-            DynamicObject hotDyn = BusinessDataServiceHelper.loadSingle(aosSourceid, "aos_mkt_hot_point");
-            hotDyn.set("aos_status", "二次确认");
-            hotDyn.set("aos_user", hotDyn.get("aos_deal"));
-            SaveServiceHelper.save(new DynamicObject[] {hotDyn});
+            // TODO 判断是否是最后一单
+            DynamicObject aosMktDesignreq = QueryServiceHelper.queryOne("aos_mkt_designreq", "id",
+                new QFilter("aos_sourceid", QCP.equals, aosSourceid).and("aos_status", QCP.not_equals, "结束")
+                    .and("id", QCP.not_equals, this.getModel().getDataEntity().getPkValue().toString()).toArray());
+            if (FndGlobal.IsNull(aosMktDesignreq)) {
+                DynamicObject hotDyn = BusinessDataServiceHelper.loadSingle(aosSourceid, "aos_mkt_hot_point");
+                hotDyn.set("aos_status", "二次确认");
+                hotDyn.set("aos_user", hotDyn.get("aos_deal"));
+                SaveServiceHelper.save(new DynamicObject[] {hotDyn});
+            }
         }
-
     }
 
     @Override

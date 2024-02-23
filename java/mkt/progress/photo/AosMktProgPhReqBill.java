@@ -1574,10 +1574,15 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
         String hot = "爆品打分";
         if (FndGlobal.IsNotNull(billno) && ((String)billno).contains(hot)) {
             Object aosParentid = this.getModel().getValue("aos_parentid");
-            DynamicObject hotDyn = BusinessDataServiceHelper.loadSingle(aosParentid, "aos_mkt_hot_point");
-            hotDyn.set("aos_status", "二次确认");
-            hotDyn.set("aos_user", hotDyn.get("aos_deal"));
-            SaveServiceHelper.save(new DynamicObject[] {hotDyn});
+            DynamicObject aosMktPhotoreq = QueryServiceHelper.queryOne("aos_mkt_photoreq", "id",
+                new QFilter("aos_parentid", QCP.equals, aosParentid).and("aos_status", QCP.not_equals, "已完成")
+                    .and("id", QCP.not_equals, this.getModel().getDataEntity().getPkValue().toString()).toArray());
+            if (FndGlobal.IsNull(aosMktPhotoreq)) {
+                DynamicObject hotDyn = BusinessDataServiceHelper.loadSingle(aosParentid, "aos_mkt_hot_point");
+                hotDyn.set("aos_status", "二次确认");
+                hotDyn.set("aos_user", hotDyn.get("aos_deal"));
+                SaveServiceHelper.save(new DynamicObject[] {hotDyn});
+            }
         }
         this.getModel().setValue("aos_status", "已完成");
         this.getModel().setValue("aos_user", SYSTEM);
@@ -3242,8 +3247,8 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             this.getView().invokeOperation("refresh");
             // 发送消息
             if (!strightCut) {
-                MktComUtil.sendGlobalMessage(messageId, AOS_MKT_PHOTOREQ, String.valueOf(reqFid), String.valueOf(aosBillno),
-                    "拍照需求表-视频剪辑");
+                MktComUtil.sendGlobalMessage(messageId, AOS_MKT_PHOTOREQ, String.valueOf(reqFid),
+                    String.valueOf(aosBillno), "拍照需求表-视频剪辑");
             }
         } catch (Exception ex) {
             throw ex;
