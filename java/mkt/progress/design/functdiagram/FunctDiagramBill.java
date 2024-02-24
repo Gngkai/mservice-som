@@ -754,6 +754,16 @@ public class FunctDiagramBill extends AbstractBillPlugIn implements HyperLinkCli
         }
         getModel().setValue("aos_u_lan", str.toString());
         this.getPageCache().put(KEY_USER, SerializationUtils.toJsonString(userCopyLanguage));
+
+        DynamicObjectCollection entityS = this.getModel().getEntryEntity("aos_entryentity2");
+        if (FndGlobal.IsNotNull(entityS) && entityS.size() > 0) {
+            TabPage control = this.getControl("aos_tabpageap7");
+            BadgeInfo badgeInfo = new BadgeInfo();
+            badgeInfo.setBadgeText("!");
+            badgeInfo.setOffset(new String[] {"5px", "5px"});
+            control.setBadgeInfo(badgeInfo);
+        }
+
     }
 
     /**
