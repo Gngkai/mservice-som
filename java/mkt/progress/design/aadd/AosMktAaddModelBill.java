@@ -14,12 +14,14 @@ import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.dataentity.serialization.SerializationUtils;
 import kd.bos.dataentity.utils.StringUtils;
+import kd.bos.entity.BadgeInfo;
 import kd.bos.entity.datamodel.events.ChangeData;
 import kd.bos.entity.datamodel.events.ImportDataEventArgs;
 import kd.bos.entity.datamodel.events.PropertyChangedArgs;
 import kd.bos.entity.report.CellStyle;
 import kd.bos.form.FormShowParameter;
 import kd.bos.form.cardentry.CardEntry;
+import kd.bos.form.container.TabPage;
 import kd.bos.form.control.AbstractGrid;
 import kd.bos.form.control.Image;
 import kd.bos.form.control.events.ItemClickEvent;
@@ -736,6 +738,16 @@ public class AosMktAaddModelBill extends AbstractBillPlugIn implements RowClickE
                 getModel().setValue(field + "_h", true);
             }
         }
+
+        DynamicObjectCollection entityS = this.getModel().getEntryEntity("aos_entryentity2");
+        if (FndGlobal.IsNotNull(entityS) && entityS.size() > 0) {
+            TabPage control = this.getControl("aos_tabpageap1");
+            BadgeInfo badgeInfo = new BadgeInfo();
+            badgeInfo.setBadgeText("!");
+            badgeInfo.setOffset(new String[] {"5px", "5px"});
+            control.setBadgeInfo(badgeInfo);
+        }
+
     }
 
     /**
