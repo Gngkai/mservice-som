@@ -300,9 +300,9 @@ public class DotdUS implements ActStrategy {
         // 计算活动毛利率
         Map<String, BigDecimal> orgLowestProfitRate = ActUtil.getOrgLowestProfitRate(aosOrgid);
         ActUtil.setLowestProfitRate(object.getPkValue(), orgLowestProfitRate);
-        ActUtil.SaveItme(entityId, listNoPriceItem);
         // 保存日志表
         log.finnalSave();
+        ActUtil.SaveItme(entityId, listNoPriceItem);
     }
 
     /** 初始化物料List **/
