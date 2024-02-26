@@ -74,12 +74,12 @@ public class AosMktAaddTask extends AbstractTask {
                 // 2.若进度表目标国别下有√，则生成新的国别新品的流程，流程直接到新品对比模块录入
                 DynamicObject aosMktAddTrack = BusinessDataServiceHelper.loadSingleFromCache("aos_mkt_addtrack",
                     new QFilter("aos_itemid", QCP.equals, itemid).and("aos_" + orgnumber, QCP.equals, true).toArray());
-                FndMsg.debug("into c");
                 if (FndGlobal.IsNotNull(aosMktAddTrack)) {
-                    FndMsg.debug("into b");
-                    // 新的国别新品的流程，流程直接到新品对比模块录入
                     DynamicObject aosItemid = aosMktAddTrack.getDynamicObject("aos_itemid");
-                    AosMktAaddBill.generateAddFromDesign(aosItemid, orgnumber, "EN_05");
+                    // 新的国别新品的流程，流程直接到新品对比模块录入
+                    if (AosMktAaddBill.queryItemExist(aosItemid, orgnumber)) {
+                        AosMktAaddBill.generateAddFromDesign(aosItemid, orgnumber, "EN_05");
+                    }
                 }
             }
         }

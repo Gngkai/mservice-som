@@ -298,7 +298,7 @@ public class AosMktAaddBill extends AbstractBillPlugIn implements HyperLinkClick
         // 国别
         Object aosOrg = dyMain.get("aos_org");
         dyMain.set("aos_edsubmit", UserServiceHelper.getCurrentUserId());
-        dyMain.set("aos_eddate",new Date());
+        dyMain.set("aos_eddate", new Date());
         // 校验是否海外确认必填
         Object aosOsconfirm = dyMain.get("aos_osconfirm");
         if (FndGlobal.IsNull(aosOsconfirm)) {
@@ -720,7 +720,7 @@ public class AosMktAaddBill extends AbstractBillPlugIn implements HyperLinkClick
         }
     }
 
-    private static Boolean queryItemExist(DynamicObject aosItemid, String ou) {
+    public static Boolean queryItemExist(DynamicObject aosItemid, String ou) {
         try {
             DynamicObject bdMaterial = QueryServiceHelper.queryOne("bd_material", "id",
                 new QFilter("id", QCP.equals, aosItemid.getPkValue().toString())
