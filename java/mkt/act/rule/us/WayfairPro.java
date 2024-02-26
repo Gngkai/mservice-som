@@ -30,6 +30,9 @@ import kd.bos.servicehelper.operation.SaveServiceHelper;
 import mkt.act.rule.ActStrategy;
 import mkt.act.rule.ActUtil;
 
+/**
+ * @author aosom
+ */
 public class WayfairPro implements ActStrategy {
     public static Set<String> queryApartFromAmzAndEbayItem(String aosOrgid, String[] channelArr, Date date,
         String[] shopArr) {
