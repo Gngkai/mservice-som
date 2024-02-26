@@ -24,7 +24,6 @@ import mkt.common.MktComUtil;
 public class EbayDDAndPD implements ActStrategy {
 	@Override
 	public void doOperation(DynamicObject object) throws Exception {
-		/** 数据层 **/
 		String aos_orgnum = object.getDynamicObject("aos_nationality").getString("number");// 国别
 		String aos_orgid = object.getDynamicObject("aos_nationality").getString("id"); // 国别id
 		Date start = object.getDate("aos_startdate");// 活动开始日
@@ -46,7 +45,7 @@ public class EbayDDAndPD implements ActStrategy {
 				itemFilterList);// 每日价格
 		DynamicObject orgActivityQty = ActUtil.getOrgActivityQty(aos_orgid);// 活动数量
 		Map<String, DynamicObject> lowestPriceMap = ActUtil.queryLowestPrice(aos_orgid, itemFilterList);// 最低价
-		HashMap<String, Object> Group = DotdUS.GenerateGroup();// 产品类别数据
+		HashMap<String, Object> Group = DotdUS.generateGroup();// 产品类别数据
 		Map<String, String[]> festivalStartAndEnd = ActUtil.queryFestivalStartAndEnd(aos_orgid);// 查询节日销售时间
 		Set<String> sameShopAndSamePeriodItem = ActUtil.querySamePeriodActivities(aos_orgid, aos_shopid, start, end); // 剔除同店铺同期活动
 		//店铺价格
