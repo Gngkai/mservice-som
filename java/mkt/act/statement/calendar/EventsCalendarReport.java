@@ -34,9 +34,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * @author: GK
- * @create: 2024-01-30 10:30
- * @Description:活动日历报表
+ * @author GK
+ * @since  2024-01-30 10:30
+ * @version 活动日历报表
  */
 @SuppressWarnings("unused")
 public class EventsCalendarReport extends AbstractFormPlugin implements HyperLinkClickListener {
