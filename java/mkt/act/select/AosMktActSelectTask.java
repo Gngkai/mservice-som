@@ -7,6 +7,7 @@ import common.fnd.FndDate;
 import common.fnd.FndGlobal;
 import common.fnd.FndLog;
 import common.sal.util.InStockAvailableDays;
+import common.sal.util.QFBuilder;
 import common.sal.util.SalUtil;
 import kd.bos.algo.DataSet;
 import kd.bos.algo.Row;
@@ -62,8 +63,10 @@ public class AosMktActSelectTask extends AbstractTask {
         DynamicObjectCollection ouS = QueryServiceHelper.query("bd_country", "id,number", overseaFlag.toArray());
         for (DynamicObject ou : ouS) {
             String pOuCode = ou.getString("number");
+            String pOuId = ou.getString("id");
             Map<String, Object> params = new HashMap<>(16);
             params.put("p_ou_code", pOuCode);
+            params.put("p_ou_id", pOuId);
             MktActSelectRunnable mktActSelectRunnable = new MktActSelectRunnable(params);
             ThreadPools.executeOnce("MKT_活动选品初始化_" + pOuCode, mktActSelectRunnable);
         }
@@ -85,7 +88,10 @@ public class AosMktActSelectTask extends AbstractTask {
         int month = date.get(Calendar.MONTH) + 1;
         int day = date.get(Calendar.DAY_OF_MONTH);
         int week = date.get(Calendar.DAY_OF_WEEK);
+        //国别编码
         Object pOuCode = params.get("p_ou_code");
+        //国别ID
+        String pOuId = params.get("p_ou_id").toString();
         // 获取当前国别下所有活动物料已提报次数
         Map<String, Integer> alreadyActivityTimes = getAlreadyActivityTimes(pOuCode);
         // 7天销量
@@ -123,6 +129,9 @@ public class AosMktActSelectTask extends AbstractTask {
         Map<String, Object> cateSeason = getCateSeason(pOuCode);
         Set<String> distSkuSet = getDistSku(pOuCode);
         Set<String> stSkuSet = getStSku(pOuCode);
+        //获取滞销类型为 春夏高库龄的数据 这部分数据 不做剔除
+        List<String> unSaleItemList = getUnSaleItem(pOuId);
+
         for (DynamicObject bdMaterial : bdMaterialS) {
             // 判断是否跳过
             long itemId = bdMaterial.getLong("id");
@@ -136,30 +145,35 @@ public class AosMktActSelectTask extends AbstractTask {
                 String aosFestivalseting = bdMaterial.getString("aos_festivalseting");
                 String aosOrgnumber = bdMaterial.getString("aos_orgnumber");
                 String aosItemtype = null;
+                //判断是否为 春夏高库龄 货号,该类型不需要剔除,不为这个类型才可剔除
+                boolean unExcludable = !unSaleItemList.contains(itemIdStr);
+
                 // 是否爆品
                 boolean saleout = bdMaterial.getBoolean("aos_is_saleout");
                 Object itemIntransqty = itemIntransqtyMap.get(orgIdStr + "~" + itemIdStr);
-                int aosShpDay = (int)aosShpdayMap.get(orgIdStr);
-                int aosFreightDay = (int)aosCleardayMap.get(orgIdStr);
-                int aosClearDay = (int)aosFreightdayMap.get(orgIdStr);
+                int aosShpDay = (int) aosShpdayMap.get(orgIdStr);
+                int aosFreightDay = (int) aosCleardayMap.get(orgIdStr);
+                int aosClearDay = (int) aosFreightdayMap.get(orgIdStr);
                 // 库存可售天数 非平台仓库用量
                 int availableDays = InStockAvailableDays.calInstockSalDays(orgIdStr, itemIdStr);
                 Object itemOverseaqty = itemOverseaqtyMap.get(orgIdStr + "~" + itemIdStr);
                 int availableDaysByPlatQty = InStockAvailableDays.calAvailableDaysByPlatQty(orgIdStr, itemIdStr);
                 Object itemMaxage = itemMaxageMap.get(orgIdStr + "~" + itemIdStr);
+
+
                 // 产品状态 季节属性
                 if (FndGlobal.IsNull(aosItemstatus) || FndGlobal.IsNull(aosSeasonpro)) {
                     log.add(aosItemNum + ":季节属性为空");
                     continue;
                 }
                 // 最大库龄≥15天
-                boolean flag1 = FndGlobal.IsNull(itemMaxage) || (int)itemMaxage < 15;
+                boolean flag1 = FndGlobal.IsNull(itemMaxage) || (int) itemMaxage < 15;
                 // 海外库存>30
                 boolean flag2 = false;
                 if (FndGlobal.IsNull(itemOverseaqty)) {
                     itemOverseaqty = 0;
                 }
-                if (FndGlobal.IsNull(itemOverseaqty) || (int)itemOverseaqty <= 30) {
+                if (FndGlobal.IsNull(itemOverseaqty) || (int) itemOverseaqty <= 30) {
                     flag2 = true;
                 }
                 // 平台仓库数量可售天数
@@ -175,7 +189,10 @@ public class AosMktActSelectTask extends AbstractTask {
                         log.add(aosItemNum + ":海外库存<30");
                     }
                     log.add(aosItemNum + "平台仓数量可售天数:" + availableDaysByPlatQty + " < 120");
-                    continue;
+                    if (unExcludable) {
+                        continue;
+                    }
+
                 }
                 // 7天日均销量dd
                 float r = InStockAvailableDays.getOrgItemOnlineAvgQty(orgIdStr, itemIdStr);
@@ -187,11 +204,13 @@ public class AosMktActSelectTask extends AbstractTask {
                 BigDecimal actQtyRate = MktComUtil.getActQtyRate(aosItemstatus, aosSeasonpro, aosFestivalseting);
                 if (FndGlobal.IsNull(actQtyRate)) {
                     log.add(aosItemNum + ":活动数量占比为空");
-                    continue;
+                    if (unExcludable) {
+                        continue;
+                    }
                 }
                 // 已提报未来60天活动数量
                 int act60PreQty = MktComUtil.getAct60PreQty(orgId, itemId);
-                BigDecimal avaQty = new BigDecimal((int)itemOverseaqty + (int)itemIntransqty);
+                BigDecimal avaQty = new BigDecimal((int) itemOverseaqty + (int) itemIntransqty);
                 // 可提报活动数量
                 log.add(aosItemNum + ":活动数量占比 " + actQtyRate);
                 log.add(aosItemNum + ":海外库存 " + itemOverseaqty);
@@ -208,22 +227,24 @@ public class AosMktActSelectTask extends AbstractTask {
                 // 滞销类型 低动销 低周转
                 String aosTypedetail = "";
                 // 7天销量
-                int day7Sales = (int)Cux_Common_Utl.nvl(order7Days.get(itemIdStr));
+                int day7Sales = (int) Cux_Common_Utl.nvl(order7Days.get(itemIdStr));
                 float seasonRate = 0;
                 // 判断当前月份
                 boolean speFlag = false;
                 if (unsalableProducts.contains(itemIdStr)) {
-                    boolean preSaleOut = MktComUtil.isPreSaleOut(orgId, itemId, (int)itemIntransqty, aosShpDay,
-                        aosFreightDay, aosClearDay, availableDays);
+                    boolean preSaleOut = MktComUtil.isPreSaleOut(orgId, itemId, (int) itemIntransqty, aosShpDay,
+                            aosFreightDay, aosClearDay, availableDays);
                     if (!preSaleOut) {
                         speFlag = true;
                         log.add(aosItemNum + ":春夏滞销不预断货货号 ");
                     }
                 }
+
+
                 // 获取数据
                 String aosSku = bdMaterial.getString("number");
                 String aosItemname = bdMaterial.getString("aos_cn_name");
-                String category = (String)SalUtil.getCategoryByItemId(itemIdStr).get("name");
+                String category = (String) SalUtil.getCategoryByItemId(itemIdStr).get("name");
                 String[] categoryGroup = category.split(",");
                 String aosCategory1 = "";
                 String aosCategory2 = "";
@@ -241,26 +262,30 @@ public class AosMktActSelectTask extends AbstractTask {
                     if ("AUTUMN_WINTER".equals(aosSeasonpro) || "WINTER".equals(aosSeasonpro)) {
                         aosSeasonprostr = "AUTUMN_WINTER_PRO";
                     } else if ("SPRING".equals(aosSeasonpro) || "SPRING_SUMMER".equals(aosSeasonpro)
-                        || "SUMMER".equals(aosSeasonpro)) {
+                            || "SUMMER".equals(aosSeasonpro)) {
                         aosSeasonprostr = "SPRING_SUMMER_PRO";
                     }
                     // 4. 如果是春夏品:当前日期大于8/31直接剔除,如果为秋冬品，当前日期大于3月31日小于7月1日直接剔除
                     if ("SPRING_SUMMER_PRO".equals(aosSeasonprostr)) {
                         if (!unsalableProducts.contains(itemIdStr) && flag1 && flag2 && flag4
-                            && month - 1 >= Calendar.SEPTEMBER) {
+                                && month - 1 >= Calendar.SEPTEMBER) {
                             log.add(aosItemNum + "-春夏品-月份:" + (month - 1));
-                            continue;
+                            if (unExcludable){
+                                continue;
+                            }
                         }
                     } else if ("AUTUMN_WINTER_PRO".equals(aosSeasonprostr)) {
                         if (month - 1 >= Calendar.APRIL && month - 1 < Calendar.JULY) {
                             log.add(aosItemNum + "-秋冬品-月份:" + (month - 1));
-                            continue;
+                            if (unExcludable){
+                                continue;
+                            }
                         }
                     }
                     // 季节品
                     boolean seasonProduct = "AUTUMN_WINTER".equals(aosSeasonpro) || "WINTER".equals(aosSeasonpro)
-                        || "SPRING".equals(aosSeasonpro) || "SPRING_SUMMER".equals(aosSeasonpro)
-                        || "SUMMER".equals(aosSeasonpro);
+                            || "SPRING".equals(aosSeasonpro) || "SPRING_SUMMER".equals(aosSeasonpro)
+                            || "SUMMER".equals(aosSeasonpro);
                     // 针对爆品 季节 节日 常规 进行筛选 不满足条件的直接跳过
                     boolean issaleout = false;
                     boolean cond2 = ((saleout || distSkuSet.contains(itemIdStr)) && availableDays >= 90);
@@ -272,8 +297,8 @@ public class AosMktActSelectTask extends AbstractTask {
                     // 非爆品
                     if (!issaleout) {
                         // 预断货
-                        boolean preSaleOut = MktComUtil.isPreSaleOut(orgId, itemId, (int)itemIntransqty, aosShpDay,
-                            aosFreightDay, aosClearDay, availableDays);
+                        boolean preSaleOut = MktComUtil.isPreSaleOut(orgId, itemId, (int) itemIntransqty, aosShpDay,
+                                aosFreightDay, aosClearDay, availableDays);
                         if (FndGlobal.IsNotNull(stSkuSet) && stSkuSet.contains(itemIdStr) && !preSaleOut) {
                             aosTypedetail = "秋冬滞销";
                             aosItemtype = "D";
@@ -282,19 +307,25 @@ public class AosMktActSelectTask extends AbstractTask {
                             seasonRate = MktComUtil.getSeasonRate(orgId, itemId, aosSeasonpro, itemOverseaqty, month);
                             if (seasonRate == 0) {
                                 log.add(aosItemNum + ":节日品累计完成率为空");
-                                continue;
+                                if (unExcludable) {
+                                    continue;
+                                }
                             }
                             if (seasonRate < 1) {
                                 aosItemtype = "S";
                             } else {
                                 log.add(aosItemNum + ":节日品累计完成率不满足条件");
-                                continue;
+                                if (unExcludable) {
+                                    continue;
+                                }
                             }
                             // 季节品预断货 跳过
                             // 海运备货清关
                             if (preSaleOut) {
                                 log.add(aosItemNum + ":节日品未预断货");
-                                continue;
+                                if (unExcludable) {
+                                    continue;
+                                }
                             }
                             // 判断季节类型
                             aosTypedetail = MktComUtil.seasonalProStage(aosSeasonpro);
@@ -306,19 +337,25 @@ public class AosMktActSelectTask extends AbstractTask {
                             log.add(aosItemNum + ":季节品累计完成率 " + seasonRate);
                             if (seasonRate == 0) {
                                 log.add(aosItemNum + ":季节品累计完成率为空");
-                                continue;
+                                if (unExcludable) {
+                                    continue;
+                                }
                             }
                             if (MktComUtil.isSeasonRate(aosSeasonpro, month, seasonRate)) {
                                 aosItemtype = "S";
                             } else {
                                 log.add(aosItemNum + ":季节品累计完成率不满足条件");
-                                continue;
+                                if (unExcludable) {
+                                    continue;
+                                }
                             }
                             // 季节品预断货 跳过
                             // 海运备货清关
                             if (preSaleOut) {
                                 log.add(aosItemNum + ":季节品未预断货");
-                                continue;
+                                if (unExcludable) {
+                                    continue;
+                                }
                             }
                             // 判断季节类型
                             aosTypedetail = MktComUtil.seasonalProStage(aosSeasonpro);
@@ -338,7 +375,9 @@ public class AosMktActSelectTask extends AbstractTask {
                             if ("".equals(aosTypedetail)) {
                                 // 如果为空则表示不为滞销品
                                 log.add(aosItemNum + ":常规品未滞销");
-                                continue;
+                                if (unExcludable) {
+                                    continue;
+                                }
                             }
                             aosItemtype = "D";
                             if ("低周转".equals(aosTypedetail) & week == Calendar.TUESDAY) {
@@ -360,7 +399,9 @@ public class AosMktActSelectTask extends AbstractTask {
                         // 3.0其他情况都跳过
                         else {
                             log.add(aosItemNum + ":其他情况都跳过");
-                            continue;
+                            if (unExcludable) {
+                                continue;
+                            }
                         }
                     }
                 }
@@ -383,6 +424,8 @@ public class AosMktActSelectTask extends AbstractTask {
                     default:
                         break;
                 }
+
+
                 // 赋值数据
                 DynamicObject aosEntryentity = aosEntryentityS.addNew();
                 if (listUnSaleItemid.contains(itemIdStr)) {
@@ -431,6 +474,22 @@ public class AosMktActSelectTask extends AbstractTask {
             OperateOption.create());
         // 保存日志表
         log.finnalSave();
+    }
+
+    /**
+     * 获取滞销类型为 春夏高库龄 的货号
+     */
+    private static List<String> getUnSaleItem(String orgId){
+        QFBuilder builder = new QFBuilder();
+        builder.add("aos_orgid","=",orgId);
+        builder.add("aos_type","=", "OLD");
+        builder.add("aos_itemid","!=","");
+        DynamicObjectCollection dyc = QueryServiceHelper.query("aos_base_stitem", "aos_itemid", builder.toArray());
+        List<String> result = new ArrayList<>(dyc.size());
+        for (DynamicObject row : dyc) {
+            result.add(row.getString("aos_itemid"));
+        }
+        return result;
     }
 
     /**
