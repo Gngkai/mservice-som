@@ -664,7 +664,7 @@ public class AosMktRcvBill extends AbstractBillPlugIn implements ItemClickListen
                     throw new FndError("拍照任务清单保存失败!");
                 }
             }
-            if (need3dFlag) {
+            if (need3dFlag && AosMktProgPhReqBill.need3d(aosMktPhotoreq)) {
                 // 生成3D确认单
                 AosMkt3DesignBill.generate3Design(aosMktPhotoreq);
             }
