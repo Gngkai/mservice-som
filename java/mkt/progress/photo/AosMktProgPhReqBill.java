@@ -444,6 +444,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                 throw fndError;
             }
         } catch (Exception ex) {
+
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -747,8 +748,9 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             if (fndError.getCount() > 0) {
                 throw fndError;
             }
-            if (aos3dflag) {
-                DynamicObject aosMktPhotoreq = BusinessDataServiceHelper.loadSingle(fid, "aos_mkt_photoreq");
+
+            DynamicObject aosMktPhotoreq = BusinessDataServiceHelper.loadSingle(fid, "aos_mkt_photoreq");
+            if (aos3dflag && need3d(aosMktPhotoreq)) {
                 // 生成3D确认单
                 AosMkt3DesignBill.generate3Design(aosMktPhotoreq);
                 status = "3D建模";
@@ -799,6 +801,27 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
     }
 
     /**
+     * 是否拍照和是否拍摄展示视频都为“否”时，不触发生成3D产品设计单； 是否拍照和是否拍摄展示视频中有一个为“是”，且拍照地点为“3D建模”时，触发生成3D产品设计单
+     * 
+     * @param aosMktPhotoreq 拍照需求表
+     * @return 是否生成3D标记
+     */
+    public static boolean need3d(DynamicObject aosMktPhotoreq) {
+        boolean flag = false;
+        // 是否拍照
+        boolean aosPhotoflag = aosMktPhotoreq.getBoolean("aos_photoflag");
+        // 是否拍展示视频
+        boolean aosVedioflag = aosMktPhotoreq.getBoolean("aos_vedioflag");
+        // 拍照地点
+        String aosPhstate = aosMktPhotoreq.getString("aos_phstate");
+        boolean cond = ((aosPhotoflag || aosVedioflag) && "工厂简拍".equals(aosPhstate));
+        if (cond) {
+            flag = true;
+        }
+        return flag;
+    }
+
+    /**
      * 实景拍摄 状态下提交
      **/
     private static void submitForAct(DynamicObject dyMain) throws FndError {
@@ -823,8 +846,8 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             // 是否生成抠图任务表
             boolean createPs = false;
             // 校验
-            if (aos3dflag) {
-                DynamicObject aosMktPhotoreq = BusinessDataServiceHelper.loadSingle(fid, "aos_mkt_photoreq");
+            DynamicObject aosMktPhotoreq = BusinessDataServiceHelper.loadSingle(fid, "aos_mkt_photoreq");
+            if (aos3dflag && need3d(aosMktPhotoreq)) {
                 // 生成3D确认单
                 AosMkt3DesignBill.generate3Design(aosMktPhotoreq);
                 status = "3D建模";
@@ -3438,7 +3461,8 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             String nextStatus = "开发确认:视频";
             String nextUser = aosDeveloper.getString("id");
             // 3d = 是，3d原因必填
-            if (Boolean.parseBoolean(getModel().getValue(sign.flag3d.name).toString())) {
+            if (Boolean.parseBoolean(getModel().getValue(sign.flag3d.name).toString())
+                && need3d(this.getModel().getDataEntity())) {
                 Object reason = getModel().getValue("aos_3d_reason");
                 if (FndGlobal.IsNull(reason)) {
                     throw new FndError("是否3D为是时，3D原因不能为空!");
