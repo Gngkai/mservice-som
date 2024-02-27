@@ -6,6 +6,7 @@ import kd.bos.bill.AbstractBillPlugIn;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.entity.datamodel.IDataModel;
+import kd.bos.entity.datamodel.events.PropertyChangedArgs;
 import kd.bos.entity.formula.CalcExprParser;
 import kd.bos.form.CloseCallBack;
 import kd.bos.form.FormShowParameter;
@@ -41,6 +42,33 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
     public  static final String Key_return_v="re_k";    //回传公式名称
 
     public  static final String Key_entity="operate";   //父界面传值标识
+    public  static final List<String> ASSESS_LIST = Arrays.asList("平台活动","线下活动","站外Deal");
+
+    @Override
+    public void propertyChanged(PropertyChangedArgs e) {
+        super.propertyChanged(e);
+        String name = e.getProperty().getName();
+        //活动分类修改
+        if ("aos_sort".equals(name)){
+            sortChange(e.getChangeSet()[0].getNewValue());
+        }
+    }
+
+    private void sortChange(Object newValue){
+        if (FndGlobal.IsNull(newValue)) {
+            getModel().setItemValueByNumber("aos_assessment","N");
+        }
+        else {
+            String newValueStr = String.valueOf(newValue);
+            if (ASSESS_LIST.contains(newValueStr)) {
+                getModel().setItemValueByNumber("aos_assessment","Y");
+            }
+            else {
+                getModel().setItemValueByNumber("aos_assessment","N");
+            }
+        }
+    }
+
     @Override
     public void registerListener(EventObject e) {
         super.registerListener(e);
