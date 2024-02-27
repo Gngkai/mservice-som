@@ -88,10 +88,11 @@ public class AosMktSyncList extends AbstractListPlugin {
     private void refreshDateOrder() {
         FndMsg.debug("=========into refreshDateOrder=========");
         Date yesterday = FndDate.add_days(FndDate.zero(new Date()), -1);
-        DynamicObject[] orderS = BusinessDataServiceHelper.load("aos_sync_om_order_r", "aos_local_date",
+        DynamicObject[] orderS = BusinessDataServiceHelper.load("aos_sync_om_order_r", "aos_local_date,aos_order_date",
             new QFilter("aos_local_date", QCP.large_equals, yesterday).toArray());
         for (DynamicObject order : orderS) {
             order.set("aos_local_date", new Date());
+            order.set("aos_order_date", new Date());
         }
         SaveServiceHelper.save(orderS);
 
