@@ -20,30 +20,24 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * @author: lch
- * @createDate: 2022/11/9
- * @description:
- * @updateRemark:
+ * @author lch
+ * @since 2022/11/9
  */
 public class ActPlanServiceImpl implements ActPlanService {
 
-    private static final ActPlanDao actPlanDao = new ActPlanDaoImpl();
-    private static final ItemCacheService itemCacheService = new ItemCacheServiceImpl();
-    private static final AvailableDaysService availableDaysService = new AvailableDaysServiceImpl();
-    // 缓存
-    private static final LocalMemoryCache cache;
+    private static final ActPlanDao ACTPLANDAO = new ActPlanDaoImpl();
+    private static final LocalMemoryCache CACHE;
     static {
-        cache = localMemoryCache();
+        CACHE = localMemoryCache();
     }
 
     private static LocalMemoryCache localMemoryCache() {
         return CacheUtil.getLocalMemoryCache("mkt_region", "actplan_cache", 5000, 1200);
     }
 
-
-
     @Override
-    public Set<Long> getNormalActItemIdSet(Long aos_orgid, Long aos_platformid, String aos_shopnum, String actType, int beforeAfterDays) {
+    public Set<Long> getNormalActItemIdSet(Long aosOrgid, Long aosPlatformid, String aosShopnum, String actType,
+        int beforeAfterDays) {
         String[] actTypeArr = null;
         if (actType != null) {
             actTypeArr = actType.split(",");
@@ -51,78 +45,75 @@ public class ActPlanServiceImpl implements ActPlanService {
         Calendar calendar = DateUtil.todayCalendar();
         calendar.add(Calendar.DAY_OF_MONTH, -beforeAfterDays);
         Date start = calendar.getTime();
-        calendar.add(Calendar.DAY_OF_MONTH, beforeAfterDays*2);
+        calendar.add(Calendar.DAY_OF_MONTH, beforeAfterDays * 2);
         Date end = calendar.getTime();
-        DynamicObjectCollection dynamicObjects = actPlanDao.listNormalActivityItems(aos_orgid, aos_platformid, aos_shopnum, actTypeArr, start, end);
-        return dynamicObjects
-                .stream()
-                .map(obj -> obj.getLong("aos_itemid"))
-                .collect(Collectors.toSet());
+        DynamicObjectCollection dynamicObjects =
+            ACTPLANDAO.listNormalActivityItems(aosOrgid, aosPlatformid, aosShopnum, actTypeArr, start, end);
+        return dynamicObjects.stream().map(obj -> obj.getLong("aos_itemid")).collect(Collectors.toSet());
     }
 
     @Override
-    public boolean containsItem(Long aos_orgid, Long aos_itemid, Long aos_platformid, String aos_shopnum, String actType, int beforeAfterDays) {
-        String cacheKey = "mkt:actplan:" +
-                aos_orgid + ":" +
-                aos_platformid + ":" +
-                aos_shopnum + ":" +
-                actType + ":" +
-                beforeAfterDays ;
+    public boolean containsItem(Long aosOrgid, Long aosItemid, Long aosPlatformid, String aosShopnum, String actType,
+        int beforeAfterDays) {
+        String cacheKey =
+            "mkt:actplan:" + aosOrgid + ":" + aosPlatformid + ":" + aosShopnum + ":" + actType + ":" + beforeAfterDays;
 
         @SuppressWarnings("unchecked")
-        Set<Long> normalActItemCache = (Set<Long>) cache.get(cacheKey);
+        Set<Long> normalActItemCache = (Set<Long>)CACHE.get(cacheKey);
         // 2.没获取到从数据库中获取
         if (normalActItemCache == null) {
             synchronized (AvailableDaysServiceImpl.class) {
-                if (cache.get(cacheKey) == null) {
+                if (CACHE.get(cacheKey) == null) {
                     // 2.1 获取线上店铺销量
-                    normalActItemCache = getNormalActItemIdSet(aos_orgid, aos_platformid, aos_shopnum, actType, beforeAfterDays);
+                    normalActItemCache =
+                        getNormalActItemIdSet(aosOrgid, aosPlatformid, aosShopnum, actType, beforeAfterDays);
                     // 2.2 存入缓存
-                    cache.put(cacheKey, normalActItemCache);
+                    CACHE.put(cacheKey, normalActItemCache);
                 }
             }
         }
-        return normalActItemCache != null && normalActItemCache.contains(aos_itemid);
+        return normalActItemCache != null && normalActItemCache.contains(aosItemid);
     }
 
     @Override
-    public Map<String, JSONObject> listActivityShopItem(Long aos_orgid, Long aos_platformid, Long aos_shopid, String[] actType, Date date) {
-        DynamicObjectCollection dynamicObjects = actPlanDao.listNormalActivityCollection(aos_orgid, aos_platformid, aos_shopid, actType, date);
-        Map<String, JSONObject> shopItemMap = new HashMap<>();
+    public Map<String, JSONObject> listActivityShopItem(Long aosOrgid, Long aosPlatformid, Long aosShopid,
+        String[] actType, Date date) {
+        DynamicObjectCollection dynamicObjects =
+            ACTPLANDAO.listNormalActivityCollection(aosOrgid, aosPlatformid, aosShopid, actType, date);
+        Map<String, JSONObject> shopItemMap = new HashMap<>(16);
         for (DynamicObject dynamicObject : dynamicObjects) {
-            long aos_shopid1 = dynamicObject.getLong("aos_shopid");
-            long aos_itemid1 = dynamicObject.getLong("aos_itemid");
-
-            Object aos_channel = dynamicObject.get("aos_channel");
-            Object aos_acttype = dynamicObject.get("aos_acttype");
-            Object aos_category_stat1 = dynamicObject.get("aos_category_stat1");
-            Object aos_category_stat2 = dynamicObject.get("aos_category_stat2");
-            Object aos_l_startdate = dynamicObject.get("aos_l_startdate");
-            Object aos_enddate = dynamicObject.get("aos_enddate");
-            Object aos_postid = dynamicObject.get("aos_postid");
+            long aosShopid1 = dynamicObject.getLong("aos_shopid");
+            long aosItemid1 = dynamicObject.getLong("aos_itemid");
+            Object aosChannel = dynamicObject.get("aos_channel");
+            Object aosActtype = dynamicObject.get("aos_acttype");
+            Object aosCategoryStat1 = dynamicObject.get("aos_category_stat1");
+            Object aosCategoryStat2 = dynamicObject.get("aos_category_stat2");
+            Object aoslStartdate = dynamicObject.get("aos_l_startdate");
+            Object aosEnddate = dynamicObject.get("aos_enddate");
+            Object aosPostid = dynamicObject.get("aos_postid");
             Object billno = dynamicObject.get("billno");
 
             JSONObject jsonObject = new JSONObject();
-            jsonObject.put("aos_channel", aos_channel);
-            jsonObject.put("aos_acttype", aos_acttype);
-            jsonObject.put("aos_category_stat1", aos_category_stat1);
-            jsonObject.put("aos_category_stat2", aos_category_stat2);
-            jsonObject.put("aos_l_startdate", aos_l_startdate);
-            jsonObject.put("aos_enddate", aos_enddate);
-            jsonObject.put("aos_postid", aos_postid);
-            jsonObject.put("aos_itemid", aos_itemid1);
-            jsonObject.put("aos_shopid", aos_shopid1);
+            jsonObject.put("aos_channel", aosChannel);
+            jsonObject.put("aos_acttype", aosActtype);
+            jsonObject.put("aos_category_stat1", aosCategoryStat1);
+            jsonObject.put("aos_category_stat2", aosCategoryStat2);
+            jsonObject.put("aos_l_startdate", aoslStartdate);
+            jsonObject.put("aos_enddate", aosEnddate);
+            jsonObject.put("aos_postid", aosPostid);
+            jsonObject.put("aos_itemid", aosItemid1);
+            jsonObject.put("aos_shopid", aosShopid1);
             jsonObject.put("billno", billno);
 
-            String key = aos_shopid1 + ":" + aos_itemid1;
+            String key = aosShopid1 + ":" + aosItemid1;
             shopItemMap.put(key, jsonObject);
         }
         return shopItemMap;
     }
 
     @Override
-    public Set<String> listShopItemByStartDate(Long aos_orgid, String[] actType, Date date) {
-        return actPlanDao.listShopItemByStartDate(aos_orgid, actType, date);
+    public Set<String> listShopItemByStartDate(Long aosOrgid, String[] actType, Date date) {
+        return ACTPLANDAO.listShopItemByStartDate(aosOrgid, actType, date);
     }
 
     @Override
