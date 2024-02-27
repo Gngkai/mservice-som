@@ -444,7 +444,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                 throw fndError;
             }
         } catch (Exception ex) {
-
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -563,6 +563,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                 message);
             GlobalMessage.SendMessage(aosBillno + "-拍照需求单据待处理", messageId);
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -715,6 +716,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                 generateRcv(dyMain);
             }
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -794,6 +796,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             MktComUtil.sendGlobalMessage(messageId, AOS_MKT_PHOTOREQ, String.valueOf(fid), String.valueOf(aosBillno),
                 messageStr);
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -935,6 +938,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                 messageStr);
             GlobalMessage.SendMessage(aosBillno + "-拍照需求单据待处理", messageId);
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -1168,6 +1172,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                 FndHistory.Create(aosMktDesignreq, aosMktDesignreq.getString("aos_status"), "设计需求表-拍照新品自动创建");
             }
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -1309,6 +1314,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             dyMain.set("aos_rcvbill", aosMktRcv.getString("billno"));
             dyMain.set("aos_samplestatus", "新建");
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -1331,6 +1337,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             QFilter filterItem = new QFilter("aos_itemid", "=", item);
             DeleteServiceHelper.delete("aos_mkt_rcv", new QFilter[] {filterBillno, filterItem});
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -1523,6 +1530,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             OperationServiceHelper.executeOperate("save", "aos_mkt_photoreq", new DynamicObject[] {pAosMktPhotoReq},
                 OperateOption.create());
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -2105,6 +2113,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             parameter.setCustomParam("params", map);
             this.getView().showForm(parameter);
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -2133,6 +2142,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                 this.getView().showForm(parameter);
             }
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -2161,6 +2171,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                 this.getView().showForm(parameter);
             }
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -2958,6 +2969,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
         try (Scope ignore = span.makeCurrent()) {
             Cux_Common_Utl.OpenHistory(this.getView());
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -2998,6 +3010,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             // 确认完成后做新的界面状态控制
             statusControl();
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -3044,6 +3057,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             // 确认完成后做新的界面状态控制
             statusControl();
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -3100,6 +3114,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                 statusControl();// 提交完成后做新的界面状态控制
             }
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -3177,6 +3192,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             OperationServiceHelper.executeOperate("save", "aos_mkt_photoreq", new DynamicObject[] {aosMktPhotoreq},
                 OperateOption.create());
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -3274,6 +3290,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                     String.valueOf(aosBillno), "拍照需求表-视频剪辑");
             }
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -3502,6 +3519,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                 "拍照需求表-" + nextStatus);
             GlobalMessage.SendMessage(aosBillno + "-拍照需求单据待处理", messageId);
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -3543,6 +3561,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             MktComUtil.sendGlobalMessage(messageId, AOS_MKT_PHOTOREQ, String.valueOf(reqFid), String.valueOf(aosBillno),
                 "拍照需求表-开发确认");
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -3626,6 +3645,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             dyMain.set(AOS_STATUS, "视频更新");
             dyMain.set(AOS_USER, SYSTEM);
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -3691,6 +3711,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             MktComUtil.sendGlobalMessage(messageId, AOS_MKT_PHOTOREQ, String.valueOf(reqFid), String.valueOf(aosBillno),
                 "拍照需求表-白底退回");
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -3801,6 +3822,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             MktComUtil.sendGlobalMessage(messageId, AOS_MKT_PHOTOREQ, String.valueOf(reqFid), String.valueOf(aosBillno),
                 "拍照需求表-开发退回");
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
@@ -3830,6 +3852,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
             }
             Cux_Common_Utl.OpenSingleBill(this.getView(), "aos_mkt_rcv", aosMktPhotoreq.get("id"));
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw ex;
         } finally {
             MmsOtelUtils.spanClose(span);
