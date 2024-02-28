@@ -6,6 +6,7 @@ import common.sal.sys.basedata.dao.ItemCategoryDao;
 import common.sal.sys.basedata.dao.ItemDao;
 import common.sal.sys.basedata.dao.impl.ItemCategoryDaoImpl;
 import common.sal.sys.basedata.dao.impl.ItemDaoImpl;
+import common.sal.util.DateUtil;
 import common.sal.util.QFBuilder;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
@@ -691,7 +692,7 @@ public class EventRule {
         selectFields.add("aos_contryentry.aos_contrybrand.name aos_contrybrand");
         QFilter filter = new QFilter("aos_contryentry.aos_nationality","=",orgEntity.getPkValue());
 
-        //判断是否参与考核，如果参与考核，需要取值物料清单,不在清单中的，剔除
+        //判断是否参与考核，如果参与考核，需要取值物料清单 和 周销售推荐清单,不在清单中的，剔除
         List<String> actSelectList = null;
         if (typEntity.get("aos_assessment")!=null) {
             if ("Y".equals(typEntity.getDynamicObject("aos_assessment").getString("number"))) {
@@ -700,10 +701,32 @@ public class EventRule {
                 builder.add("createtime",">=",now.toString());
                 builder.add("createtime","<",now.plusDays(1).toString());
                 builder.add("aos_entryentity.aos_orgid","=",orgEntity.getString("number"));
-                DynamicObjectCollection dyc = QueryServiceHelper.query("aos_mkt_actselect", "aos_entryentity.aos_sku aos_sku", builder.toArray());
-                actSelectList = new ArrayList<>(dyc.size());
-                for (DynamicObject dy : dyc) {
+                DynamicObjectCollection actDyc = QueryServiceHelper.query("aos_mkt_actselect", "aos_entryentity.aos_sku aos_sku", builder.toArray());
+
+
+                //查找 周销售推荐清单 中的数据
+                builder.clear();
+                builder.add("aos_org","=",orgEntity.getString("id"));
+                Calendar instance = Calendar.getInstance();
+                Date date = actPlanEntity.getDate("aos_startdate");
+                if (date!=null){
+                    instance.setTime(date);
+                    DateUtil.setTodayCalendar(instance);
+                    builder.add("entryentity.aos_date_e",">=",instance.getTime());
+                }
+                date = actPlanEntity.getDate("aos_enddate1");
+                if (date!=null){
+                    instance.setTime(date);
+                    DateUtil.setTodayCalendar(instance);
+                    builder.add("entryentity.aos_date_s","<=",instance.getTime());
+                }
+                DynamicObjectCollection proposeDyc = QueryServiceHelper.query("aos_act_propose", "entryentity.aos_item aos_item", builder.toArray());
+                actSelectList = new ArrayList<>(actDyc.size()+proposeDyc.size());
+                for (DynamicObject dy : actDyc) {
                     actSelectList.add(dy.getString("aos_sku"));
+                }
+                for (DynamicObject dy : proposeDyc) {
+                    actSelectList.add(dy.getString("aos_item"));
                 }
             }
         }
