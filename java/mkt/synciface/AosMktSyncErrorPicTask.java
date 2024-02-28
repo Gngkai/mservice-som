@@ -20,6 +20,7 @@ import kd.bos.orm.query.QFilter;
 import kd.bos.schedule.executor.AbstractTask;
 import kd.bos.servicehelper.BusinessDataServiceHelper;
 import kd.bos.servicehelper.QueryServiceHelper;
+import kd.bos.servicehelper.operation.DeleteServiceHelper;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import mkt.common.api.AosMktClApiUtil;
 import mkt.openapi.ListingReq.utils;
@@ -52,7 +53,7 @@ public class AosMktSyncErrorPicTask extends AbstractTask {
             OkHttpClient client = new OkHttpClient().newBuilder().build();
             MediaType mediaType = MediaType.parse("application/json");
             // 上线后参数调整
-            RequestBody body = RequestBody.create(mediaType, "{\"SYNC_TIME\": \"" + dateStr + "\"}");
+            RequestBody body = RequestBody.create(mediaType, "");
             String clToken = AosMktClApiUtil.getClToken();
             Request request = new Request.Builder().url("http://54.82.42.126:9400/api/SST/getErrorImageList")
                 .method("POST", body).addHeader("User-Agent", "Apifox/1.0.0 (https://apifox.com)")
@@ -61,6 +62,8 @@ public class AosMktSyncErrorPicTask extends AbstractTask {
             JSONArray jsonArr = JSON.parseArray(response.body().string());
             int length = jsonArr.size();
             FndMsg.debug("length:" + length);
+            // 删除全部历史数据
+            DeleteServiceHelper.delete("aos_mkt_wait_design", null);
             for (int i = 0; i < length; i++) {
                 JSONObject jsObj = jsonArr.getJSONObject(i);
                 FndMsg.debug(jsObj);
@@ -90,21 +93,21 @@ public class AosMktSyncErrorPicTask extends AbstractTask {
                 aosMktWaitDesign.set("aos_scm_status", jsObj.getString("SCM_INVENTORY_STATUS"));
                 // 首次入库日期
                 aosMktWaitDesign.set("aos_instock_date", firstInstockDate);
-                // 生成Listing优化需求表
-                String billno = createListingReq(aosMktWaitDesign);
                 // Listing单号
-                aosMktWaitDesign.set("aos_billno", billno);
                 aosMktWaitDesign.set("createtime", today);
                 SaveServiceHelper.save(new DynamicObject[] {aosMktWaitDesign});
+                // 生成Listing优化需求表
+                createListingReq(aosMktWaitDesign);
             }
 
             // 刷新设计需求状态
-            DynamicObject[] waitS =
-                BusinessDataServiceHelper.load("aos_mkt_wait_design", "aos_billno,aos_list_status", null);
+            DynamicObject[] waitS = BusinessDataServiceHelper.load("aos_mkt_wait_design",
+                "aos_orgid.id orgId,aos_itemid itemId,aos_list_status", null);
             for (DynamicObject wait : waitS) {
-                String aosBillno = wait.getString("aos_billno");
                 DynamicObject aosMktDesignreq = QueryServiceHelper.queryOne("aos_mkt_designreq", "aos_status",
-                    new QFilter("aos_orignbill", QCP.equals, aosBillno).toArray());
+                    new QFilter("aos_orgid", QCP.equals, wait.get("orgId"))
+                        .and("aos_entryentity.aos_itemid", QCP.equals, wait.get("itemId"))
+                        .and("aos_source", QCP.equals, "上架图片缺失").toArray());
                 if (FndGlobal.IsNotNull(aosMktDesignreq)) {
                     wait.set("aos_list_status", aosMktDesignreq.get("aos_status"));
                 }

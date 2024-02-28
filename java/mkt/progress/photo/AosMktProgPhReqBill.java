@@ -3465,6 +3465,7 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
         Span span = MmsOtelUtils.getCusSubSpan(TRACER, MmsOtelUtils.getMethodPath());
         try (Scope ignore = span.makeCurrent()) {
             this.getView().invokeOperation("save");
+            Object aosBillno = this.getModel().getValue(BILLNO);
             // 异常参数
             // 数据层
             DynamicObject aosDeveloper = (DynamicObject)this.getModel().getValue(AOS_DEVELOPER);
@@ -3490,11 +3491,15 @@ public class AosMktProgPhReqBill extends AbstractBillPlugIn implements ItemClick
                 if (dy3d != null) {
                     nextUser = dy3d.getString("id");
                 }
-                // 生成对应的 3D产品设计单
-                AosMkt3DesignBill.generate3Design(getModel().getDataEntity(true));
+                // 判断拍照是否已生成3D
+                DynamicObject aosMkt3Design = QueryServiceHelper.queryOne("aos_mkt_3design", "id",
+                    new QFilter("aos_orignbill", QCP.equals, aosBillno).and("aos_status", QCP.not_equals, "已完成")
+                        .toArray());
+                if (FndGlobal.IsNull(aosMkt3Design)) {
+                    AosMkt3DesignBill.generate3Design(getModel().getDataEntity(true));
+                }
             }
             Object aosSourceid = this.getModel().getValue(AOS_SOURCEID);
-            Object aosBillno = this.getModel().getValue(BILLNO);
             Object reqFid = this.getModel().getDataEntity().getPkValue();
             // 回写拍照任务清单
             if (QueryServiceHelper.exists(sign.photoList.name, aosSourceid)) {

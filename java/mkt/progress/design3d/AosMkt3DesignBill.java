@@ -45,6 +45,7 @@ public class AosMkt3DesignBill extends AbstractBillPlugIn implements ItemClickLi
     public final static String DESIGN = "设计需求表";
     public final static String PHOTO = "拍照需求表";
     public final static String VED = "视频";
+    public final static String PH = "拍照";
     public final static String FACEZ = "工厂简拍";
     public final static String SAMPLE = "来样拍照";
     public final static String AOS_MKT_PHOTOLIST = "aos_mkt_photolist";
@@ -132,6 +133,17 @@ public class AosMkt3DesignBill extends AbstractBillPlugIn implements ItemClickLi
             String aosPhstate = aosMktPhotoreq.getString("aos_phstate");
             // 24-1-3 如果拍照需求表 需求类型是 视频，则到视频更新节点（实际是到 开发采购确认视频，再触发提交）
             String aosType = aosMktPhotoreq.getString("aos_type");
+            if (PH.equals(aosType)) {
+                // 判断是否有 视频
+                DynamicObject ved =
+                    BusinessDataServiceHelper.loadSingle("aos_mkt_photoreq", new QFilter("aos_type", QCP.equals, VED)
+                        .and("billno", QCP.equals, aosOrignbill).and("aos_status", QCP.equals, "视频剪辑").toArray());
+                if (FndGlobal.IsNotNull(ved)) {
+                    ved.set("aos_status", "开发确认:视频");
+                    FndHistory.Create(ved, "提交(3d回写),开发确认:视频", "开发确认:视频");
+                    new AosMktProgPhReqBill().aosSubmit(ved, "B");
+                }
+            }
             if (VED.equals(aosType)) {
                 aosMktPhotoreq.set("aos_status", "开发确认:视频");
                 FndHistory.Create(aosMktPhotoreq, "提交(3d回写),开发确认:视频", aosStatus);
