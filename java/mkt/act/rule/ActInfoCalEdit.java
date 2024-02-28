@@ -1,9 +1,11 @@
 package mkt.act.rule;
 
+import common.fnd.FndMsg;
 import common.sal.EventRuleCommon;
 import common.sal.util.LogUtils;
 import kd.bos.bill.AbstractBillPlugIn;
 import kd.bos.context.OperationContext;
+import kd.bos.context.RequestContext;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.entity.datamodel.events.ImportDataEventArgs;
@@ -105,7 +107,7 @@ public class ActInfoCalEdit extends AbstractBillPlugIn {
             String shopid = dy_the.getDynamicObject("aos_shop").get("id").toString();
             DynamicObjectCollection dyc_ent = dy_the.getDynamicObjectCollection("aos_sal_actplanentity");
 
-//            对引入模板中的活动结束时间进行筛选，并进行赋值
+            //对引入模板中的活动结束时间进行筛选，并进行赋值
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             Date latedate = sdf.parse("2019-11-1 23:59:59");
             for (DynamicObject dynamicObject:dyc_ent) {
@@ -131,11 +133,18 @@ public class ActInfoCalEdit extends AbstractBillPlugIn {
             //获取物料和价格
             Map<String, BigDecimal[]> map_itemAndPrice = new HashMap<>();
             Map<String,String> map_itemToDate = new HashMap<>();
+            //记录活动价超过原价的数据
+            List<String> abnormalPriceList = new ArrayList<>();
+
             for (int i = 0; i < dyc_ent.size(); i++) {
                 DynamicObject dy = dyc_ent.get(i);
                 StringJoiner str = new StringJoiner("/");
                 str.add(String.valueOf(i));
-                str.add(dy.getDynamicObject("aos_itemnum").getString("id"));
+                DynamicObject itemnumDy = dy.getDynamicObject("aos_itemnum");
+                if (itemnumDy == null) {
+                    continue;
+                }
+                str.add(itemnumDy.getString("id"));
                 BigDecimal[] big_price = new BigDecimal[3];
                 big_price[0] = BigDecimal.ZERO;   //原价
                 if (dy.get("aos_price")!=null)
@@ -147,6 +156,10 @@ public class ActInfoCalEdit extends AbstractBillPlugIn {
                 if (dy.get("aos_actqty")!=null)
                     big_price[2] = dy.getBigDecimal("aos_actqty");
                 map_itemAndPrice.put(str.toString(),big_price);
+                //活动价超过了原价
+                if (big_price[1].compareTo(big_price[0])>0){
+                    abnormalPriceList.add(itemnumDy.getString("number"));
+                }
                 if (dy.get("aos_l_startdate")!=null&&dy.get("aos_enddate")!=null){
                     LocalDate date_s = dy.getDate("aos_l_startdate").toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
                     LocalDate date_e = dy.getDate("aos_enddate").toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
@@ -206,6 +219,16 @@ public class ActInfoCalEdit extends AbstractBillPlugIn {
                     });
             //设置表头数据
             EventRuleCommon.collectRevenueCost(dy_the);
+            //发送消息
+            senMessage(abnormalPriceList);
+        }
+
+        private void senMessage(List<String> abnormalPriceList){
+            if (abnormalPriceList.size()>0){
+                String text = String.join(",", abnormalPriceList);
+                String receiver = String.valueOf(RequestContext.get().getCurrUserId());
+                FndMsg.SendGlobalMessage(receiver,"aos_act_select_plan",dy_the.getString("id"),"活动价格异常",text);
+            }
         }
     }
 
