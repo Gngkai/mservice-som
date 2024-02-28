@@ -9,6 +9,8 @@ import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.entity.datamodel.events.ImportDataEventArgs;
 import kd.bos.form.control.events.ItemClickEvent;
 import kd.bos.form.events.AfterDoOperationEventArgs;
+import kd.bos.logging.Log;
+import kd.bos.logging.LogFactory;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
 import kd.bos.threads.ThreadPools;
 import mkt.act.rule.Import.EventRule;
@@ -69,13 +71,13 @@ public class ActInfoCalEdit extends AbstractBillPlugIn {
     class ActInfo implements Runnable{
         private DynamicObject dy_the;
         private String actStatus;
-        private AosomLog log;
+        private Log log;
         String billno;
         ActInfo (DynamicObject dy_the,String actStatus){
             this.dy_the = dy_the;
             this.actStatus = actStatus;
             billno  = dy_the.getString("billno");
-            log = LogUtils.getSaleLog("sal.act","sal.act.ActShopProfit.aos_sal_act_from.ActInfo");
+            log = LogFactory.getLog("sal.act.ActShopProfit.aos_sal_act_from.ActInfo");
         }
         @Override
         public void run() {
