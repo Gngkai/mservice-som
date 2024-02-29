@@ -924,7 +924,8 @@ public class EventRule {
             }
         }
 
-        //判断是否要超过两次的活动，eBay、AM、WF渠道，除黑五网一，平台推荐产品 不做剔除
+        //判断是否要超过两次的活动，eBay、AM、WF渠道，除黑五网一，平台推荐产品 不做剔除   240229，该逻辑剔除
+        /*
         boolean isMoreThanTwo = true;
         //eBay、AM
         if (actPlanEntity.getDynamicObject("aos_channel")!=null) {
@@ -999,6 +1000,8 @@ public class EventRule {
             }
         }
 
+
+         */
 
         return result;
     }
