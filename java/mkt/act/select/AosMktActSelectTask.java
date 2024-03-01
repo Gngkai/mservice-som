@@ -18,6 +18,7 @@ import kd.bos.dataentity.OperateOption;
 import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.exception.KDException;
+import kd.bos.isc.util.misc.Pair;
 import kd.bos.orm.query.QCP;
 import kd.bos.orm.query.QFilter;
 import kd.bos.schedule.executor.AbstractTask;
@@ -132,6 +133,13 @@ public class AosMktActSelectTask extends AbstractTask {
         //获取滞销类型为 春夏高库龄的数据 这部分数据 不做剔除
         List<String> unSaleItemList = getUnSaleItem(pOuId);
 
+        //获取数量和占比
+        Pair<Integer,BigDecimal> pair = getActQtyPar(pOuId);
+        //最低活动数量
+        int minActQty = pair.getA();
+        //活动占比
+        BigDecimal actShareBd = pair.getB();
+
         for (DynamicObject bdMaterial : bdMaterialS) {
             // 判断是否跳过
             long itemId = bdMaterial.getLong("id");
@@ -200,7 +208,8 @@ public class AosMktActSelectTask extends AbstractTask {
                 if (FndGlobal.IsNull(itemIntransqty)) {
                     itemIntransqty = 0;
                 }
-                // 活动数量占比
+                // 活动数量占比  废除
+                /*
                 BigDecimal actQtyRate = MktComUtil.getActQtyRate(aosItemstatus, aosSeasonpro, aosFestivalseting);
                 if (FndGlobal.IsNull(actQtyRate)) {
                     log.add(aosItemNum + ":活动数量占比为空");
@@ -208,18 +217,20 @@ public class AosMktActSelectTask extends AbstractTask {
                         continue;
                     }
                 }
+
+                 */
                 // 已提报未来60天活动数量
                 int act60PreQty = MktComUtil.getAct60PreQty(orgId, itemId);
                 BigDecimal avaQty = new BigDecimal((int) itemOverseaqty + (int) itemIntransqty);
                 // 可提报活动数量
-                log.add(aosItemNum + ":活动数量占比 " + actQtyRate);
+                log.add(aosItemNum + ":活动数量占比 " + actShareBd);
                 log.add(aosItemNum + ":海外库存 " + itemOverseaqty);
                 log.add(aosItemNum + ":在途数量 " + itemIntransqty);
                 log.add(aosItemNum + ":已提报未来60天活动数量 " + act60PreQty);
-                int aosQty = 0;
-                if (actQtyRate != null) {
-                    aosQty = actQtyRate.multiply(avaQty).intValue() - act60PreQty;
-                }
+                int aosQty = actShareBd.multiply(avaQty).intValue() - act60PreQty;
+                aosQty = Math.max(minActQty,aosQty);
+
+
                 log.add(aosItemNum + ":可提报活动数量 " + aosQty);
                 if (aosQty <= 5) {
                     log.add(aosItemNum + ":可提报活动数量<=5 ");
@@ -475,6 +486,26 @@ public class AosMktActSelectTask extends AbstractTask {
         // 保存日志表
         log.finnalSave();
     }
+
+    /**
+     * 获取活动参数
+     * @param orgId
+     */
+    private static Pair<Integer,BigDecimal> getActQtyPar(String orgId){
+        QFBuilder builder = new QFBuilder("aos_org","=",orgId);
+        DynamicObject dy = QueryServiceHelper.queryOne("aos_act_qty_pr", "aos_qty,aos_share", builder.toArray());
+        BigDecimal shareBd = BigDecimal.ZERO;
+        int qty = 0;
+        if (dy != null){
+            shareBd = dy.getBigDecimal("aos_share");
+            qty = dy.getInt("aos_qty");
+        }
+        return new Pair<>(qty, shareBd);
+    }
+
+
+
+
 
     /**
      * 获取滞销类型为 春夏高库龄 的货号
