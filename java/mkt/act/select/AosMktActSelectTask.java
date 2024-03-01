@@ -32,7 +32,6 @@ import mkt.common.MktComUtil;
 import mkt.common.AosMktCacheUtil;
 import org.apache.commons.lang3.SerializationUtils;
 
-
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -42,7 +41,7 @@ import java.util.stream.Collectors;
 
 /**
  * @author aosom
- * @version 活动选品表初始化-调度任务类
+ * @version 活动选品表初始化-调度任务类  sa
  */
 public class AosMktActSelectTask extends AbstractTask {
 
