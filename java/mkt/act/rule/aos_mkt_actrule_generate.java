@@ -115,8 +115,9 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 					break;
 				case "aos_qtycal":
 					// 从新批量设置活动数量
-					batchSetActQty();
-
+					batchSetActQty(getModel().getDataEntity(true),false);
+					getView().updateView();
+					getView().showTipNotification("批量计算数量完成");
 					break;
 			}
 
@@ -518,7 +519,9 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 //			this.getView().showMessage("以下物料缺失价格：  " + noPriceItem);
 //		}
 		//从新批量设置活动数量
-		batchSetActQty();
+		batchSetActQty(getModel().getDataEntity(true),false);
+		this.getView().updateView();
+
 	}
 	private void execute(Object actstatus,DynamicObject ou,DynamicObject channel ,DynamicObject shop, DynamicObject actType, DynamicObject actPlanEntity){
 		QFBuilder builder = new QFBuilder();
@@ -558,12 +561,14 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 	}
 
 	/**
-	 * 批量设置活动数量
+	 * 	批量设置活动数量
+	 * @param aos_act_select_plan	单据
+	 * @param rawValue	是否保留原值
 	 */
-	private void batchSetActQty() {
+	public static void batchSetActQty(DynamicObject aos_act_select_plan,boolean rawValue) {
 		System.out.println("活动数量计算---活动数量计算开始");
 		logging.info("导入数据---活动数量计算开始");
-		DynamicObject aos_act_select_plan = this.getModel().getDataEntity();
+
 		Object fid = aos_act_select_plan.getPkValue().toString();
 		DynamicObject aos_nationality = aos_act_select_plan.getDynamicObject("aos_nationality");
 		DynamicObject aos_acttype = aos_act_select_plan.getDynamicObject("aos_acttype");
@@ -574,10 +579,19 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 		String orgIdStr = aos_nationality.getPkValue().toString();
 		HashMap<String, Integer> itemShopMap = getItemShopQty(orgIdStr);
 		logging.info("获取七日 国别+物料+店铺销量 ：" + itemShopMap);
-		DynamicObjectCollection aos_sal_actplanentityS = this.getModel().getEntryEntity("aos_sal_actplanentity");
+		DynamicObjectCollection aos_sal_actplanentityS =aos_act_select_plan.getDynamicObjectCollection("aos_sal_actplanentity");
 		int size = aos_sal_actplanentityS.size();
 		FndMsg.debug("size:" + size);
+		//最小值
+		BigDecimal minQtyBd = BigDecimal.valueOf(Long.parseLong("2"));
 		for (DynamicObject aos_sal_actplanentity : aos_sal_actplanentityS) {
+			//如果要保留原值，且该行原值大于0，则该行跳过
+			if (rawValue){
+				BigDecimal rowQtyBd = aos_sal_actplanentity.getBigDecimal("aos_actqty");
+				if (rowQtyBd!=null && rowQtyBd.compareTo(BigDecimal.ZERO)>0){
+					continue;
+				}
+			}
 			DynamicObject aos_itemnum = aos_sal_actplanentity.getDynamicObject("aos_itemnum");
 			Date aos_l_startdate = aos_sal_actplanentity.getDate("aos_l_startdate");
 			Date aos_enddate = aos_sal_actplanentity.getDate("aos_enddate");
@@ -611,16 +625,20 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 				if(aos_actqty.compareTo(BigDecimal.ZERO) < 0)
 					aos_actqty = BigDecimal.ZERO;
 				logging.info("活动计划表个数=3时，活动数量 = " + aos_actqty);
-			} else {
+			}
+			else {
 				aos_actqty = BigDecimal.valueOf(hisQty).multiply(BigDecimal.valueOf(1.1))
 						.multiply(BigDecimal.valueOf(betweenDays));
 				logging.info("活动计划表个数!=3时，活动数量 = " + aos_actqty);
 			}
+			if (aos_actqty.compareTo(minQtyBd)<0){
+				aos_actqty = minQtyBd;
+			}
+
 			aos_sal_actplanentity.set("aos_actqty", aos_actqty);
 		}
 		logging.info("活动数量计算--活动数量计算结束");
-		this.getView().updateView();
-		this.getView().showSuccessNotification("批量计算" + size + "条活动数量成功!");
+
 	}
 
 	/**
@@ -629,7 +647,7 @@ public class aos_mkt_actrule_generate extends AbstractBillPlugIn
 	 * @param orgIdStr
 	 * @return
 	 */
-	private HashMap<String, Integer> getItemShopQty(String orgIdStr) {
+	private static HashMap<String, Integer> getItemShopQty(String orgIdStr) {
 		FndMsg.debug("=====into getItemShopQty=====");
 		HashMap<String, Integer> itemShopMap = new HashMap<>();
 		Calendar date = Calendar.getInstance();

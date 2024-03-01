@@ -42,15 +42,7 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
     public  static final String Key_entity="operate";   //父界面传值标识
     public  static final List<String> ASSESS_LIST = Arrays.asList("平台活动","线下活动","站外Deal");
 
-    @Override
-    public void propertyChanged(PropertyChangedArgs e) {
-        super.propertyChanged(e);
-        String name = e.getProperty().getName();
-        //活动分类修改
-        if ("aos_sort".equals(name)){
-            sortChange(e.getChangeSet()[0].getNewValue());
-        }
-    }
+
 
     private void sortChange(Object newValue){
         if (FndGlobal.IsNull(newValue)) {
@@ -179,6 +171,10 @@ public class actTypeForm extends AbstractBillPlugIn implements BeforeF7SelectLis
         if ("aos_project".equals(name)){
             int rowIndex = e.getChangeSet()[0].getRowIndex();
             setDay(rowIndex);
+        }
+        //活动分类修改
+        else if ("aos_sort".equals(name)){
+            sortChange(e.getChangeSet()[0].getNewValue());
         }
     }
 

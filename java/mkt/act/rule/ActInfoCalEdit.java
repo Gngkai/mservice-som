@@ -2,7 +2,6 @@ package mkt.act.rule;
 
 import common.fnd.FndMsg;
 import common.sal.EventRuleCommon;
-import common.sal.util.LogUtils;
 import kd.bos.bill.AbstractBillPlugIn;
 import kd.bos.context.OperationContext;
 import kd.bos.context.RequestContext;
@@ -10,7 +9,6 @@ import kd.bos.dataentity.entity.DynamicObject;
 import kd.bos.dataentity.entity.DynamicObjectCollection;
 import kd.bos.entity.datamodel.events.ImportDataEventArgs;
 import kd.bos.form.control.events.ItemClickEvent;
-import kd.bos.form.events.AfterDoOperationEventArgs;
 import kd.bos.logging.Log;
 import kd.bos.logging.LogFactory;
 import kd.bos.servicehelper.operation.SaveServiceHelper;
@@ -217,6 +215,9 @@ public class ActInfoCalEdit extends AbstractBillPlugIn {
                         String name = dy.getDynamicObject("aos_itemnum").getString("name");
                         dy.set("aos_itemname",name);
                     });
+            //设置活动数量
+            aos_mkt_actrule_generate.batchSetActQty(dy_the,true);
+
             //设置表头数据
             EventRuleCommon.collectRevenueCost(dy_the);
             //发送消息
